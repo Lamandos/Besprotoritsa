@@ -8,7 +8,10 @@ environment:
 resolution: workspace
 
 dependencies:
-  besprotoritsa_data: ^0.0.0
-  besprotoritsa_rules: ^0.0.0
+  besprotoritsa_data:
+    path: ../besprotoritsa_data
+  besprotoritsa_rules:
+    path: ../besprotoritsa_rules
   flutter:
     sdk: flutter
+  flutter_riverpod: ^3.0.0

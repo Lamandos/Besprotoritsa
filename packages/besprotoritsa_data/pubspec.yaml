@@ -8,8 +8,9 @@ environment:
 resolution: workspace
 
 dependencies:
-  besprotoritsa_rules: ^0.0.0
+  besprotoritsa_rules:
+    path: ../besprotoritsa_rules
+  meta: ^1.19.0
 
 dev_dependencies:
-  crypto: ^3.0.6
   test: ^1.25.15
