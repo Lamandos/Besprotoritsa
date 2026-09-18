@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "event.schema.json",
+  "title": "Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "options", "nameKey"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "options": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/option" }
+    },
+    "nameKey": { "$ref": "#/$defs/localizationKey" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+    "localizationKey": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionKey", "skillCheck", "successKey", "failureKey", "behaviorId"],
+      "properties": {
+        "actionKey": { "$ref": "#/$defs/localizationKey" },
+        "skillCheck": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["skill", "difficulty"],
+          "properties": {
+            "skill": { "enum": ["strength", "combatStrength", "science", "repair", "endurance", "agility"] },
+            "difficulty": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "successKey": { "$ref": "#/$defs/localizationKey" },
+        "failureKey": { "$ref": "#/$defs/localizationKey" },
+        "behaviorId": { "$ref": "#/$defs/id" }
+      }
+    }
+  }
+}

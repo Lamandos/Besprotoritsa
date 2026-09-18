@@ -1,0 +1,13 @@
+{
+  "id": "test_character",
+  "health": "five",
+  "strength": 2,
+  "combatStrength": 2,
+  "science": 2,
+  "repair": 2,
+  "endurance": 2,
+  "agility": 2,
+  "startItems": [],
+  "startCredits": 0,
+  "diaryKey": "characters.test.diary"
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "special_item.schema.json",
+  "title": "Special item",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "sourceQuestId", "behaviorId", "nameKey", "descKey"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "sourceQuestId": { "$ref": "#/$defs/id" },
+    "behaviorId": { "$ref": "#/$defs/id" },
+    "nameKey": { "$ref": "#/$defs/localizationKey" },
+    "descKey": { "$ref": "#/$defs/localizationKey" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+    "localizationKey": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" }
+  }
+}

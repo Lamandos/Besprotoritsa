@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "condition.schema.json",
+  "title": "Condition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "statModifiers", "behaviorId", "nameKey", "descKey"],
+  "properties": {
+    "id": { "$ref": "#/$defs/id" },
+    "statModifiers": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    },
+    "behaviorId": { "$ref": "#/$defs/id" },
+    "nameKey": { "$ref": "#/$defs/localizationKey" },
+    "descKey": { "$ref": "#/$defs/localizationKey" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+    "localizationKey": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" }
+  }
+}
