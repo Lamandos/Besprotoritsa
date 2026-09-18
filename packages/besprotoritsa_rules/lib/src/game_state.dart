@@ -248,11 +248,82 @@ final class QuestState {
 
 enum GamePhase { players, monsters, events }
 
-/// Base type for a game state waiting for a player response.
+/// A deterministic window in which the active player may make a micro-decision.
 ///
-/// Concrete decision variants are introduced by the command reducer; modelling
-/// it as an interface keeps this foundational state package independent of it.
-abstract interface class PendingDecision {}
+/// The reducer advances this counter rather than consulting wall-clock time, so
+/// the state remains reproducible in tests, replays, and networked games.
+@immutable
+final class DecisionWindow {
+  const DecisionWindow({required this.remainingTicks})
+    : assert(remainingTicks >= 0, 'remainingTicks must not be negative.');
+
+  final int remainingTicks;
+}
+
+/// Base type for a game state waiting for a player response.
+sealed class PendingDecision {
+  const PendingDecision();
+}
+
+/// A roll which may still be kept or rerolled by the active player.
+@immutable
+final class AwaitingRerollChoice extends PendingDecision {
+  AwaitingRerollChoice({
+    required Iterable<int> dice,
+    required this.availableRerolls,
+    required this.window,
+  }) : dice = List.unmodifiable(dice) {
+    _requireNonNegative(availableRerolls, 'availableRerolls');
+    for (final die in this.dice) {
+      if (die < 1 || die > 6) {
+        throw ArgumentError.value(die, 'dice', 'Dice values must be in 1..6.');
+      }
+    }
+  }
+
+  final List<int> dice;
+  final int availableRerolls;
+  final DecisionWindow window;
+
+  /// Alias retained for UI code which calls these values rolls.
+  List<int> get rolls => dice;
+}
+
+/// A pending attempt to prevent incoming monster damage with agility hits.
+@immutable
+final class AwaitingDodge extends PendingDecision {
+  const AwaitingDodge({
+    required this.monsterDamage,
+    required this.requiredAgilitySuccesses,
+  }) : assert(monsterDamage >= 0, 'monsterDamage must not be negative.'),
+       assert(
+         requiredAgilitySuccesses >= 0,
+         'requiredAgilitySuccesses must not be negative.',
+       );
+
+  final int monsterDamage;
+  final int requiredAgilitySuccesses;
+
+  /// Short name convenient for generic decision views.
+  int get requiredSuccesses => requiredAgilitySuccesses;
+}
+
+/// A pending choice between event branches, normally the A and B options.
+@immutable
+final class AwaitingEventOption extends PendingDecision {
+  AwaitingEventOption({required Iterable<String> options})
+    : options = List.unmodifiable(options) {
+    if (this.options.isEmpty) {
+      throw ArgumentError.value(
+        options,
+        'options',
+        'At least one option is required.',
+      );
+    }
+  }
+
+  final List<String> options;
+}
 
 /// The authoritative, complete game state. Collections are copied on input.
 @immutable
