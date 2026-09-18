@@ -107,10 +107,15 @@ final class EventOptionChoice extends DecisionChoice {
 
 @immutable
 final class GameStepResult {
-  const GameStepResult({required this.state, this.rejection});
+  GameStepResult({
+    required this.state,
+    this.rejection,
+    Iterable<GameEvent> events = const [],
+  }) : events = List.unmodifiable(events);
 
   final GameState state;
   final CommandRejection? rejection;
+  final List<GameEvent> events;
 
   GameState get nextState => state;
   bool get isAccepted => rejection == null;
@@ -182,7 +187,7 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
     return GameStepResult(state: state, rejection: rejection);
   }
 
-  return switch (command) {
+  final result = switch (command) {
     MoveCommand(:final target) => _move(state, target),
     AttackCommand(:final targetInstanceId) => _attack(
       state,
@@ -198,6 +203,38 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
     EndTurnCommand() => GameStepResult(state: _endTurn(state)),
     HealCommand(:final amount) => GameStepResult(state: _heal(state, amount)),
   };
+  return GameStepResult(
+    state: result.state,
+    rejection: result.rejection,
+    events: _eventsForTransition(state, result.state),
+  );
+}
+
+List<GameEvent> _eventsForTransition(GameState before, GameState after) {
+  final events = <GameEvent>[];
+  for (final player in after.players) {
+    final previous = _playerById(before, player.id);
+    if (previous == null) continue;
+    final enteredHex = previous.coord != player.coord;
+    if (enteredHex) {
+      events.add(
+        HexEntered(playerId: player.id, from: previous.coord, to: player.coord),
+      );
+    }
+    if (enteredHex && after.pendingDecision is AwaitingDodge) {
+      events.add(ColocationTriggered(playerId: player.id, coord: player.coord));
+    }
+    final damage = player.damage - previous.damage;
+    if (damage > 0) {
+      events.add(DamageDealt(playerId: player.id, amount: damage));
+    }
+    final previousConditions = List<CardId>.of(previous.conditions);
+    for (final condition in player.conditions) {
+      if (previousConditions.remove(condition)) continue;
+      events.add(ConditionDrawn(playerId: player.id, conditionId: condition));
+    }
+  }
+  return events;
 }
 
 GameStepResult _move(GameState state, HexCoord target) {
@@ -698,9 +735,7 @@ GameState _resolveCabinNoise(
       coord: player.coord,
       damage: 0,
       health: 2,
-      defense: 0,
       attack: 2,
-      movement: 1,
     ),
   );
 }
@@ -766,20 +801,25 @@ GameState _endTurn(GameState state) {
 /// order, which is the turn order of the round.
 List<PlayerState> nearestTargets(GameState state, MonsterInstance monster) {
   final distances = _openPathDistances(state, monster.coord);
-  final targets = state.players
-      .where((player) => player.alive && distances.containsKey(player.coord))
-      .toList();
-  targets.sort((left, right) {
-    final distanceOrder = distances[left.coord]!.compareTo(
-      distances[right.coord]!,
-    );
-    if (distanceOrder != 0) return distanceOrder;
-    final leftHp = _currentHp(left);
-    final rightHp = _currentHp(right);
-    final hpOrder = leftHp.compareTo(rightHp);
-    if (hpOrder != 0) return hpOrder;
-    return state.players.indexOf(left).compareTo(state.players.indexOf(right));
-  });
+  final targets =
+      state.players
+          .where(
+            (player) => player.alive && distances.containsKey(player.coord),
+          )
+          .toList()
+        ..sort((left, right) {
+          final distanceOrder = distances[left.coord]!.compareTo(
+            distances[right.coord]!,
+          );
+          if (distanceOrder != 0) return distanceOrder;
+          final leftHp = _currentHp(left);
+          final rightHp = _currentHp(right);
+          final hpOrder = leftHp.compareTo(rightHp);
+          if (hpOrder != 0) return hpOrder;
+          return state.players
+              .indexOf(left)
+              .compareTo(state.players.indexOf(right));
+        });
   return List.unmodifiable(targets);
 }
 

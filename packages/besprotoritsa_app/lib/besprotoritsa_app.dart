@@ -2,3 +2,7 @@
 library;
 
 export 'src/app.dart';
+export 'src/game/event_queue.dart';
+export 'src/game/game_controller.dart';
+export 'src/game/mvp_game_state.dart';
+export 'src/mvp/mvp_game_screen.dart';

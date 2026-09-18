@@ -1,3 +1,4 @@
+import 'package:besprotoritsa_app/src/mvp/mvp_game_screen.dart';
 import 'package:flutter/material.dart';
 
 /// Root widget for the Besprotoritsa application.
@@ -57,15 +58,11 @@ class StartScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Демо MVP будет доступно в следующей сборке.',
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (context) => const MvpGameScreen(),
+                    ),
+                  ),
                   child: const Text('Запуск MVP (Демо)'),
                 ),
               ],

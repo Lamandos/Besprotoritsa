@@ -301,14 +301,55 @@ enum GamePhase {
   eventsPhase;
 
   /// Compatibility aliases for states written before the round loop existed.
-  static const players = playersTurn;
-  static const monsters = monstersTurn;
-  static const events = eventsPhase;
+  static const GamePhase players = playersTurn;
+  static const GamePhase monsters = monstersTurn;
+  static const GamePhase events = eventsPhase;
 }
 
 /// A durable fact emitted by the rules engine, suitable for an animation queue.
 sealed class GameEvent {
   const GameEvent();
+}
+
+/// A hero entered a new hex during a command transition.
+@immutable
+final class HexEntered extends GameEvent {
+  const HexEntered({
+    required this.playerId,
+    required this.from,
+    required this.to,
+  });
+
+  final PlayerId playerId;
+  final HexCoord from;
+  final HexCoord to;
+}
+
+/// A hero shares a hex with a threat and its consequences are being resolved.
+@immutable
+final class ColocationTriggered extends GameEvent {
+  const ColocationTriggered({required this.playerId, required this.coord});
+
+  final PlayerId playerId;
+  final HexCoord coord;
+}
+
+/// Damage was applied to a hero after a combat or hazard resolution.
+@immutable
+final class DamageDealt extends GameEvent {
+  const DamageDealt({required this.playerId, required this.amount});
+
+  final PlayerId playerId;
+  final int amount;
+}
+
+/// A condition card was drawn and attached to a hero.
+@immutable
+final class ConditionDrawn extends GameEvent {
+  const ConditionDrawn({required this.playerId, required this.conditionId});
+
+  final PlayerId playerId;
+  final CardId conditionId;
 }
 
 /// The terminal event of the demonstration scenario.
