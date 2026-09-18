@@ -76,6 +76,7 @@ abstract final class SaveJsonModels {
       weaponModifier: _int(json, 'weapon_modifier'),
     );
   }
+
   static Map<String, Object?> monsterToJson(MonsterInstance monster) => {
     'instance_id': monster.instanceId,
     'monster_id': monster.monsterId,
@@ -182,6 +183,7 @@ abstract final class SaveJsonModels {
           'type': 'reroll',
           'dice': decision.dice,
           'available_rerolls': decision.availableRerolls,
+          'max_dice_per_reroll': decision.maxDicePerReroll,
           'window': {'remaining_ticks': decision.window.remainingTicks},
           'context': _contextToJson(decision.context),
         },
@@ -207,6 +209,7 @@ abstract final class SaveJsonModels {
       'reroll' => AwaitingRerollChoice(
         dice: _ints(json, 'dice'),
         availableRerolls: _int(json, 'available_rerolls'),
+        maxDicePerReroll: _optionalInt(json, 'max_dice_per_reroll') ?? 999,
         window: DecisionWindow(
           remainingTicks: _int(_object(json, 'window'), 'remaining_ticks'),
         ),
@@ -314,27 +317,40 @@ PlayerStats _statsFromJson(Map<String, Object?> json) => PlayerStats(
   agility: _int(json, 'agility'),
 );
 
-Map<String, Object?>? _contextToJson(SkillCheckContext? context) =>
-    context == null
-    ? null
-    : {
-        'player_id': context.playerId,
-        'stat': context.stat.name,
-        'difficulty': context.difficulty,
-        'event_id': context.eventId,
-        'quest_id': context.questId,
-      };
+Map<String, Object?>? _contextToJson(RollContext? context) => switch (context) {
+  null => null,
+  SkillCheckContext() => {
+    'type': 'skill',
+    'player_id': context.playerId,
+    'stat': context.stat.name,
+    'difficulty': context.difficulty,
+    'event_id': context.eventId,
+    'quest_id': context.questId,
+  },
+  AttackRollContext() => {
+    'type': 'attack',
+    'player_id': context.playerId,
+    'target_instance_id': context.targetInstanceId,
+  },
+};
 
-SkillCheckContext? _contextFromJson(Object? value) {
+RollContext? _contextFromJson(Object? value) {
   if (value == null) return null;
   final json = _asObject(value, 'pending_decision.context');
-  return SkillCheckContext(
-    playerId: _string(json, 'player_id'),
-    stat: _enum(StatType.values, _string(json, 'stat'), 'stat'),
-    difficulty: _int(json, 'difficulty'),
-    eventId: _nullableString(json['event_id'], 'event_id'),
-    questId: _nullableString(json['quest_id'], 'quest_id'),
-  );
+  return switch (json['type']) {
+    'attack' => AttackRollContext(
+      playerId: _string(json, 'player_id'),
+      targetInstanceId: _string(json, 'target_instance_id'),
+    ),
+    'skill' || null => SkillCheckContext(
+      playerId: _string(json, 'player_id'),
+      stat: _enum(StatType.values, _string(json, 'stat'), 'stat'),
+      difficulty: _int(json, 'difficulty'),
+      eventId: _nullableString(json['event_id'], 'event_id'),
+      questId: _nullableString(json['quest_id'], 'quest_id'),
+    ),
+    final type => throw FormatException('Unknown reroll context type: $type.'),
+  };
 }
 
 E _enum<E extends Enum>(List<E> values, String name, String key) {
@@ -368,6 +384,12 @@ String? _nullableString(Object? value, String key) {
 }
 
 int _int(Map<String, Object?> json, String key) => _asInt(json[key], key);
+
+int? _optionalInt(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value == null) return null;
+  return _asInt(value, key);
+}
 
 int _asInt(Object? value, String key) {
   if (value is! int) throw FormatException('$key must be an integer.');

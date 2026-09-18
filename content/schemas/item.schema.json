@@ -4,7 +4,7 @@
   "title": "Item",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "category", "slots", "cost", "stats", "behaviorId", "nameKey", "descKey"],
+  "required": ["id", "category", "slots", "cost", "stats", "nameKey", "descKey"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
     "category": { "enum": ["weapon", "armor", "clothing", "robot", "modification"] },
@@ -14,7 +14,13 @@
       "type": "object",
       "additionalProperties": { "type": "number" }
     },
+    "range": { "$ref": "#/$defs/nonNegativeInteger" },
     "behaviorId": { "$ref": "#/$defs/id" },
+    "behaviorIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/id" }
+    },
     "nameKey": { "$ref": "#/$defs/localizationKey" },
     "descKey": { "$ref": "#/$defs/localizationKey" }
   },

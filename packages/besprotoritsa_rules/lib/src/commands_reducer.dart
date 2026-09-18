@@ -2,8 +2,12 @@
 // identical transition can run on a client, server, or replay verifier.
 // ignore_for_file: public_member_api_docs
 
+import 'package:besprotoritsa_rules/src/card_definition.dart';
 import 'package:besprotoritsa_rules/src/combat_models.dart';
 import 'package:besprotoritsa_rules/src/dice_roller.dart';
+import 'package:besprotoritsa_rules/src/effect_engine.dart';
+import 'package:besprotoritsa_rules/src/effect_hooks.dart';
+import 'package:besprotoritsa_rules/src/effect_registry.dart';
 import 'package:besprotoritsa_rules/src/game_state.dart';
 import 'package:meta/meta.dart';
 
@@ -357,24 +361,89 @@ GameStepResult _attack(
   DiceRoller dice,
 ) {
   final player = _activePlayer(state)!;
-  final monster = _monsterById(state, targetInstanceId)!;
-  final successes = countHits(dice.rollDice(_heroAttackDice(player, state)));
-  final damage = (successes - monster.defense).clamp(0, successes);
-  final monsterDamage = monster.damage + damage;
-  final defeated = monsterDamage >= monster.health;
+  final diceRoll = dice.rollDice(_heroAttackDice(player, state));
+  final roll = const EffectEngine().resolveRoll(
+    diceRoll,
+    _activeEffectHooks(state, player),
+  );
+  if (roll.rerollsAvailable > 0) {
+    return GameStepResult(
+      state: _copyState(
+        state,
+        actionsLeft: state.actionsLeft - 1,
+        pendingDecision: AwaitingRerollChoice(
+          dice: diceRoll,
+          availableRerolls: roll.rerollsAvailable,
+          maxDicePerReroll: 1,
+          window: const DecisionWindow(remainingTicks: 1),
+          context: AttackRollContext(
+            playerId: player.id,
+            targetInstanceId: targetInstanceId,
+          ),
+        ),
+        logEntry: 'attack-roll:${player.id}:$targetInstanceId',
+      ),
+    );
+  }
   return GameStepResult(
-    state: _copyState(
+    state: _resolveAttackRoll(
       state,
-      actionsLeft: state.actionsLeft - 1,
-      monsters: [
-        for (final current in state.monsters)
-          if (current.instanceId != monster.instanceId)
-            current
-          else if (!defeated)
-            _copyMonster(current, damage: monsterDamage),
-      ],
-      logEntry: _attackLog(player, monster, damage, defeated),
+      player.id,
+      targetInstanceId,
+      diceRoll,
+      consumesAction: true,
     ),
+  );
+}
+
+GameState _resolveAttackRoll(
+  GameState state,
+  PlayerId playerId,
+  String targetInstanceId,
+  List<int> dice, {
+  required bool consumesAction,
+}) {
+  final player = _playerById(state, playerId)!;
+  final monster = _monsterById(state, targetInstanceId)!;
+  final hooks = _activeEffectHooks(state, player);
+  final roll = const EffectEngine().resolveRoll(dice, hooks);
+  final damage = (roll.hits - monster.defense).clamp(0, roll.hits);
+  final defeated = monster.damage + damage >= monster.health;
+  final collateral = defeated
+      ? const EffectEngine()
+            .resolveKill(
+              killedEnemyId: monster.instanceId,
+              sectorId: monster.coord.toString(),
+              enemySectors: {
+                for (final enemy in state.monsters)
+                  enemy.instanceId: enemy.coord.toString(),
+              },
+              hooks: hooks,
+            )
+            .damageByEnemyId
+      : const <String, int>{};
+  final monsters = <MonsterInstance>[];
+  for (final current in state.monsters) {
+    if (current.instanceId == monster.instanceId) continue;
+    final totalDamage = current.damage + (collateral[current.instanceId] ?? 0);
+    if (totalDamage < current.health) {
+      monsters.add(_copyMonster(current, damage: totalDamage));
+    }
+  }
+  return _copyState(
+    state,
+    actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
+    players: _replacePlayer(
+      state,
+      player.id,
+      (current) =>
+          _copyPlayer(current, damage: current.damage + roll.ownerDamage),
+    ),
+    monsters: [
+      if (!defeated) _copyMonster(monster, damage: monster.damage + damage),
+      ...monsters,
+    ],
+    logEntry: _attackLog(player, monster, damage, defeated),
   );
 }
 
@@ -415,13 +484,58 @@ String _attackLog(
 int _heroAttackDice(PlayerState player, GameState state) =>
     _statDice(player, state, StatType.strength) + player.weaponModifier;
 
+List<EffectHook> _activeEffectHooks(GameState state, PlayerState player) {
+  final registry = EffectRegistry.standard();
+  return [
+    for (final cardId in _activeCardIds(player))
+      for (final behaviorId
+          in state.cardDefinitions[cardId]?.behaviorIds ?? const <String>[])
+        if (registry[behaviorId] case final EffectHook hook) hook,
+  ];
+}
+
 int _statDice(PlayerState player, GameState state, StatType stat) {
   final modifier = player.conditions.fold<int>(
     0,
     (total, conditionId) =>
         total + (state.conditionCards[conditionId]?.statModifiers[stat] ?? 0),
   );
-  return (player.stats.valueFor(stat) + modifier).clamp(1, 999);
+  return (player.stats.valueFor(stat) +
+          modifier +
+          _cardStatModifier(
+            state,
+            player,
+            stat,
+          ))
+      .clamp(1, 999);
+}
+
+int _cardStatModifier(GameState state, PlayerState player, StatType stat) {
+  final cardStat = switch (stat) {
+    StatType.strength || StatType.combatStrength => CardStat.strength,
+    StatType.science => CardStat.science,
+    StatType.repair => CardStat.repair,
+    StatType.endurance => CardStat.endurance,
+    StatType.agility => CardStat.agility,
+  };
+  return _activeCardIds(player).fold(
+    0,
+    (sum, id) =>
+        sum + (state.cardDefinitions[id]?.staticEffects[cardStat] ?? 0),
+  );
+}
+
+Iterable<String> _activeCardIds(PlayerState player) sync* {
+  final equipped = player.equipped;
+  for (final id in [
+    equipped.weapon,
+    equipped.armor,
+    equipped.clothing,
+    equipped.robot,
+  ]) {
+    if (id != null) yield id;
+  }
+  yield* player.implanted;
 }
 
 GameState _heal(GameState state, int amount) {
@@ -472,7 +586,7 @@ GameStepResult _startRoll(
   DiceRoller dice,
   String logEntry, {
   int diceCount = 1,
-  SkillCheckContext? context,
+  RollContext? context,
   bool consumesAction = true,
 }) => GameStepResult(
   state: _copyState(
@@ -509,7 +623,7 @@ GameStepResult _resolveReroll(
 ) {
   if (choice is KeepRollChoice) {
     final resolved = _copyState(state, clearPendingDecision: true);
-    return GameStepResult(state: _completeSkillCheck(resolved, pending));
+    return GameStepResult(state: _completeRoll(resolved, pending));
   }
   if (choice is! RerollChoice || pending.availableRerolls == 0) {
     return GameStepResult(
@@ -527,6 +641,12 @@ GameStepResult _resolveReroll(
       rejection: const ActionBlockedByPendingDecision(),
     );
   }
+  if (indexes.length > pending.maxDicePerReroll) {
+    return GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
+    );
+  }
   final rerolled = List<int>.of(pending.dice);
   final newRolls = dice.rollDice(indexes.length);
   for (var index = 0; index < indexes.length; index++) {
@@ -538,6 +658,7 @@ GameStepResult _resolveReroll(
       pendingDecision: AwaitingRerollChoice(
         dice: rerolled,
         availableRerolls: pending.availableRerolls - 1,
+        maxDicePerReroll: pending.maxDicePerReroll,
         window: pending.window,
         context: pending.context,
       ),
@@ -676,12 +797,22 @@ GameStepResult _resolveEventOption(
   );
 }
 
-GameState _completeSkillCheck(
+GameState _completeRoll(
   GameState state,
   AwaitingRerollChoice pending,
 ) {
   final context = pending.context;
   if (context == null) return _resumeAutomaticPhase(state);
+  if (context case AttackRollContext()) {
+    return _resolveAttackRoll(
+      state,
+      context.playerId,
+      context.targetInstanceId,
+      pending.dice,
+      consumesAction: false,
+    );
+  }
+  if (context is! SkillCheckContext) return _resumeAutomaticPhase(state);
   final succeeded = countHits(pending.dice) >= context.difficulty;
   if (context.questId != null && succeeded) {
     return _completeMvpQuest(state, context);
@@ -1130,6 +1261,7 @@ GameState _copyState(
   monsters: monsters ?? state.monsters,
   boils: boils ?? state.boils,
   conditionCards: state.conditionCards,
+  cardDefinitions: state.cardDefinitions,
   pendingDamage: pendingDamage ?? state.pendingDamage,
   decks: decks ?? state.decks,
   quests: quests ?? state.quests,

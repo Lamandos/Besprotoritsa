@@ -5,6 +5,7 @@
 
 import 'dart:collection';
 
+import 'package:besprotoritsa_rules/src/card_definition.dart';
 import 'package:besprotoritsa_rules/src/combat_models.dart';
 import 'package:meta/meta.dart';
 
@@ -381,6 +382,10 @@ sealed class PendingDecision {
   const PendingDecision();
 }
 
+sealed class RollContext {
+  const RollContext();
+}
+
 /// A roll which may still be kept or rerolled by the active player.
 @immutable
 final class AwaitingRerollChoice extends PendingDecision {
@@ -389,8 +394,16 @@ final class AwaitingRerollChoice extends PendingDecision {
     required this.availableRerolls,
     required this.window,
     this.context,
+    this.maxDicePerReroll = 999,
   }) : dice = List.unmodifiable(dice) {
     _requireNonNegative(availableRerolls, 'availableRerolls');
+    if (maxDicePerReroll < 1) {
+      throw ArgumentError.value(
+        maxDicePerReroll,
+        'maxDicePerReroll',
+        'Must be at least one.',
+      );
+    }
     for (final die in this.dice) {
       if (die < 1 || die > 6) {
         throw ArgumentError.value(die, 'dice', 'Dice values must be in 1..6.');
@@ -401,7 +414,8 @@ final class AwaitingRerollChoice extends PendingDecision {
   final List<int> dice;
   final int availableRerolls;
   final DecisionWindow window;
-  final SkillCheckContext? context;
+  final RollContext? context;
+  final int maxDicePerReroll;
 
   /// Alias retained for UI code which calls these values rolls.
   List<int> get rolls => dice;
@@ -409,20 +423,33 @@ final class AwaitingRerollChoice extends PendingDecision {
 
 /// What should happen after a skill check is accepted by its player.
 @immutable
-final class SkillCheckContext {
+final class SkillCheckContext extends RollContext {
   const SkillCheckContext({
     required this.playerId,
     required this.stat,
     this.difficulty = 1,
     this.eventId,
     this.questId,
-  }) : assert(difficulty >= 1, 'difficulty must be positive.');
+  }) : assert(difficulty >= 1, 'difficulty must be positive.'),
+       super();
 
   final PlayerId playerId;
   final StatType stat;
   final int difficulty;
   final CardId? eventId;
   final QuestId? questId;
+}
+
+/// Deferred attack resolution, retained while a weapon grants rerolls.
+@immutable
+final class AttackRollContext extends RollContext {
+  const AttackRollContext({
+    required this.playerId,
+    required this.targetInstanceId,
+  }) : super();
+
+  final PlayerId playerId;
+  final String targetInstanceId;
 }
 
 /// A pending attempt to prevent incoming monster damage with agility hits.
@@ -487,6 +514,7 @@ final class GameState {
     required this.quests,
     Iterable<BoilToken> boils = const [],
     Map<CardId, ConditionCard> conditionCards = const {},
+    Map<CardId, CardDefinition> cardDefinitions = const {},
     Iterable<IncomingDamage> pendingDamage = const [],
     Iterable<String> log = const [],
     Iterable<GameEvent> gameEvents = const [],
@@ -500,6 +528,7 @@ final class GameState {
        monsters = List.unmodifiable(monsters),
        boils = List.unmodifiable(boils),
        conditionCards = UnmodifiableMapView(Map.of(conditionCards)),
+       cardDefinitions = UnmodifiableMapView(Map.of(cardDefinitions)),
        pendingDamage = List.unmodifiable(pendingDamage),
        decks = UnmodifiableMapView(Map.of(decks)),
        log = List.unmodifiable(log),
@@ -550,6 +579,7 @@ final class GameState {
   final List<MonsterInstance> monsters;
   final List<BoilToken> boils;
   final Map<CardId, ConditionCard> conditionCards;
+  final Map<CardId, CardDefinition> cardDefinitions;
   final List<IncomingDamage> pendingDamage;
   final Map<DeckId, DeckState> decks;
   final QuestState quests;
