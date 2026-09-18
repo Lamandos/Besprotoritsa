@@ -160,6 +160,7 @@ final class PlayerState {
     required this.characterId,
     required this.coord,
     required this.damage,
+    this.health = 3,
     required this.credits,
     required Iterable<CardId> backpack,
     required this.equipped,
@@ -176,6 +177,9 @@ final class PlayerState {
     _requireId(id, 'id');
     _requireId(characterId, 'characterId');
     _requireNonNegative(damage, 'damage');
+    if (health < 1) {
+      throw ArgumentError.value(health, 'health', 'Health must be positive.');
+    }
     _requireNonNegative(credits, 'credits');
     _requireNonNegative(weaponModifier, 'weaponModifier');
     if (this.backpack.length > 3) {
@@ -198,6 +202,9 @@ final class PlayerState {
   final CharacterId characterId;
   final HexCoord coord;
   final int damage;
+
+  /// Maximum health; current HP is [health] minus [damage].
+  final int health;
   final int credits;
   final List<CardId> backpack;
   final EquippedGear equipped;
@@ -222,6 +229,7 @@ final class MonsterInstance {
     this.health = 1,
     this.defense = 0,
     this.attack = 0,
+    this.movement = 1,
     Iterable<CardId> carriedGear = const [],
   }) : carriedGear = List.unmodifiable(carriedGear) {
     _requireId(instanceId, 'instanceId');
@@ -230,6 +238,7 @@ final class MonsterInstance {
     _requireNonNegative(health, 'health');
     _requireNonNegative(defense, 'defense');
     _requireNonNegative(attack, 'attack');
+    _requireNonNegative(movement, 'movement');
   }
 
   final String instanceId;
@@ -239,6 +248,9 @@ final class MonsterInstance {
   final int health;
   final int defense;
   final int attack;
+
+  /// Number of connected, opened sectors this monster traverses per round.
+  final int movement;
   final List<CardId> carriedGear;
 }
 
@@ -263,17 +275,53 @@ final class QuestState {
   QuestState({
     Iterable<QuestId> storyQuestIds = const [],
     Map<PlayerId, Iterable<QuestId>> personalTasksByPlayer = const {},
+    Map<QuestId, QuestStatus> statuses = const {},
   }) : storyQuestIds = List.unmodifiable(storyQuestIds),
        personalTasksByPlayer = UnmodifiableMapView({
          for (final entry in personalTasksByPlayer.entries)
            entry.key: List<QuestId>.unmodifiable(entry.value),
-       });
+       }),
+       statuses = UnmodifiableMapView(Map.of(statuses));
 
   final List<QuestId> storyQuestIds;
   final Map<PlayerId, List<QuestId>> personalTasksByPlayer;
+  final Map<QuestId, QuestStatus> statuses;
+
+  /// Story quests start active unless an explicit status was recorded.
+  QuestStatus statusOf(QuestId questId) =>
+      statuses[questId] ?? QuestStatus.active;
 }
 
-enum GamePhase { players, monsters, events }
+enum QuestStatus { active, completed }
+
+/// The three deterministic parts of one round.
+enum GamePhase {
+  playersTurn,
+  monstersTurn,
+  eventsPhase;
+
+  /// Compatibility aliases for states written before the round loop existed.
+  static const players = playersTurn;
+  static const monsters = monstersTurn;
+  static const events = eventsPhase;
+}
+
+/// A durable fact emitted by the rules engine, suitable for an animation queue.
+sealed class GameEvent {
+  const GameEvent();
+}
+
+/// The terminal event of the demonstration scenario.
+@immutable
+final class MvpDemonstrationCompleted extends GameEvent {
+  const MvpDemonstrationCompleted({
+    required this.questId,
+    required this.playerId,
+  });
+
+  final QuestId questId;
+  final PlayerId playerId;
+}
 
 /// A deterministic window in which the active player may make a micro-decision.
 ///
@@ -299,6 +347,7 @@ final class AwaitingRerollChoice extends PendingDecision {
     required Iterable<int> dice,
     required this.availableRerolls,
     required this.window,
+    this.context,
   }) : dice = List.unmodifiable(dice) {
     _requireNonNegative(availableRerolls, 'availableRerolls');
     for (final die in this.dice) {
@@ -311,9 +360,28 @@ final class AwaitingRerollChoice extends PendingDecision {
   final List<int> dice;
   final int availableRerolls;
   final DecisionWindow window;
+  final SkillCheckContext? context;
 
   /// Alias retained for UI code which calls these values rolls.
   List<int> get rolls => dice;
+}
+
+/// What should happen after a skill check is accepted by its player.
+@immutable
+final class SkillCheckContext {
+  const SkillCheckContext({
+    required this.playerId,
+    required this.stat,
+    this.difficulty = 1,
+    this.eventId,
+    this.questId,
+  }) : assert(difficulty >= 1, 'difficulty must be positive.');
+
+  final PlayerId playerId;
+  final StatType stat;
+  final int difficulty;
+  final CardId? eventId;
+  final QuestId? questId;
 }
 
 /// A pending attempt to prevent incoming monster damage with agility hits.
@@ -342,8 +410,11 @@ final class AwaitingDodge extends PendingDecision {
 /// A pending choice between event branches, normally the A and B options.
 @immutable
 final class AwaitingEventOption extends PendingDecision {
-  AwaitingEventOption({required Iterable<String> options})
-    : options = List.unmodifiable(options) {
+  AwaitingEventOption({
+    required Iterable<String> options,
+    this.playerId,
+    this.eventId,
+  }) : options = List.unmodifiable(options) {
     if (this.options.isEmpty) {
       throw ArgumentError.value(
         options,
@@ -354,6 +425,8 @@ final class AwaitingEventOption extends PendingDecision {
   }
 
   final List<String> options;
+  final PlayerId? playerId;
+  final CardId? eventId;
 }
 
 /// The authoritative, complete game state. Collections are copied on input.
@@ -375,6 +448,11 @@ final class GameState {
     Map<CardId, ConditionCard> conditionCards = const {},
     Iterable<IncomingDamage> pendingDamage = const [],
     Iterable<String> log = const [],
+    Iterable<GameEvent> gameEvents = const [],
+    this.isComplete = false,
+    this.monsterTurnIndex = 0,
+    this.monsterStepsRemaining = 0,
+    this.eventTurnIndex = 0,
     this.pendingDecision,
   }) : board = List.unmodifiable(board),
        players = List.unmodifiable(players),
@@ -383,7 +461,8 @@ final class GameState {
        conditionCards = UnmodifiableMapView(Map.of(conditionCards)),
        pendingDamage = List.unmodifiable(pendingDamage),
        decks = UnmodifiableMapView(Map.of(decks)),
-       log = List.unmodifiable(log) {
+       log = List.unmodifiable(log),
+       gameEvents = List.unmodifiable(gameEvents) {
     if (schemaVersion != 1) {
       throw ArgumentError.value(
         schemaVersion,
@@ -395,6 +474,9 @@ final class GameState {
       throw ArgumentError.value(round, 'round', 'Round must be at least 1.');
     }
     _requireNonNegative(actionsLeft, 'actionsLeft');
+    _requireNonNegative(monsterTurnIndex, 'monsterTurnIndex');
+    _requireNonNegative(monsterStepsRemaining, 'monsterStepsRemaining');
+    _requireNonNegative(eventTurnIndex, 'eventTurnIndex');
     _ensureUnique(this.board.map((tile) => tile.coord), 'board coordinates');
     _ensureUnique(this.board.map((tile) => tile.id), 'tile ids');
     _ensureUnique(this.players.map((player) => player.id), 'player ids');
@@ -431,6 +513,14 @@ final class GameState {
   final Map<DeckId, DeckState> decks;
   final QuestState quests;
   final List<String> log;
+  final List<GameEvent> gameEvents;
+  final bool isComplete;
+
+  /// Internal deterministic cursors. They make automatic phases resumable
+  /// after a dodge decision without relying on a process-local call stack.
+  final int monsterTurnIndex;
+  final int monsterStepsRemaining;
+  final int eventTurnIndex;
   final PendingDecision? pendingDecision;
 
   HexTile? tileAt(HexCoord coord) {
