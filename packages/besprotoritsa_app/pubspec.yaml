@@ -1,5 +1,6 @@
 name: besprotoritsa_app
 description: Flutter user interface for Besprotoritsa.
+version: 0.1.0-dev
 publish_to: none
 
 environment:
@@ -15,3 +16,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_riverpod: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

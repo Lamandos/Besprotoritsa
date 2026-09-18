@@ -1,2 +1,4 @@
-/// Flutter user interface for Besprotoritsa.
+/// Public widgets for the Besprotoritsa Flutter application.
 library;
+
+export 'src/app.dart';
