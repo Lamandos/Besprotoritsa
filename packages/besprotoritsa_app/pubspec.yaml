@@ -1,0 +1,14 @@
+name: besprotoritsa_app
+description: Flutter user interface for Besprotoritsa.
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+resolution: workspace
+
+dependencies:
+  besprotoritsa_data: ^0.0.0
+  besprotoritsa_rules: ^0.0.0
+  flutter:
+    sdk: flutter

@@ -1,0 +1,14 @@
+name: besprotoritsa
+description: Monorepo for the Besprotoritsa digital board game.
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+workspace:
+  - packages/besprotoritsa_rules
+  - packages/besprotoritsa_data
+  - packages/besprotoritsa_app
+
+dev_dependencies:
+  very_good_analysis: ^9.0.0

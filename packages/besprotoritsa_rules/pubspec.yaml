@@ -1,0 +1,8 @@
+name: besprotoritsa_rules
+description: Pure Dart game rules for Besprotoritsa.
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+resolution: workspace

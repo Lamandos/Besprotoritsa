@@ -1,0 +1,11 @@
+name: besprotoritsa_data
+description: Content schemas, validators, and loaders for Besprotoritsa.
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+resolution: workspace
+
+dependencies:
+  besprotoritsa_rules: ^0.0.0
