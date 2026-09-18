@@ -1,0 +1,12 @@
+{
+  "id": "gu4-rd",
+  "category": "robot",
+  "slots": ["robot"],
+  "cost": 0,
+  "stats": {
+    "preAttackDamageOnSuccess": 1
+  },
+  "behaviorId": "gu4_rd_pre_attack_roll",
+  "nameKey": "mvp.item.gu4-rd.name",
+  "descKey": "mvp.item.gu4-rd.description"
+}

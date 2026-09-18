@@ -1,0 +1,13 @@
+{
+  "id": "guard",
+  "health": 11,
+  "strength": 3,
+  "combatStrength": 3,
+  "science": 1,
+  "repair": 1,
+  "endurance": 3,
+  "agility": 3,
+  "startItems": ["pistol"],
+  "startCredits": 3,
+  "diaryKey": "mvp.character.guard.diary"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "crew-mess",
+  "type": "compartment",
+  "locationNameKey": "mvp.location.crew-mess.name",
+  "hasTerminal": false,
+  "ventColor": "none",
+  "exits": [0]
+}

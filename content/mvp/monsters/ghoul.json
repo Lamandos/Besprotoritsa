@@ -1,0 +1,13 @@
+{
+  "id": "ghoul",
+  "health": 2,
+  "defense": 0,
+  "attack": 2,
+  "movement": 1,
+  "rewardCredits": 0,
+  "rewardItems": [],
+  "behaviorId": "monster_moves_through_vents",
+  "features": ["moves-through-vents"],
+  "nameKey": "mvp.monster.ghoul.name",
+  "descKey": "mvp.monster.ghoul.description"
+}

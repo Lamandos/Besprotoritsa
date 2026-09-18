@@ -1,0 +1,9 @@
+{
+  "id": "concussion",
+  "statModifiers": {
+    "repair": -1
+  },
+  "behaviorId": "condition_stat_modifier",
+  "nameKey": "mvp.condition.concussion.name",
+  "descKey": "mvp.condition.concussion.description"
+}

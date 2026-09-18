@@ -1,0 +1,13 @@
+{
+  "id": "engineer",
+  "health": 10,
+  "strength": 3,
+  "combatStrength": 3,
+  "science": 2,
+  "repair": 3,
+  "endurance": 2,
+  "agility": 1,
+  "startItems": ["gu4-rd"],
+  "startCredits": 3,
+  "diaryKey": "mvp.character.engineer.diary"
+}

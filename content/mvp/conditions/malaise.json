@@ -1,0 +1,9 @@
+{
+  "id": "malaise",
+  "statModifiers": {
+    "strength": -1
+  },
+  "behaviorId": "condition_stat_modifier",
+  "nameKey": "mvp.condition.malaise.name",
+  "descKey": "mvp.condition.malaise.description"
+}

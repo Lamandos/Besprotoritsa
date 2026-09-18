@@ -1,0 +1,13 @@
+{
+  "id": "chapter-1-awakening",
+  "chapter": 1,
+  "targetLocation": "crew-mess",
+  "conditions": ["science-check"],
+  "reward": {
+    "credits": 0,
+    "items": []
+  },
+  "nextQuestIds": [],
+  "nameKey": "mvp.quest.chapter-1-awakening.name",
+  "descKey": "mvp.quest.chapter-1-awakening.description"
+}

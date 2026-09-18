@@ -1,0 +1,13 @@
+{
+  "id": "pistol",
+  "category": "weapon",
+  "slots": ["weapon"],
+  "cost": 0,
+  "stats": {
+    "combatStrength": 2,
+    "attackRerolls": 1
+  },
+  "behaviorId": "pistol_attack_reroll",
+  "nameKey": "mvp.item.pistol.name",
+  "descKey": "mvp.item.pistol.description"
+}

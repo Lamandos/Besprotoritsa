@@ -1,0 +1,16 @@
+{
+  "id": "cabin-noise",
+  "options": [
+    {
+      "actionKey": "mvp.event.cabin-noise.action",
+      "skillCheck": {
+        "skill": "agility",
+        "difficulty": 1
+      },
+      "successKey": "mvp.event.cabin-noise.success",
+      "failureKey": "mvp.event.cabin-noise.failure",
+      "behaviorId": "event_cabin_noise"
+    }
+  ],
+  "nameKey": "mvp.event.cabin-noise.name"
+}

@@ -1,0 +1,7 @@
+{
+  "coordinates": [
+    { "q": 0, "r": 0, "hexId": "anabiosis" },
+    { "q": 0, "r": 1, "hexId": "corridor" },
+    { "q": 0, "r": 2, "hexId": "crew-mess" }
+  ]
+}
