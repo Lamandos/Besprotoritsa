@@ -11,4 +11,5 @@ workspace:
   - packages/besprotoritsa_app
 
 dev_dependencies:
+  crypto: ^3.0.6
   very_good_analysis: ^9.0.0

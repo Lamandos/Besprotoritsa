@@ -1,0 +1,82 @@
+{
+  "files": [
+    {
+      "path": "materials/задания сюжет.pdf",
+      "sha256": "af0940b12e563470e544c1807deb83834390700aa07b4729eed7ff9b26de2797",
+      "sizeBytes": 7692380,
+      "pageCount": 5
+    },
+    {
+      "path": "materials/задачи.pdf",
+      "sha256": "c3821708ec6f8e81e4e498b6792299aee706006b8b3cf4ec5b762097d9840458",
+      "sizeBytes": 12689586,
+      "pageCount": 3
+    },
+    {
+      "path": "materials/колода предметов.pdf",
+      "sha256": "14ce94d884a01c68bc7366d4df88487edc928dce72918967ef2d5c45cb3c1a8d",
+      "sizeBytes": 37159853,
+      "pageCount": 7
+    },
+    {
+      "path": "materials/колода припасов.pdf",
+      "sha256": "adc52629d7218b7b4eb948335a43ccd231bb95887652166be27442541d9b717f",
+      "sizeBytes": 57172772,
+      "pageCount": 9
+    },
+    {
+      "path": "materials/монстры жетоны.pdf",
+      "sha256": "cdadb8f0af70b9aa1d36ad25eab920f9fb004a58f247a4001119505ac67a09d4",
+      "sizeBytes": 36645687,
+      "pageCount": 8
+    },
+    {
+      "path": "materials/монстры.pdf",
+      "sha256": "cdfad2521558a114dd96a63525a5247a5108f781d1a207c60bd3ba8387870e42",
+      "sizeBytes": 18038100,
+      "pageCount": 10
+    },
+    {
+      "path": "materials/особые предметы.pdf",
+      "sha256": "f864719f752bc21e6e9b4feb44a9bd9f8ae56ecc50021395a73be1656318d580",
+      "sizeBytes": 14329735,
+      "pageCount": 2
+    },
+    {
+      "path": "materials/персонажи.pdf",
+      "sha256": "f543522519e566f61d5426ce0c5693d69b061e7cacd7cae2e9687666075195d7",
+      "sizeBytes": 36299365,
+      "pageCount": 6
+    },
+    {
+      "path": "materials/поле.pdf",
+      "sha256": "4c4b43f905f2cdb46d5926c39f4c7965193b71a8f675fd84901a7a2f56ec7028",
+      "sizeBytes": 77676416,
+      "pageCount": 14
+    },
+    {
+      "path": "materials/правила игры.pdf",
+      "sha256": "c09f313326c4fcbd7d17dd206fb558ba87f78252615b01fa45feb901a3484366",
+      "sizeBytes": 11414821,
+      "pageCount": 20
+    },
+    {
+      "path": "materials/события.pdf",
+      "sha256": "d4772f8bb2145bf7ea5cd8ed39f333487ae9600b9678d2137a6a88fbb907ec3f",
+      "sizeBytes": 23830967,
+      "pageCount": 12
+    },
+    {
+      "path": "materials/состояния.pdf",
+      "sha256": "aae0085410e7a829a9dcbb6a634768153e5fbe204eb77f94f82320754771ba0b",
+      "sizeBytes": 8148604,
+      "pageCount": 4
+    },
+    {
+      "path": "materials/токены.pdf",
+      "sha256": "3e085195377a611a995cd61da85a401a02d50e831dcea3bd6ed6bd0af72ef565",
+      "sizeBytes": 3271852,
+      "pageCount": 4
+    }
+  ]
+}
