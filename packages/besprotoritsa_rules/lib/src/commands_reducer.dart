@@ -126,7 +126,7 @@ CommandRejection? validate(GameState state, GameCommand command) {
     final player = _activePlayer(state)!;
     final source = state.tileAt(player.coord);
     final destination = state.tileAt(target);
-    if (source == null || destination == null || !destination.opened) {
+    if (source == null || !source.opened || destination == null) {
       return const InvalidTargetCoord();
     }
     final edge = player.coord.edgeTowardOrNull(target);
@@ -135,6 +135,9 @@ CommandRejection? validate(GameState state, GameCommand command) {
     }
     if (!source.hasExit(edge) || !destination.hasExit(edge.opposite)) {
       return const PortMismatch();
+    }
+    if (state.actionsLeft < _movementCost(destination)) {
+      return const NotEnoughActions();
     }
   }
 
@@ -158,17 +161,7 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
   }
 
   return switch (command) {
-    MoveCommand(:final target) => GameStepResult(
-      state: _copyState(
-        state,
-        actionsLeft: state.actionsLeft - 1,
-        players: _replaceActivePlayer(
-          state,
-          (player) => _copyPlayer(player, coord: target),
-        ),
-        logEntry: 'move:${state.activePlayerId}:$target',
-      ),
-    ),
+    MoveCommand(:final target) => _move(state, target),
     AttackCommand(:final targetInstanceId) => _startRoll(
       state,
       dice,
@@ -187,6 +180,42 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
     EndTurnCommand() => GameStepResult(state: _endTurn(state)),
   };
 }
+
+GameStepResult _move(GameState state, HexCoord target) {
+  final destination = state.tileAt(target)!;
+  final opensSector = !destination.opened;
+  return GameStepResult(
+    state: _copyState(
+      state,
+      actionsLeft: state.actionsLeft - _movementCost(destination),
+      board: opensSector ? _openTile(state.board, destination) : null,
+      players: _replaceActivePlayer(
+        state,
+        (player) => _copyPlayer(player, coord: target),
+      ),
+      logEntry: 'move:${state.activePlayerId}:$target',
+    ),
+  );
+}
+
+int _movementCost(HexTile destination) => destination.opened ? 1 : 2;
+
+List<HexTile> _openTile(List<HexTile> board, HexTile destination) => [
+  for (final tile in board)
+    if (tile.coord == destination.coord)
+      HexTile(
+        id: tile.id,
+        coord: tile.coord,
+        type: tile.type,
+        opened: true,
+        exits: tile.exits,
+        locationId: tile.locationId,
+        hasTerminal: tile.hasTerminal,
+        ventColor: tile.ventColor,
+      )
+    else
+      tile,
+];
 
 GameStepResult _startRoll(
   GameState state,
@@ -396,6 +425,7 @@ GameState _copyState(
   int? round,
   PlayerId? activePlayerId,
   int? actionsLeft,
+  Iterable<HexTile>? board,
   Iterable<PlayerState>? players,
   PendingDecision? pendingDecision,
   bool clearPendingDecision = false,
@@ -407,7 +437,7 @@ GameState _copyState(
   phase: state.phase,
   activePlayerId: activePlayerId ?? state.activePlayerId,
   actionsLeft: actionsLeft ?? state.actionsLeft,
-  board: state.board,
+  board: board ?? state.board,
   players: players ?? state.players,
   monsters: state.monsters,
   decks: state.decks,
