@@ -5,6 +5,7 @@
 
 import 'dart:collection';
 
+import 'package:besprotoritsa_rules/src/combat_models.dart';
 import 'package:meta/meta.dart';
 
 /// Stable identifiers used by the game-state model.
@@ -141,6 +142,16 @@ final class EquippedGear {
   final CardId? robot;
 }
 
+/// An inert threat token which explodes when a player shares its cell.
+@immutable
+final class BoilToken {
+  const BoilToken({required this.instanceId, required this.coord})
+    : assert(instanceId != '', 'instanceId must not be empty');
+
+  final String instanceId;
+  final HexCoord coord;
+}
+
 /// The private and public state of one participant's character.
 @immutable
 final class PlayerState {
@@ -156,6 +167,8 @@ final class PlayerState {
     required Iterable<CardId> implanted,
     required Iterable<CardId> conditions,
     required this.alive,
+    this.stats = const PlayerStats(),
+    this.weaponModifier = 0,
   }) : backpack = List.unmodifiable(backpack),
        carriedMods = List.unmodifiable(carriedMods),
        implanted = List.unmodifiable(implanted),
@@ -164,6 +177,7 @@ final class PlayerState {
     _requireId(characterId, 'characterId');
     _requireNonNegative(damage, 'damage');
     _requireNonNegative(credits, 'credits');
+    _requireNonNegative(weaponModifier, 'weaponModifier');
     if (this.backpack.length > 3) {
       throw ArgumentError.value(
         backpack,
@@ -191,6 +205,10 @@ final class PlayerState {
   final List<CardId> implanted;
   final List<CardId> conditions;
   final bool alive;
+  final PlayerStats stats;
+
+  /// The equipped weapon's bonus to the hero attack pool.
+  final int weaponModifier;
 }
 
 /// A monster token on the board. [carriedGear] is used by a Restless monster.
@@ -201,17 +219,26 @@ final class MonsterInstance {
     required this.monsterId,
     required this.coord,
     required this.damage,
+    this.health = 1,
+    this.defense = 0,
+    this.attack = 0,
     Iterable<CardId> carriedGear = const [],
   }) : carriedGear = List.unmodifiable(carriedGear) {
     _requireId(instanceId, 'instanceId');
     _requireId(monsterId, 'monsterId');
     _requireNonNegative(damage, 'damage');
+    _requireNonNegative(health, 'health');
+    _requireNonNegative(defense, 'defense');
+    _requireNonNegative(attack, 'attack');
   }
 
   final String instanceId;
   final String monsterId;
   final HexCoord coord;
   final int damage;
+  final int health;
+  final int defense;
+  final int attack;
   final List<CardId> carriedGear;
 }
 
@@ -295,6 +322,8 @@ final class AwaitingDodge extends PendingDecision {
   const AwaitingDodge({
     required this.monsterDamage,
     required this.requiredAgilitySuccesses,
+    this.targetPlayerId,
+    this.source = DamageSource.monster,
   }) : assert(monsterDamage >= 0, 'monsterDamage must not be negative.'),
        assert(
          requiredAgilitySuccesses >= 0,
@@ -303,6 +332,8 @@ final class AwaitingDodge extends PendingDecision {
 
   final int monsterDamage;
   final int requiredAgilitySuccesses;
+  final PlayerId? targetPlayerId;
+  final DamageSource source;
 
   /// Short name convenient for generic decision views.
   int get requiredSuccesses => requiredAgilitySuccesses;
@@ -340,11 +371,17 @@ final class GameState {
     required Iterable<MonsterInstance> monsters,
     required Map<DeckId, DeckState> decks,
     required this.quests,
+    Iterable<BoilToken> boils = const [],
+    Map<CardId, ConditionCard> conditionCards = const {},
+    Iterable<IncomingDamage> pendingDamage = const [],
     Iterable<String> log = const [],
     this.pendingDecision,
   }) : board = List.unmodifiable(board),
        players = List.unmodifiable(players),
        monsters = List.unmodifiable(monsters),
+       boils = List.unmodifiable(boils),
+       conditionCards = UnmodifiableMapView(Map.of(conditionCards)),
+       pendingDamage = List.unmodifiable(pendingDamage),
        decks = UnmodifiableMapView(Map.of(decks)),
        log = List.unmodifiable(log) {
     if (schemaVersion != 1) {
@@ -365,6 +402,10 @@ final class GameState {
       this.monsters.map((monster) => monster.instanceId),
       'monster instance ids',
     );
+    _ensureUnique(
+      this.boils.map((boil) => boil.instanceId),
+      'boil instance ids',
+    );
     if (activePlayerId != null &&
         !this.players.any((player) => player.id == activePlayerId)) {
       throw ArgumentError.value(
@@ -384,6 +425,9 @@ final class GameState {
   final List<HexTile> board;
   final List<PlayerState> players;
   final List<MonsterInstance> monsters;
+  final List<BoilToken> boils;
+  final Map<CardId, ConditionCard> conditionCards;
+  final List<IncomingDamage> pendingDamage;
   final Map<DeckId, DeckState> decks;
   final QuestState quests;
   final List<String> log;
