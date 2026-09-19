@@ -84,6 +84,46 @@ abstract final class SaveJsonModels {
     );
   }
 
+  static Map<String, Object?> reserveHeroToJson(ReserveHero hero) => {
+    'character_id': hero.characterId,
+    'health': hero.health,
+    'credits': hero.credits,
+    'backpack': hero.backpack,
+    'equipped': {
+      'weapon': hero.equipped.weapon,
+      'second_weapon': hero.equipped.secondWeapon,
+      'armor': hero.equipped.armor,
+      'clothing': hero.equipped.clothing,
+      'robot': hero.equipped.robot,
+    },
+    'carried_mods': hero.carriedMods,
+    'implanted': hero.implanted,
+    'stats': _statsToJson(hero.stats),
+  };
+
+  static ReserveHero reserveHeroFromJson(Map<String, Object?> json) {
+    final equipped = _object(json, 'equipped');
+    return ReserveHero(
+      characterId: _string(json, 'character_id'),
+      health: _int(json, 'health'),
+      credits: _int(json, 'credits'),
+      backpack: _strings(json, 'backpack'),
+      equipped: EquippedGear(
+        weapon: _nullableString(equipped['weapon'], 'equipped.weapon'),
+        secondWeapon: _nullableString(
+          equipped['second_weapon'],
+          'equipped.second_weapon',
+        ),
+        armor: _nullableString(equipped['armor'], 'equipped.armor'),
+        clothing: _nullableString(equipped['clothing'], 'equipped.clothing'),
+        robot: _nullableString(equipped['robot'], 'equipped.robot'),
+      ),
+      carriedMods: _strings(json, 'carried_mods'),
+      implanted: _strings(json, 'implanted'),
+      stats: _statsFromJson(_object(json, 'stats')),
+    );
+  }
+
   static Map<String, Object?> monsterToJson(MonsterInstance monster) => {
     'instance_id': monster.instanceId,
     'monster_id': monster.monsterId,
@@ -213,6 +253,11 @@ abstract final class SaveJsonModels {
           'player_id': decision.playerId,
           'deck_id': decision.deckId,
         },
+        AwaitingHeroReplacement() => {
+          'type': 'hero_replacement',
+          'player_id': decision.playerId,
+          'character_ids': decision.characterIds,
+        },
       };
 
   static PendingDecision? decisionFromJson(Object? value) {
@@ -247,6 +292,10 @@ abstract final class SaveJsonModels {
         playerId: _string(json, 'player_id'),
         deckId: _string(json, 'deck_id'),
       ),
+      'hero_replacement' => AwaitingHeroReplacement(
+        playerId: _string(json, 'player_id'),
+        characterIds: _strings(json, 'character_ids'),
+      ),
       final type => throw FormatException(
         'Unknown pending decision type: $type.',
       ),
@@ -280,6 +329,12 @@ abstract final class SaveJsonModels {
       'quest_id': event.questId,
       'player_id': event.playerId,
     },
+    HeroDied() => {
+      'type': 'hero_died',
+      'player_id': event.playerId,
+      'restless_instance_id': event.restlessInstanceId,
+      'coord': _coordToJson(event.coord),
+    },
   };
 
   static GameEvent eventFromJson(Map<String, Object?> json) =>
@@ -304,6 +359,11 @@ abstract final class SaveJsonModels {
         'mvp_demonstration_completed' => MvpDemonstrationCompleted(
           questId: _string(json, 'quest_id'),
           playerId: _string(json, 'player_id'),
+        ),
+        'hero_died' => HeroDied(
+          playerId: _string(json, 'player_id'),
+          restlessInstanceId: _string(json, 'restless_instance_id'),
+          coord: _coordFromJson(_object(json, 'coord')),
         ),
         final type => throw FormatException('Unknown game event type: $type.'),
       };

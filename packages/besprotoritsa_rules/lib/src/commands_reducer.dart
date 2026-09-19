@@ -252,6 +252,13 @@ final class DeclineTerminalPickChoice extends DecisionChoice {
   const DeclineTerminalPickChoice();
 }
 
+/// Selects an unused character after this player's previous hero died.
+final class SelectReplacementHeroChoice extends DecisionChoice {
+  const SelectReplacementHeroChoice(this.characterId);
+
+  final CharacterId characterId;
+}
+
 @immutable
 final class GameStepResult {
   GameStepResult({
@@ -962,21 +969,170 @@ GameState _resolveAttackRoll(
       monsters.add(_copyMonster(current, damage: totalDamage));
     }
   }
+  var awardedPlayer = _copyPlayer(
+    player,
+    damage: player.damage + roll.ownerDamage,
+  );
+  if (defeated && monster.monsterId == RestlessMonster.restlessMonsterId) {
+    awardedPlayer = _awardRestlessTrophies(awardedPlayer, monster, state);
+  }
+  return resolveHeroDeaths(
+    _copyState(
+      state,
+      actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
+      players: _replacePlayer(
+        state,
+        player.id,
+        (_) => awardedPlayer,
+      ),
+      monsters: [
+        if (!defeated) _copyMonster(monster, damage: monster.damage + damage),
+        ...monsters,
+      ],
+      logEntry: _attackLog(player, monster, damage, defeated),
+    ),
+  );
+}
+
+PlayerState _awardRestlessTrophies(
+  PlayerState player,
+  MonsterInstance restless,
+  GameState state,
+) {
+  var awarded = player;
+  for (final cardId in restless.carriedGear) {
+    awarded = InventoryRules.receive(awarded, cardId, state.cardDefinitions);
+  }
+  return awarded;
+}
+
+/// Converts every newly lethal hero into a Restless monster.
+///
+/// This function is public so non-combat damage effects can use the identical
+/// death transition instead of reimplementing the loss of inventory and spawn.
+GameState resolveHeroDeaths(GameState state) {
+  final newlyDead = state.players
+      .where((player) => player.alive && player.damage >= player.health)
+      .toList();
+  if (newlyDead.isEmpty) return state;
+
+  final players = List<PlayerState>.of(state.players);
+  final monsters = List<MonsterInstance>.of(state.monsters);
+  final decks = Map<DeckId, DeckState>.of(state.decks);
+  final events = List<GameEvent>.of(state.gameEvents);
+  AwaitingHeroReplacement? replacementDecision;
+  var noReserve = false;
+
+  for (final deceased in newlyDead) {
+    final carriedGear = _restlessGear(deceased, state.cardDefinitions);
+    final bonuses = _restlessBonuses(deceased, state.cardDefinitions);
+    final instanceId = _nextRestlessInstanceId(state, deceased.id, monsters);
+    monsters.add(
+      RestlessMonster(
+        instanceId: instanceId,
+        coord: deceased.coord,
+        attack: RestlessMonster.baseAttack + bonuses.strength,
+        defense: RestlessMonster.baseDefense + bonuses.defense,
+        carriedGear: carriedGear,
+      ),
+    );
+    final deadIndex = players.indexWhere((player) => player.id == deceased.id);
+    players[deadIndex] = _copyPlayer(
+      deceased,
+      credits: 0,
+      backpack: const [],
+      equipped: const EquippedGear(),
+      carriedMods: const [],
+      implanted: const [],
+      conditions: const [],
+      alive: false,
+      weaponModifier: 0,
+    );
+    final conditionDeck = decks['conditions'];
+    if (conditionDeck != null && deceased.conditions.isNotEmpty) {
+      decks['conditions'] = DeckState(
+        drawPile: conditionDeck.drawPile,
+        discardPile: [...conditionDeck.discardPile, ...deceased.conditions],
+      );
+    }
+    events.add(
+      HeroDied(
+        playerId: deceased.id,
+        restlessInstanceId: instanceId,
+        coord: deceased.coord,
+      ),
+    );
+    if (state.reserveHeroes.isEmpty) {
+      noReserve = true;
+    } else {
+      replacementDecision ??= AwaitingHeroReplacement(
+        playerId: deceased.id,
+        characterIds: state.reserveHeroes.map((hero) => hero.characterId),
+      );
+    }
+  }
+
   return _copyState(
     state,
-    actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
-    players: _replacePlayer(
-      state,
-      player.id,
-      (current) =>
-          _copyPlayer(current, damage: current.damage + roll.ownerDamage),
+    players: players,
+    monsters: monsters,
+    decks: decks,
+    pendingDamage: state.pendingDamage.where(
+      (damage) => players.any(
+        (player) => player.id == damage.targetPlayerId && player.alive,
+      ),
     ),
-    monsters: [
-      if (!defeated) _copyMonster(monster, damage: monster.damage + damage),
-      ...monsters,
-    ],
-    logEntry: _attackLog(player, monster, damage, defeated),
+    gameEvents: events,
+    isComplete: noReserve || state.isComplete,
+    pendingDecision: noReserve ? null : replacementDecision,
+    clearPendingDecision: noReserve,
+    logEntry: 'hero-died:${newlyDead.map((hero) => hero.id).join(',')}',
   );
+}
+
+List<CardId> _restlessGear(
+  PlayerState deceased,
+  Map<CardId, CardDefinition> definitions,
+) => [
+  for (final cardId in [
+    ...deceased.backpack,
+    ...deceased.equipped.weapons,
+    deceased.equipped.armor,
+    deceased.equipped.clothing,
+    deceased.equipped.robot,
+    ...deceased.carriedMods,
+    ...deceased.implanted,
+  ])
+    if (cardId != null && definitions[cardId]?.type != ItemType.supply) cardId,
+];
+
+({int strength, int defense}) _restlessBonuses(
+  PlayerState deceased,
+  Map<CardId, CardDefinition> definitions,
+) {
+  var strength = 0;
+  var defense = 0;
+  for (final cardId in InventoryRules.activeCardIds(deceased)) {
+    final effects = definitions[cardId]?.staticEffects;
+    if (effects == null) continue;
+    strength += effects[CardStat.strength].clamp(0, 999);
+    defense += effects[CardStat.defense].clamp(0, 999);
+  }
+  return (strength: strength, defense: defense);
+}
+
+String _nextRestlessInstanceId(
+  GameState state,
+  PlayerId playerId,
+  Iterable<MonsterInstance> monsters,
+) {
+  final prefix = 'restless-${state.round}-$playerId';
+  var suffix = 1;
+  var id = '$prefix-$suffix';
+  while (monsters.any((monster) => monster.instanceId == id)) {
+    id = '$prefix-${++suffix}';
+  }
+  return id;
 }
 
 GameStepResult _startPlayerSkillCheck(
@@ -1139,7 +1295,55 @@ GameStepResult _resolveDecision(
     AwaitingDodge() => _resolveDodge(state, pending, choice, dice),
     AwaitingEventOption() => _resolveEventOption(state, pending, choice, dice),
     AwaitingTerminalPick() => _resolveTerminalPick(state, pending, choice),
+    AwaitingHeroReplacement() => _resolveHeroReplacement(
+      state,
+      pending,
+      choice,
+    ),
   };
+}
+
+GameStepResult _resolveHeroReplacement(
+  GameState state,
+  AwaitingHeroReplacement pending,
+  DecisionChoice choice,
+) {
+  if (choice is! SelectReplacementHeroChoice ||
+      !pending.characterIds.contains(choice.characterId)) {
+    return GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
+    );
+  }
+  ReserveHero? reserve;
+  for (final candidate in state.reserveHeroes) {
+    if (candidate.characterId == choice.characterId) {
+      reserve = candidate;
+      break;
+    }
+  }
+  if (reserve == null) {
+    return GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
+    );
+  }
+  final selectedReserve = reserve;
+  final queued = Map<PlayerId, ReserveHero>.of(state.queuedReplacements)
+    ..[pending.playerId] = selectedReserve;
+  return GameStepResult(
+    state: _copyState(
+      state,
+      reserveHeroes: state.reserveHeroes.where(
+        (hero) => hero.characterId != selectedReserve.characterId,
+      ),
+      queuedReplacements: queued,
+      clearPendingDecision: true,
+      logEntry:
+          'replacement-selected:'
+          '${pending.playerId}:${selectedReserve.characterId}',
+    ),
+  );
 }
 
 GameStepResult _resolveTerminalPick(
@@ -1309,17 +1513,22 @@ GameStepResult _resolveDodge(
   );
   final targetId = pending.targetPlayerId ?? state.activePlayerId;
   final damaged = remainingDamage > 0;
-  final withDamage = _copyState(
-    state,
-    players: _replacePlayer(
+  final withDamage = resolveHeroDeaths(
+    _copyState(
       state,
-      targetId,
-      (player) => _copyPlayer(player, damage: player.damage + remainingDamage),
+      players: _replacePlayer(
+        state,
+        targetId,
+        (player) =>
+            _copyPlayer(player, damage: player.damage + remainingDamage),
+      ),
+      clearPendingDecision: true,
     ),
-    clearPendingDecision: true,
   );
-  final withCondition = damaged && pending.source == DamageSource.monster
-      ? _drawCondition(withDamage, targetId!)
+  final targetStillLives = _playerById(withDamage, targetId!)?.alive ?? false;
+  final withCondition =
+      damaged && targetStillLives && pending.source == DamageSource.monster
+      ? _drawCondition(withDamage, targetId)
       : withDamage;
   return GameStepResult(
     state: _resumeAutomaticPhase(
@@ -1364,7 +1573,15 @@ GameState _startNextIncomingDamage(GameState state) {
   if (state.pendingDecision != null || state.pendingDamage.isEmpty) {
     return state;
   }
-  final next = state.pendingDamage.first;
+  final pending = state.pendingDamage
+      .where(
+        (damage) => _playerById(state, damage.targetPlayerId)?.alive ?? false,
+      )
+      .toList();
+  if (pending.isEmpty) {
+    return _copyState(state, pendingDamage: const []);
+  }
+  final next = pending.first;
   return _copyState(
     state,
     pendingDecision: AwaitingDodge(
@@ -1373,7 +1590,7 @@ GameState _startNextIncomingDamage(GameState state) {
       targetPlayerId: next.targetPlayerId,
       source: next.source,
     ),
-    pendingDamage: state.pendingDamage.skip(1),
+    pendingDamage: pending.skip(1),
   );
 }
 
@@ -1528,6 +1745,11 @@ GameState _endTurn(GameState state) {
   );
   final nextIndex = _nextLivingPlayerIndex(state.players, activeIndex);
   if (nextIndex == null) {
+    if (state.queuedReplacements.isNotEmpty) {
+      return _startNextPlayersTurn(
+        _copyState(state, actionsLeft: 0, clearActivePlayerId: true),
+      );
+    }
     return _copyState(state, actionsLeft: 0, clearActivePlayerId: true);
   }
   final lastPlayerOfRound = activeIndex >= 0 && nextIndex <= activeIndex;
@@ -1728,25 +1950,71 @@ bool _hasAggressiveMonster(GameState state, PlayerState player) => state
     .any((monster) => monster.attack > 0 && monster.coord == player.coord);
 
 GameState _startNextPlayersTurn(GameState state) {
+  final withReplacements = _activateQueuedReplacements(state);
   PlayerState? first;
-  for (final player in state.players) {
+  for (final player in withReplacements.players) {
     if (player.alive) {
       first = player;
       break;
     }
   }
   if (first == null) {
-    return _copyState(state, actionsLeft: 0, clearActivePlayerId: true);
+    return _copyState(
+      withReplacements,
+      actionsLeft: 0,
+      clearActivePlayerId: true,
+      isComplete: true,
+    );
   }
   return _copyState(
-    state,
-    round: state.round + 1,
+    withReplacements,
+    round: withReplacements.round + 1,
     phase: GamePhase.playersTurn,
     activePlayerId: first.id,
     actionsLeft: 2,
     actionsTakenThisTurn: 0,
     eventTurnIndex: 0,
-    logEntry: 'round-start:${state.round + 1}',
+    logEntry: 'round-start:${withReplacements.round + 1}',
+  );
+}
+
+GameState _activateQueuedReplacements(GameState state) {
+  if (state.queuedReplacements.isEmpty) return state;
+  HexCoord? anabiosis;
+  for (final tile in state.board) {
+    if (tile.type == HexTileType.start) {
+      anabiosis = tile.coord;
+      break;
+    }
+  }
+  if (anabiosis == null) {
+    throw StateError('A replacement hero requires an anabiosis start sector.');
+  }
+  return _copyState(
+    state,
+    players: [
+      for (final player in state.players)
+        if (state.queuedReplacements[player.id] case final replacement?)
+          PlayerState(
+            id: player.id,
+            characterId: replacement.characterId,
+            coord: anabiosis,
+            damage: 0,
+            health: replacement.health,
+            credits: replacement.credits,
+            backpack: replacement.backpack,
+            equipped: replacement.equipped,
+            carriedMods: replacement.carriedMods,
+            implanted: replacement.implanted,
+            conditions: const [],
+            alive: true,
+            stats: replacement.stats,
+          )
+        else
+          player,
+    ],
+    queuedReplacements: const {},
+    logEntry: 'replacement-arrived',
   );
 }
 
@@ -1825,22 +2093,29 @@ PlayerState _copyPlayer(
   int? damage,
   int? credits,
   Iterable<CardId>? backpack,
+  EquippedGear? equipped,
+  Iterable<CardId>? carriedMods,
+  Iterable<CardId>? implanted,
   Iterable<CardId>? conditions,
+  bool? alive,
+  PlayerStats? stats,
+  int? health,
+  int? weaponModifier,
 }) => PlayerState(
   id: player.id,
   characterId: player.characterId,
   coord: coord ?? player.coord,
   damage: damage ?? player.damage,
-  health: player.health,
+  health: health ?? player.health,
   credits: credits ?? player.credits,
   backpack: backpack ?? player.backpack,
-  equipped: player.equipped,
-  carriedMods: player.carriedMods,
-  implanted: player.implanted,
+  equipped: equipped ?? player.equipped,
+  carriedMods: carriedMods ?? player.carriedMods,
+  implanted: implanted ?? player.implanted,
   conditions: conditions ?? player.conditions,
-  alive: player.alive,
-  stats: player.stats,
-  weaponModifier: player.weaponModifier,
+  alive: alive ?? player.alive,
+  stats: stats ?? player.stats,
+  weaponModifier: weaponModifier ?? player.weaponModifier,
 );
 
 MonsterInstance _copyMonster(
@@ -1870,6 +2145,8 @@ GameState _copyState(
   Iterable<PlayerState>? players,
   Iterable<MonsterInstance>? monsters,
   Iterable<BoilToken>? boils,
+  Iterable<ReserveHero>? reserveHeroes,
+  Map<PlayerId, ReserveHero>? queuedReplacements,
   Iterable<CardId>? chestCards,
   Map<DeckId, DeckState>? decks,
   QuestState? quests,
@@ -1896,6 +2173,8 @@ GameState _copyState(
   players: players ?? state.players,
   monsters: monsters ?? state.monsters,
   boils: boils ?? state.boils,
+  reserveHeroes: reserveHeroes ?? state.reserveHeroes,
+  queuedReplacements: queuedReplacements ?? state.queuedReplacements,
   chestCards: chestCards ?? state.chestCards,
   conditionCards: state.conditionCards,
   cardDefinitions: state.cardDefinitions,

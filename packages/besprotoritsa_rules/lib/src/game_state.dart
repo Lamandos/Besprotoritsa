@@ -267,7 +267,7 @@ final class PlayerState {
 
 /// A monster token on the board. [carriedGear] is used by a Restless monster.
 @immutable
-final class MonsterInstance {
+class MonsterInstance {
   MonsterInstance({
     required this.instanceId,
     required this.monsterId,
@@ -299,6 +299,67 @@ final class MonsterInstance {
   /// Number of connected, opened sectors this monster traverses per round.
   final int movement;
   final List<CardId> carriedGear;
+}
+
+/// The infected form created in the sector where a hero dies.
+///
+/// The base values match the printed Restless card.  Its attack and defense
+/// can be increased by the deceased hero's active equipment.
+@immutable
+final class RestlessMonster extends MonsterInstance {
+  RestlessMonster({
+    required super.instanceId,
+    required super.coord,
+    required super.attack,
+    required super.defense,
+    required super.carriedGear,
+  }) : super(
+         monsterId: restlessMonsterId,
+         damage: 0,
+         health: baseHealth,
+         movement: baseMovement,
+       );
+
+  static const String restlessMonsterId = 'restless';
+  static const int baseHealth = 1;
+  static const int baseAttack = 1;
+  static const int baseDefense = 0;
+  static const int baseMovement = 1;
+}
+
+/// A character which can replace a fallen hero.
+///
+/// Reserve characters deliberately contain only their own starting state;
+/// they never inherit the dead hero's credits, conditions, or inventory.
+@immutable
+final class ReserveHero {
+  ReserveHero({
+    required this.characterId,
+    required this.health,
+    required this.stats,
+    this.credits = 0,
+    Iterable<CardId> backpack = const [],
+    this.equipped = const EquippedGear(),
+    Iterable<CardId> carriedMods = const [],
+    Iterable<CardId> implanted = const [],
+  }) : backpack = List.unmodifiable(backpack),
+       carriedMods = List.unmodifiable(carriedMods),
+       implanted = List.unmodifiable(implanted) {
+    _requireId(characterId, 'characterId');
+    if (health < 1) {
+      throw ArgumentError.value(health, 'health', 'Health must be positive.');
+    }
+    _requireNonNegative(credits, 'credits');
+  }
+
+  final CharacterId characterId;
+  final int health;
+  final PlayerStats stats;
+  final int credits;
+  final List<CardId> backpack;
+  final EquippedGear equipped;
+  final List<CardId> carriedMods;
+  final List<CardId> implanted;
 }
 
 /// Full deck state. Its card order is deliberately available only in GameState.
@@ -513,6 +574,20 @@ final class MvpDemonstrationCompleted extends GameEvent {
   final PlayerId playerId;
 }
 
+/// A hero died and became a Restless monster in their former sector.
+@immutable
+final class HeroDied extends GameEvent {
+  const HeroDied({
+    required this.playerId,
+    required this.restlessInstanceId,
+    required this.coord,
+  });
+
+  final PlayerId playerId;
+  final String restlessInstanceId;
+  final HexCoord coord;
+}
+
 /// A deterministic window in which the active player may make a micro-decision.
 ///
 /// The reducer advances this counter rather than consulting wall-clock time, so
@@ -671,6 +746,27 @@ final class AwaitingTerminalPick extends PendingDecision {
   List<CardId> get cards => offeredCards;
 }
 
+/// The owner of a fallen hero must choose one unused reserve character.
+@immutable
+final class AwaitingHeroReplacement extends PendingDecision {
+  AwaitingHeroReplacement({
+    required this.playerId,
+    required Iterable<CharacterId> characterIds,
+  }) : characterIds = List.unmodifiable(characterIds) {
+    _requireId(playerId, 'playerId');
+    if (this.characterIds.isEmpty) {
+      throw ArgumentError.value(
+        characterIds,
+        'characterIds',
+        'At least one reserve character is required.',
+      );
+    }
+  }
+
+  final PlayerId playerId;
+  final List<CharacterId> characterIds;
+}
+
 /// The authoritative, complete game state. Collections are copied on input.
 @immutable
 final class GameState {
@@ -688,6 +784,8 @@ final class GameState {
     required this.quests,
     Iterable<CardId> chestCards = const [],
     Iterable<BoilToken> boils = const [],
+    Iterable<ReserveHero> reserveHeroes = const [],
+    Map<PlayerId, ReserveHero> queuedReplacements = const {},
     Map<CardId, ConditionCard> conditionCards = const {},
     Map<CardId, CardDefinition> cardDefinitions = const {},
     Iterable<IncomingDamage> pendingDamage = const [],
@@ -703,6 +801,8 @@ final class GameState {
        players = List.unmodifiable(players),
        monsters = List.unmodifiable(monsters),
        boils = List.unmodifiable(boils),
+       reserveHeroes = List.unmodifiable(reserveHeroes),
+       queuedReplacements = UnmodifiableMapView(Map.of(queuedReplacements)),
        conditionCards = UnmodifiableMapView(Map.of(conditionCards)),
        cardDefinitions = UnmodifiableMapView(Map.of(cardDefinitions)),
        chestCards = List.unmodifiable(chestCards),
@@ -728,6 +828,31 @@ final class GameState {
     _ensureUnique(this.board.map((tile) => tile.coord), 'board coordinates');
     _ensureUnique(this.board.map((tile) => tile.id), 'tile ids');
     _ensureUnique(this.players.map((player) => player.id), 'player ids');
+    _ensureUnique(
+      this.reserveHeroes.map((hero) => hero.characterId),
+      'reserve character ids',
+    );
+    final usedCharacterIds = this.players
+        .map((player) => player.characterId)
+        .toSet();
+    if (this.reserveHeroes.any(
+      (hero) => usedCharacterIds.contains(hero.characterId),
+    )) {
+      throw ArgumentError.value(
+        reserveHeroes,
+        'reserveHeroes',
+        'A reserve character must not already be in use.',
+      );
+    }
+    for (final entry in this.queuedReplacements.entries) {
+      if (!this.players.any((player) => player.id == entry.key)) {
+        throw ArgumentError.value(
+          queuedReplacements,
+          'queuedReplacements',
+          'A queued replacement must belong to an existing player.',
+        );
+      }
+    }
     _ensureUnique(
       this.monsters.map((monster) => monster.instanceId),
       'monster instance ids',
@@ -756,6 +881,8 @@ final class GameState {
   final List<PlayerState> players;
   final List<MonsterInstance> monsters;
   final List<BoilToken> boils;
+  final List<ReserveHero> reserveHeroes;
+  final Map<PlayerId, ReserveHero> queuedReplacements;
   final Map<CardId, ConditionCard> conditionCards;
   final Map<CardId, CardDefinition> cardDefinitions;
 

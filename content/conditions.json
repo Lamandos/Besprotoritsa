@@ -1,0 +1,60 @@
+{
+  "deck": "conditions",
+  "source": "materials/состояния.pdf",
+  "cards": [
+    {
+      "id": "malaise",
+      "copies": 9,
+      "statModifiers": {"strength": -1},
+      "behaviorId": "condition_stat_modifier",
+      "nameKey": "content.condition.malaise.name",
+      "descKey": "content.condition.malaise.description"
+    },
+    {
+      "id": "concussion",
+      "copies": 9,
+      "statModifiers": {"repair": -1},
+      "behaviorId": "condition_stat_modifier",
+      "nameKey": "content.condition.concussion.name",
+      "descKey": "content.condition.concussion.description"
+    },
+    {
+      "id": "nausea",
+      "copies": 9,
+      "statModifiers": {"science": -1},
+      "behaviorId": "condition_stat_modifier",
+      "nameKey": "content.condition.nausea.name",
+      "descKey": "content.condition.nausea.description"
+    },
+    {
+      "id": "fracture",
+      "copies": 9,
+      "statModifiers": {"agility": -1},
+      "behaviorId": "condition_stat_modifier",
+      "nameKey": "content.condition.fracture.name",
+      "descKey": "content.condition.fracture.description"
+    },
+    {
+      "id": "shortness-of-breath",
+      "copies": 9,
+      "statModifiers": {"endurance": -1},
+      "behaviorId": "condition_stat_modifier",
+      "nameKey": "content.condition.shortness-of-breath.name",
+      "descKey": "content.condition.shortness-of-breath.description"
+    },
+    {
+      "id": "adrenaline",
+      "copies": 5,
+      "statModifiers": {
+        "strength": 1,
+        "science": 1,
+        "repair": 1,
+        "endurance": 1,
+        "agility": 1
+      },
+      "behaviorId": "condition_stat_modifier",
+      "nameKey": "content.condition.adrenaline.name",
+      "descKey": "content.condition.adrenaline.description"
+    }
+  ]
+}

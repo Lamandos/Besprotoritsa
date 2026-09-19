@@ -37,6 +37,13 @@ class GameStateJsonCodec {
     'players': state.players.map(SaveJsonModels.playerToJson).toList(),
     'monsters': state.monsters.map(SaveJsonModels.monsterToJson).toList(),
     'boils': state.boils.map(SaveJsonModels.boilToJson).toList(),
+    'reserve_heroes': state.reserveHeroes
+        .map(SaveJsonModels.reserveHeroToJson)
+        .toList(),
+    'queued_replacements': {
+      for (final entry in state.queuedReplacements.entries)
+        entry.key: SaveJsonModels.reserveHeroToJson(entry.value),
+    },
     'condition_cards': {
       for (final entry in state.conditionCards.entries)
         entry.key: SaveJsonModels.conditionToJson(entry.value),
@@ -77,6 +84,20 @@ class GameStateJsonCodec {
       players: _objects(json, 'players').map(SaveJsonModels.playerFromJson),
       monsters: _objects(json, 'monsters').map(SaveJsonModels.monsterFromJson),
       boils: _objects(json, 'boils').map(SaveJsonModels.boilFromJson),
+      reserveHeroes: _objectsOrDefault(
+        json['reserve_heroes'],
+        'reserve_heroes',
+      ).map(SaveJsonModels.reserveHeroFromJson),
+      queuedReplacements:
+          _objectMapOrDefault(
+            json['queued_replacements'],
+            'queued_replacements',
+          ).map(
+            (playerId, hero) => MapEntry(
+              playerId,
+              SaveJsonModels.reserveHeroFromJson(hero),
+            ),
+          ),
       conditionCards: _objectMap(json, 'condition_cards').map(
         (id, value) => MapEntry(id, SaveJsonModels.conditionFromJson(value)),
       ),
@@ -128,6 +149,25 @@ Iterable<Map<String, Object?>> _objects(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! List<dynamic>) throw FormatException('$key must be an array.');
   return value.map((entry) => _asObject(entry, key));
+}
+
+Iterable<Map<String, Object?>> _objectsOrDefault(Object? value, String key) {
+  if (value == null) return const [];
+  if (value is! List<dynamic>) throw FormatException('$key must be an array.');
+  return value.map((entry) => _asObject(entry, key));
+}
+
+Map<String, Map<String, Object?>> _objectMapOrDefault(
+  Object? value,
+  String key,
+) {
+  if (value == null) return const {};
+  if (value is! Map<String, dynamic>) {
+    throw FormatException('$key must be an object.');
+  }
+  return {
+    for (final entry in value.entries) entry.key: _asObject(entry.value, key),
+  };
 }
 
 List<String> _strings(Map<String, Object?> json, String key) {
