@@ -12,6 +12,8 @@
     "copies": { "type": "integer", "minimum": 1 },
     "importBatch": { "type": "integer", "minimum": 1 },
     "behaviorId": { "$ref": "#/$defs/behaviorId" },
+    "behaviorIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/behaviorId" } },
+    "stats": { "type": "object", "additionalProperties": { "type": "number" } },
     "nameKey": { "$ref": "#/$defs/localizationKey" },
     "descKey": { "$ref": "#/$defs/localizationKey" }
   },
