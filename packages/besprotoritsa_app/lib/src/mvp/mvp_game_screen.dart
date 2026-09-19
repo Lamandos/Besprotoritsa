@@ -56,6 +56,10 @@ class MvpGameScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(gameControllerProvider);
+    final outcome = _gameOutcome(state);
+    if (outcome != null) {
+      return _GameOutcomeScreen(outcome: outcome, state: state);
+    }
     final queue = ref.read(eventQueueProvider);
     return ListenableBuilder(
       listenable: queue,
@@ -63,6 +67,70 @@ class MvpGameScreen extends ConsumerWidget {
         state: state,
         queue: queue,
         onManualSaveRequested: onManualSaveRequested,
+      ),
+    );
+  }
+}
+
+enum _GameOutcome { victory, defeat }
+
+_GameOutcome? _gameOutcome(GameState state) {
+  if (!state.isComplete) return null;
+  return state.players.any((player) => player.alive)
+      ? _GameOutcome.victory
+      : _GameOutcome.defeat;
+}
+
+/// Final, non-interactive state of an expedition.
+///
+/// A completed rules snapshot is the source of truth: a surviving hero means
+/// that the expedition won; no survivors means the reserve was exhausted.
+class _GameOutcomeScreen extends StatelessWidget {
+  const _GameOutcomeScreen({required this.outcome, required this.state});
+
+  final _GameOutcome outcome;
+  final GameState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final victory = outcome == _GameOutcome.victory;
+    return Scaffold(
+      key: ValueKey<String>(
+        victory ? 'victory-screen' : 'defeat-screen',
+      ),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  victory
+                      ? Icons.emoji_events_outlined
+                      : Icons.dangerous_outlined,
+                  size: 64,
+                  color: victory ? Colors.amber.shade700 : Colors.red.shade700,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  victory ? 'Победа выживших' : 'Поражение',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  victory
+                      ? 'Сюжетная цепочка завершена. Экипаж покидает корабль.'
+                      : 'Все герои пали, а резерв персонажей исчерпан.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text('Раунд ${state.round}'),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
