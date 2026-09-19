@@ -11,13 +11,31 @@ Future<void> main(List<String> arguments) async {
 
   final document = await _readObject('content/monsters.json');
   final cards = _cardsForBatch(document, request.batch);
-  _require(cards.length == 10, 'Batch ${request.batch} must contain 10 cards.');
+  final expectedSize = _expectedBatchSize(document, request.batch);
+  _require(
+    cards.length == expectedSize,
+    'Batch ${request.batch} must contain $expectedSize cards.',
+  );
   _requireUniqueIds(cards);
   await _validateCards(cards);
   await _validateTranslations(cards);
   stdout.writeln(
     'Validated monsters batch ${request.batch}: ${cards.length} card types.',
   );
+}
+
+int _expectedBatchSize(Map<String, Object?> document, int batch) {
+  final rawSizes = document['batchSizes'];
+  if (rawSizes is! Map<String, dynamic>) {
+    throw const FormatException(
+      'content/monsters.json must declare batchSizes.',
+    );
+  }
+  final expectedSize = rawSizes['$batch'];
+  if (expectedSize is! int || expectedSize < 1) {
+    throw FormatException('Batch $batch is not declared in batchSizes.');
+  }
+  return expectedSize;
 }
 
 Future<Map<String, Object?>> _readObject(String path) async {

@@ -89,6 +89,26 @@ final class EffectRegistry {
       'monster-target-lowest-health-through-vents',
       behavior: MonsterBehavior.targetLowestHealthThroughVents,
     ),
+    MonsterBehaviorHook(
+      'monster-mother-ignores-armor-scales-per-hero',
+      behavior: MonsterBehavior.motherIgnoresArmorAndScalesPerHero,
+    ),
+    MonsterBehaviorHook(
+      'monster-scales-per-hero',
+      behavior: MonsterBehavior.scalesPerHero,
+    ),
+    MonsterBehaviorHook(
+      'monster-scales-per-alive-monster',
+      behavior: MonsterBehavior.scalesPerAliveMonster,
+    ),
+    MonsterBehaviorHook(
+      'monster-flees-and-spawns-two-boils',
+      behavior: MonsterBehavior.fleesAndSpawnsTwoBoils,
+    ),
+    MonsterBehaviorHook(
+      'boil-explodes-on-colocation',
+      behavior: MonsterBehavior.explodesOnColocation,
+    ),
     ModifyRollHook('pistol_attack_reroll', rerollsPerAttack: 1),
     OnDamageHook('gu4_rd_pre_attack_roll', target: EffectDamageTarget.target),
   ]);

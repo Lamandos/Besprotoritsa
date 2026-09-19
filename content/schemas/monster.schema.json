@@ -23,7 +23,9 @@
       "required": ["healthPerHero", "attackPerHero"],
       "properties": {
         "healthPerHero": { "$ref": "#/$defs/nonNegativeInteger" },
-        "attackPerHero": { "$ref": "#/$defs/nonNegativeInteger" }
+        "attackPerHero": { "$ref": "#/$defs/nonNegativeInteger" },
+        "healthPerAliveMonster": { "$ref": "#/$defs/nonNegativeInteger" },
+        "attackPerAliveMonster": { "$ref": "#/$defs/nonNegativeInteger" }
       }
     },
     "nameKey": { "$ref": "#/$defs/localizationKey" },

@@ -17,6 +17,11 @@ enum MonsterBehavior {
   stationaryBlockExits,
   moveThroughVents,
   targetLowestHealthThroughVents,
+  motherIgnoresArmorAndScalesPerHero,
+  scalesPerHero,
+  scalesPerAliveMonster,
+  fleesAndSpawnsTwoBoils,
+  explodesOnColocation,
 }
 
 final class MonsterBehaviorHook extends EffectHook {

@@ -1,5 +1,9 @@
 {
   "deck": "monsters",
+  "batchSizes": {
+    "1": 10,
+    "2": 6
+  },
   "cards": [
     {
       "id": "volot",
@@ -150,6 +154,110 @@
       "importBatch": 1,
       "nameKey": "content.monster.seeker.name",
       "descKey": "content.monster.seeker.description"
+    },
+    {
+      "id": "restless",
+      "health": 1,
+      "defense": 0,
+      "attack": 1,
+      "movement": 1,
+      "rewardCredits": 0,
+      "rewardItems": [],
+      "behaviorId": "monster-reduce-combat-strength",
+      "features": ["reduces-combat-strength"],
+      "copies": 16,
+      "importBatch": 2,
+      "nameKey": "content.monster.restless.name",
+      "descKey": "content.monster.restless.description"
+    },
+    {
+      "id": "mother",
+      "health": 6,
+      "defense": 2,
+      "attack": 3,
+      "movement": 2,
+      "rewardCredits": 0,
+      "rewardItems": [],
+      "behaviorId": "monster-mother-ignores-armor-scales-per-hero",
+      "features": ["boss", "ignores-defense", "scales-per-hero"],
+      "copies": 1,
+      "importBatch": 2,
+      "scaling": {
+        "healthPerHero": 1,
+        "attackPerHero": 1
+      },
+      "nameKey": "content.monster.mother.name",
+      "descKey": "content.monster.mother.description"
+    },
+    {
+      "id": "viy",
+      "health": 4,
+      "defense": 2,
+      "attack": 3,
+      "movement": 2,
+      "rewardCredits": 2,
+      "rewardItems": [],
+      "behaviorId": "monster-scales-per-hero",
+      "features": ["boss", "scales-per-hero"],
+      "copies": 1,
+      "importBatch": 2,
+      "scaling": {
+        "healthPerHero": 1,
+        "attackPerHero": 1
+      },
+      "nameKey": "content.monster.viy.name",
+      "descKey": "content.monster.viy.description"
+    },
+    {
+      "id": "swarm",
+      "health": 3,
+      "defense": 2,
+      "attack": 3,
+      "movement": 2,
+      "rewardCredits": 2,
+      "rewardItems": [],
+      "behaviorId": "monster-scales-per-alive-monster",
+      "features": ["boss", "scales-per-alive-monster"],
+      "copies": 1,
+      "importBatch": 2,
+      "scaling": {
+        "healthPerHero": 0,
+        "attackPerHero": 0,
+        "healthPerAliveMonster": 1,
+        "attackPerAliveMonster": 1
+      },
+      "nameKey": "content.monster.swarm.name",
+      "descKey": "content.monster.swarm.description"
+    },
+    {
+      "id": "leshy",
+      "health": 3,
+      "defense": 2,
+      "attack": 0,
+      "movement": 4,
+      "rewardCredits": 2,
+      "rewardItems": [],
+      "behaviorId": "monster-flees-and-spawns-two-boils",
+      "features": ["boss", "flees-from-heroes", "spawns-two-boils"],
+      "copies": 1,
+      "importBatch": 2,
+      "nameKey": "content.monster.leshy.name",
+      "descKey": "content.monster.leshy.description"
+    },
+    {
+      "id": "boil",
+      "health": 1,
+      "defense": 0,
+      "attack": 2,
+      "movement": 0,
+      "rewardCredits": 0,
+      "rewardItems": [],
+      "behaviorId": "boil-explodes-on-colocation",
+      "features": ["stationary", "explodes-on-colocation"],
+      "copies": 2,
+      "importBatch": 2,
+      "nameKey": "content.monster.boil.name",
+      "descKey": "content.monster.boil.description"
     }
   ]
 }
