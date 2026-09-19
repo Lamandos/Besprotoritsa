@@ -63,6 +63,7 @@ GameState _interruptedState() => GameState(
       locationId: 'reactor',
       hasTerminal: false,
       ventColor: VentColor.red,
+      isBlocked: true,
     ),
   ],
   players: [

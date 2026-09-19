@@ -2,6 +2,7 @@
 // identical transition can run on a client, server, or replay verifier.
 // ignore_for_file: public_member_api_docs
 
+import 'package:besprotoritsa_rules/src/board_generator.dart';
 import 'package:besprotoritsa_rules/src/card_definition.dart';
 import 'package:besprotoritsa_rules/src/combat_models.dart';
 import 'package:besprotoritsa_rules/src/dice_roller.dart';
@@ -17,6 +18,21 @@ sealed class GameCommand {
 
 final class MoveCommand extends GameCommand {
   const MoveCommand(this.target);
+
+  final HexCoord target;
+}
+
+/// Moves between any two opened airlocks using the supplied movement aid.
+final class AirlockMoveCommand extends GameCommand {
+  const AirlockMoveCommand(this.target, this.equipment);
+
+  final HexCoord target;
+  final AirlockEquipment equipment;
+}
+
+/// Seals an adjacent, empty corridor for the remainder of the game.
+final class CloseCorridorCommand extends GameCommand {
+  const CloseCorridorCommand(this.target);
 
   final HexCoord target;
 }
@@ -65,6 +81,14 @@ final class InvalidTargetCoord extends CommandRejection {
 
 final class PortMismatch extends CommandRejection {
   const PortMismatch();
+}
+
+final class PathBlocked extends CommandRejection {
+  const PathBlocked();
+}
+
+final class CorridorCannotBeClosed extends CommandRejection {
+  const CorridorCannotBeClosed();
 }
 
 final class TargetOutOfRange extends CommandRejection {
@@ -167,8 +191,48 @@ CommandRejection? validate(GameState state, GameCommand command) {
     if (!source.hasExit(edge) || !destination.hasExit(edge.opposite)) {
       return const PortMismatch();
     }
+    if (source.isBlocked || destination.isBlocked) {
+      return const PathBlocked();
+    }
     if (state.actionsLeft < _movementCost(destination)) {
       return const NotEnoughActions();
+    }
+  }
+
+  if (command case AirlockMoveCommand(:final target, :final equipment)) {
+    final player = _activePlayer(state)!;
+    final source = state.tileAt(player.coord);
+    final destination = state.tileAt(target);
+    if (source == null || destination == null) {
+      return const InvalidTargetCoord();
+    }
+    final cost = airlockTransferCost(source, destination, equipment);
+    if (cost == null) {
+      return const TargetOutOfRange();
+    }
+    if (state.actionsLeft < cost) {
+      return const NotEnoughActions();
+    }
+  }
+
+  if (command case CloseCorridorCommand(:final target)) {
+    final player = _activePlayer(state)!;
+    final source = state.tileAt(player.coord);
+    final corridor = state.tileAt(target);
+    final edge = player.coord.edgeTowardOrNull(target);
+    final occupied =
+        state.players.any((hero) => hero.coord == target) ||
+        state.monsters.any((monster) => monster.coord == target) ||
+        state.boils.any((boil) => boil.coord == target);
+    if (source == null ||
+        corridor == null ||
+        edge == null ||
+        corridor.type != HexTileType.corridor ||
+        corridor.isBlocked ||
+        occupied ||
+        !source.hasExit(edge) ||
+        !corridor.hasExit(edge.opposite)) {
+      return const CorridorCannotBeClosed();
     }
   }
 
@@ -192,7 +256,21 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
   }
 
   final result = switch (command) {
-    MoveCommand(:final target) => _move(state, target),
+    MoveCommand(:final target) => _move(
+      state,
+      target,
+      _movementCost(state.tileAt(target)!),
+    ),
+    AirlockMoveCommand(:final target, :final equipment) => _move(
+      state,
+      target,
+      airlockTransferCost(
+        state.tileAt(_activePlayer(state)!.coord)!,
+        state.tileAt(target)!,
+        equipment,
+      )!,
+    ),
+    CloseCorridorCommand(:final target) => _closeCorridor(state, target),
     AttackCommand(:final targetInstanceId) => _attack(
       state,
       targetInstanceId,
@@ -241,12 +319,12 @@ List<GameEvent> _eventsForTransition(GameState before, GameState after) {
   return events;
 }
 
-GameStepResult _move(GameState state, HexCoord target) {
+GameStepResult _move(GameState state, HexCoord target, int cost) {
   final destination = state.tileAt(target)!;
   final opensSector = !destination.opened;
   final moved = _copyState(
     state,
-    actionsLeft: state.actionsLeft - _movementCost(destination),
+    actionsLeft: state.actionsLeft - cost,
     board: opensSector ? _openTile(state.board, destination) : null,
     players: _replaceActivePlayer(
       state,
@@ -256,6 +334,22 @@ GameStepResult _move(GameState state, HexCoord target) {
   );
   return GameStepResult(state: resolveColocation(moved));
 }
+
+GameStepResult _closeCorridor(GameState state, HexCoord target) =>
+    GameStepResult(
+      state: _copyState(
+        state,
+        actionsLeft: state.actionsLeft - 1,
+        board: [
+          for (final tile in state.board)
+            if (tile.coord == target)
+              _copyTile(tile, isBlocked: true)
+            else
+              tile,
+        ],
+        logEntry: 'corridor-closed:${state.activePlayerId}:$target',
+      ),
+    );
 
 /// Resolves threats in shared cells, creating one dodge decision per hit.
 ///
@@ -318,6 +412,17 @@ GameState moveMonsterOneStep(
   final monster = _monsterById(state, instanceId);
   if (monster == null || monster.coord.distanceTo(target) != 1) {
     throw ArgumentError.value(target, 'target', 'Monster must move one step.');
+  }
+  final source = state.tileAt(monster.coord);
+  final destination = state.tileAt(target);
+  final edge = monster.coord.edgeToward(target);
+  if (source == null ||
+      destination == null ||
+      source.isBlocked ||
+      destination.isBlocked ||
+      !source.hasExit(edge) ||
+      !destination.hasExit(edge.opposite)) {
+    throw ArgumentError.value(target, 'target', 'Monster path is blocked.');
   }
   return resolveColocation(
     _copyState(
@@ -567,19 +672,22 @@ GameState _heal(GameState state, int amount) {
 List<HexTile> _openTile(List<HexTile> board, HexTile destination) => [
   for (final tile in board)
     if (tile.coord == destination.coord)
-      HexTile(
-        id: tile.id,
-        coord: tile.coord,
-        type: tile.type,
-        opened: true,
-        exits: tile.exits,
-        locationId: tile.locationId,
-        hasTerminal: tile.hasTerminal,
-        ventColor: tile.ventColor,
-      )
+      _copyTile(tile, opened: true)
     else
       tile,
 ];
+
+HexTile _copyTile(HexTile tile, {bool? opened, bool? isBlocked}) => HexTile(
+  id: tile.id,
+  coord: tile.coord,
+  type: tile.type,
+  opened: opened ?? tile.opened,
+  exits: tile.exits,
+  locationId: tile.locationId,
+  hasTerminal: tile.hasTerminal,
+  ventColor: tile.ventColor,
+  isBlocked: isBlocked ?? tile.isBlocked,
+);
 
 GameStepResult _startRoll(
   GameState state,

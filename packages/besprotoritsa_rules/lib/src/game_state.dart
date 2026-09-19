@@ -113,6 +113,7 @@ final class HexTile {
     this.locationId,
     required this.hasTerminal,
     required this.ventColor,
+    this.isBlocked = false,
   }) : exits = Set.unmodifiable(exits) {
     _requireId(id, 'id');
     if (locationId != null) {
@@ -128,6 +129,7 @@ final class HexTile {
   final LocationId? locationId;
   final bool hasTerminal;
   final VentColor ventColor;
+  final bool isBlocked;
 
   bool hasExit(HexEdge edge) => exits.contains(edge);
 }

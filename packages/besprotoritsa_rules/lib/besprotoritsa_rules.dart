@@ -1,6 +1,7 @@
 /// Pure Dart game rules for Besprotoritsa.
 library;
 
+export 'src/board_generator.dart';
 export 'src/card_definition.dart';
 export 'src/combat_models.dart';
 export 'src/commands_reducer.dart';

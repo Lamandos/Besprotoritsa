@@ -16,6 +16,7 @@ abstract final class SaveJsonModels {
     'location_id': tile.locationId,
     'has_terminal': tile.hasTerminal,
     'vent_color': tile.ventColor.name,
+    'is_blocked': tile.isBlocked,
   };
   static HexTile tileFromJson(Map<String, Object?> json) => HexTile(
     id: _string(json, 'id'),
@@ -30,6 +31,7 @@ abstract final class SaveJsonModels {
       _string(json, 'vent_color'),
       'vent_color',
     ),
+    isBlocked: _boolOrDefault(json['is_blocked'], 'is_blocked'),
   );
   static Map<String, Object?> playerToJson(PlayerState player) => {
     'id': player.id,
@@ -398,6 +400,12 @@ int _asInt(Object? value, String key) {
 
 bool _bool(Map<String, Object?> json, String key) {
   final value = json[key];
+  if (value is! bool) throw FormatException('$key must be a boolean.');
+  return value;
+}
+
+bool _boolOrDefault(Object? value, String key, {bool defaultValue = false}) {
+  if (value == null) return defaultValue;
   if (value is! bool) throw FormatException('$key must be a boolean.');
   return value;
 }
