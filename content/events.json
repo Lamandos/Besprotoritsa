@@ -932,6 +932,321 @@
         "event.skillCheck",
         "event.successFailure"
       ]
+    },
+    {
+      "id": "needle-box",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.needle-box.name",
+      "descKey": "content.event.needle-box.description",
+      "options": [
+        {
+          "actionKey": "content.event.needle-box.option.o1.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.needle-box.option.o1.success",
+          "failureKey": "content.event.needle-box.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.needle-box.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.needle-box.option.o2.success",
+          "failureKey": "content.event.needle-box.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "bloody-suitcase",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.bloody-suitcase.name",
+      "descKey": "content.event.bloody-suitcase.description",
+      "options": [
+        {
+          "actionKey": "content.event.bloody-suitcase.option.o1.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.bloody-suitcase.option.o1.success",
+          "failureKey": "content.event.bloody-suitcase.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.bloody-suitcase.option.o2.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.bloody-suitcase.option.o2.success",
+          "failureKey": "content.event.bloody-suitcase.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "broken-drone",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.broken-drone.name",
+      "descKey": "content.event.broken-drone.description",
+      "options": [
+        {
+          "actionKey": "content.event.broken-drone.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.broken-drone.option.o1.success",
+          "failureKey": "content.event.broken-drone.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.broken-drone.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.broken-drone.option.o2.success",
+          "failureKey": "content.event.broken-drone.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "radio-transmitter",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.radio-transmitter.name",
+      "descKey": "content.event.radio-transmitter.description",
+      "options": [
+        {
+          "actionKey": "content.event.radio-transmitter.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.radio-transmitter.option.o1.success",
+          "failureKey": "content.event.radio-transmitter.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.radio-transmitter.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.radio-transmitter.option.o2.success",
+          "failureKey": "content.event.radio-transmitter.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "lights-out",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.lights-out.name",
+      "descKey": "content.event.lights-out.description",
+      "options": [
+        {
+          "actionKey": "content.event.lights-out.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.lights-out.option.o1.success",
+          "failureKey": "content.event.lights-out.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "ventilation-failure",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.ventilation-failure.name",
+      "descKey": "content.event.ventilation-failure.description",
+      "options": [
+        {
+          "actionKey": "content.event.ventilation-failure.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.ventilation-failure.option.o1.success",
+          "failureKey": "content.event.ventilation-failure.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.ventilation-failure.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.ventilation-failure.option.o2.success",
+          "failureKey": "content.event.ventilation-failure.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "gas-pipe",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.gas-pipe.name",
+      "descKey": "content.event.gas-pipe.description",
+      "options": [
+        {
+          "actionKey": "content.event.gas-pipe.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.gas-pipe.option.o1.success",
+          "failureKey": "content.event.gas-pipe.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "vent-monster",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.vent-monster.name",
+      "descKey": "content.event.vent-monster.description",
+      "options": [
+        {
+          "actionKey": "content.event.vent-monster.option.o1.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.vent-monster.option.o1.success",
+          "failureKey": "content.event.vent-monster.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.vent-monster.option.o2.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.vent-monster.option.o2.success",
+          "failureKey": "content.event.vent-monster.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.vent-monster.option.o3.action",
+          "skillCheck": null,
+          "successKey": "content.event.vent-monster.option.o3.success",
+          "failureKey": "content.event.vent-monster.option.o3.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "security-console",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.security-console.name",
+      "descKey": "content.event.security-console.description",
+      "options": [
+        {
+          "actionKey": "content.event.security-console.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.security-console.option.o1.success",
+          "failureKey": "content.event.security-console.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.security-console.option.o2.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.security-console.option.o2.success",
+          "failureKey": "content.event.security-console.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "cigarette-machine",
+      "importBatch": 4,
+      "kind": "narrative",
+      "nameKey": "content.event.cigarette-machine.name",
+      "descKey": "content.event.cigarette-machine.description",
+      "options": [
+        {
+          "actionKey": "content.event.cigarette-machine.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.cigarette-machine.option.o1.success",
+          "failureKey": "content.event.cigarette-machine.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.cigarette-machine.option.o2.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.cigarette-machine.option.o2.success",
+          "failureKey": "content.event.cigarette-machine.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     }
   ]
 }
