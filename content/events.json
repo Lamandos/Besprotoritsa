@@ -1247,6 +1247,335 @@
         "event.skillCheck",
         "event.successFailure"
       ]
+    },
+    {
+      "id": "pack-sighting",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.pack-sighting.name",
+      "descKey": "content.event.pack-sighting.description",
+      "options": [
+        {
+          "actionKey": "content.event.pack-sighting.option.o1.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.pack-sighting.option.o1.success",
+          "failureKey": "content.event.pack-sighting.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.pack-sighting.option.o2.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.pack-sighting.option.o2.success",
+          "failureKey": "content.event.pack-sighting.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "gas-cabin",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.gas-cabin.name",
+      "descKey": "content.event.gas-cabin.description",
+      "options": [
+        {
+          "actionKey": "content.event.gas-cabin.option.o1.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.gas-cabin.option.o1.success",
+          "failureKey": "content.event.gas-cabin.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.gas-cabin.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.gas-cabin.option.o2.success",
+          "failureKey": "content.event.gas-cabin.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "hatch-scrape",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.hatch-scrape.name",
+      "descKey": "content.event.hatch-scrape.description",
+      "options": [
+        {
+          "actionKey": "content.event.hatch-scrape.option.o1.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.hatch-scrape.option.o1.success",
+          "failureKey": "content.event.hatch-scrape.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.hatch-scrape.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.hatch-scrape.option.o2.success",
+          "failureKey": "content.event.hatch-scrape.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "oxygen-alarm",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.oxygen-alarm.name",
+      "descKey": "content.event.oxygen-alarm.description",
+      "options": [
+        {
+          "actionKey": "content.event.oxygen-alarm.option.o1.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.oxygen-alarm.option.o1.success",
+          "failureKey": "content.event.oxygen-alarm.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.oxygen-alarm.option.o2.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.oxygen-alarm.option.o2.success",
+          "failureKey": "content.event.oxygen-alarm.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "survivor-scream",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.survivor-scream.name",
+      "descKey": "content.event.survivor-scream.description",
+      "options": [
+        {
+          "actionKey": "content.event.survivor-scream.option.o1.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.survivor-scream.option.o1.success",
+          "failureKey": "content.event.survivor-scream.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.survivor-scream.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.survivor-scream.option.o2.success",
+          "failureKey": "content.event.survivor-scream.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "child-cry",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.child-cry.name",
+      "descKey": "content.event.child-cry.description",
+      "options": [
+        {
+          "actionKey": "content.event.child-cry.option.o1.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.child-cry.option.o1.success",
+          "failureKey": "content.event.child-cry.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.child-cry.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.child-cry.option.o2.success",
+          "failureKey": "content.event.child-cry.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "female-whisper",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.female-whisper.name",
+      "descKey": "content.event.female-whisper.description",
+      "options": [
+        {
+          "actionKey": "content.event.female-whisper.option.o1.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.female-whisper.option.o1.success",
+          "failureKey": "content.event.female-whisper.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.female-whisper.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.female-whisper.option.o2.success",
+          "failureKey": "content.event.female-whisper.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "alcohol-crate",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.alcohol-crate.name",
+      "descKey": "content.event.alcohol-crate.description",
+      "options": [
+        {
+          "actionKey": "content.event.alcohol-crate.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.alcohol-crate.option.o1.success",
+          "failureKey": "content.event.alcohol-crate.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.alcohol-crate.option.o2.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.alcohol-crate.option.o2.success",
+          "failureKey": "content.event.alcohol-crate.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.alcohol-crate.option.o3.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.alcohol-crate.option.o3.success",
+          "failureKey": "content.event.alcohol-crate.option.o3.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "supply-terminal",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.supply-terminal.name",
+      "descKey": "content.event.supply-terminal.description",
+      "options": [
+        {
+          "actionKey": "content.event.supply-terminal.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.supply-terminal.option.o1.success",
+          "failureKey": "content.event.supply-terminal.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.supply-terminal.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.supply-terminal.option.o2.success",
+          "failureKey": "content.event.supply-terminal.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.supply-terminal.option.o3.action",
+          "skillCheck": null,
+          "successKey": "content.event.supply-terminal.option.o3.success",
+          "failureKey": "content.event.supply-terminal.option.o3.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "trade-bot",
+      "importBatch": 5,
+      "kind": "narrative",
+      "nameKey": "content.event.trade-bot.name",
+      "descKey": "content.event.trade-bot.description",
+      "options": [
+        {
+          "actionKey": "content.event.trade-bot.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.trade-bot.option.o1.success",
+          "failureKey": "content.event.trade-bot.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.trade-bot.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.trade-bot.option.o2.success",
+          "failureKey": "content.event.trade-bot.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     }
   ]
 }
