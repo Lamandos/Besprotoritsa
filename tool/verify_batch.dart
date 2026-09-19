@@ -92,10 +92,15 @@ void _validateDeckBatchSizes(String deck, List<dynamic> cards) {
   final batches = counts.keys.toList()..sort();
   for (var index = 0; index < batches.length; index++) {
     final batch = batches[index];
-    if (batch != index + 1) throw FormatException('Missing import batch ${index + 1}.');
+    if (batch != index + 1) {
+      throw FormatException('Missing import batch ${index + 1}.');
+    }
     final isFinal = index == batches.length - 1;
     if ((!isFinal && counts[batch] != 10) || (isFinal && counts[batch]! > 10)) {
-      throw FormatException('Import batch $batch must contain 10 cards, except the final remainder.');
+      throw FormatException(
+        'Import batch $batch must contain 10 cards, except the final '
+        'remainder.',
+      );
     }
   }
 }
