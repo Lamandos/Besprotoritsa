@@ -46,12 +46,14 @@ class _AutosavingGame extends ConsumerStatefulWidget {
 class _AutosavingGameState extends ConsumerState<_AutosavingGame>
     with WidgetsBindingObserver {
   late final SaveSystem _saves;
+  late GameState _latestState;
   Future<void> _saveChain = Future<void>.value();
 
   @override
   void initState() {
     super.initState();
     _saves = SaveSystem(storage: widget.storage);
+    _latestState = widget.initialState;
     WidgetsBinding.instance.addObserver(this);
     _queueAutosave(widget.initialState);
   }
@@ -61,6 +63,7 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
     ref.listen<GameState>(gameControllerProvider, (_, next) {
       // This covers every state boundary, including the start of a new round
       // and an unresolved event/combat choice.
+      _latestState = next;
       _queueAutosave(next);
     });
     return MvpGameScreen(onManualSaveRequested: _saveManual);
@@ -69,7 +72,7 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
   @override
   void dispose() {
     // A final queued snapshot records a back-navigation/app-close boundary.
-    _queueAutosave(ref.read(gameControllerProvider));
+    _queueAutosave(_latestState);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -79,7 +82,7 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
     if (lifecycleState == AppLifecycleState.inactive ||
         lifecycleState == AppLifecycleState.paused ||
         lifecycleState == AppLifecycleState.detached) {
-      _queueAutosave(ref.read(gameControllerProvider));
+      _queueAutosave(_latestState);
     }
   }
 

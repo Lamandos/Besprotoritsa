@@ -1,0 +1,6 @@
+# Copy to key.properties and replace every placeholder. Never commit the copy
+# or the referenced keystore.
+storePassword=REPLACE_WITH_KEYSTORE_PASSWORD
+keyPassword=REPLACE_WITH_KEY_PASSWORD
+keyAlias=besprotoritsa
+storeFile=besprotoritsa-release.jks
