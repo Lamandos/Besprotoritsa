@@ -4,7 +4,7 @@
   "title": "Event",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "importBatch", "kind", "options", "nameKey", "descKey", "behaviorIds"],
+  "required": ["id", "options", "nameKey"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
     "importBatch": { "type": "integer", "minimum": 1 },

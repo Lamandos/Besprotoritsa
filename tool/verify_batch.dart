@@ -39,6 +39,9 @@ Future<void> main(List<String> arguments) async {
     final card = Map<String, Object?>.from(raw);
     validator.validate(card);
     _validateBehaviorIds(card, await _registeredBehaviorIds());
+    if (deck == 'events') {
+      _requireEventFields(card);
+    }
     final id = card['id']! as String;
     if (!ids.add(id)) throw FormatException('Duplicate card id: $id');
     final batch = card['importBatch']! as int;
@@ -64,6 +67,19 @@ Future<void> main(List<String> arguments) async {
   stdout.writeln(
     'Validated $deck: ${cards.length} cards in ${batches.length} batches.',
   );
+}
+
+void _requireEventFields(Map<String, Object?> card) {
+  if (card['importBatch'] is! int || card['kind'] is! String) {
+    throw FormatException('${card['id']} must declare importBatch and kind.');
+  }
+  if (card['descKey'] is! String) {
+    throw FormatException('${card['id']} must declare descKey.');
+  }
+  if (card['behaviorIds'] is! List<dynamic> ||
+      (card['behaviorIds']! as List<dynamic>).isEmpty) {
+    throw FormatException('${card['id']} must declare behaviorIds.');
+  }
 }
 
 void _validateDeckBatchSizes(String deck, List<dynamic> cards) {
