@@ -1,10 +1,9 @@
 // This conditional adapter is intentionally the small web-only fallback.
-// ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 
 import 'dart:convert';
-import 'dart:html' as html;
 
 import 'package:besprotoritsa_app/src/content/review_status_store_api.dart';
+import 'package:web/web.dart' as web;
 
 const _storageKey = 'besprotoritsa.content.review_status';
 
@@ -31,11 +30,11 @@ final class WebReviewStatusStore implements ReviewStatusStore {
       'reviewedAt': DateTime.now().toUtc().toIso8601String(),
     };
     document['reviews'] = reviews;
-    html.window.localStorage[_storageKey] = jsonEncode(document);
+    web.window.localStorage.setItem(_storageKey, jsonEncode(document));
   }
 
   Map<String, dynamic> _readDocument() {
-    final raw = html.window.localStorage[_storageKey];
+    final raw = web.window.localStorage.getItem(_storageKey);
     if (raw == null) {
       return <String, dynamic>{
         'schemaVersion': 1,
