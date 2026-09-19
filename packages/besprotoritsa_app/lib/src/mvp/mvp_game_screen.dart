@@ -2,13 +2,50 @@ import 'package:besprotoritsa_app/src/game/event_queue.dart';
 import 'package:besprotoritsa_app/src/game/game_controller.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Key of the boundary that keeps board repaints isolated from the game chrome.
-const mvpBoardRepaintBoundaryKey = ValueKey<String>('mvp-hex-board');
+/// Boundary around the static ship artwork and hex tiles.
+const ValueKey<String> mvpBoardRepaintBoundaryKey = ValueKey<String>(
+  'mvp-board-static-layer',
+);
 
-/// The playable MVP board, command palette, animation status, and game log.
+/// Alias retained for callers that describe the static boundary explicitly.
+const ValueKey<String> mvpBoardStaticRepaintBoundaryKey =
+    mvpBoardRepaintBoundaryKey;
+
+/// Boundary around hero and monster tokens.
+const mvpBoardTokensRepaintBoundaryKey = ValueKey<String>(
+  'mvp-board-tokens-layer',
+);
+
+/// The pannable board viewport.
+const mvpBoardInteractiveViewerKey = ValueKey<String>('mvp-board-viewport');
+
+/// Compact portrait layout root.
+const mvpCompactLayoutKey = ValueKey<String>('mvp-compact-layout');
+
+/// Three-panel landscape layout root.
+const mvpWideLayoutKey = ValueKey<String>('mvp-wide-layout');
+
+/// Inventory sheet root.
+const mvpInventorySheetKey = ValueKey<String>('mvp-inventory-sheet');
+
+/// Quest journal sheet root.
+const mvpJournalSheetKey = ValueKey<String>('mvp-journal-sheet');
+
+/// Compact-layout inventory trigger.
+const mvpInventoryButtonKey = ValueKey<String>('mvp-inventory-button');
+
+/// Compact-layout quest journal trigger.
+const mvpJournalButtonKey = ValueKey<String>('mvp-journal-button');
+
+const _minimumTouchTarget = Size(48, 48);
+const _wideLayoutMinimumWidth = 840.0;
+
+/// The playable board, adaptive command palette, animation status, and log.
 class MvpGameScreen extends ConsumerWidget {
   /// Creates the MVP game screen.
   const MvpGameScreen({this.onManualSaveRequested, super.key});
@@ -54,32 +91,125 @@ class _MvpGameLayout extends ConsumerWidget {
             IconButton(
               key: const ValueKey<String>('manual-save-button'),
               tooltip: 'Сохранить партию',
+              constraints: const BoxConstraints.tightFor(
+                width: 48,
+                height: 48,
+              ),
               onPressed: () => onManualSaveRequested!(state),
               icon: const Icon(Icons.save_outlined),
             ),
         ],
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide =
+                constraints.maxWidth >= _wideLayoutMinimumWidth &&
+                constraints.maxWidth > constraints.maxHeight;
+            return Stack(
               children: [
-                _GameStatus(state: state, queue: queue),
-                Expanded(child: HexBoardWidget(state: state)),
-                AbsorbPointer(
-                  absorbing: blocked,
-                  child: _CommandPanel(state: state),
-                ),
-                _GameLog(state: state, queue: queue),
+                if (isWide)
+                  _WideGameLayout(
+                    key: mvpWideLayoutKey,
+                    state: state,
+                    queue: queue,
+                    blocked: blocked,
+                  )
+                else
+                  _CompactGameLayout(
+                    key: mvpCompactLayoutKey,
+                    state: state,
+                    queue: queue,
+                    blocked: blocked,
+                  ),
+                if (state.pendingDecision != null && !queue.isPlaying)
+                  _PendingDecisionModal(decision: state.pendingDecision!),
               ],
-            ),
-            if (state.pendingDecision != null && !queue.isPlaying)
-              _PendingDecisionModal(decision: state.pendingDecision!),
-          ],
+            );
+          },
         ),
       ),
     );
   }
+}
+
+/// Three fixed regions give landscape displays an at-a-glance game overview.
+class _WideGameLayout extends StatelessWidget {
+  const _WideGameLayout({
+    required this.state,
+    required this.queue,
+    required this.blocked,
+    super.key,
+  });
+
+  final GameState state;
+  final EventQueue queue;
+  final bool blocked;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      SizedBox(width: 256, child: _HeroRosterPanel(state: state)),
+      const VerticalDivider(width: 1),
+      Expanded(
+        child: Column(
+          children: [
+            _GameStatus(state: state, queue: queue),
+            Expanded(child: HexBoardWidget(state: state)),
+            AbsorbPointer(
+              absorbing: blocked,
+              child: _CommandPanel(state: state, compact: true),
+            ),
+          ],
+        ),
+      ),
+      const VerticalDivider(width: 1),
+      SizedBox(
+        width: 304,
+        child: _JournalPanel(state: state, queue: queue),
+      ),
+    ],
+  );
+}
+
+/// Portrait screens reserve the board for play and reveal supporting content
+/// in bottom sheets instead of squeezing it into permanent columns.
+class _CompactGameLayout extends StatelessWidget {
+  const _CompactGameLayout({
+    required this.state,
+    required this.queue,
+    required this.blocked,
+    super.key,
+  });
+
+  final GameState state;
+  final EventQueue queue;
+  final bool blocked;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    children: [
+      Column(
+        children: [
+          _GameStatus(state: state, queue: queue),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 84),
+              child: HexBoardWidget(state: state),
+            ),
+          ),
+        ],
+      ),
+      Align(
+        alignment: Alignment.bottomCenter,
+        child: AbsorbPointer(
+          absorbing: blocked,
+          child: _MobileActionDock(state: state, queue: queue),
+        ),
+      ),
+    ],
+  );
 }
 
 class _GameStatus extends StatelessWidget {
@@ -111,31 +241,134 @@ class _GameStatus extends StatelessWidget {
   }
 }
 
-/// A painted axial board with hero and monster tokens positioned by `(q, r)`.
-class HexBoardWidget extends StatelessWidget {
-  /// Creates the hex board for [state].
+/// A pannable and zoomable viewport for a board with isolated static artwork.
+class HexBoardWidget extends StatefulWidget {
+  /// Creates a board viewport from [state].
   const HexBoardWidget({required this.state, super.key});
 
   /// State rendered by this board.
   final GameState state;
 
   @override
-  Widget build(BuildContext context) => RepaintBoundary(
-    key: mvpBoardRepaintBoundaryKey,
-    child: LayoutBuilder(
-      builder: (context, constraints) => SizedBox(
-        height: 280,
-        width: constraints.maxWidth,
-        child: Stack(
-          children: [
-            for (final tile in state.board) _HexTileView(tile: tile),
-            for (final player in state.players) _HeroToken(player: player),
-            for (final monster in state.monsters)
-              _MonsterToken(monster: monster),
-          ],
+  State<HexBoardWidget> createState() => _HexBoardWidgetState();
+}
+
+class _HexBoardWidgetState extends State<HexBoardWidget> {
+  final TransformationController _transformationController =
+      TransformationController();
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    final key = event.logicalKey;
+    var dx = 0.0;
+    var dy = 0.0;
+    if (key == LogicalKeyboardKey.arrowLeft) {
+      dx = 32;
+    } else if (key == LogicalKeyboardKey.arrowRight) {
+      dx = -32;
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      dy = 32;
+    } else if (key == LogicalKeyboardKey.arrowDown) {
+      dy = -32;
+    } else {
+      return KeyEventResult.ignored;
+    }
+    _transformationController.value = _transformationController.value.clone()
+      ..translateByDouble(dx, dy, 0, 1);
+    return KeyEventResult.handled;
+  }
+
+  void _handlePointerSignal(PointerSignalEvent event) {
+    if (event is! PointerScrollEvent) {
+      return;
+    }
+    _transformationController.value = _transformationController.value.clone()
+      ..translateByDouble(
+        -event.scrollDelta.dx,
+        -event.scrollDelta.dy,
+        0,
+        1,
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) => Focus(
+    autofocus: true,
+    onKeyEvent: _handleKeyEvent,
+    child: Listener(
+      onPointerSignal: _handlePointerSignal,
+      child: InteractiveViewer(
+        key: mvpBoardInteractiveViewerKey,
+        transformationController: _transformationController,
+        constrained: false,
+        boundaryMargin: const EdgeInsets.all(160),
+        minScale: 0.65,
+        trackpadScrollCausesScale: true,
+        child: SizedBox(
+          width: 520,
+          height: 420,
+          child: Stack(
+            children: [
+              RepaintBoundary(
+                key: mvpBoardStaticRepaintBoundaryKey,
+                child: _StaticBoardLayer(board: widget.state.board),
+              ),
+              RepaintBoundary(
+                key: mvpBoardTokensRepaintBoundaryKey,
+                child: _TokenLayer(
+                  players: widget.state.players,
+                  monsters: widget.state.monsters,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ),
+  );
+}
+
+class _StaticBoardLayer extends StatelessWidget {
+  const _StaticBoardLayer({required this.board});
+
+  final List<HexTile> board;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
+    children: [
+      const DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            colors: [Color(0xFF27324A), Color(0xFF111622)],
+          ),
+        ),
+      ),
+      for (final tile in board) _HexTileView(tile: tile),
+    ],
+  );
+}
+
+class _TokenLayer extends StatelessWidget {
+  const _TokenLayer({required this.players, required this.monsters});
+
+  final List<PlayerState> players;
+  final List<MonsterInstance> monsters;
+
+  @override
+  Widget build(BuildContext context) => Stack(
+    children: [
+      for (final player in players) _HeroToken(player: player),
+      for (final monster in monsters) _MonsterToken(monster: monster),
+    ],
   );
 }
 
@@ -220,19 +453,105 @@ class _MonsterToken extends StatelessWidget {
   }
 }
 
-class _CommandPanel extends ConsumerWidget {
-  const _CommandPanel({required this.state});
+class _MobileActionDock extends StatelessWidget {
+  const _MobileActionDock({required this.state, required this.queue});
 
   final GameState state;
+  final EventQueue queue;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final strings = AppStrings.of(context);
+    final commands = _availableCommands(state, strings);
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        child: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(28),
+          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          child: SizedBox(
+            height: 64,
+            child: Row(
+              children: [
+                _TouchIconButton(
+                  buttonKey: mvpInventoryButtonKey,
+                  tooltip: 'Инвентарь',
+                  icon: const Icon(Icons.backpack_outlined),
+                  onPressed: () => _showInventorySheet(context, state),
+                ),
+                const VerticalDivider(indent: 10, endIndent: 10),
+                Expanded(
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    itemCount: commands.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: 8),
+                    itemBuilder: (context, index) => _CommandButton(
+                      command: commands[index],
+                      compact: true,
+                    ),
+                  ),
+                ),
+                const VerticalDivider(indent: 10, endIndent: 10),
+                _TouchIconButton(
+                  buttonKey: mvpJournalButtonKey,
+                  tooltip: 'Журнал заданий',
+                  icon: const Icon(Icons.menu_book_outlined),
+                  onPressed: () => _showJournalSheet(context, state, queue),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TouchIconButton extends StatelessWidget {
+  const _TouchIconButton({
+    required this.buttonKey,
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final Key buttonKey;
+  final Widget icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    key: buttonKey,
+    tooltip: tooltip,
+    constraints: const BoxConstraints.tightFor(
+      width: 48,
+      height: 48,
+    ),
+    onPressed: onPressed,
+    icon: icon,
+  );
+}
+
+class _CommandPanel extends StatelessWidget {
+  const _CommandPanel({required this.state, required this.compact});
+
+  final GameState state;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     final commands = _availableCommands(state, strings);
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(strings.availableCommands),
           const SizedBox(height: 6),
@@ -241,12 +560,7 @@ class _CommandPanel extends ConsumerWidget {
             runSpacing: 8,
             children: [
               for (final command in commands)
-                FilledButton(
-                  onPressed: () => ref
-                      .read(gameControllerProvider.notifier)
-                      .dispatch(command.command),
-                  child: Text(command.label),
-                ),
+                _CommandButton(command: command, compact: compact),
             ],
           ),
         ],
@@ -255,8 +569,101 @@ class _CommandPanel extends ConsumerWidget {
   }
 }
 
-class _GameLog extends StatelessWidget {
-  const _GameLog({required this.state, required this.queue});
+class _CommandButton extends ConsumerWidget {
+  const _CommandButton({required this.command, required this.compact});
+
+  final _NamedCommand command;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => SizedBox(
+    height: _minimumTouchTarget.height,
+    child: FilledButton(
+      style: compact
+          ? FilledButton.styleFrom(
+              minimumSize: const Size(48, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            )
+          : null,
+      onPressed: () =>
+          ref.read(gameControllerProvider.notifier).dispatch(command.command),
+      child: Text(command.label),
+    ),
+  );
+}
+
+class _HeroRosterPanel extends StatelessWidget {
+  const _HeroRosterPanel({required this.state});
+
+  final GameState state;
+
+  @override
+  Widget build(BuildContext context) => _PanelFrame(
+    title: 'Отряд героев',
+    icon: const Icon(Icons.groups_outlined),
+    child: ListView.separated(
+      itemCount: state.players.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final player = state.players[index];
+        return ListTile(
+          minVerticalPadding: 12,
+          leading: CircleAvatar(child: Text(player.id.substring(0, 1))),
+          title: Text(player.characterId),
+          subtitle: Text(
+            'Здоровье: ${player.health - player.damage}/${player.health}',
+          ),
+          trailing: Text('₡${player.credits}'),
+        );
+      },
+    ),
+  );
+}
+
+class _JournalPanel extends StatelessWidget {
+  const _JournalPanel({required this.state, required this.queue});
+
+  final GameState state;
+  final EventQueue queue;
+
+  @override
+  Widget build(BuildContext context) => _PanelFrame(
+    title: 'Журнал',
+    icon: const Icon(Icons.menu_book_outlined),
+    child: _JournalContents(state: state, queue: queue),
+  );
+}
+
+class _PanelFrame extends StatelessWidget {
+  const _PanelFrame({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  final String title;
+  final Widget icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: Theme.of(context).colorScheme.surfaceContainerLow,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(children: [icon, const SizedBox(width: 8), Text(title)]),
+        ),
+        const Divider(height: 1),
+        Expanded(child: child),
+      ],
+    ),
+  );
+}
+
+class _JournalContents extends StatelessWidget {
+  const _JournalContents({required this.state, required this.queue});
 
   final GameState state;
   final EventQueue queue;
@@ -268,27 +675,114 @@ class _GameLog extends StatelessWidget {
       ...state.log,
       ...queue.history.map((event) => _eventLabel(event, strings)),
     ];
-    return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(maxHeight: 110),
+    final activeQuests = _activeQuests(state);
+    return ListView(
       padding: const EdgeInsets.all(12),
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(strings.eventLog),
-          const SizedBox(height: 4),
-          Expanded(
-            child: ListView.builder(
-              itemCount: entries.length,
-              itemBuilder: (context, index) => Text(entries[index]),
+      children: [
+        Text(strings.eventLog),
+        const SizedBox(height: 4),
+        if (entries.isEmpty)
+          const Text('Событий пока нет.')
+        else
+          for (final entry in entries) Text(entry),
+        const SizedBox(height: 20),
+        const Text('Активные задания'),
+        const SizedBox(height: 4),
+        if (activeQuests.isEmpty)
+          const Text('Нет активных заданий.')
+        else
+          for (final quest in activeQuests)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.flag_outlined),
+              title: Text(quest),
             ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
+
+void _showInventorySheet(BuildContext context, GameState state) {
+  showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (context) => _GameBottomSheet(
+      key: mvpInventorySheetKey,
+      title: 'Инвентарь',
+      icon: const Icon(Icons.backpack_outlined),
+      child: ListView.separated(
+        itemCount: state.players.length,
+        separatorBuilder: (context, index) => const Divider(),
+        itemBuilder: (context, index) {
+          final player = state.players[index];
+          final inventory = player.backpack.isEmpty
+              ? 'Рюкзак пуст'
+              : player.backpack.join(', ');
+          return ListTile(
+            title: Text(player.characterId),
+            subtitle: Text(inventory),
+            trailing: Text('₡${player.credits}'),
+          );
+        },
+      ),
+    ),
+  );
+}
+
+void _showJournalSheet(
+  BuildContext context,
+  GameState state,
+  EventQueue queue,
+) {
+  showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (context) => _GameBottomSheet(
+      key: mvpJournalSheetKey,
+      title: 'Журнал заданий',
+      icon: const Icon(Icons.menu_book_outlined),
+      child: _JournalContents(state: state, queue: queue),
+    ),
+  );
+}
+
+class _GameBottomSheet extends StatelessWidget {
+  const _GameBottomSheet({
+    required this.title,
+    required this.icon,
+    required this.child,
+    super.key,
+  });
+
+  final String title;
+  final Widget icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: MediaQuery.sizeOf(context).height * .6,
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [icon, const SizedBox(width: 8), Text(title)]),
+          const SizedBox(height: 12),
+          Expanded(child: child),
+        ],
+      ),
+    ),
+  );
+}
+
+List<String> _activeQuests(GameState state) => [
+  for (final questId in state.quests.storyQuestIds)
+    if (state.quests.statusOf(questId) == QuestStatus.active) questId,
+  for (final entry in state.quests.personalTasksByPlayer.entries)
+    for (final questId in entry.value)
+      if (state.quests.statusOf(questId) == QuestStatus.active) questId,
+];
 
 class _PendingDecisionModal extends ConsumerWidget {
   const _PendingDecisionModal({required this.decision});
@@ -329,9 +823,7 @@ List<Widget> _decisionActions(
     FilledButton(
       onPressed: () => ref
           .read(gameControllerProvider.notifier)
-          .dispatch(
-            const ResolvePendingDecisionCommand(KeepRollChoice()),
-          ),
+          .dispatch(const ResolvePendingDecisionCommand(KeepRollChoice())),
       child: Text(strings.keepResult),
     ),
   ],
@@ -368,9 +860,7 @@ List<Widget> _decisionActions(
       onPressed: () => ref
           .read(gameControllerProvider.notifier)
           .dispatch(
-            const ResolvePendingDecisionCommand(
-              DeclineTerminalPickChoice(),
-            ),
+            const ResolvePendingDecisionCommand(DeclineTerminalPickChoice()),
           ),
       child: Text(strings.doNotBuy),
     ),
