@@ -325,6 +325,321 @@
         "event.skillCheck",
         "event.successFailure"
       ]
+    },
+    {
+      "id": "rope-hatch",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.rope-hatch.name",
+      "descKey": "content.event.rope-hatch.description",
+      "options": [
+        {
+          "actionKey": "content.event.rope-hatch.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.rope-hatch.option.o1.success",
+          "failureKey": "content.event.rope-hatch.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.rope-hatch.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.rope-hatch.option.o2.success",
+          "failureKey": "content.event.rope-hatch.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.rope-hatch.option.o3.action",
+          "skillCheck": null,
+          "successKey": "content.event.rope-hatch.option.o3.success",
+          "failureKey": "content.event.rope-hatch.option.o3.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "weapon-monster",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.weapon-monster.name",
+      "descKey": "content.event.weapon-monster.description",
+      "options": [
+        {
+          "actionKey": "content.event.weapon-monster.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.weapon-monster.option.o1.success",
+          "failureKey": "content.event.weapon-monster.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.weapon-monster.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.weapon-monster.option.o2.success",
+          "failureKey": "content.event.weapon-monster.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "repair-cleaner",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.repair-cleaner.name",
+      "descKey": "content.event.repair-cleaner.description",
+      "options": [
+        {
+          "actionKey": "content.event.repair-cleaner.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.repair-cleaner.option.o1.success",
+          "failureKey": "content.event.repair-cleaner.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.repair-cleaner.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.repair-cleaner.option.o2.success",
+          "failureKey": "content.event.repair-cleaner.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "countdown-trap",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.countdown-trap.name",
+      "descKey": "content.event.countdown-trap.description",
+      "options": [
+        {
+          "actionKey": "content.event.countdown-trap.option.o1.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.countdown-trap.option.o1.success",
+          "failureKey": "content.event.countdown-trap.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.countdown-trap.option.o2.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.countdown-trap.option.o2.success",
+          "failureKey": "content.event.countdown-trap.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "scientist-report",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.scientist-report.name",
+      "descKey": "content.event.scientist-report.description",
+      "options": [
+        {
+          "actionKey": "content.event.scientist-report.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.scientist-report.option.o1.success",
+          "failureKey": "content.event.scientist-report.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "monster-corpse",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.monster-corpse.name",
+      "descKey": "content.event.monster-corpse.description",
+      "options": [
+        {
+          "actionKey": "content.event.monster-corpse.option.o1.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.monster-corpse.option.o1.success",
+          "failureKey": "content.event.monster-corpse.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "rubble",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.rubble.name",
+      "descKey": "content.event.rubble.description",
+      "options": [
+        {
+          "actionKey": "content.event.rubble.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.rubble.option.o1.success",
+          "failureKey": "content.event.rubble.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.rubble.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.rubble.option.o2.success",
+          "failureKey": "content.event.rubble.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "two-crates",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.two-crates.name",
+      "descKey": "content.event.two-crates.description",
+      "options": [
+        {
+          "actionKey": "content.event.two-crates.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.two-crates.option.o1.success",
+          "failureKey": "content.event.two-crates.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.two-crates.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.two-crates.option.o2.success",
+          "failureKey": "content.event.two-crates.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "huge-crate",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.huge-crate.name",
+      "descKey": "content.event.huge-crate.description",
+      "options": [
+        {
+          "actionKey": "content.event.huge-crate.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.huge-crate.option.o1.success",
+          "failureKey": "content.event.huge-crate.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.huge-crate.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.huge-crate.option.o2.success",
+          "failureKey": "content.event.huge-crate.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "toolbox",
+      "importBatch": 2,
+      "kind": "narrative",
+      "nameKey": "content.event.toolbox.name",
+      "descKey": "content.event.toolbox.description",
+      "options": [
+        {
+          "actionKey": "content.event.toolbox.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.toolbox.option.o1.success",
+          "failureKey": "content.event.toolbox.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.toolbox.option.o2.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.toolbox.option.o2.success",
+          "failureKey": "content.event.toolbox.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.toolbox.option.o3.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.toolbox.option.o3.success",
+          "failureKey": "content.event.toolbox.option.o3.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     }
   ]
 }
