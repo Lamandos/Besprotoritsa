@@ -35,6 +35,7 @@ void main() {
           'Source PDFs are not included in this checkout: '
           '${missingSources.join(', ')}.',
         );
+        return;
       }
 
       for (final entry in entries) {
