@@ -1,0 +1,330 @@
+{
+  "cards": [
+    {
+      "id": "cabin-noise",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.cabin-noise.name",
+      "descKey": "content.event.cabin-noise.description",
+      "options": [
+        {
+          "actionKey": "content.event.cabin-noise.option.o1.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.cabin-noise.option.o1.success",
+          "failureKey": "content.event.cabin-noise.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.cabin-noise.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.cabin-noise.option.o2.success",
+          "failureKey": "content.event.cabin-noise.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "vending-machine",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.vending-machine.name",
+      "descKey": "content.event.vending-machine.description",
+      "options": [
+        {
+          "actionKey": "content.event.vending-machine.option.o1.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.vending-machine.option.o1.success",
+          "failureKey": "content.event.vending-machine.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "pile-of-things",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.pile-of-things.name",
+      "descKey": "content.event.pile-of-things.description",
+      "options": [
+        {
+          "actionKey": "content.event.pile-of-things.option.o1.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.pile-of-things.option.o1.success",
+          "failureKey": "content.event.pile-of-things.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.pile-of-things.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.pile-of-things.option.o2.success",
+          "failureKey": "content.event.pile-of-things.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "monster-nest",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.monster-nest.name",
+      "descKey": "content.event.monster-nest.description",
+      "options": [
+        {
+          "actionKey": "content.event.monster-nest.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.monster-nest.option.o1.success",
+          "failureKey": "content.event.monster-nest.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.monster-nest.option.o2.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.monster-nest.option.o2.success",
+          "failureKey": "content.event.monster-nest.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.monster-nest.option.o3.action",
+          "skillCheck": null,
+          "successKey": "content.event.monster-nest.option.o3.success",
+          "failureKey": "content.event.monster-nest.option.o3.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "corpse",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.corpse.name",
+      "descKey": "content.event.corpse.description",
+      "options": [
+        {
+          "actionKey": "content.event.corpse.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.corpse.option.o1.success",
+          "failureKey": "content.event.corpse.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.corpse.option.o2.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.corpse.option.o2.success",
+          "failureKey": "content.event.corpse.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "suitcases",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.suitcases.name",
+      "descKey": "content.event.suitcases.description",
+      "options": [
+        {
+          "actionKey": "content.event.suitcases.option.o1.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.suitcases.option.o1.success",
+          "failureKey": "content.event.suitcases.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.suitcases.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.suitcases.option.o2.success",
+          "failureKey": "content.event.suitcases.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "hatch-monster",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.hatch-monster.name",
+      "descKey": "content.event.hatch-monster.description",
+      "options": [
+        {
+          "actionKey": "content.event.hatch-monster.option.o1.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.hatch-monster.option.o1.success",
+          "failureKey": "content.event.hatch-monster.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.hatch-monster.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.hatch-monster.option.o2.success",
+          "failureKey": "content.event.hatch-monster.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "security-room",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.security-room.name",
+      "descKey": "content.event.security-room.description",
+      "options": [
+        {
+          "actionKey": "content.event.security-room.option.o1.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.security-room.option.o1.success",
+          "failureKey": "content.event.security-room.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.security-room.option.o2.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.security-room.option.o2.success",
+          "failureKey": "content.event.security-room.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "exposed-wires",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.exposed-wires.name",
+      "descKey": "content.event.exposed-wires.description",
+      "options": [
+        {
+          "actionKey": "content.event.exposed-wires.option.o1.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.exposed-wires.option.o1.success",
+          "failureKey": "content.event.exposed-wires.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.exposed-wires.option.o2.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.exposed-wires.option.o2.success",
+          "failureKey": "content.event.exposed-wires.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.exposed-wires.option.o3.action",
+          "skillCheck": null,
+          "successKey": "content.event.exposed-wires.option.o3.success",
+          "failureKey": "content.event.exposed-wires.option.o3.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "monster-pack",
+      "importBatch": 1,
+      "kind": "narrative",
+      "nameKey": "content.event.monster-pack.name",
+      "descKey": "content.event.monster-pack.description",
+      "options": [
+        {
+          "actionKey": "content.event.monster-pack.option.o1.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.monster-pack.option.o1.success",
+          "failureKey": "content.event.monster-pack.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.monster-pack.option.o2.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.monster-pack.option.o2.success",
+          "failureKey": "content.event.monster-pack.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    }
+  ]
+}

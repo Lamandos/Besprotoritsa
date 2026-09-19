@@ -6,13 +6,18 @@ import 'validate_schemas.dart';
 Future<void> main(List<String> arguments) async {
   if (arguments.length != 2 || arguments.first != '--deck') {
     throw const FormatException(
-      'Usage: dart run tool/verify_batch.dart --deck <items|supplies>',
+      'Usage: dart run tool/verify_batch.dart --deck <items|supplies|events>',
     );
   }
   final deck = arguments[1];
   final path = 'content/$deck.json';
-  final schemaPath =
-      'content/schemas/${deck == 'items' ? 'item' : 'supply'}.schema.json';
+  final schemaName = switch (deck) {
+    'items' => 'item',
+    'supplies' => 'supply',
+    'events' => 'event',
+    _ => throw FormatException('Unsupported deck: $deck.'),
+  };
+  final schemaPath = 'content/schemas/$schemaName.schema.json';
   final decoded = jsonDecode(await File(path).readAsString());
   if (decoded is! Map<String, dynamic> || decoded['cards'] is! List<dynamic>) {
     throw FormatException('$path must contain a cards array.');
@@ -51,10 +56,32 @@ Future<void> main(List<String> arguments) async {
       throw FormatException('Batch ${entry.key} has more than 10 cards.');
     }
   }
-  await _validateGlobalBatchSizes();
+  if (deck == 'events') {
+    _validateDeckBatchSizes(deck, cards);
+  } else {
+    await _validateGlobalBatchSizes();
+  }
   stdout.writeln(
     'Validated $deck: ${cards.length} cards in ${batches.length} batches.',
   );
+}
+
+void _validateDeckBatchSizes(String deck, List<dynamic> cards) {
+  final counts = <int, int>{};
+  for (final raw in cards) {
+    final batch = (raw as Map<String, dynamic>)['importBatch'];
+    if (batch is! int) throw FormatException('$deck card has no importBatch.');
+    counts.update(batch, (count) => count + 1, ifAbsent: () => 1);
+  }
+  final batches = counts.keys.toList()..sort();
+  for (var index = 0; index < batches.length; index++) {
+    final batch = batches[index];
+    if (batch != index + 1) throw FormatException('Missing import batch ${index + 1}.');
+    final isFinal = index == batches.length - 1;
+    if ((!isFinal && counts[batch] != 10) || (isFinal && counts[batch]! > 10)) {
+      throw FormatException('Import batch $batch must contain 10 cards, except the final remainder.');
+    }
+  }
 }
 
 void _validateBehaviorIds(

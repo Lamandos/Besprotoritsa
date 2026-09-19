@@ -151,6 +151,11 @@ final class EffectRegistry {
     CardBehaviorHook('combat.pushUnkilledEnemy'),
     CardBehaviorHook('health.healingBonus'),
     CardBehaviorHook('damage.ignoreBoil'),
+    CardBehaviorHook('event.choice'),
+    CardBehaviorHook('event.skillCheck'),
+    CardBehaviorHook('event.successFailure'),
+    CardBehaviorHook('monster.spawn'),
+    CardBehaviorHook('monster.spawnClosedFallback'),
   ]);
 
   final List<EffectHook> _hookList;
