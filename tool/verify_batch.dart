@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
-
 import 'validate_schemas.dart';
 
 Future<void> main(List<String> arguments) async {
@@ -35,7 +33,7 @@ Future<void> main(List<String> arguments) async {
     }
     final card = Map<String, Object?>.from(raw);
     validator.validate(card);
-    _validateBehaviorIds(card);
+    _validateBehaviorIds(card, await _registeredBehaviorIds());
     final id = card['id']! as String;
     if (!ids.add(id)) throw FormatException('Duplicate card id: $id');
     final batch = card['importBatch']! as int;
@@ -59,8 +57,10 @@ Future<void> main(List<String> arguments) async {
   );
 }
 
-void _validateBehaviorIds(Map<String, Object?> card) {
-  final registered = EffectRegistry.standard().behaviorIds.toSet();
+void _validateBehaviorIds(
+  Map<String, Object?> card,
+  Set<String> registered,
+) {
   final ids = <String>[
     if (card['behaviorId'] case final String behaviorId) behaviorId,
     if (card['behaviorIds'] case final List<dynamic> behaviorIds)
@@ -73,6 +73,31 @@ void _validateBehaviorIds(Map<String, Object?> card) {
       );
     }
   }
+}
+
+Set<String>? _behaviorIds;
+
+Future<Set<String>> _registeredBehaviorIds() async {
+  final cached = _behaviorIds;
+  if (cached != null) return cached;
+  final document = jsonDecode(
+    await File('content/effects_inventory.json').readAsString(),
+  );
+  if (document is! Map<String, dynamic> || document['behaviors'] is! List) {
+    throw const FormatException(
+      'content/effects_inventory.json must contain behaviors.',
+    );
+  }
+  final ids = <String>{};
+  for (final raw in document['behaviors']! as List<dynamic>) {
+    if (raw is Map<String, dynamic> && raw['behaviorId'] is String) {
+      ids.add(raw['behaviorId']! as String);
+    }
+  }
+  if (ids.isEmpty) {
+    throw const FormatException('No behaviorIds found in effects inventory.');
+  }
+  return _behaviorIds = ids;
 }
 
 Future<void> _validateGlobalBatchSizes() async {
