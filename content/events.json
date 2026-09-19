@@ -2409,6 +2409,230 @@
         "target": "location",
         "fallback": "closedSector"
       }
+    },
+    {
+      "id": "invasion-crew-quarters-17",
+      "importBatch": 9,
+      "kind": "invasion",
+      "nameKey": "content.event.invasion-crew-quarters-17.name",
+      "descKey": "content.event.invasion-crew-quarters-17.description",
+      "options": [
+        {
+          "actionKey": "content.event.invasion-crew-quarters-17.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.invasion-crew-quarters-17.option.o1.success",
+          "failureKey": "content.event.invasion-crew-quarters-17.option.o1.failure",
+          "behaviorId": "monster.spawn",
+          "resolution": "immediate"
+        }
+      ],
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ],
+      "immediateCombat": true,
+      "locationId": "crew-quarters",
+      "spawn": {
+        "behaviorId": "monster.spawn",
+        "target": "location",
+        "fallback": "closedSector"
+      }
+    },
+    {
+      "id": "invasion-laboratory-18",
+      "importBatch": 9,
+      "kind": "invasion",
+      "nameKey": "content.event.invasion-laboratory-18.name",
+      "descKey": "content.event.invasion-laboratory-18.description",
+      "options": [
+        {
+          "actionKey": "content.event.invasion-laboratory-18.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.invasion-laboratory-18.option.o1.success",
+          "failureKey": "content.event.invasion-laboratory-18.option.o1.failure",
+          "behaviorId": "monster.spawn",
+          "resolution": "immediate"
+        }
+      ],
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ],
+      "immediateCombat": true,
+      "locationId": "laboratory",
+      "spawn": {
+        "behaviorId": "monster.spawn",
+        "target": "location",
+        "fallback": "closedSector"
+      }
+    },
+    {
+      "id": "invasion-storage-19",
+      "importBatch": 9,
+      "kind": "invasion",
+      "nameKey": "content.event.invasion-storage-19.name",
+      "descKey": "content.event.invasion-storage-19.description",
+      "options": [
+        {
+          "actionKey": "content.event.invasion-storage-19.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.invasion-storage-19.option.o1.success",
+          "failureKey": "content.event.invasion-storage-19.option.o1.failure",
+          "behaviorId": "monster.spawn",
+          "resolution": "immediate"
+        }
+      ],
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ],
+      "immediateCombat": true,
+      "locationId": "storage",
+      "spawn": {
+        "behaviorId": "monster.spawn",
+        "target": "location",
+        "fallback": "closedSector"
+      }
+    },
+    {
+      "id": "invasion-engineering-control-post-20",
+      "importBatch": 9,
+      "kind": "invasion",
+      "nameKey": "content.event.invasion-engineering-control-post-20.name",
+      "descKey": "content.event.invasion-engineering-control-post-20.description",
+      "options": [
+        {
+          "actionKey": "content.event.invasion-engineering-control-post-20.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.invasion-engineering-control-post-20.option.o1.success",
+          "failureKey": "content.event.invasion-engineering-control-post-20.option.o1.failure",
+          "behaviorId": "monster.spawn",
+          "resolution": "immediate"
+        }
+      ],
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ],
+      "immediateCombat": true,
+      "locationId": "engineering-control-post",
+      "spawn": {
+        "behaviorId": "monster.spawn",
+        "target": "location",
+        "fallback": "closedSector"
+      }
+    },
+    {
+      "id": "invasion-main-computer-21",
+      "importBatch": 9,
+      "kind": "invasion",
+      "nameKey": "content.event.invasion-main-computer-21.name",
+      "descKey": "content.event.invasion-main-computer-21.description",
+      "options": [
+        {
+          "actionKey": "content.event.invasion-main-computer-21.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.invasion-main-computer-21.option.o1.success",
+          "failureKey": "content.event.invasion-main-computer-21.option.o1.failure",
+          "behaviorId": "monster.spawn",
+          "resolution": "immediate"
+        }
+      ],
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ],
+      "immediateCombat": true,
+      "locationId": "main-computer",
+      "spawn": {
+        "behaviorId": "monster.spawn",
+        "target": "location",
+        "fallback": "closedSector"
+      }
+    },
+    {
+      "id": "invasion-dining-hall-22",
+      "importBatch": 9,
+      "kind": "invasion",
+      "nameKey": "content.event.invasion-dining-hall-22.name",
+      "descKey": "content.event.invasion-dining-hall-22.description",
+      "options": [
+        {
+          "actionKey": "content.event.invasion-dining-hall-22.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.invasion-dining-hall-22.option.o1.success",
+          "failureKey": "content.event.invasion-dining-hall-22.option.o1.failure",
+          "behaviorId": "monster.spawn",
+          "resolution": "immediate"
+        }
+      ],
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ],
+      "immediateCombat": true,
+      "locationId": "dining-hall",
+      "spawn": {
+        "behaviorId": "monster.spawn",
+        "target": "location",
+        "fallback": "closedSector"
+      }
+    },
+    {
+      "id": "invasion-flight-control-23",
+      "importBatch": 9,
+      "kind": "invasion",
+      "nameKey": "content.event.invasion-flight-control-23.name",
+      "descKey": "content.event.invasion-flight-control-23.description",
+      "options": [
+        {
+          "actionKey": "content.event.invasion-flight-control-23.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.invasion-flight-control-23.option.o1.success",
+          "failureKey": "content.event.invasion-flight-control-23.option.o1.failure",
+          "behaviorId": "monster.spawn",
+          "resolution": "immediate"
+        }
+      ],
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ],
+      "immediateCombat": true,
+      "locationId": "flight-control",
+      "spawn": {
+        "behaviorId": "monster.spawn",
+        "target": "location",
+        "fallback": "closedSector"
+      }
+    },
+    {
+      "id": "invasion-morgue-24",
+      "importBatch": 9,
+      "kind": "invasion",
+      "nameKey": "content.event.invasion-morgue-24.name",
+      "descKey": "content.event.invasion-morgue-24.description",
+      "options": [
+        {
+          "actionKey": "content.event.invasion-morgue-24.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.invasion-morgue-24.option.o1.success",
+          "failureKey": "content.event.invasion-morgue-24.option.o1.failure",
+          "behaviorId": "monster.spawn",
+          "resolution": "immediate"
+        }
+      ],
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ],
+      "immediateCombat": true,
+      "locationId": "morgue",
+      "spawn": {
+        "behaviorId": "monster.spawn",
+        "target": "location",
+        "fallback": "closedSector"
+      }
     }
   ]
 }
