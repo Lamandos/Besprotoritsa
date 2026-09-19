@@ -46,6 +46,9 @@
     {"id":"h3-al","category":"robot","slots":["robot"],"cost":0,"stats":{},"behaviorIds":["robot.exhaust","health.restore"],"copies":1,"importBatch":5,"sourceDeck":"items","nameKey":"content.item.h3-al.name","descKey":"content.item.h3-al.description"},
     {"id":"pipe","category":"weapon","slots":["weapon"],"cost":6,"stats":{},"behaviorId":"dice.reroll.one","copies":1,"importBatch":5,"sourceDeck":"supplies","nameKey":"content.item.pipe.name","descKey":"content.item.pipe.description"},
     {"id":"brass-knuckles","category":"weapon","slots":["weapon"],"cost":8,"stats":{},"behaviorId":"combat.selfDamageForHit","copies":1,"importBatch":5,"sourceDeck":"supplies","nameKey":"content.item.brass-knuckles.name","descKey":"content.item.brass-knuckles.description"},
-    {"id":"helmet","category":"armor","slots":["armor"],"cost":10,"stats":{"defense":1},"copies":1,"importBatch":5,"sourceDeck":"supplies","nameKey":"content.item.helmet.name","descKey":"content.item.helmet.description"}
+    {"id":"helmet","category":"armor","slots":["armor"],"cost":10,"stats":{"defense":1},"copies":1,"importBatch":5,"sourceDeck":"supplies","nameKey":"content.item.helmet.name","descKey":"content.item.helmet.description"},
+    {"id":"makeshift-armor","category":"armor","slots":["armor"],"cost":8,"stats":{"defense":1,"agility":-1},"copies":1,"importBatch":6,"sourceDeck":"supplies","nameKey":"content.item.makeshift-armor.name","descKey":"content.item.makeshift-armor.description"},
+    {"id":"welding-mask","category":"armor","slots":["armor"],"cost":10,"stats":{"defense":2,"strength":-1,"agility":-1},"copies":1,"importBatch":6,"sourceDeck":"supplies","nameKey":"content.item.welding-mask.name","descKey":"content.item.welding-mask.description"},
+    {"id":"cleaver","category":"weapon","slots":["weapon"],"cost":7,"stats":{"strength":1},"copies":1,"importBatch":6,"sourceDeck":"supplies","nameKey":"content.item.cleaver.name","descKey":"content.item.cleaver.description"}
   ]
 }

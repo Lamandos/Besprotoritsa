@@ -135,6 +135,7 @@ final class EffectRegistry {
     CardBehaviorHook('card.discardCost'),
     CardBehaviorHook('action.grant'),
     CardBehaviorHook('economy.gainCredits'),
+    CardBehaviorHook('economy.spendCredits'),
     CardBehaviorHook('action.spend'),
     CardBehaviorHook('map.moveAirlock'),
     CardBehaviorHook('monster.trapOnEnter'),
