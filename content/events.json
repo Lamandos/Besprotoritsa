@@ -1576,6 +1576,295 @@
         "event.skillCheck",
         "event.successFailure"
       ]
+    },
+    {
+      "id": "lockers",
+      "importBatch": 6,
+      "kind": "narrative",
+      "nameKey": "content.event.lockers.name",
+      "descKey": "content.event.lockers.description",
+      "options": [
+        {
+          "actionKey": "content.event.lockers.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.lockers.option.o1.success",
+          "failureKey": "content.event.lockers.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.lockers.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.lockers.option.o2.success",
+          "failureKey": "content.event.lockers.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "body-pile",
+      "importBatch": 6,
+      "kind": "narrative",
+      "nameKey": "content.event.body-pile.name",
+      "descKey": "content.event.body-pile.description",
+      "options": [
+        {
+          "actionKey": "content.event.body-pile.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.body-pile.option.o1.success",
+          "failureKey": "content.event.body-pile.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.body-pile.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.body-pile.option.o2.success",
+          "failureKey": "content.event.body-pile.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "junk-medical",
+      "importBatch": 6,
+      "kind": "narrative",
+      "nameKey": "content.event.junk-medical.name",
+      "descKey": "content.event.junk-medical.description",
+      "options": [
+        {
+          "actionKey": "content.event.junk-medical.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.junk-medical.option.o1.success",
+          "failureKey": "content.event.junk-medical.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.junk-medical.option.o2.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.junk-medical.option.o2.success",
+          "failureKey": "content.event.junk-medical.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.junk-medical.option.o3.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.junk-medical.option.o3.success",
+          "failureKey": "content.event.junk-medical.option.o3.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "junk-credits",
+      "importBatch": 6,
+      "kind": "narrative",
+      "nameKey": "content.event.junk-credits.name",
+      "descKey": "content.event.junk-credits.description",
+      "options": [
+        {
+          "actionKey": "content.event.junk-credits.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.junk-credits.option.o1.success",
+          "failureKey": "content.event.junk-credits.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.junk-credits.option.o2.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.junk-credits.option.o2.success",
+          "failureKey": "content.event.junk-credits.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "junk-guitar",
+      "importBatch": 6,
+      "kind": "narrative",
+      "nameKey": "content.event.junk-guitar.name",
+      "descKey": "content.event.junk-guitar.description",
+      "options": [
+        {
+          "actionKey": "content.event.junk-guitar.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.junk-guitar.option.o1.success",
+          "failureKey": "content.event.junk-guitar.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.junk-guitar.option.o2.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.junk-guitar.option.o2.success",
+          "failureKey": "content.event.junk-guitar.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "shelf-equipment",
+      "importBatch": 6,
+      "kind": "narrative",
+      "nameKey": "content.event.shelf-equipment.name",
+      "descKey": "content.event.shelf-equipment.description",
+      "options": [
+        {
+          "actionKey": "content.event.shelf-equipment.option.o1.action",
+          "skillCheck": {
+            "skill": "agility",
+            "difficulty": 1
+          },
+          "successKey": "content.event.shelf-equipment.option.o1.success",
+          "failureKey": "content.event.shelf-equipment.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.shelf-equipment.option.o2.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.shelf-equipment.option.o2.success",
+          "failureKey": "content.event.shelf-equipment.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "falling-beam",
+      "importBatch": 6,
+      "kind": "global",
+      "nameKey": "content.event.falling-beam.name",
+      "descKey": "content.event.falling-beam.description",
+      "options": [
+        {
+          "actionKey": "content.event.falling-beam.option.o1.action",
+          "skillCheck": {
+            "skill": "endurance",
+            "difficulty": 1
+          },
+          "successKey": "content.event.falling-beam.option.o1.success",
+          "failureKey": "content.event.falling-beam.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "meteor-stream",
+      "importBatch": 6,
+      "kind": "global",
+      "nameKey": "content.event.meteor-stream.name",
+      "descKey": "content.event.meteor-stream.description",
+      "options": [
+        {
+          "actionKey": "content.event.meteor-stream.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.meteor-stream.option.o1.success",
+          "failureKey": "content.event.meteor-stream.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "fire",
+      "importBatch": 6,
+      "kind": "global",
+      "nameKey": "content.event.fire.name",
+      "descKey": "content.event.fire.description",
+      "options": [
+        {
+          "actionKey": "content.event.fire.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.fire.option.o1.success",
+          "failureKey": "content.event.fire.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.fire.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.fire.option.o2.success",
+          "failureKey": "content.event.fire.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "monster-horde",
+      "importBatch": 6,
+      "kind": "global",
+      "nameKey": "content.event.monster-horde.name",
+      "descKey": "content.event.monster-horde.description",
+      "options": [
+        {
+          "actionKey": "content.event.monster-horde.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.monster-horde.option.o1.success",
+          "failureKey": "content.event.monster-horde.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.monster-horde.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.monster-horde.option.o2.success",
+          "failureKey": "content.event.monster-horde.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.successFailure"
+      ]
     }
   ]
 }
