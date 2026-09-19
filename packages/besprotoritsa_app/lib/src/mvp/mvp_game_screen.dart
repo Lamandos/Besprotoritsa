@@ -335,6 +335,19 @@ List<Widget> _decisionActions(WidgetRef ref, PendingDecision decision) =>
           child: const Text('Не покупать'),
         ),
       ],
+      AwaitingHeroReplacement(:final characterIds) => [
+        for (final characterId in characterIds)
+          FilledButton(
+            onPressed: () => ref
+                .read(gameControllerProvider.notifier)
+                .dispatch(
+                  ResolvePendingDecisionCommand(
+                    SelectReplacementHeroChoice(characterId),
+                  ),
+                ),
+            child: Text('Выбрать: $characterId'),
+          ),
+      ],
     };
 
 List<_NamedCommand> _availableCommands(GameState state) {
@@ -375,6 +388,8 @@ String _eventLabel(GameEvent event) => switch (event) {
   ColocationTriggered(:final playerId) => 'столкновение: $playerId',
   DamageDealt(:final playerId, :final amount) =>
     '$playerId получил урон $amount',
+  HeroDied(:final playerId, :final restlessInstanceId) =>
+    '$playerId погиб; появился $restlessInstanceId',
   ConditionDrawn(:final conditionId) => 'получено состояние: $conditionId',
   MvpDemonstrationCompleted(:final questId) => 'завершено задание: $questId',
 };
@@ -385,6 +400,7 @@ String _decisionPrompt(PendingDecision decision) => switch (decision) {
     'Уклонение: нужно успехов $requiredSuccesses',
   AwaitingEventOption() => 'Выберите вариант события.',
   AwaitingTerminalPick() => 'Выберите припас в терминале.',
+  AwaitingHeroReplacement() => 'Выберите героя на замену.',
 };
 
 class _HexClipper extends CustomClipper<Path> {
