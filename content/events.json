@@ -640,6 +640,298 @@
         "event.skillCheck",
         "event.successFailure"
       ]
+    },
+    {
+      "id": "exoskeleton-terminal",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.exoskeleton-terminal.name",
+      "descKey": "content.event.exoskeleton-terminal.description",
+      "options": [
+        {
+          "actionKey": "content.event.exoskeleton-terminal.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.exoskeleton-terminal.option.o1.success",
+          "failureKey": "content.event.exoskeleton-terminal.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "contraband-cache",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.contraband-cache.name",
+      "descKey": "content.event.contraband-cache.description",
+      "options": [
+        {
+          "actionKey": "content.event.contraband-cache.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.contraband-cache.option.o1.success",
+          "failureKey": "content.event.contraband-cache.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.contraband-cache.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.contraband-cache.option.o2.success",
+          "failureKey": "content.event.contraband-cache.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "falling-monster",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.falling-monster.name",
+      "descKey": "content.event.falling-monster.description",
+      "options": [
+        {
+          "actionKey": "content.event.falling-monster.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.falling-monster.option.o1.success",
+          "failureKey": "content.event.falling-monster.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "collapsed-panel",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.collapsed-panel.name",
+      "descKey": "content.event.collapsed-panel.description",
+      "options": [
+        {
+          "actionKey": "content.event.collapsed-panel.option.o1.action",
+          "skillCheck": {
+            "skill": "strength",
+            "difficulty": 1
+          },
+          "successKey": "content.event.collapsed-panel.option.o1.success",
+          "failureKey": "content.event.collapsed-panel.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.collapsed-panel.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.collapsed-panel.option.o2.success",
+          "failureKey": "content.event.collapsed-panel.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "blood-trail",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.blood-trail.name",
+      "descKey": "content.event.blood-trail.description",
+      "options": [
+        {
+          "actionKey": "content.event.blood-trail.option.o1.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.blood-trail.option.o1.success",
+          "failureKey": "content.event.blood-trail.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.blood-trail.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.blood-trail.option.o2.success",
+          "failureKey": "content.event.blood-trail.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "ship-map",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.ship-map.name",
+      "descKey": "content.event.ship-map.description",
+      "options": [
+        {
+          "actionKey": "content.event.ship-map.option.o1.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.ship-map.option.o1.success",
+          "failureKey": "content.event.ship-map.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.ship-map.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.ship-map.option.o2.success",
+          "failureKey": "content.event.ship-map.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "cache-symbols",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.cache-symbols.name",
+      "descKey": "content.event.cache-symbols.description",
+      "options": [
+        {
+          "actionKey": "content.event.cache-symbols.option.o1.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.cache-symbols.option.o1.success",
+          "failureKey": "content.event.cache-symbols.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "scientist-case",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.scientist-case.name",
+      "descKey": "content.event.scientist-case.description",
+      "options": [
+        {
+          "actionKey": "content.event.scientist-case.option.o1.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.scientist-case.option.o1.success",
+          "failureKey": "content.event.scientist-case.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.scientist-case.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.scientist-case.option.o2.success",
+          "failureKey": "content.event.scientist-case.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "inventory-notes",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.inventory-notes.name",
+      "descKey": "content.event.inventory-notes.description",
+      "options": [
+        {
+          "actionKey": "content.event.inventory-notes.option.o1.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.inventory-notes.option.o1.success",
+          "failureKey": "content.event.inventory-notes.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
+    },
+    {
+      "id": "nest-room",
+      "importBatch": 3,
+      "kind": "narrative",
+      "nameKey": "content.event.nest-room.name",
+      "descKey": "content.event.nest-room.description",
+      "options": [
+        {
+          "actionKey": "content.event.nest-room.option.o1.action",
+          "skillCheck": null,
+          "successKey": "content.event.nest-room.option.o1.success",
+          "failureKey": "content.event.nest-room.option.o1.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.nest-room.option.o2.action",
+          "skillCheck": {
+            "skill": "science",
+            "difficulty": 1
+          },
+          "successKey": "content.event.nest-room.option.o2.success",
+          "failureKey": "content.event.nest-room.option.o2.failure",
+          "behaviorId": "event.successFailure"
+        },
+        {
+          "actionKey": "content.event.nest-room.option.o3.action",
+          "skillCheck": {
+            "skill": "repair",
+            "difficulty": 1
+          },
+          "successKey": "content.event.nest-room.option.o3.success",
+          "failureKey": "content.event.nest-room.option.o3.failure",
+          "behaviorId": "event.successFailure"
+        }
+      ],
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     }
   ]
 }
