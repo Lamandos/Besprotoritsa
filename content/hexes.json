@@ -1,0 +1,17 @@
+{
+  "hexes": [
+    {"id":"crew-quarters","type":"compartment","locationNameKey":"content.location.crew-quarters","hasTerminal":false,"ventColor":"none","exits":[]},
+    {"id":"engineering-control-post","type":"compartment","locationNameKey":"content.location.engineering-control-post","hasTerminal":true,"ventColor":"none","exits":[]},
+    {"id":"reactor","type":"compartment","locationNameKey":"content.location.reactor","hasTerminal":true,"ventColor":"none","exits":[]},
+    {"id":"medical-bay","type":"compartment","locationNameKey":"content.location.medical-bay","hasTerminal":false,"ventColor":"none","exits":[]},
+    {"id":"laboratory","type":"compartment","locationNameKey":"content.location.laboratory","hasTerminal":true,"ventColor":"none","exits":[]},
+    {"id":"main-computer","type":"compartment","locationNameKey":"content.location.main-computer","hasTerminal":true,"ventColor":"none","exits":[]},
+    {"id":"escape-pods","type":"compartment","locationNameKey":"content.location.escape-pods","hasTerminal":false,"ventColor":"none","exits":[]},
+    {"id":"storage","type":"compartment","locationNameKey":"content.location.storage","hasTerminal":false,"ventColor":"none","exits":[]},
+    {"id":"flight-control","type":"compartment","locationNameKey":"content.location.flight-control","hasTerminal":true,"ventColor":"none","exits":[]},
+    {"id":"armory","type":"compartment","locationNameKey":"content.location.armory","hasTerminal":false,"ventColor":"none","exits":[]},
+    {"id":"dining-hall","type":"compartment","locationNameKey":"content.location.dining-hall","hasTerminal":false,"ventColor":"none","exits":[]},
+    {"id":"morgue","type":"compartment","locationNameKey":"content.location.morgue","hasTerminal":false,"ventColor":"none","exits":[]},
+    {"id":"anabiosis","type":"start","locationNameKey":"content.location.anabiosis","hasTerminal":false,"ventColor":"none","exits":[]}
+  ]
+}

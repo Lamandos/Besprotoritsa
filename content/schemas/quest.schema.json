@@ -4,12 +4,13 @@
   "title": "Quest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "chapter", "targetLocation", "conditions", "reward", "nextQuestIds", "nameKey", "descKey"],
+  "required": ["id", "chapter", "conditions", "reward", "nextQuestIds", "nameKey", "descKey"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
-    "chapter": { "type": "integer", "minimum": 1 },
-    "targetLocation": { "$ref": "#/$defs/id" },
-    "conditions": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "number": { "type": "integer", "minimum": 1 },
+    "chapter": { "type": "integer", "minimum": 0 },
+    "targetLocation": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+    "conditions": { "type": "array", "uniqueItems": true, "items": { "oneOf": [{ "$ref": "#/$defs/id" }, { "$ref": "#/$defs/condition" }] } },
     "reward": {
       "type": "object",
       "additionalProperties": false,
@@ -20,11 +21,28 @@
       }
     },
     "nextQuestIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "prerequisiteQuestIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "endsGame": { "type": "boolean" },
     "nameKey": { "$ref": "#/$defs/localizationKey" },
     "descKey": { "$ref": "#/$defs/localizationKey" }
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
-    "localizationKey": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" }
+    "localizationKey": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "$ref": "#/$defs/id" },
+        "locationId": { "$ref": "#/$defs/id" },
+        "skill": { "$ref": "#/$defs/id" },
+        "monsterId": { "$ref": "#/$defs/id" },
+        "itemId": { "$ref": "#/$defs/id" },
+        "metric": { "$ref": "#/$defs/id" },
+        "targetValue": { "type": "integer", "minimum": 1 }
+      }
+    }
   }
 }

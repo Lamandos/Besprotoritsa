@@ -4,11 +4,14 @@
   "title": "Task",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "targetType", "targetValue", "rewardCredits", "nameKey", "descKey"],
+  "required": ["id", "targetType", "metric", "targetValue", "window", "rewardCredits", "nameKey", "descKey"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
     "targetType": { "$ref": "#/$defs/id" },
+    "metric": { "$ref": "#/$defs/id" },
     "targetValue": { "type": "integer", "minimum": 0 },
+    "window": { "enum": ["perTurn", "simultaneously", "game"] },
+    "aggregation": { "enum": ["sum", "maximum", "max"] },
     "rewardCredits": { "type": "integer", "minimum": 0 },
     "nameKey": { "$ref": "#/$defs/localizationKey" },
     "descKey": { "$ref": "#/$defs/localizationKey" }

@@ -11,3 +11,5 @@ export 'src/effect_hooks.dart';
 export 'src/effect_registry.dart';
 export 'src/game_state.dart';
 export 'src/inventory_rules.dart';
+export 'src/personal_tasks.dart';
+export 'src/quest_engine.dart';
