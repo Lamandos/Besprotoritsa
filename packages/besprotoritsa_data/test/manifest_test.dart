@@ -25,6 +25,18 @@ void main() {
     });
 
     test('contains deterministic SHA-256 hashes', () async {
+      final missingSources = [
+        for (final entry in entries)
+          if (!File(entry['path']! as String).existsSync())
+            entry['path']! as String,
+      ];
+      if (missingSources.isNotEmpty) {
+        markTestSkipped(
+          'Source PDFs are not included in this checkout: '
+          '${missingSources.join(', ')}.',
+        );
+      }
+
       for (final entry in entries) {
         final path = entry['path']! as String;
         final expectedHash = entry['sha256']! as String;
