@@ -5,6 +5,7 @@ import 'dart:async';
 
 import 'package:besprotoritsa_app/src/game/game_controller.dart';
 import 'package:besprotoritsa_app/src/mvp/mvp_game_screen.dart';
+import 'package:besprotoritsa_app/src/storage/save_system.dart';
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:flutter/material.dart';
@@ -42,26 +43,129 @@ class _AutosavingGame extends ConsumerStatefulWidget {
   ConsumerState<_AutosavingGame> createState() => _AutosavingGameState();
 }
 
-class _AutosavingGameState extends ConsumerState<_AutosavingGame> {
+class _AutosavingGameState extends ConsumerState<_AutosavingGame>
+    with WidgetsBindingObserver {
+  late final SaveSystem _saves;
+  Future<void> _saveChain = Future<void>.value();
+
   @override
   void initState() {
     super.initState();
-    unawaited(_save(widget.initialState));
+    _saves = SaveSystem(storage: widget.storage);
+    WidgetsBinding.instance.addObserver(this);
+    _queueAutosave(widget.initialState);
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<GameState>(gameControllerProvider, (_, next) {
-      unawaited(_save(next));
+      // This covers every state boundary, including the start of a new round
+      // and an unresolved event/combat choice.
+      _queueAutosave(next);
     });
-    return const MvpGameScreen();
+    return MvpGameScreen(onManualSaveRequested: _saveManual);
   }
 
-  Future<void> _save(GameState state) async {
-    try {
-      await widget.storage.saveGame('autosave', state);
-    } on Object {
-      // Saving must not prevent an otherwise playable local game session.
+  @override
+  void dispose() {
+    // A final queued snapshot records a back-navigation/app-close boundary.
+    _queueAutosave(ref.read(gameControllerProvider));
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState lifecycleState) {
+    if (lifecycleState == AppLifecycleState.inactive ||
+        lifecycleState == AppLifecycleState.paused ||
+        lifecycleState == AppLifecycleState.detached) {
+      _queueAutosave(ref.read(gameControllerProvider));
     }
   }
+
+  void _queueAutosave(GameState state) {
+    _saveChain = _saveChain.catchError((Object _) {}).then((_) async {
+      try {
+        await _saves.autosave(state);
+      } on Object {
+        // Saving must not prevent an otherwise playable local game session.
+      }
+    });
+  }
+
+  Future<void> _saveManual(GameState state) async {
+    final selected = await _showManualSaveDialog();
+    if (selected == null || !mounted) return;
+    try {
+      await _saves.saveManual(selected.slotId, state, name: selected.name);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Партия сохранена.')),
+        );
+      }
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось сохранить партию.')),
+        );
+      }
+    }
+  }
+
+  Future<_ManualSaveChoice?> _showManualSaveDialog() async {
+    final controller = TextEditingController();
+    var slotId = SaveSlots.manual.first;
+    final result = await showDialog<_ManualSaveChoice>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Сохранить партию'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: slotId,
+                items: [
+                  for (var index = 0; index < SaveSlots.manual.length; index++)
+                    DropdownMenuItem<String>(
+                      value: SaveSlots.manual[index],
+                      child: Text('Слот ${index + 1}'),
+                    ),
+                ],
+                onChanged: (value) {
+                  if (value != null) setDialogState(() => slotId = value);
+                },
+              ),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(labelText: 'Название'),
+                maxLength: 80,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(
+                _ManualSaveChoice(slotId, controller.text),
+              ),
+              child: const Text('Сохранить'),
+            ),
+          ],
+        ),
+      ),
+    );
+    controller.dispose();
+    return result;
+  }
+}
+
+class _ManualSaveChoice {
+  const _ManualSaveChoice(this.slotId, this.name);
+
+  final String slotId;
+  final String name;
 }

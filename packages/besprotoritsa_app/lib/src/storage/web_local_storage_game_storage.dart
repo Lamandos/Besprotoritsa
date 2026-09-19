@@ -10,7 +10,8 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 const _saveKeyPrefix = 'besprotoritsa.save.';
 
 /// Browser save adapter backed by the origin-scoped LocalStorage database.
-class WebLocalStorageGameStorage implements GameStorage {
+class WebLocalStorageGameStorage
+    implements GameStorage, SaveSlotMetadataStorage {
   /// Creates browser storage using the supplied [codec].
   WebLocalStorageGameStorage({GameStateJsonCodec? codec})
     : _codec = codec ?? GameStateJsonCodec();
@@ -27,6 +28,20 @@ class WebLocalStorageGameStorage implements GameStorage {
     final document = html.window.localStorage[_keyFor(slotId)];
     return document == null ? null : _codec.decode(document);
   }
+
+  @override
+  Future<void> saveSlotName(String slotId, String? name) async {
+    final key = '${_keyFor(slotId)}.name';
+    if (name == null || name.trim().isEmpty) {
+      html.window.localStorage.remove(key);
+    } else {
+      html.window.localStorage[key] = name.trim();
+    }
+  }
+
+  @override
+  Future<String?> loadSlotName(String slotId) async =>
+      html.window.localStorage['${_keyFor(slotId)}.name'];
 
   String _keyFor(String slotId) =>
       '$_saveKeyPrefix'

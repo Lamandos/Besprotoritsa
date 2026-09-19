@@ -11,7 +11,10 @@ const mvpBoardRepaintBoundaryKey = ValueKey<String>('mvp-hex-board');
 /// The playable MVP board, command palette, animation status, and game log.
 class MvpGameScreen extends ConsumerWidget {
   /// Creates the MVP game screen.
-  const MvpGameScreen({super.key});
+  const MvpGameScreen({this.onManualSaveRequested, super.key});
+
+  /// Called with the current immutable snapshot when the player saves.
+  final Future<void> Function(GameState state)? onManualSaveRequested;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,23 +22,43 @@ class MvpGameScreen extends ConsumerWidget {
     final queue = ref.read(eventQueueProvider);
     return ListenableBuilder(
       listenable: queue,
-      builder: (context, _) => _MvpGameLayout(state: state, queue: queue),
+      builder: (context, _) => _MvpGameLayout(
+        state: state,
+        queue: queue,
+        onManualSaveRequested: onManualSaveRequested,
+      ),
     );
   }
 }
 
 class _MvpGameLayout extends ConsumerWidget {
-  const _MvpGameLayout({required this.state, required this.queue});
+  const _MvpGameLayout({
+    required this.state,
+    required this.queue,
+    required this.onManualSaveRequested,
+  });
 
   final GameState state;
   final EventQueue queue;
+  final Future<void> Function(GameState state)? onManualSaveRequested;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final blocked = queue.isPlaying || state.pendingDecision != null;
     final strings = AppStrings.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(strings.mvpTitle)),
+      appBar: AppBar(
+        title: Text(strings.mvpTitle),
+        actions: [
+          if (onManualSaveRequested != null)
+            IconButton(
+              key: const ValueKey<String>('manual-save-button'),
+              tooltip: 'Сохранить партию',
+              onPressed: () => onManualSaveRequested!(state),
+              icon: const Icon(Icons.save_outlined),
+            ),
+        ],
+      ),
       body: SafeArea(
         child: Stack(
           children: [

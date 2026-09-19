@@ -60,6 +60,8 @@ void main() {
 
     expect(find.text('Последнее автосохранение'), findsOneWidget);
     expect(find.text('Слот 1'), findsOneWidget);
-    expect(find.text('Пусто'), findsNWidgets(4));
+    expect(find.text('Слот 4'), findsOneWidget);
+    expect(find.text('Слот 5'), findsOneWidget);
+    expect(find.text('Пусто'), findsNWidgets(6));
   });
 }

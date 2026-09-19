@@ -6,6 +6,7 @@ import 'package:besprotoritsa_app/src/menu/game_session_screen.dart';
 import 'package:besprotoritsa_app/src/menu/roster_selection_screen.dart';
 import 'package:besprotoritsa_app/src/menu/tutorial_and_rules_screens.dart';
 import 'package:besprotoritsa_app/src/storage/platform_game_storage.dart';
+import 'package:besprotoritsa_app/src/storage/save_system.dart';
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:flutter/material.dart';
@@ -131,7 +132,7 @@ void _push(BuildContext context, Widget screen) {
   );
 }
 
-/// Shows the autosave and three player-facing save slots.
+/// Shows the autosave and five player-facing save slots.
 class SaveSlotsScreen extends StatelessWidget {
   const SaveSlotsScreen({required this.storage, super.key});
 
@@ -142,7 +143,7 @@ class SaveSlotsScreen extends StatelessWidget {
     final strings = AppStrings.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(strings.loadTitle)),
-      body: FutureBuilder<List<GameState?>>(
+      body: FutureBuilder<List<_LoadedSlot>>(
         future: _loadSlots(storage),
         builder: (context, snapshot) {
           final saves = snapshot.data;
@@ -155,7 +156,7 @@ class SaveSlotsScreen extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) => _SaveSlotTile(
               slot: _saveSlots[index],
-              state: saves[index],
+              loaded: saves[index],
               storage: storage,
               strings: strings,
             ),
@@ -166,48 +167,62 @@ class SaveSlotsScreen extends StatelessWidget {
   }
 }
 
-Future<List<GameState?>> _loadSlots(GameStorage storage) => Future.wait(
-  _saveSlots.map((slot) async {
-    try {
-      return await storage.loadGame(slot.id);
-    } on Object {
-      return null;
-    }
-  }),
-);
+Future<List<_LoadedSlot>> _loadSlots(GameStorage storage) {
+  final saves = SaveSystem(storage: storage);
+  return Future.wait(
+    _saveSlots.map((slot) async {
+      try {
+        return _LoadedSlot(
+          state: await saves.load(slot.id),
+          name: await saves.loadName(slot.id),
+        );
+      } on Object {
+        return const _LoadedSlot();
+      }
+    }),
+  );
+}
 
 class _SaveSlotTile extends StatelessWidget {
   const _SaveSlotTile({
     required this.slot,
-    required this.state,
+    required this.loaded,
     required this.storage,
     required this.strings,
   });
 
   final _SaveSlot slot;
-  final GameState? state;
+  final _LoadedSlot loaded;
   final GameStorage storage;
   final AppStrings strings;
 
   @override
   Widget build(BuildContext context) => Card(
     child: ListTile(
-      title: Text(slot.label(strings)),
+      title: Text(loaded.name ?? slot.label(strings)),
       subtitle: Text(
-        state == null
+        loaded.state == null
             ? strings.emptySlot
-            : '${strings.savedGame} · ${strings.saveRound(state!.round)}',
+            : '${strings.savedGame} · '
+                  '${strings.saveRound(loaded.state!.round)}',
       ),
       trailing: const Icon(Icons.chevron_right),
-      enabled: state != null,
-      onTap: state == null
+      enabled: loaded.state != null,
+      onTap: loaded.state == null
           ? null
           : () => _push(
               context,
-              GameSessionScreen(initialState: state!, storage: storage),
+              GameSessionScreen(initialState: loaded.state!, storage: storage),
             ),
     ),
   );
+}
+
+class _LoadedSlot {
+  const _LoadedSlot({this.state, this.name});
+
+  final GameState? state;
+  final String? name;
 }
 
 class _SaveSlot {
@@ -218,8 +233,10 @@ class _SaveSlot {
 }
 
 final List<_SaveSlot> _saveSlots = <_SaveSlot>[
-  _SaveSlot('autosave', (strings) => strings.autosave),
-  _SaveSlot('slot-1', (strings) => strings.saveSlotOne),
-  _SaveSlot('slot-2', (strings) => strings.saveSlotTwo),
-  _SaveSlot('slot-3', (strings) => strings.saveSlotThree),
+  _SaveSlot(SaveSlots.autosave, (strings) => strings.autosave),
+  for (var index = 0; index < SaveSlots.manual.length; index++)
+    _SaveSlot(
+      SaveSlots.manual[index],
+      (strings) => strings.saveSlot(index + 1),
+    ),
 ];

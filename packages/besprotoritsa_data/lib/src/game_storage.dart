@@ -13,6 +13,19 @@ abstract interface class GameStorage {
   Future<GameState?> loadGame(String slotId);
 }
 
+/// Optional capability for storage backends that persist player-facing slot
+/// names alongside their game snapshots.
+///
+/// Keeping this separate from [GameStorage] preserves compatibility with hosts
+/// that only need to persist a game state.
+abstract interface class SaveSlotMetadataStorage {
+  /// Stores a nullable display name for [slotId]. A null name clears it.
+  Future<void> saveSlotName(String slotId, String? name);
+
+  /// Reads the player-provided display name for [slotId], if one exists.
+  Future<String?> loadSlotName(String slotId);
+}
+
 /// A single transformation from one save schema version to the next.
 typedef SaveMigration =
     Map<String, Object?> Function(
@@ -88,13 +101,14 @@ Map<String, Object?> _migrateVersionZero(Map<String, Object?> document) {
 }
 
 /// A storage implementation useful for tests and hosts with their own backend.
-class InMemoryGameStorage implements GameStorage {
+class InMemoryGameStorage implements GameStorage, SaveSlotMetadataStorage {
   /// Creates an empty memory-backed storage using [codec].
   InMemoryGameStorage({GameStateJsonCodec? codec})
     : _codec = codec ?? GameStateJsonCodec();
 
   final GameStateJsonCodec _codec;
   final Map<String, String> _documents = <String, String>{};
+  final Map<String, String> _slotNames = <String, String>{};
 
   @override
   Future<void> saveGame(String slotId, GameState state) async {
@@ -106,6 +120,20 @@ class InMemoryGameStorage implements GameStorage {
     final document = _documents[_validateSlotId(slotId)];
     return document == null ? null : _codec.decode(document);
   }
+
+  @override
+  Future<void> saveSlotName(String slotId, String? name) async {
+    final validatedSlotId = _validateSlotId(slotId);
+    if (name == null || name.trim().isEmpty) {
+      _slotNames.remove(validatedSlotId);
+    } else {
+      _slotNames[validatedSlotId] = name.trim();
+    }
+  }
+
+  @override
+  Future<String?> loadSlotName(String slotId) async =>
+      _slotNames[_validateSlotId(slotId)];
 
   /// Exposes the exact JSON document for persistence adapter tests.
   String? encodedSlot(String slotId) => _documents[_validateSlotId(slotId)];

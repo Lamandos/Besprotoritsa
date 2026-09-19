@@ -109,6 +109,7 @@ class AppStrings {
   String rosterCount(int count) => '${_value('rosterCountPrefix')}$count/4';
   String tutorialRound(int round) => '${_value('tutorialRoundPrefix')}$round/3';
   String saveRound(int round) => '${_value('saveRoundPrefix')}$round';
+  String saveSlot(int number) => '${_value('saveSlotPrefix')}$number';
 
   String _value(String key) => _values[key]!;
 }
@@ -153,6 +154,7 @@ const Map<String, String> _ruValues = <String, String>{
   'saveSlotOne': 'Слот 1',
   'saveSlotTwo': 'Слот 2',
   'saveSlotThree': 'Слот 3',
+  'saveSlotPrefix': 'Слот ',
   'emptySlot': 'Пусто',
   'savedGame': 'Сохранённая партия',
   'noAutosave': 'Автосохранение пока не найдено.',
