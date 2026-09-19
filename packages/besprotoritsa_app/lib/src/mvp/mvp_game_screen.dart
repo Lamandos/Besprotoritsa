@@ -314,6 +314,27 @@ List<Widget> _decisionActions(WidgetRef ref, PendingDecision decision) =>
             child: Text(option),
           ),
       ],
+      AwaitingTerminalPick(:final offeredCards) => [
+        for (final cardId in offeredCards)
+          FilledButton(
+            onPressed: () => ref
+                .read(gameControllerProvider.notifier)
+                .dispatch(
+                  ResolvePendingDecisionCommand(TerminalPickChoice(cardId)),
+                ),
+            child: Text('Купить: $cardId'),
+          ),
+        TextButton(
+          onPressed: () => ref
+              .read(gameControllerProvider.notifier)
+              .dispatch(
+                const ResolvePendingDecisionCommand(
+                  DeclineTerminalPickChoice(),
+                ),
+              ),
+          child: const Text('Не покупать'),
+        ),
+      ],
     };
 
 List<_NamedCommand> _availableCommands(GameState state) {
@@ -363,6 +384,7 @@ String _decisionPrompt(PendingDecision decision) => switch (decision) {
   AwaitingDodge(:final requiredSuccesses) =>
     'Уклонение: нужно успехов $requiredSuccesses',
   AwaitingEventOption() => 'Выберите вариант события.',
+  AwaitingTerminalPick() => 'Выберите припас в терминале.',
 };
 
 class _HexClipper extends CustomClipper<Path> {
