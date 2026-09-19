@@ -1,3 +1,4 @@
+import 'package:besprotoritsa_app/src/content/content_review_screen.dart';
 import 'package:besprotoritsa_app/src/mvp/mvp_game_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -65,6 +66,16 @@ class StartScreen extends StatelessWidget {
                   ),
                   child: const Text('Запуск MVP (Демо)'),
                 ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push<void>(
+                    MaterialPageRoute<void>(
+                      builder: (context) => const InternalDevMenuScreen(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.developer_mode),
+                  label: const Text('Внутреннее dev-меню'),
+                ),
               ],
             ),
           ),
@@ -72,4 +83,35 @@ class StartScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Internal-only utilities that are intentionally separate from the game UI.
+class InternalDevMenuScreen extends StatelessWidget {
+  /// Creates the internal development menu.
+  const InternalDevMenuScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Внутреннее dev-меню')),
+    body: ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.fact_check_outlined),
+            title: const Text('Аудит контента'),
+            subtitle: const Text(
+              'Изображение, JSON, локализация, behaviorId и тесты',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (context) => const ContentReviewScreen(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }
