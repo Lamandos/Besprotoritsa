@@ -1,0 +1,108 @@
+{
+  "characters": [
+    {
+      "id": "scientist",
+      "health": 8,
+      "strength": 2,
+      "combatStrength": 2,
+      "science": 4,
+      "repair": 2,
+      "endurance": 1,
+      "agility": 2,
+      "startItems": ["lucky-socks"],
+      "startCredits": 5,
+      "diaryKey": "character.scientist.diary"
+    },
+    {
+      "id": "guard",
+      "health": 11,
+      "strength": 3,
+      "combatStrength": 3,
+      "science": 1,
+      "repair": 1,
+      "endurance": 3,
+      "agility": 3,
+      "startItems": ["pistol"],
+      "startCredits": 3,
+      "diaryKey": "character.guard.diary"
+    },
+    {
+      "id": "mechanic",
+      "health": 9,
+      "strength": 2,
+      "combatStrength": 2,
+      "science": 2,
+      "repair": 3,
+      "endurance": 2,
+      "agility": 2,
+      "startItems": ["hard-hat"],
+      "startCredits": 4,
+      "diaryKey": "character.mechanic.diary"
+    },
+    {
+      "id": "worker",
+      "health": 10,
+      "strength": 3,
+      "combatStrength": 3,
+      "science": 1,
+      "repair": 2,
+      "endurance": 2,
+      "agility": 3,
+      "startItems": ["backpack"],
+      "startCredits": 4,
+      "diaryKey": "character.worker.diary"
+    },
+    {
+      "id": "hauler",
+      "health": 8,
+      "strength": 2,
+      "combatStrength": 2,
+      "science": 1,
+      "repair": 1,
+      "endurance": 3,
+      "agility": 3,
+      "startItems": ["smuggler-mark"],
+      "startCredits": 6,
+      "diaryKey": "character.hauler.diary"
+    },
+    {
+      "id": "healer",
+      "health": 8,
+      "strength": 2,
+      "combatStrength": 2,
+      "science": 3,
+      "repair": 2,
+      "endurance": 2,
+      "agility": 2,
+      "startItems": ["medic-bag"],
+      "startCredits": 4,
+      "diaryKey": "character.healer.diary"
+    },
+    {
+      "id": "engineer",
+      "health": 10,
+      "strength": 3,
+      "combatStrength": 3,
+      "science": 2,
+      "repair": 3,
+      "endurance": 2,
+      "agility": 1,
+      "startItems": ["gu4-rd"],
+      "startCredits": 3,
+      "diaryKey": "character.engineer.diary"
+    },
+    {
+      "id": "astronaut",
+      "health": 9,
+      "strength": 2,
+      "combatStrength": 2,
+      "science": 1,
+      "repair": 2,
+      "endurance": 3,
+      "agility": 3,
+      "startItems": ["spacesuit-mk2"],
+      "startCredits": 4,
+      "diaryKey": "character.astronaut.diary"
+    }
+  ]
+}

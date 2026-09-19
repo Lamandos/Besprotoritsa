@@ -137,9 +137,50 @@ final class HexTile {
 /// Gear occupying the four visible equipment slots of a player.
 @immutable
 final class EquippedGear {
-  const EquippedGear({this.weapon, this.armor, this.clothing, this.robot});
+  const EquippedGear({
+    this.weapon,
+    this.secondWeapon,
+    this.armor,
+    this.clothing,
+    this.robot,
+  });
 
+  factory EquippedGear.withWeapons({
+    required Iterable<CardId> weapons,
+    CardId? armor,
+    CardId? clothing,
+    CardId? robot,
+  }) {
+    final weaponList = List<CardId>.of(weapons);
+    if (weaponList.length > 2) {
+      throw ArgumentError.value(
+        weapons,
+        'weapons',
+        'At most two weapons may be equipped.',
+      );
+    }
+    return EquippedGear(
+      weapon: weaponList.isEmpty ? null : weaponList.first,
+      secondWeapon: weaponList.length < 2 ? null : weaponList[1],
+      armor: armor,
+      clothing: clothing,
+      robot: robot,
+    );
+  }
+
+  /// Weapons in their displayed order. A second entry requires a load-bearing
+  /// vest; inventory rules verify that rule against the card definitions.
+  List<CardId> get weapons => List.unmodifiable([
+    if (weapon != null) weapon!,
+    if (secondWeapon != null) secondWeapon!,
+  ]);
+
+  /// The primary weapon.
   final CardId? weapon;
+
+  /// The additional weapon, when a load-bearing vest allows one.
+  final CardId? secondWeapon;
+
   final CardId? armor;
   final CardId? clothing;
   final CardId? robot;
@@ -185,11 +226,14 @@ final class PlayerState {
     }
     _requireNonNegative(credits, 'credits');
     _requireNonNegative(weaponModifier, 'weaponModifier');
-    if (this.backpack.length > 3) {
+    // A load-bearing backpack can raise the effective limit to five. The
+    // current effective limit depends on card definitions and is enforced by
+    // InventoryRules; this model-level ceiling prevents impossible states.
+    if (this.backpack.length > 5) {
       throw ArgumentError.value(
         backpack,
         'backpack',
-        'Backpack holds at most 3 cards.',
+        'Backpack holds at most 5 cards.',
       );
     }
     if (this.implanted.length > 2) {
@@ -524,6 +568,7 @@ final class GameState {
     this.monsterTurnIndex = 0,
     this.monsterStepsRemaining = 0,
     this.eventTurnIndex = 0,
+    this.actionsTakenThisTurn = 0,
     this.pendingDecision,
   }) : board = List.unmodifiable(board),
        players = List.unmodifiable(players),
@@ -549,6 +594,7 @@ final class GameState {
     _requireNonNegative(monsterTurnIndex, 'monsterTurnIndex');
     _requireNonNegative(monsterStepsRemaining, 'monsterStepsRemaining');
     _requireNonNegative(eventTurnIndex, 'eventTurnIndex');
+    _requireNonNegative(actionsTakenThisTurn, 'actionsTakenThisTurn');
     _ensureUnique(this.board.map((tile) => tile.coord), 'board coordinates');
     _ensureUnique(this.board.map((tile) => tile.id), 'tile ids');
     _ensureUnique(this.players.map((player) => player.id), 'player ids');
@@ -594,6 +640,11 @@ final class GameState {
   final int monsterTurnIndex;
   final int monsterStepsRemaining;
   final int eventTurnIndex;
+
+  /// Completed regular actions by the active player in the current turn.
+  /// It makes the "before the first action" implant window explicit rather
+  /// than inferring it from a variable number of remaining actions.
+  final int actionsTakenThisTurn;
   final PendingDecision? pendingDecision;
 
   HexTile? tileAt(HexCoord coord) {

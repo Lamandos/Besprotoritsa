@@ -32,6 +32,7 @@ class GameStateJsonCodec {
     'phase': state.phase.name,
     'active_player_id': state.activePlayerId,
     'actions_left': state.actionsLeft,
+    'actions_taken_this_turn': state.actionsTakenThisTurn,
     'board': state.board.map(SaveJsonModels.tileToJson).toList(),
     'players': state.players.map(SaveJsonModels.playerToJson).toList(),
     'monsters': state.monsters.map(SaveJsonModels.monsterToJson).toList(),
@@ -70,6 +71,7 @@ class GameStateJsonCodec {
         'active_player_id',
       ),
       actionsLeft: _int(json, 'actions_left'),
+      actionsTakenThisTurn: _intOrDefault(json, 'actions_taken_this_turn'),
       board: _objects(json, 'board').map(SaveJsonModels.tileFromJson),
       players: _objects(json, 'players').map(SaveJsonModels.playerFromJson),
       monsters: _objects(json, 'monsters').map(SaveJsonModels.monsterFromJson),
@@ -143,6 +145,17 @@ Map<String, Object?> _asObject(Object? value, String key) {
 
 int _int(Map<String, Object?> json, String key) {
   final value = json[key];
+  if (value is! int) throw FormatException('$key must be an integer.');
+  return value;
+}
+
+int _intOrDefault(
+  Map<String, Object?> json,
+  String key, {
+  int defaultValue = 0,
+}) {
+  final value = json[key];
+  if (value == null) return defaultValue;
   if (value is! int) throw FormatException('$key must be an integer.');
   return value;
 }

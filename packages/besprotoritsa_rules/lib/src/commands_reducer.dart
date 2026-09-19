@@ -10,6 +10,7 @@ import 'package:besprotoritsa_rules/src/effect_engine.dart';
 import 'package:besprotoritsa_rules/src/effect_hooks.dart';
 import 'package:besprotoritsa_rules/src/effect_registry.dart';
 import 'package:besprotoritsa_rules/src/game_state.dart';
+import 'package:besprotoritsa_rules/src/inventory_rules.dart';
 import 'package:meta/meta.dart';
 
 sealed class GameCommand {
@@ -67,6 +68,39 @@ final class HealCommand extends GameCommand {
   final int amount;
 }
 
+/// Equips a backpack card without spending an action.
+final class EquipCommand extends GameCommand {
+  const EquipCommand(this.cardId, {this.weaponSlot = 0});
+
+  final CardId cardId;
+  final int weaponSlot;
+}
+
+/// Unequips a visible equipment slot without spending an action.
+final class UnequipCommand extends GameCommand {
+  const UnequipCommand(this.slot, {this.weaponSlot = 0});
+
+  final ItemSlot slot;
+  final int weaponSlot;
+}
+
+/// Gives the active player a card. A received modification may be implanted
+/// immediately, including after the player has already taken an action.
+final class ReceiveCardCommand extends GameCommand {
+  const ReceiveCardCommand(this.cardId, {this.implantImmediately = false});
+
+  final CardId cardId;
+  final bool implantImmediately;
+}
+
+/// Permanently implants an already carried modification before the active
+/// player has taken their first action this turn.
+final class ImplantModificationCommand extends GameCommand {
+  const ImplantModificationCommand(this.cardId);
+
+  final CardId cardId;
+}
+
 sealed class CommandRejection {
   const CommandRejection();
 }
@@ -105,6 +139,16 @@ final class ActionUnavailableInPhase extends CommandRejection {
 
 final class GameAlreadyCompleted extends CommandRejection {
   const GameAlreadyCompleted();
+}
+
+final class InventoryCommandRejected extends CommandRejection {
+  const InventoryCommandRejected(this.reason);
+
+  final String reason;
+}
+
+final class ImplantWindowClosed extends CommandRejection {
+  const ImplantWindowClosed();
 }
 
 sealed class DecisionChoice {
@@ -170,6 +214,23 @@ CommandRejection? validate(GameState state, GameCommand command) {
   }
 
   if (command is EndTurnCommand) {
+    return null;
+  }
+
+  if (command is ImplantModificationCommand && state.actionsTakenThisTurn > 0) {
+    return const ImplantWindowClosed();
+  }
+
+  if (_isInventoryCommand(command)) {
+    try {
+      _applyInventoryCommand(state, command);
+    } on BackpackCapacityExceeded catch (error) {
+      return InventoryCommandRejected(
+        'Backpack capacity ${error.capacity} would be exceeded.',
+      );
+    } on InventoryRuleViolation catch (error) {
+      return InventoryCommandRejected(error.message);
+    }
     return null;
   }
 
@@ -284,12 +345,90 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
     ),
     EndTurnCommand() => GameStepResult(state: _endTurn(state)),
     HealCommand(:final amount) => GameStepResult(state: _heal(state, amount)),
+    EquipCommand() ||
+    UnequipCommand() ||
+    ReceiveCardCommand() ||
+    ImplantModificationCommand() => GameStepResult(
+      state: _applyInventoryCommand(state, command),
+    ),
   };
+  final didTakeAction = _isActionCommand(command) && result.rejection == null;
+  final resultState = didTakeAction
+      ? _copyState(
+          result.state,
+          actionsTakenThisTurn: state.actionsTakenThisTurn + 1,
+        )
+      : result.state;
   return GameStepResult(
-    state: result.state,
+    state: resultState,
     rejection: result.rejection,
-    events: _eventsForTransition(state, result.state),
+    events: _eventsForTransition(state, resultState),
   );
+}
+
+bool _isInventoryCommand(GameCommand command) =>
+    command is EquipCommand ||
+    command is UnequipCommand ||
+    command is ReceiveCardCommand ||
+    command is ImplantModificationCommand;
+
+bool _isActionCommand(GameCommand command) =>
+    command is MoveCommand ||
+    command is AirlockMoveCommand ||
+    command is CloseCorridorCommand ||
+    command is AttackCommand ||
+    command is SkillCheckCommand ||
+    command is HealCommand;
+
+GameState _applyInventoryCommand(GameState state, GameCommand command) {
+  final player = _activePlayer(state);
+  if (player == null) {
+    throw InventoryRuleViolation('There is no active player.');
+  }
+  final definitions = state.cardDefinitions;
+  final updated = switch (command) {
+    EquipCommand(:final cardId, :final weaponSlot) => InventoryRules.equip(
+      player,
+      cardId,
+      definitions,
+      weaponSlot: weaponSlot,
+    ),
+    UnequipCommand(:final slot, :final weaponSlot) => InventoryRules.unequip(
+      player,
+      slot,
+      definitions,
+      weaponSlot: weaponSlot,
+    ),
+    ReceiveCardCommand(:final cardId, :final implantImmediately) =>
+      _receiveCard(player, cardId, definitions, implantImmediately),
+    ImplantModificationCommand(:final cardId) => InventoryRules.implant(
+      player,
+      cardId,
+      definitions,
+    ),
+    _ => throw ArgumentError.value(
+      command,
+      'command',
+      'Not an inventory command.',
+    ),
+  };
+  return _copyState(
+    state,
+    players: _replacePlayer(state, player.id, (_) => updated),
+    logEntry: 'inventory:${player.id}:${command.runtimeType}',
+  );
+}
+
+PlayerState _receiveCard(
+  PlayerState player,
+  CardId cardId,
+  Map<CardId, CardDefinition> definitions,
+  bool implantImmediately,
+) {
+  final received = InventoryRules.receive(player, cardId, definitions);
+  return implantImmediately
+      ? InventoryRules.implant(received, cardId, definitions)
+      : received;
 }
 
 List<GameEvent> _eventsForTransition(GameState before, GameState after) {
@@ -631,16 +770,7 @@ int _cardStatModifier(GameState state, PlayerState player, StatType stat) {
 }
 
 Iterable<String> _activeCardIds(PlayerState player) sync* {
-  final equipped = player.equipped;
-  for (final id in [
-    equipped.weapon,
-    equipped.armor,
-    equipped.clothing,
-    equipped.robot,
-  ]) {
-    if (id != null) yield id;
-  }
-  yield* player.implanted;
+  yield* InventoryRules.activeCardIds(player);
 }
 
 GameState _heal(GameState state, int amount) {
@@ -1029,6 +1159,7 @@ GameState _endTurn(GameState state) {
     state,
     activePlayerId: state.players[nextIndex].id,
     actionsLeft: 2,
+    actionsTakenThisTurn: 0,
     logEntry: 'end-turn:${state.activePlayerId}',
   );
 }
@@ -1219,6 +1350,7 @@ GameState _startNextPlayersTurn(GameState state) {
     phase: GamePhase.playersTurn,
     activePlayerId: first.id,
     actionsLeft: 2,
+    actionsTakenThisTurn: 0,
     eventTurnIndex: 0,
     logEntry: 'round-start:${state.round + 1}',
   );
@@ -1352,6 +1484,7 @@ GameState _copyState(
   int? monsterTurnIndex,
   int? monsterStepsRemaining,
   int? eventTurnIndex,
+  int? actionsTakenThisTurn,
   PendingDecision? pendingDecision,
   bool clearPendingDecision = false,
   String? logEntry,
@@ -1379,6 +1512,7 @@ GameState _copyState(
   monsterTurnIndex: monsterTurnIndex ?? state.monsterTurnIndex,
   monsterStepsRemaining: monsterStepsRemaining ?? state.monsterStepsRemaining,
   eventTurnIndex: eventTurnIndex ?? state.eventTurnIndex,
+  actionsTakenThisTurn: actionsTakenThisTurn ?? state.actionsTakenThisTurn,
   pendingDecision: clearPendingDecision
       ? null
       : pendingDecision ?? state.pendingDecision,

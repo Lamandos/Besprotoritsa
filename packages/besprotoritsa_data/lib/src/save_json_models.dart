@@ -43,6 +43,7 @@ abstract final class SaveJsonModels {
     'backpack': player.backpack,
     'equipped': {
       'weapon': player.equipped.weapon,
+      'second_weapon': player.equipped.secondWeapon,
       'armor': player.equipped.armor,
       'clothing': player.equipped.clothing,
       'robot': player.equipped.robot,
@@ -66,6 +67,10 @@ abstract final class SaveJsonModels {
       backpack: _strings(json, 'backpack'),
       equipped: EquippedGear(
         weapon: _nullableString(equipped['weapon'], 'equipped.weapon'),
+        secondWeapon: _nullableString(
+          equipped['second_weapon'],
+          'equipped.second_weapon',
+        ),
         armor: _nullableString(equipped['armor'], 'equipped.armor'),
         clothing: _nullableString(equipped['clothing'], 'equipped.clothing'),
         robot: _nullableString(equipped['robot'], 'equipped.robot'),
