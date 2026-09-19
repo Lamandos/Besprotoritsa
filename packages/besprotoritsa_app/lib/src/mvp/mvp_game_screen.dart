@@ -1,5 +1,6 @@
 import 'package:besprotoritsa_app/src/game/event_queue.dart';
 import 'package:besprotoritsa_app/src/game/game_controller.dart';
+import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,8 +33,9 @@ class _MvpGameLayout extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final blocked = queue.isPlaying || state.pendingDecision != null;
+    final strings = AppStrings.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Беспроторица — MVP')),
+      appBar: AppBar(title: Text(strings.mvpTitle)),
       body: SafeArea(
         child: Stack(
           children: [
@@ -64,21 +66,26 @@ class _GameStatus extends StatelessWidget {
   final EventQueue queue;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-    child: Row(
-      children: [
-        Text('Раунд ${state.round} · действий: ${state.actionsLeft}'),
-        const Spacer(),
-        if (queue.current != null)
-          Chip(
-            key: const ValueKey<String>('animation-status'),
-            avatar: const Icon(Icons.animation),
-            label: Text('Анимация: ${_eventLabel(queue.current!)}'),
-          ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final strings = AppStrings.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
+        children: [
+          Text(strings.roundStatus(state.round, state.actionsLeft)),
+          const Spacer(),
+          if (queue.current != null)
+            Chip(
+              key: const ValueKey<String>('animation-status'),
+              avatar: const Icon(Icons.animation),
+              label: Text(
+                strings.animationStatus(_eventLabel(queue.current!, strings)),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 /// A painted axial board with hero and monster tokens positioned by `(q, r)`.
@@ -122,7 +129,7 @@ class _HexTileView extends StatelessWidget {
       left: position.dx,
       top: position.dy,
       child: Semantics(
-        label: 'Гекс (${tile.coord.q}, ${tile.coord.r})',
+        label: AppStrings.of(context).hexLabel(tile.coord.q, tile.coord.r),
         child: ClipPath(
           clipper: const _HexClipper(),
           child: Container(
@@ -153,7 +160,9 @@ class _HeroToken extends StatelessWidget {
       left: position.dx + 23,
       top: position.dy + 18,
       child: Semantics(
-        label: 'Герой ${player.id} на (${player.coord.q}, ${player.coord.r})',
+        label: AppStrings.of(
+          context,
+        ).heroLabel(player.id, player.coord.q, player.coord.r),
         child: CircleAvatar(
           key: ValueKey<String>(
             'hero-${player.id}-at-${player.coord.q}-${player.coord.r}',
@@ -179,9 +188,9 @@ class _MonsterToken extends StatelessWidget {
       left: position.dx + 50,
       top: position.dy + 32,
       child: Semantics(
-        label:
-            'Монстр ${monster.monsterId} '
-            'на (${monster.coord.q}, ${monster.coord.r})',
+        label: AppStrings.of(
+          context,
+        ).monsterLabel(monster.monsterId, monster.coord.q, monster.coord.r),
         child: const Icon(Icons.bug_report, color: Colors.deepOrange, size: 28),
       ),
     );
@@ -195,13 +204,14 @@ class _CommandPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final commands = _availableCommands(state);
+    final strings = AppStrings.of(context);
+    final commands = _availableCommands(state, strings);
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('Доступные команды'),
+          Text(strings.availableCommands),
           const SizedBox(height: 6),
           Wrap(
             spacing: 8,
@@ -230,9 +240,10 @@ class _GameLog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = AppStrings.of(context);
     final entries = <String>[
       ...state.log,
-      ...queue.history.map(_eventLabel),
+      ...queue.history.map((event) => _eventLabel(event, strings)),
     ];
     return Container(
       width: double.infinity,
@@ -242,7 +253,7 @@ class _GameLog extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Лог последних событий'),
+          Text(strings.eventLog),
           const SizedBox(height: 4),
           Expanded(
             child: ListView.builder(
@@ -262,107 +273,113 @@ class _PendingDecisionModal extends ConsumerWidget {
   final PendingDecision decision;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Positioned.fill(
-    child: ColoredBox(
-      color: Colors.black54,
-      child: Center(
-        child: AlertDialog(
-          title: const Text('Нужно решение'),
-          content: Text(_decisionPrompt(decision)),
-          actions: _decisionActions(ref, decision),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final strings = AppStrings.of(context);
+    return Positioned.fill(
+      child: ColoredBox(
+        color: Colors.black54,
+        child: Center(
+          child: AlertDialog(
+            title: Text(strings.decisionRequired),
+            content: Text(_decisionPrompt(decision, strings)),
+            actions: _decisionActions(ref, decision, strings),
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
-List<Widget> _decisionActions(WidgetRef ref, PendingDecision decision) =>
-    switch (decision) {
-      AwaitingRerollChoice(:final availableRerolls) => [
-        if (availableRerolls > 0)
-          TextButton(
-            onPressed: () => ref
-                .read(gameControllerProvider.notifier)
-                .dispatch(ResolvePendingDecisionCommand(RerollChoice())),
-            child: const Text('Перебросить'),
+List<Widget> _decisionActions(
+  WidgetRef ref,
+  PendingDecision decision,
+  AppStrings strings,
+) => switch (decision) {
+  AwaitingRerollChoice(:final availableRerolls) => [
+    if (availableRerolls > 0)
+      TextButton(
+        onPressed: () => ref
+            .read(gameControllerProvider.notifier)
+            .dispatch(ResolvePendingDecisionCommand(RerollChoice())),
+        child: Text(strings.reroll),
+      ),
+    FilledButton(
+      onPressed: () => ref
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            const ResolvePendingDecisionCommand(KeepRollChoice()),
           ),
-        FilledButton(
-          onPressed: () => ref
-              .read(gameControllerProvider.notifier)
-              .dispatch(
-                const ResolvePendingDecisionCommand(KeepRollChoice()),
+      child: Text(strings.keepResult),
+    ),
+  ],
+  AwaitingDodge() => [
+    FilledButton(
+      onPressed: () => ref
+          .read(gameControllerProvider.notifier)
+          .dispatch(const ResolvePendingDecisionCommand(DodgeChoice())),
+      child: Text(strings.dodge),
+    ),
+  ],
+  AwaitingEventOption(:final options) => [
+    for (final option in options)
+      FilledButton(
+        onPressed: () => ref
+            .read(gameControllerProvider.notifier)
+            .dispatch(
+              ResolvePendingDecisionCommand(EventOptionChoice(option)),
+            ),
+        child: Text(option),
+      ),
+  ],
+  AwaitingTerminalPick(:final offeredCards) => [
+    for (final cardId in offeredCards)
+      FilledButton(
+        onPressed: () => ref
+            .read(gameControllerProvider.notifier)
+            .dispatch(
+              ResolvePendingDecisionCommand(TerminalPickChoice(cardId)),
+            ),
+        child: Text(strings.buyCommand(cardId)),
+      ),
+    TextButton(
+      onPressed: () => ref
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            const ResolvePendingDecisionCommand(
+              DeclineTerminalPickChoice(),
+            ),
+          ),
+      child: Text(strings.doNotBuy),
+    ),
+  ],
+  AwaitingHeroReplacement(:final characterIds) => [
+    for (final characterId in characterIds)
+      FilledButton(
+        onPressed: () => ref
+            .read(gameControllerProvider.notifier)
+            .dispatch(
+              ResolvePendingDecisionCommand(
+                SelectReplacementHeroChoice(characterId),
               ),
-          child: const Text('Оставить результат'),
-        ),
-      ],
-      AwaitingDodge() => [
-        FilledButton(
-          onPressed: () => ref
-              .read(gameControllerProvider.notifier)
-              .dispatch(const ResolvePendingDecisionCommand(DodgeChoice())),
-          child: const Text('Уклониться'),
-        ),
-      ],
-      AwaitingEventOption(:final options) => [
-        for (final option in options)
-          FilledButton(
-            onPressed: () => ref
-                .read(gameControllerProvider.notifier)
-                .dispatch(
-                  ResolvePendingDecisionCommand(EventOptionChoice(option)),
-                ),
-            child: Text(option),
-          ),
-      ],
-      AwaitingTerminalPick(:final offeredCards) => [
-        for (final cardId in offeredCards)
-          FilledButton(
-            onPressed: () => ref
-                .read(gameControllerProvider.notifier)
-                .dispatch(
-                  ResolvePendingDecisionCommand(TerminalPickChoice(cardId)),
-                ),
-            child: Text('Купить: $cardId'),
-          ),
-        TextButton(
-          onPressed: () => ref
-              .read(gameControllerProvider.notifier)
-              .dispatch(
-                const ResolvePendingDecisionCommand(
-                  DeclineTerminalPickChoice(),
-                ),
-              ),
-          child: const Text('Не покупать'),
-        ),
-      ],
-      AwaitingHeroReplacement(:final characterIds) => [
-        for (final characterId in characterIds)
-          FilledButton(
-            onPressed: () => ref
-                .read(gameControllerProvider.notifier)
-                .dispatch(
-                  ResolvePendingDecisionCommand(
-                    SelectReplacementHeroChoice(characterId),
-                  ),
-                ),
-            child: Text('Выбрать: $characterId'),
-          ),
-      ],
-    };
+            ),
+        child: Text(strings.chooseCommand(characterId)),
+      ),
+  ],
+};
 
-List<_NamedCommand> _availableCommands(GameState state) {
+List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
   final candidates = <_NamedCommand>[
     for (final tile in state.board)
       _NamedCommand(
-        'Ход: ${tile.coord.q}, ${tile.coord.r}',
+        strings.moveCommand(tile.coord.q, tile.coord.r),
         MoveCommand(tile.coord),
       ),
     for (final monster in state.monsters)
       _NamedCommand(
-        'Атаковать ${monster.monsterId}',
+        strings.attackCommand(monster.monsterId),
         AttackCommand(monster.instanceId),
       ),
-    const _NamedCommand('Завершить ход', EndTurnCommand()),
+    _NamedCommand(strings.next, const EndTurnCommand()),
   ];
   return [
     for (final candidate in candidates)
@@ -382,26 +399,35 @@ Offset _positionFor(HexCoord coord) => Offset(
   94 + coord.r * 64,
 );
 
-String _eventLabel(GameEvent event) => switch (event) {
-  HexEntered(:final playerId, :final to) =>
-    '$playerId вошёл в (${to.q}, ${to.r})',
-  ColocationTriggered(:final playerId) => 'столкновение: $playerId',
-  DamageDealt(:final playerId, :final amount) =>
-    '$playerId получил урон $amount',
-  HeroDied(:final playerId, :final restlessInstanceId) =>
-    '$playerId погиб; появился $restlessInstanceId',
-  ConditionDrawn(:final conditionId) => 'получено состояние: $conditionId',
-  MvpDemonstrationCompleted(:final questId) => 'завершено задание: $questId',
+String _eventLabel(GameEvent event, AppStrings strings) => switch (event) {
+  HexEntered(:final playerId, :final to) => strings.enteredEvent(
+    playerId,
+    to.q,
+    to.r,
+  ),
+  ColocationTriggered(:final playerId) => strings.colocationEvent(playerId),
+  DamageDealt(:final playerId, :final amount) => strings.damageEvent(
+    playerId,
+    amount,
+  ),
+  HeroDied(:final playerId, :final restlessInstanceId) => strings.diedEvent(
+    playerId,
+    restlessInstanceId,
+  ),
+  ConditionDrawn(:final conditionId) => strings.conditionEvent(conditionId),
+  MvpDemonstrationCompleted(:final questId) => strings.questEvent(questId),
 };
 
-String _decisionPrompt(PendingDecision decision) => switch (decision) {
-  AwaitingRerollChoice(:final dice) => 'Кубики: ${dice.join(', ')}',
-  AwaitingDodge(:final requiredSuccesses) =>
-    'Уклонение: нужно успехов $requiredSuccesses',
-  AwaitingEventOption() => 'Выберите вариант события.',
-  AwaitingTerminalPick() => 'Выберите припас в терминале.',
-  AwaitingHeroReplacement() => 'Выберите героя на замену.',
-};
+String _decisionPrompt(PendingDecision decision, AppStrings strings) =>
+    switch (decision) {
+      AwaitingRerollChoice(:final dice) => strings.dicePrompt(dice.join(', ')),
+      AwaitingDodge(:final requiredSuccesses) => strings.dodgePrompt(
+        requiredSuccesses,
+      ),
+      AwaitingEventOption() => strings.eventOptionPrompt,
+      AwaitingTerminalPick() => strings.terminalPickPrompt,
+      AwaitingHeroReplacement() => strings.replacementHeroPrompt,
+    };
 
 class _HexClipper extends CustomClipper<Path> {
   const _HexClipper();

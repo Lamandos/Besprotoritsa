@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('shows the MVP start screen', (WidgetTester tester) async {
+  testWidgets('shows the main menu', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(
         child: BesprotoritsaApp(),
@@ -11,8 +11,10 @@ void main() {
     );
 
     expect(find.text('Беспроторица'), findsOneWidget);
-    expect(find.text('0.1.0-dev'), findsOneWidget);
-    expect(find.text('Одиночная игра / Локально'), findsOneWidget);
-    expect(find.text('Запуск MVP (Демо)'), findsOneWidget);
+    expect(find.text('Новая игра'), findsOneWidget);
+    expect(find.text('Продолжить'), findsOneWidget);
+    expect(find.text('Загрузить партию'), findsOneWidget);
+    expect(find.text('Обучение'), findsOneWidget);
+    expect(find.text('Справочник правил'), findsOneWidget);
   });
 }
