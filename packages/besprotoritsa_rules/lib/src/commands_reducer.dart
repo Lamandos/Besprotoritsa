@@ -101,6 +101,53 @@ final class ImplantModificationCommand extends GameCommand {
   final CardId cardId;
 }
 
+/// Spends one action to reveal the top supplies at a terminal.
+final class UseTerminalCommand extends GameCommand {
+  const UseTerminalCommand();
+}
+
+/// Places a carried card into the shared chest in the start sector.
+final class DepositIntoChestCommand extends GameCommand {
+  const DepositIntoChestCommand(this.cardId);
+
+  final CardId cardId;
+}
+
+/// Takes one card from the shared chest in the start sector.
+final class WithdrawFromChestCommand extends GameCommand {
+  const WithdrawFromChestCommand(this.cardId);
+
+  final CardId cardId;
+}
+
+/// Credits are currency, not chest contents. This explicit command exists so
+/// clients can receive a rules rejection instead of modelling credits as cards.
+final class DepositCreditsIntoChestCommand extends GameCommand {
+  const DepositCreditsIntoChestCommand(this.amount)
+    : assert(amount > 0, 'amount must be positive');
+
+  final int amount;
+}
+
+/// Atomically exchanges optional cards and/or credits with a co-located hero.
+/// At least one side must transfer something.
+final class ExchangeCommand extends GameCommand {
+  const ExchangeCommand({
+    required this.partnerId,
+    this.giveCardId,
+    this.receiveCardId,
+    this.giveCredits = 0,
+    this.receiveCredits = 0,
+  }) : assert(giveCredits >= 0, 'giveCredits must not be negative'),
+       assert(receiveCredits >= 0, 'receiveCredits must not be negative');
+
+  final PlayerId partnerId;
+  final CardId? giveCardId;
+  final CardId? receiveCardId;
+  final int giveCredits;
+  final int receiveCredits;
+}
+
 sealed class CommandRejection {
   const CommandRejection();
 }
@@ -151,6 +198,22 @@ final class ImplantWindowClosed extends CommandRejection {
   const ImplantWindowClosed();
 }
 
+final class TerminalUnavailable extends CommandRejection {
+  const TerminalUnavailable();
+}
+
+final class ChestUnavailable extends CommandRejection {
+  const ChestUnavailable();
+}
+
+final class CreditsCannotBeStoredInChest extends CommandRejection {
+  const CreditsCannotBeStoredInChest();
+}
+
+final class ExchangeUnavailable extends CommandRejection {
+  const ExchangeUnavailable();
+}
+
 sealed class DecisionChoice {
   const DecisionChoice();
 }
@@ -175,6 +238,18 @@ final class EventOptionChoice extends DecisionChoice {
   const EventOptionChoice(this.option);
 
   final String option;
+}
+
+/// Buys one of the supplies currently offered by [AwaitingTerminalPick].
+final class TerminalPickChoice extends DecisionChoice {
+  const TerminalPickChoice(this.cardId);
+
+  final CardId cardId;
+}
+
+/// Returns every currently offered terminal supply without buying one.
+final class DeclineTerminalPickChoice extends DecisionChoice {
+  const DeclineTerminalPickChoice();
 }
 
 @immutable
@@ -221,6 +296,36 @@ CommandRejection? validate(GameState state, GameCommand command) {
     return const ImplantWindowClosed();
   }
 
+  if (command is DepositCreditsIntoChestCommand) {
+    return const CreditsCannotBeStoredInChest();
+  }
+
+  if (command is DepositIntoChestCommand ||
+      command is WithdrawFromChestCommand) {
+    final player = _activePlayer(state);
+    if (player == null ||
+        state.tileAt(player.coord)?.type != HexTileType.start) {
+      return const ChestUnavailable();
+    }
+    try {
+      if (command case DepositIntoChestCommand(:final cardId)) {
+        InventoryRules.discard(player, cardId);
+      } else if (command case WithdrawFromChestCommand(:final cardId)) {
+        if (!state.chestCards.contains(cardId)) {
+          throw InventoryRuleViolation('The card is not in the chest.');
+        }
+        InventoryRules.receive(player, cardId, state.cardDefinitions);
+      }
+    } on BackpackCapacityExceeded catch (error) {
+      return InventoryCommandRejected(
+        'Backpack capacity ${error.capacity} would be exceeded.',
+      );
+    } on InventoryRuleViolation catch (error) {
+      return InventoryCommandRejected(error.message);
+    }
+    return null;
+  }
+
   if (_isInventoryCommand(command)) {
     try {
       _applyInventoryCommand(state, command);
@@ -236,6 +341,45 @@ CommandRejection? validate(GameState state, GameCommand command) {
 
   if (state.actionsLeft == 0 || _activePlayer(state) == null) {
     return const NotEnoughActions();
+  }
+
+  if (command is UseTerminalCommand) {
+    final player = _activePlayer(state)!;
+    final tile = state.tileAt(player.coord);
+    final supplies = state.decks['supplies'];
+    if (tile == null ||
+        tile.type != HexTileType.compartment ||
+        !tile.hasTerminal ||
+        state.monsters.any((monster) => monster.coord == player.coord) ||
+        supplies == null ||
+        (supplies.drawPile.isEmpty && supplies.discardPile.isEmpty)) {
+      return const TerminalUnavailable();
+    }
+  }
+
+  if (command is ExchangeCommand) {
+    final player = _activePlayer(state)!;
+    final partner = _playerById(state, command.partnerId);
+    if (partner == null ||
+        partner.id == player.id ||
+        partner.coord != player.coord ||
+        (command.giveCardId == null &&
+            command.receiveCardId == null &&
+            command.giveCredits == 0 &&
+            command.receiveCredits == 0) ||
+        command.giveCredits > player.credits ||
+        command.receiveCredits > partner.credits) {
+      return const ExchangeUnavailable();
+    }
+    try {
+      _exchangePlayers(state, player, partner, command);
+    } on BackpackCapacityExceeded catch (error) {
+      return InventoryCommandRejected(
+        'Backpack capacity ${error.capacity} would be exceeded.',
+      );
+    } on InventoryRuleViolation catch (error) {
+      return InventoryCommandRejected(error.message);
+    }
   }
 
   if (command case MoveCommand(:final target)) {
@@ -351,6 +495,14 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
     ImplantModificationCommand() => GameStepResult(
       state: _applyInventoryCommand(state, command),
     ),
+    UseTerminalCommand() => _useTerminal(state),
+    DepositIntoChestCommand() || WithdrawFromChestCommand() => GameStepResult(
+      state: _applyChestCommand(state, command),
+    ),
+    DepositCreditsIntoChestCommand() => throw StateError(
+      'Validated as rejected.',
+    ),
+    ExchangeCommand() => GameStepResult(state: _exchange(state, command)),
   };
   final didTakeAction = _isActionCommand(command) && result.rejection == null;
   final resultState = didTakeAction
@@ -378,7 +530,9 @@ bool _isActionCommand(GameCommand command) =>
     command is CloseCorridorCommand ||
     command is AttackCommand ||
     command is SkillCheckCommand ||
-    command is HealCommand;
+    command is HealCommand ||
+    command is UseTerminalCommand ||
+    command is ExchangeCommand;
 
 GameState _applyInventoryCommand(GameState state, GameCommand command) {
   final player = _activePlayer(state);
@@ -429,6 +583,140 @@ PlayerState _receiveCard(
   return implantImmediately
       ? InventoryRules.implant(received, cardId, definitions)
       : received;
+}
+
+GameStepResult _useTerminal(GameState state) {
+  final player = _activePlayer(state)!;
+  final draw = DeckRules.draw(
+    state.decks['supplies']!,
+    count: 3,
+    seed: _deckSeed(state, 'supplies'),
+  );
+  final decks = Map<DeckId, DeckState>.of(state.decks)
+    ..['supplies'] = draw.deck;
+  return GameStepResult(
+    state: _copyState(
+      state,
+      actionsLeft: state.actionsLeft - 1,
+      decks: decks,
+      pendingDecision: AwaitingTerminalPick(
+        offeredCards: draw.cards,
+        playerId: player.id,
+      ),
+      logEntry: 'terminal:${player.id}:${draw.cards.join(',')}',
+    ),
+  );
+}
+
+GameState _applyChestCommand(GameState state, GameCommand command) {
+  final player = _activePlayer(state)!;
+  return switch (command) {
+    DepositIntoChestCommand(:final cardId) => _copyState(
+      state,
+      players: _replacePlayer(
+        state,
+        player.id,
+        (current) => InventoryRules.discard(current, cardId),
+      ),
+      chestCards: [...state.chestCards, cardId],
+      logEntry: 'chest-deposit:${player.id}:$cardId',
+    ),
+    WithdrawFromChestCommand(:final cardId) => _copyState(
+      state,
+      players: _replacePlayer(
+        state,
+        player.id,
+        (current) => InventoryRules.receive(
+          current,
+          cardId,
+          state.cardDefinitions,
+        ),
+      ),
+      chestCards: _removeOne(state.chestCards, cardId),
+      logEntry: 'chest-withdraw:${player.id}:$cardId',
+    ),
+    _ => throw ArgumentError.value(
+      command,
+      'command',
+      'Not a chest command.',
+    ),
+  };
+}
+
+GameState _exchange(GameState state, ExchangeCommand command) {
+  final player = _activePlayer(state)!;
+  final partner = _playerById(state, command.partnerId)!;
+  final exchanged = _exchangePlayers(state, player, partner, command);
+  return _copyState(
+    state,
+    actionsLeft: state.actionsLeft - 1,
+    players: [
+      for (final current in state.players)
+        if (current.id == player.id)
+          exchanged.from
+        else if (current.id == partner.id)
+          exchanged.to
+        else
+          current,
+    ],
+    logEntry: 'exchange:${player.id}:${partner.id}',
+  );
+}
+
+InventoryTransfer _exchangePlayers(
+  GameState state,
+  PlayerState player,
+  PlayerState partner,
+  ExchangeCommand command,
+) {
+  var from = player;
+  var to = partner;
+  if (command.giveCardId case final cardId?) {
+    final transfer = InventoryRules.transfer(
+      from,
+      to,
+      cardId,
+      state.cardDefinitions,
+    );
+    from = transfer.from;
+    to = transfer.to;
+  }
+  if (command.receiveCardId case final cardId?) {
+    final transfer = InventoryRules.transfer(
+      to,
+      from,
+      cardId,
+      state.cardDefinitions,
+    );
+    from = transfer.to;
+    to = transfer.from;
+  }
+  return InventoryTransfer(
+    from: _copyPlayer(
+      from,
+      credits: from.credits - command.giveCredits + command.receiveCredits,
+    ),
+    to: _copyPlayer(
+      to,
+      credits: to.credits + command.giveCredits - command.receiveCredits,
+    ),
+  );
+}
+
+List<CardId> _removeOne(Iterable<CardId> cards, CardId cardId) {
+  final remaining = List<CardId>.of(cards);
+  if (!remaining.remove(cardId)) {
+    throw StateError('Expected card "$cardId" to be present.');
+  }
+  return remaining;
+}
+
+int _deckSeed(GameState state, DeckId deckId) {
+  var value = (state.seed ^ state.round ^ state.log.length) & 0x7fffffff;
+  for (final codeUnit in deckId.codeUnits) {
+    value = ((value * 31) ^ codeUnit) & 0x7fffffff;
+  }
+  return value;
 }
 
 List<GameEvent> _eventsForTransition(GameState before, GameState after) {
@@ -850,7 +1138,105 @@ GameStepResult _resolveDecision(
     AwaitingRerollChoice() => _resolveReroll(state, pending, choice, dice),
     AwaitingDodge() => _resolveDodge(state, pending, choice, dice),
     AwaitingEventOption() => _resolveEventOption(state, pending, choice, dice),
+    AwaitingTerminalPick() => _resolveTerminalPick(state, pending, choice),
   };
+}
+
+GameStepResult _resolveTerminalPick(
+  GameState state,
+  AwaitingTerminalPick pending,
+  DecisionChoice choice,
+) {
+  if (state.activePlayerId != pending.playerId) {
+    return GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
+    );
+  }
+  CardId? purchased;
+  if (choice is TerminalPickChoice) {
+    if (!pending.offeredCards.contains(choice.cardId)) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
+    final definition = state.cardDefinitions[choice.cardId];
+    final player = _activePlayer(state)!;
+    if (definition == null || player.credits < definition.cost) {
+      return GameStepResult(
+        state: state,
+        rejection: const InventoryCommandRejected(
+          'The selected supply cannot be purchased.',
+        ),
+      );
+    }
+    try {
+      InventoryRules.receive(player, choice.cardId, state.cardDefinitions);
+    } on BackpackCapacityExceeded catch (error) {
+      return GameStepResult(
+        state: state,
+        rejection: InventoryCommandRejected(
+          'Backpack capacity ${error.capacity} would be exceeded.',
+        ),
+      );
+    } on InventoryRuleViolation catch (error) {
+      return GameStepResult(
+        state: state,
+        rejection: InventoryCommandRejected(error.message),
+      );
+    }
+    purchased = choice.cardId;
+  } else if (choice is! DeclineTerminalPickChoice) {
+    return GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
+    );
+  }
+
+  final returned = [
+    for (final card in pending.offeredCards)
+      if (card != purchased) card,
+  ];
+  final decks = Map<DeckId, DeckState>.of(state.decks);
+  final deck = decks[pending.deckId];
+  if (deck == null) {
+    return GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
+    );
+  }
+  decks[pending.deckId] = DeckRules.returnAndShuffle(
+    deck,
+    returned,
+    seed: _deckSeed(state, pending.deckId),
+  );
+  final player = _activePlayer(state)!;
+  final next = purchased == null
+      ? state
+      : _copyState(
+          state,
+          players: _replacePlayer(
+            state,
+            player.id,
+            (current) => _copyPlayer(
+              InventoryRules.receive(
+                current,
+                purchased!,
+                state.cardDefinitions,
+              ),
+              credits: current.credits - state.cardDefinitions[purchased]!.cost,
+            ),
+          ),
+        );
+  return GameStepResult(
+    state: _copyState(
+      next,
+      decks: decks,
+      clearPendingDecision: true,
+      logEntry: 'terminal-pick:${player.id}:${purchased ?? 'decline'}',
+    ),
+  );
 }
 
 GameStepResult _resolveReroll(
@@ -949,15 +1335,18 @@ GameStepResult _resolveDodge(
 
 GameState _drawCondition(GameState state, PlayerId targetId) {
   final deck = state.decks['conditions'];
-  if (deck == null || deck.drawPile.isEmpty) {
+  if (deck == null) {
     return state;
   }
-  final condition = deck.drawPile.first;
-  final decks = Map<DeckId, DeckState>.of(state.decks);
-  decks['conditions'] = DeckState(
-    drawPile: deck.drawPile.skip(1),
-    discardPile: deck.discardPile,
+  final draw = DeckRules.draw(
+    deck,
+    seed: _deckSeed(state, 'conditions'),
   );
+  if (draw.cards.isEmpty) return state;
+  final condition = draw.cards.single;
+  final decks = Map<DeckId, DeckState>.of(state.decks);
+  // A condition remains attached to its hero until healing discards it.
+  decks['conditions'] = draw.deck;
   return _copyState(
     state,
     players: _replacePlayer(
@@ -1307,12 +1696,17 @@ GameState _advanceEvents(GameState state) {
     current = _copyState(current, eventTurnIndex: current.eventTurnIndex + 1);
     if (!player.alive || _hasAggressiveMonster(current, player)) continue;
     final eventDeck = current.decks['events'];
-    if (eventDeck == null || eventDeck.drawPile.isEmpty) continue;
-    final eventId = eventDeck.drawPile.first;
+    if (eventDeck == null) continue;
+    final draw = DeckRules.draw(
+      eventDeck,
+      seed: _deckSeed(current, 'events'),
+    );
+    if (draw.cards.isEmpty) continue;
+    final eventId = draw.cards.single;
     final decks = Map<DeckId, DeckState>.of(current.decks);
     decks['events'] = DeckState(
-      drawPile: eventDeck.drawPile.skip(1),
-      discardPile: [...eventDeck.discardPile, eventId],
+      drawPile: draw.deck.drawPile,
+      discardPile: [...draw.deck.discardPile, eventId],
     );
     return _copyState(
       current,
@@ -1476,6 +1870,7 @@ GameState _copyState(
   Iterable<PlayerState>? players,
   Iterable<MonsterInstance>? monsters,
   Iterable<BoilToken>? boils,
+  Iterable<CardId>? chestCards,
   Map<DeckId, DeckState>? decks,
   QuestState? quests,
   Iterable<IncomingDamage>? pendingDamage,
@@ -1501,6 +1896,7 @@ GameState _copyState(
   players: players ?? state.players,
   monsters: monsters ?? state.monsters,
   boils: boils ?? state.boils,
+  chestCards: chestCards ?? state.chestCards,
   conditionCards: state.conditionCards,
   cardDefinitions: state.cardDefinitions,
   pendingDamage: pendingDamage ?? state.pendingDamage,

@@ -42,9 +42,20 @@ void main() {
     expect(state.players.single.coord, const HexCoord(0, 2));
     expect(state.tileAt(const HexCoord(0, 2))!.opened, isTrue);
 
-    // With the only event card discarded, this round passes straight through
-    // the automatic phases and restores two actions for the next player turn.
+    // The exhausted event deck recycles its discard, so the same event is
+    // drawn again before the next player turn begins.
     state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    expect(state.pendingDecision, isA<AwaitingEventOption>());
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('investigate')),
+      FixedDiceRoller([6]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
     expect(state.phase, GamePhase.playersTurn);
     expect(state.round, 3);
     expect(state.actionsLeft, 2);

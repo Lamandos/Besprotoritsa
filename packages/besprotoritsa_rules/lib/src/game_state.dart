@@ -316,6 +316,108 @@ final class DeckState {
   int get cardsRemaining => drawPile.length;
 }
 
+/// The immutable result of drawing one or more cards from a [DeckState].
+@immutable
+final class DeckDraw {
+  DeckDraw({required Iterable<CardId> cards, required this.deck})
+    : cards = List.unmodifiable(cards);
+
+  final List<CardId> cards;
+  final DeckState deck;
+}
+
+/// Deterministic deck operations shared by effects, rewards, and terminals.
+///
+/// A discard pile is recycled only once the draw pile is empty.  This means a
+/// partially used draw pile always remains on top, while still making a deck
+/// usable after it has been exhausted. The `seed` is supplied by the caller so
+/// replays do not depend on process-local randomness.
+abstract final class DeckRules {
+  /// Draws up to [count] cards, recycling and shuffling the discard pile when
+  /// necessary. Story decks can opt out of recycling with [recycleDiscard].
+  static DeckDraw draw(
+    DeckState deck, {
+    int count = 1,
+    int seed = 0,
+    bool recycleDiscard = true,
+  }) {
+    if (count < 0) {
+      throw ArgumentError.value(count, 'count', 'Must not be negative.');
+    }
+    var drawPile = List<CardId>.of(deck.drawPile);
+    var discardPile = List<CardId>.of(deck.discardPile);
+    final cards = <CardId>[];
+    var shuffleSeed = seed;
+    while (cards.length < count) {
+      if (drawPile.isEmpty) {
+        if (!recycleDiscard || discardPile.isEmpty) break;
+        drawPile = _shuffled(discardPile, shuffleSeed);
+        discardPile = <CardId>[];
+        shuffleSeed++;
+      }
+      cards.add(drawPile.removeAt(0));
+    }
+    return DeckDraw(
+      cards: cards,
+      deck: DeckState(drawPile: drawPile, discardPile: discardPile),
+    );
+  }
+
+  /// Draws [cardId] wherever it appears in the active deck and shuffles the
+  /// remaining draw pile, as required by effects that search for a card.
+  static DeckDraw drawSpecific(
+    DeckState deck,
+    CardId cardId, {
+    int seed = 0,
+    bool recycleDiscard = true,
+  }) {
+    var prepared = deck;
+    if (prepared.drawPile.isEmpty && recycleDiscard) {
+      if (prepared.discardPile.isNotEmpty) {
+        prepared = DeckState(
+          drawPile: _shuffled(prepared.discardPile, seed),
+        );
+      }
+    }
+    final cards = List<CardId>.of(prepared.drawPile);
+    if (!cards.remove(cardId)) {
+      return DeckDraw(cards: const [], deck: prepared);
+    }
+    return DeckDraw(
+      cards: [cardId],
+      deck: DeckState(
+        drawPile: _shuffled(cards, seed),
+        discardPile: prepared.discardPile,
+      ),
+    );
+  }
+
+  /// Returns cards to the draw pile and shuffles the combined pile.
+  static DeckState returnAndShuffle(
+    DeckState deck,
+    Iterable<CardId> cards, {
+    int seed = 0,
+  }) => DeckState(
+    drawPile: _shuffled([...deck.drawPile, ...cards], seed),
+    discardPile: deck.discardPile,
+  );
+
+  static List<CardId> _shuffled(Iterable<CardId> cards, int seed) {
+    final shuffled = List<CardId>.of(cards);
+    var state = seed & 0x7fffffff;
+    for (var index = shuffled.length - 1; index > 0; index--) {
+      // A small local PRNG avoids a mutable global Random and is stable in
+      // server, client, and replay runtimes.
+      state = (state * 1103515245 + 12345) & 0x7fffffff;
+      final other = state % (index + 1);
+      final card = shuffled[index];
+      shuffled[index] = shuffled[other];
+      shuffled[other] = card;
+    }
+    return shuffled;
+  }
+}
+
 /// Story quests and private personal tasks.
 @immutable
 final class QuestState {
@@ -543,6 +645,32 @@ final class AwaitingEventOption extends PendingDecision {
   final CardId? eventId;
 }
 
+/// A terminal has revealed supply cards and awaits either one purchase or a
+/// decline. The cards are temporarily out of the deck until this is resolved.
+@immutable
+final class AwaitingTerminalPick extends PendingDecision {
+  AwaitingTerminalPick({
+    required Iterable<CardId> offeredCards,
+    required this.playerId,
+    this.deckId = 'supplies',
+  }) : offeredCards = List.unmodifiable(offeredCards) {
+    if (this.offeredCards.isEmpty) {
+      throw ArgumentError.value(
+        offeredCards,
+        'offeredCards',
+        'A terminal must offer at least one card.',
+      );
+    }
+  }
+
+  final List<CardId> offeredCards;
+  final PlayerId playerId;
+  final DeckId deckId;
+
+  /// Alias used by generic decision views.
+  List<CardId> get cards => offeredCards;
+}
+
 /// The authoritative, complete game state. Collections are copied on input.
 @immutable
 final class GameState {
@@ -558,6 +686,7 @@ final class GameState {
     required Iterable<MonsterInstance> monsters,
     required Map<DeckId, DeckState> decks,
     required this.quests,
+    Iterable<CardId> chestCards = const [],
     Iterable<BoilToken> boils = const [],
     Map<CardId, ConditionCard> conditionCards = const {},
     Map<CardId, CardDefinition> cardDefinitions = const {},
@@ -576,6 +705,7 @@ final class GameState {
        boils = List.unmodifiable(boils),
        conditionCards = UnmodifiableMapView(Map.of(conditionCards)),
        cardDefinitions = UnmodifiableMapView(Map.of(cardDefinitions)),
+       chestCards = List.unmodifiable(chestCards),
        pendingDamage = List.unmodifiable(pendingDamage),
        decks = UnmodifiableMapView(Map.of(decks)),
        log = List.unmodifiable(log),
@@ -628,6 +758,10 @@ final class GameState {
   final List<BoilToken> boils;
   final Map<CardId, ConditionCard> conditionCards;
   final Map<CardId, CardDefinition> cardDefinitions;
+
+  /// Shared storage in the start/anabiosis sector. Credits are deliberately
+  /// not represented here: only cards can be placed in the chest.
+  final List<CardId> chestCards;
   final List<IncomingDamage> pendingDamage;
   final Map<DeckId, DeckState> decks;
   final QuestState quests;

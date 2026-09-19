@@ -207,6 +207,12 @@ abstract final class SaveJsonModels {
           'player_id': decision.playerId,
           'event_id': decision.eventId,
         },
+        AwaitingTerminalPick() => {
+          'type': 'terminal_pick',
+          'offered_cards': decision.offeredCards,
+          'player_id': decision.playerId,
+          'deck_id': decision.deckId,
+        },
       };
 
   static PendingDecision? decisionFromJson(Object? value) {
@@ -235,6 +241,11 @@ abstract final class SaveJsonModels {
         options: _strings(json, 'options'),
         playerId: _nullableString(json['player_id'], 'player_id'),
         eventId: _nullableString(json['event_id'], 'event_id'),
+      ),
+      'terminal_pick' => AwaitingTerminalPick(
+        offeredCards: _strings(json, 'offered_cards'),
+        playerId: _string(json, 'player_id'),
+        deckId: _string(json, 'deck_id'),
       ),
       final type => throw FormatException(
         'Unknown pending decision type: $type.',

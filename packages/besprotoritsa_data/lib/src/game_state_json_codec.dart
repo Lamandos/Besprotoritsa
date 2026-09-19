@@ -44,6 +44,7 @@ class GameStateJsonCodec {
     'pending_damage': state.pendingDamage
         .map(SaveJsonModels.incomingDamageToJson)
         .toList(),
+    'chest_cards': state.chestCards,
     'decks': {
       for (final entry in state.decks.entries)
         entry.key: SaveJsonModels.deckToJson(entry.value),
@@ -83,6 +84,7 @@ class GameStateJsonCodec {
         json,
         'pending_damage',
       ).map(SaveJsonModels.incomingDamageFromJson),
+      chestCards: _stringsOrDefault(json['chest_cards']),
       decks: _objectMap(json, 'decks').map(
         (id, value) => MapEntry(id, SaveJsonModels.deckFromJson(value)),
       ),
@@ -132,6 +134,14 @@ List<String> _strings(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! List<dynamic> || value.any((entry) => entry is! String)) {
     throw FormatException('$key must be an array of strings.');
+  }
+  return List<String>.from(value);
+}
+
+List<String> _stringsOrDefault(Object? value) {
+  if (value == null) return const [];
+  if (value is! List<dynamic> || value.any((entry) => entry is! String)) {
+    throw const FormatException('chest_cards must be an array of strings.');
   }
   return List<String>.from(value);
 }
