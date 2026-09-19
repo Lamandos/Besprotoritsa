@@ -112,6 +112,7 @@ final class EffectRegistry {
     ModifyRollHook('pistol_attack_reroll', rerollsPerAttack: 1),
     OnDamageHook('gu4_rd_pre_attack_roll', target: EffectDamageTarget.target),
     CardBehaviorHook('combat.ignoreEnemyDefense'),
+    CardBehaviorHook('combat.addHit'),
     CardBehaviorHook('combat.useScienceInsteadOfStrength'),
     CardBehaviorHook('combat.noHit.takeDamage'),
     CardBehaviorHook('combat.noHit.damageTarget'),
