@@ -1,0 +1,16 @@
+{
+  "deck": "items",
+  "source": "materials/колода предметов.pdf",
+  "cards": [
+    {"id":"circular-saw","category":"weapon","slots":["weapon"],"cost":0,"stats":{},"behaviorIds":["dice.reroll.twoPerAttack"],"copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.circular-saw.name","descKey":"content.item.circular-saw.description"},
+    {"id":"laser-cutter","category":"weapon","slots":["weapon"],"cost":0,"stats":{},"behaviorIds":["combat.damageAllEnemiesInSectorOnKill"],"copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.laser-cutter.name","descKey":"content.item.laser-cutter.description"},
+    {"id":"exo-gloves","category":"weapon","slots":["weapon"],"cost":0,"stats":{},"behaviorIds":["dice.equalPair.addHit"],"copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.exo-gloves.name","descKey":"content.item.exo-gloves.description"},
+    {"id":"pneumo-cannon","category":"weapon","slots":["weapon"],"cost":0,"stats":{"strength":1},"behaviorIds":["dice.successFace.3","dice.face6.damageBoth"],"copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.pneumo-cannon.name","descKey":"content.item.pneumo-cannon.description"},
+    {"id":"nailgun","category":"weapon","slots":["weapon"],"cost":0,"stats":{},"behaviorId":"combat.ignoreEnemyDefense","copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.nailgun.name","descKey":"content.item.nailgun.description"},
+    {"id":"flamethrower","category":"weapon","slots":["weapon"],"cost":0,"stats":{"strength":3},"behaviorId":"card.preventMonsterLoot","copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.flamethrower.name","descKey":"content.item.flamethrower.description"},
+    {"id":"knife","category":"weapon","slots":["weapon"],"cost":0,"stats":{"strength":1},"behaviorId":"combat.noHit.takeDamage","copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.knife.name","descKey":"content.item.knife.description"},
+    {"id":"ultrasonic-hammer","category":"weapon","slots":["weapon"],"cost":0,"stats":{"strength":4},"behaviorId":"combat.rechargeForCredits","copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.ultrasonic-hammer.name","descKey":"content.item.ultrasonic-hammer.description"},
+    {"id":"spacesuit","category":"armor","slots":["armor"],"cost":0,"stats":{"defense":1},"behaviorId":"map.moveHullBetweenAirlocks","copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.spacesuit.name","descKey":"content.item.spacesuit.description"},
+    {"id":"frying-pan","category":"weapon","slots":["weapon"],"cost":0,"stats":{"strength":1,"defense":1},"copies":1,"importBatch":1,"sourceDeck":"items","nameKey":"content.item.frying-pan.name","descKey":"content.item.frying-pan.description"}
+  ]
+}

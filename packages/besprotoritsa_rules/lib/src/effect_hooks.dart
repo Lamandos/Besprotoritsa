@@ -8,6 +8,14 @@ sealed class EffectHook {
   final String behaviorId;
 }
 
+/// A named rule implemented by a card.  Some cards need a dedicated resolver,
+/// while others are consumed by the turn, inventory, or map subsystem.  Keeping
+/// their identifiers as hooks makes content validation exhaustive without
+/// turning JSON into executable code.
+final class CardBehaviorHook extends EffectHook {
+  const CardBehaviorHook(super.behaviorId);
+}
+
 enum MonsterBehavior {
   standard,
   reduceCombatStrength,
