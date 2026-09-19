@@ -57,6 +57,38 @@ final class EffectRegistry {
     ),
     OnColocationHook('boil.explodeOnColocation', explodes: true),
     OnColocationHook('monster.passThroughAttack', attacksPassingPlayers: true),
+    MonsterBehaviorHook(
+      'monster-standard',
+      behavior: MonsterBehavior.standard,
+    ),
+    MonsterBehaviorHook(
+      'monster-reduce-combat-strength',
+      behavior: MonsterBehavior.reduceCombatStrength,
+    ),
+    MonsterBehaviorHook(
+      'monster-restore-full-health-if-alive',
+      behavior: MonsterBehavior.restoreFullHealthIfAlive,
+    ),
+    MonsterBehaviorHook(
+      'monster-spawn-boils-on-death',
+      behavior: MonsterBehavior.spawnBoilsOnDeath,
+    ),
+    MonsterBehaviorHook(
+      'monster-spawn-boil-instead-of-attack',
+      behavior: MonsterBehavior.spawnBoilInsteadOfAttack,
+    ),
+    MonsterBehaviorHook(
+      'monster-stationary-block-exits',
+      behavior: MonsterBehavior.stationaryBlockExits,
+    ),
+    MonsterBehaviorHook(
+      'monster-move-through-vents',
+      behavior: MonsterBehavior.moveThroughVents,
+    ),
+    MonsterBehaviorHook(
+      'monster-target-lowest-health-through-vents',
+      behavior: MonsterBehavior.targetLowestHealthThroughVents,
+    ),
     ModifyRollHook('pistol_attack_reroll', rerollsPerAttack: 1),
     OnDamageHook('gu4_rd_pre_attack_roll', target: EffectDamageTarget.target),
   ]);

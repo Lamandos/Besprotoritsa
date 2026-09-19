@@ -15,6 +15,17 @@
     "rewardItems": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
     "behaviorId": { "$ref": "#/$defs/id" },
     "features": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "copies": { "type": "integer", "minimum": 1 },
+    "importBatch": { "type": "integer", "minimum": 1 },
+    "scaling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["healthPerHero", "attackPerHero"],
+      "properties": {
+        "healthPerHero": { "$ref": "#/$defs/nonNegativeInteger" },
+        "attackPerHero": { "$ref": "#/$defs/nonNegativeInteger" }
+      }
+    },
     "nameKey": { "$ref": "#/$defs/localizationKey" },
     "descKey": { "$ref": "#/$defs/localizationKey" }
   },

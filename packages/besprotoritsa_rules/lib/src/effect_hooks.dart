@@ -8,6 +8,23 @@ sealed class EffectHook {
   final String behaviorId;
 }
 
+enum MonsterBehavior {
+  standard,
+  reduceCombatStrength,
+  restoreFullHealthIfAlive,
+  spawnBoilsOnDeath,
+  spawnBoilInsteadOfAttack,
+  stationaryBlockExits,
+  moveThroughVents,
+  targetLowestHealthThroughVents,
+}
+
+final class MonsterBehaviorHook extends EffectHook {
+  const MonsterBehaviorHook(super.behaviorId, {required this.behavior});
+
+  final MonsterBehavior behavior;
+}
+
 final class ModifyRollHook extends EffectHook {
   const ModifyRollHook(
     super.behaviorId, {
