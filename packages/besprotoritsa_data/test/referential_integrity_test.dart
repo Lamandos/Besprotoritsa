@@ -9,6 +9,7 @@ const _russianLocalizationPath = 'content/i18n/ru.json';
 const _deckFiles = <String>[
   'items.json',
   'supplies.json',
+  'special_items.json',
   'monsters.json',
   'events.json',
 ];

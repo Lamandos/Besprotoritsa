@@ -4,20 +4,11 @@ import 'dart:io';
 import 'validate_schemas.dart';
 
 Future<void> main(List<String> arguments) async {
-  if (arguments.length != 2 || arguments.first != '--deck') {
-    throw const FormatException(
-      'Usage: dart run tool/verify_batch.dart --deck <items|supplies|events>',
-    );
-  }
-  final deck = arguments[1];
-  final path = 'content/$deck.json';
-  final schemaName = switch (deck) {
-    'items' => 'item',
-    'supplies' => 'supply',
-    'events' => 'event',
-    _ => throw FormatException('Unsupported deck: $deck.'),
-  };
-  final schemaPath = 'content/schemas/$schemaName.schema.json';
+  final request = _BatchRequest.parse(arguments);
+  final target = _BatchTarget.fromDeck(request.deck);
+  final deck = request.deck;
+  final path = target.path;
+  final schemaPath = 'content/schemas/${target.schemaName}.schema.json';
   final decoded = jsonDecode(await File(path).readAsString());
   if (decoded is! Map<String, dynamic> || decoded['cards'] is! List<dynamic>) {
     throw FormatException('$path must contain a cards array.');
@@ -39,7 +30,7 @@ Future<void> main(List<String> arguments) async {
     final card = Map<String, Object?>.from(raw);
     validator.validate(card);
     _validateBehaviorIds(card, await _registeredBehaviorIds());
-    if (deck == 'events') {
+    if (target.requiresEventFields) {
       _requireEventFields(card);
     }
     final id = card['id']! as String;
@@ -59,14 +50,79 @@ Future<void> main(List<String> arguments) async {
       throw FormatException('Batch ${entry.key} has more than 10 cards.');
     }
   }
-  if (deck == 'events') {
+  if (target.hasIndependentBatches) {
     _validateDeckBatchSizes(deck, cards);
   } else {
     await _validateGlobalBatchSizes();
   }
+  _validateRequestedBatch(cards, request.batch);
   stdout.writeln(
-    'Validated $deck: ${cards.length} cards in ${batches.length} batches.',
+    'Validated $deck${request.batch == null ? '' : ' batch ${request.batch}'}: '
+    '${cards.length} cards in ${batches.length} batches.',
   );
+}
+
+final class _BatchRequest {
+  const _BatchRequest({required this.deck, this.batch});
+
+  factory _BatchRequest.parse(List<String> arguments) {
+    if (arguments.length == 2 && arguments.first == '--deck') {
+      return _BatchRequest(deck: arguments[1]);
+    }
+    if (arguments.length == 4 &&
+        arguments[0] == '--deck' &&
+        arguments[2] == '--batch') {
+      final batch = int.tryParse(arguments[3]);
+      if (batch == null || batch < 1) {
+        throw const FormatException('Batch must be a positive integer.');
+      }
+      return _BatchRequest(deck: arguments[1], batch: batch);
+    }
+    throw const FormatException(
+      'Usage: dart run tool/verify_batch.dart --deck '
+      '<items|supplies|events|special-items> [--batch <number>]',
+    );
+  }
+
+  final String deck;
+  final int? batch;
+}
+
+final class _BatchTarget {
+  const _BatchTarget({
+    required this.path,
+    required this.schemaName,
+    this.requiresEventFields = false,
+    this.hasIndependentBatches = false,
+  });
+
+  factory _BatchTarget.fromDeck(String deck) => switch (deck) {
+    'items' => const _BatchTarget(
+      path: 'content/items.json',
+      schemaName: 'item',
+    ),
+    'supplies' => const _BatchTarget(
+      path: 'content/supplies.json',
+      schemaName: 'supply',
+    ),
+    'events' => const _BatchTarget(
+      path: 'content/events.json',
+      schemaName: 'event',
+      requiresEventFields: true,
+      hasIndependentBatches: true,
+    ),
+    'special-items' => const _BatchTarget(
+      path: 'content/special_items.json',
+      schemaName: 'special_item',
+      hasIndependentBatches: true,
+    ),
+    _ => throw FormatException('Unsupported deck: $deck.'),
+  };
+
+  final String path;
+  final String schemaName;
+  final bool requiresEventFields;
+  final bool hasIndependentBatches;
 }
 
 void _requireEventFields(Map<String, Object?> card) {
@@ -102,6 +158,15 @@ void _validateDeckBatchSizes(String deck, List<dynamic> cards) {
         'remainder.',
       );
     }
+  }
+}
+
+void _validateRequestedBatch(List<dynamic> cards, int? batch) {
+  if (batch == null) return;
+  if (!cards.any(
+    (raw) => (raw as Map<String, dynamic>)['importBatch'] == batch,
+  )) {
+    throw FormatException('Import batch $batch does not exist.');
   }
 }
 

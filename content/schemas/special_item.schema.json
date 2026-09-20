@@ -1,19 +1,29 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "special_item.schema.json",
-  "title": "Special item",
+  "title": "Special item card",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "sourceQuestId", "behaviorId", "nameKey", "descKey"],
+  "required": ["id", "category", "slots", "cost", "stats", "copies", "importBatch", "sourceDeck", "nameKey", "descKey"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
-    "sourceQuestId": { "$ref": "#/$defs/id" },
-    "behaviorId": { "$ref": "#/$defs/id" },
+    "category": { "enum": ["weapon", "armor", "clothing", "robot", "modification"] },
+    "slots": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "cost": { "$ref": "#/$defs/nonNegativeInteger" },
+    "stats": { "type": "object", "additionalProperties": { "type": "number" } },
+    "range": { "$ref": "#/$defs/nonNegativeInteger" },
+    "copies": { "type": "integer", "minimum": 1 },
+    "importBatch": { "type": "integer", "minimum": 1 },
+    "sourceDeck": { "enum": ["specialItems"] },
+    "behaviorId": { "$ref": "#/$defs/behaviorId" },
+    "behaviorIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/behaviorId" } },
     "nameKey": { "$ref": "#/$defs/localizationKey" },
     "descKey": { "$ref": "#/$defs/localizationKey" }
   },
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
-    "localizationKey": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" }
+    "behaviorId": { "type": "string", "pattern": "^[a-z][A-Za-z0-9_.-]*$" },
+    "localizationKey": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+    "nonNegativeInteger": { "type": "integer", "minimum": 0 }
   }
 }
