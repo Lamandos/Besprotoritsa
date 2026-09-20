@@ -14,7 +14,7 @@ final class ProjectedGameStateCodec {
 
   GameState decode(Map<String, Object?> json) => GameState(
     schemaVersion: _int(json, 'schemaVersion', fallback: 1),
-    seed: _int(json, 'seed'),
+    seed: _int(json, 'seed', fallback: 0),
     round: _int(json, 'round'),
     phase: _enum(GamePhase.values, _string(json, 'phase')),
     activePlayerId: json['activePlayerId'] as String?,
@@ -78,6 +78,7 @@ final class ProjectedGameStateCodec {
       characterId: _string(json, 'characterId'),
       coord: _coord(_object(json, 'coord')),
       damage: _int(json, 'damage'),
+      health: _int(json, 'health', fallback: 3),
       credits: _int(json, 'credits'),
       backpack: _strings(json['backpack']),
       equipped: EquippedGear(
@@ -117,6 +118,7 @@ final class ProjectedGameStateCodec {
       'reroll' => AwaitingRerollChoice(
         dice: _ints(json['dice']),
         availableRerolls: _int(json, 'availableRerolls'),
+        maxDicePerReroll: _int(json, 'maxDicePerReroll', fallback: 999),
         window: const DecisionWindow(remainingTicks: 1),
       ),
       'dodge' => AwaitingDodge(
@@ -124,12 +126,12 @@ final class ProjectedGameStateCodec {
         requiredAgilitySuccesses: _int(json, 'requiredAgilitySuccesses'),
       ),
       'eventOption' => AwaitingEventOption(options: _strings(json['options'])),
-      // The server withholds private card choices until it is their owner's
-      // turn. These placeholders preserve the modal shape without inventing
-      // hidden card data.
       'terminalPick' => AwaitingTerminalPick(
-        offeredCards: const ['hidden-card'],
+        offeredCards: _strings(json['offeredCards']),
         playerId: _string(json, 'playerId'),
+      ),
+      'hidden' => AwaitingOtherPlayerDecision(
+        awaitingPlayerId: _string(json, 'awaitingPlayerId'),
       ),
       'heroReplacement' => AwaitingHeroReplacement(
         playerId: _string(json, 'playerId'),

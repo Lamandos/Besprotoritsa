@@ -18,6 +18,63 @@ void main() {
       expect(result.state.log.last, 'attack:ada:ghoul-1:1');
     });
 
+    test('pistol reroll accepts exactly one selected die', () {
+      final state = _state(
+        monster: _monster(health: 2),
+        player: _player(
+          equipped: const EquippedGear(weapon: 'pistol'),
+        ),
+        cards: <CardId, CardDefinition>{
+          'pistol': _card(
+            'pistol',
+            behaviorIds: const ['pistol_attack_reroll'],
+          ),
+        },
+      );
+      final attacked = step(
+        state,
+        const AttackCommand('ghoul-1'),
+        FixedDiceRoller([1]),
+      );
+
+      final rerolled = step(
+        attacked.state,
+        ResolvePendingDecisionCommand(
+          RerollChoice(diceIndexes: const <int>[0]),
+        ),
+        FixedDiceRoller([6]),
+      );
+      final resolved = step(
+        rerolled.state,
+        const ResolvePendingDecisionCommand(KeepRollChoice()),
+        FixedDiceRoller([]),
+      );
+
+      expect(resolved.rejection, isNull);
+      expect(resolved.state.monsters.single.damage, 1);
+    });
+
+    test('GU4-RD deals target damage on a successful pre-attack roll', () {
+      final result = step(
+        _state(
+          monster: _monster(health: 3),
+          player: _player(equipped: const EquippedGear(robot: 'gu4-rd')),
+          cards: <CardId, CardDefinition>{
+            'gu4-rd': _card(
+              'gu4-rd',
+              behaviorIds: const ['gu4_rd_pre_attack_roll'],
+            ),
+          },
+        ),
+        const AttackCommand('ghoul-1'),
+        // The pre-attack die succeeds, while the regular attack misses.
+        FixedDiceRoller([4, 1]),
+      );
+
+      expect(result.rejection, isNull);
+      expect(result.state.monsters.single.damage, 1);
+    });
+
     test('monster damage opens dodge and assigns one condition on damage', () {
       final attacked = resolveColocation(
         _state(
@@ -134,6 +191,7 @@ GameState _state({
   Iterable<PlayerState>? players,
   MonsterInstance? monster,
   Iterable<String> conditions = const ['concussion'],
+  Map<CardId, CardDefinition> cards = const <CardId, CardDefinition>{},
 }) => GameState(
   seed: 1,
   round: 1,
@@ -160,6 +218,7 @@ GameState _state({
       statModifiers: const {StatType.repair: -1},
     ),
   },
+  cardDefinitions: cards,
   quests: QuestState(),
 );
 
@@ -180,6 +239,7 @@ PlayerState _player({
   int weaponModifier = 0,
   int damage = 0,
   Iterable<String> conditions = const [],
+  EquippedGear equipped = const EquippedGear(),
 }) => PlayerState(
   id: id,
   characterId: '$id-character',
@@ -187,7 +247,7 @@ PlayerState _player({
   damage: damage,
   credits: 0,
   backpack: const [],
-  equipped: const EquippedGear(),
+  equipped: equipped,
   carriedMods: const [],
   implanted: const [],
   conditions: conditions,
@@ -210,3 +270,13 @@ MonsterInstance _monster({
   defense: defense,
   attack: attack,
 );
+
+CardDefinition _card(String id, {List<String> behaviorIds = const []}) =>
+    CardDefinition(
+      id: id,
+      type: ItemType.robot,
+      slots: const <ItemSlot>{ItemSlot.robot},
+      cost: 0,
+      staticEffects: CardStaticEffects(const <CardStat, int>{}),
+      behaviorIds: behaviorIds,
+    );

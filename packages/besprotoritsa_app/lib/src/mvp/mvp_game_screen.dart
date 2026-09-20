@@ -880,21 +880,38 @@ List<Widget> _decisionActions(
   PendingDecision decision,
   AppStrings strings,
 ) => switch (decision) {
-  AwaitingRerollChoice(:final availableRerolls) => [
-    if (availableRerolls > 0)
-      TextButton(
+  AwaitingRerollChoice(
+    :final availableRerolls,
+    :final maxDicePerReroll,
+    :final dice,
+  ) =>
+    [
+      if (availableRerolls > 0 && maxDicePerReroll == 1)
+        for (final (index, die) in dice.indexed)
+          TextButton(
+            onPressed: () => ref
+                .read(gameControllerProvider.notifier)
+                .dispatch(
+                  ResolvePendingDecisionCommand(
+                    RerollChoice(diceIndexes: <int>[index]),
+                  ),
+                ),
+            child: Text('${strings.reroll}: $die'),
+          )
+      else if (availableRerolls > 0)
+        TextButton(
+          onPressed: () => ref
+              .read(gameControllerProvider.notifier)
+              .dispatch(ResolvePendingDecisionCommand(RerollChoice())),
+          child: Text(strings.reroll),
+        ),
+      FilledButton(
         onPressed: () => ref
             .read(gameControllerProvider.notifier)
-            .dispatch(ResolvePendingDecisionCommand(RerollChoice())),
-        child: Text(strings.reroll),
+            .dispatch(const ResolvePendingDecisionCommand(KeepRollChoice())),
+        child: Text(strings.keepResult),
       ),
-    FilledButton(
-      onPressed: () => ref
-          .read(gameControllerProvider.notifier)
-          .dispatch(const ResolvePendingDecisionCommand(KeepRollChoice())),
-      child: Text(strings.keepResult),
-    ),
-  ],
+    ],
   AwaitingDodge() => [
     FilledButton(
       onPressed: () => ref
@@ -946,6 +963,7 @@ List<Widget> _decisionActions(
         child: Text(strings.chooseCommand(characterId)),
       ),
   ],
+  AwaitingOtherPlayerDecision() => const [],
 };
 
 List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
@@ -1008,6 +1026,7 @@ String _decisionPrompt(PendingDecision decision, AppStrings strings) =>
       AwaitingEventOption() => strings.eventOptionPrompt,
       AwaitingTerminalPick() => strings.terminalPickPrompt,
       AwaitingHeroReplacement() => strings.replacementHeroPrompt,
+      AwaitingOtherPlayerDecision() => strings.waitingForOtherPlayer,
     };
 
 class _HexClipper extends CustomClipper<Path> {

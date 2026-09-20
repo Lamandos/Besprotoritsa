@@ -36,6 +36,23 @@ void main() {
 
     expect(codec.toJson(restored)['schema_version'], 1);
   });
+
+  test('reports invalid card definitions as format errors', () {
+    final codec = GameStateJsonCodec();
+    final invalid = Map<String, Object?>.of(codec.toJson(_interruptedState()))
+      ..['card_definitions'] = <String, Object?>{
+        'invalid-card': <String, Object?>{
+          'id': 'invalid-card',
+          'category': 'unknown',
+          'slots': <String>[],
+          'cost': 0,
+          'stats': <String, int>{},
+          'behaviorIds': <String>[],
+        },
+      };
+
+    expect(() => codec.fromJson(invalid), throwsFormatException);
+  });
 }
 
 GameState _interruptedState() => GameState(
@@ -98,6 +115,16 @@ GameState _interruptedState() => GameState(
     'malaise': ConditionCard(
       id: 'malaise',
       statModifiers: const {StatType.strength: -1},
+    ),
+  },
+  cardDefinitions: {
+    'pistol': CardDefinition(
+      id: 'pistol',
+      type: ItemType.weapon,
+      slots: const {ItemSlot.weapon},
+      cost: 2,
+      staticEffects: CardStaticEffects(const {CardStat.strength: 1}, range: 2),
+      behaviorIds: const ['pistol_attack_reroll'],
     ),
   },
   pendingDamage: const [

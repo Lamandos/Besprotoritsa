@@ -14,7 +14,10 @@ void main() {
     addTearDown(() => directory.delete(recursive: true));
 
     final firstManager = RoomManager(persistenceDirectory: directory);
-    final created = firstManager.createRoom(state: _twoHeroState());
+    final created = firstManager.createRoom(
+      state: _twoHeroState(),
+      started: true,
+    );
     var server = await _serve(firstManager);
     addTearDown(() => server.close(force: true));
 
@@ -38,6 +41,7 @@ void main() {
       jsonEncode(<String, Object?>{
         'type': 'command',
         'commandId': 'heal-before-crash',
+        'expectedRevision': 0,
         'command': <String, Object?>{'type': 'heal', 'amount': 1},
       }),
     );
@@ -49,6 +53,13 @@ void main() {
       ).readAsStringSync(),
       contains('heal-before-crash'),
     );
+    // Snapshots from before participant-scoped command ids stored bare ids.
+    // Preserve that legacy shape to verify restoration migrates it.
+    final snapshotFile = File('${directory.path}/${created.code}.room.json');
+    final legacySnapshot = Map<String, Object?>.from(
+      jsonDecode(snapshotFile.readAsStringSync()) as Map<Object?, Object?>,
+    )..['processedCommandIds'] = <String>['heal-before-crash'];
+    snapshotFile.writeAsStringSync(jsonEncode(legacySnapshot));
 
     // Simulate a process crash: a fresh manager knows only what reached disk.
     await server.close(force: true);
@@ -78,7 +89,25 @@ void main() {
     expect(joined['reconnectToken'], adaToken);
     expect(state['type'], 'state');
     expect(state['revision'], 1);
-    expect((state['state']! as Map<Object?, Object?>)['seed'], 8);
+    expect(
+      (state['state']! as Map<Object?, Object?>).containsKey('seed'),
+      isFalse,
+    );
+
+    // The retry retains its original revision, so it proves the bare legacy
+    // id was migrated before the stale-revision check.
+    reconnected.sink.add(
+      jsonEncode(<String, Object?>{
+        'type': 'command',
+        'commandId': 'heal-before-crash',
+        'expectedRevision': 0,
+        'command': <String, Object?>{'type': 'heal', 'amount': 1},
+      }),
+    );
+    final retried = await reconnectedInbox.next();
+    expect(retried['type'], 'state');
+    expect(retried['revision'], 1);
+    expect(restored.revision, 1);
 
     // Boris has a valid session, but not Ada's active hero. His command is
     // rejected rather than being applied to the active player.
@@ -97,6 +126,7 @@ void main() {
       jsonEncode(<String, Object?>{
         'type': 'command',
         'commandId': 'boris-cannot-control-ada',
+        'expectedRevision': 1,
         'command': <String, Object?>{'type': 'heal', 'amount': 1},
       }),
     );
@@ -104,6 +134,24 @@ void main() {
     expect(rejected['type'], 'error');
     expect(rejected['reason'], 'Only the active hero may issue commands.');
     expect(restored.revision, 1);
+
+    // The restarted room derives its roller from the persisted revision, so
+    // the next outcome cannot restart the initial pseudo-random sequence.
+    reconnected.sink.add(
+      jsonEncode(<String, Object?>{
+        'type': 'command',
+        'commandId': 'roll-after-restart',
+        'expectedRevision': 1,
+        'command': <String, Object?>{'type': 'skillCheck', 'stat': 'science'},
+      }),
+    );
+    final rolled = await reconnectedInbox.next();
+    final pending = Map<String, Object?>.from(
+      (rolled['state']! as Map<Object?, Object?>)['pendingDecision']!
+          as Map<Object?, Object?>,
+    );
+    expect(pending['dice'], SeededDiceRoller(8 ^ 1).rollDice(1));
+    expect(restored.revision, 2);
   });
 }
 

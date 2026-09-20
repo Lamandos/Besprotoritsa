@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:besprotoritsa_server/besprotoritsa_server.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
@@ -14,7 +15,7 @@ void main() {
 
   setUp(() async {
     final manager = RoomManager();
-    room = manager.createRoom(state: _twoHeroState());
+    room = manager.createRoom(state: _twoHeroState(), started: true);
     server = await shelf_io.serve(
       manager.handler,
       InternetAddress.loopbackIPv4,
@@ -39,6 +40,35 @@ void main() {
 
     expect(response.statusCode, HttpStatus.ok);
     expect(await response.transform(utf8.decoder).join(), 'ok\n');
+  });
+
+  test('rejects an invalid posted card definition with bad request', () async {
+    final document = GameStateJsonCodec().toJson(_twoHeroState())
+      ..['card_definitions'] = <String, Object?>{
+        'invalid-card': <String, Object?>{
+          'id': 'invalid-card',
+          'category': 'unknown',
+          'slots': <String>[],
+          'cost': 0,
+          'stats': <String, int>{},
+          'behaviorIds': <String>[],
+        },
+      };
+    final client = HttpClient();
+    addTearDown(client.close);
+    final request = await client.postUrl(
+      Uri(
+        scheme: 'http',
+        host: InternetAddress.loopbackIPv4.address,
+        port: server.port,
+        path: '/rooms',
+      ),
+    );
+    request.headers.contentType = ContentType.json;
+    request.write(jsonEncode(document));
+    final response = await request.close();
+
+    expect(response.statusCode, HttpStatus.badRequest);
   });
 
   test(
@@ -80,6 +110,7 @@ void main() {
         jsonEncode({
           'type': 'command',
           'commandId': 'heal-ada-1',
+          'expectedRevision': 0,
           'command': {'type': 'heal', 'amount': 1},
         }),
       );
@@ -89,19 +120,261 @@ void main() {
       expect(borisUpdated['revision'], 1);
       expect(room.revision, 1);
 
-      // The same id is an idempotent retry: it neither steps rules nor
-      // broadcasts.
+      // The same id is an idempotent retry. A stale retry replays the
+      // authoritative outcome to the original participant without stepping
+      // rules or broadcasting to other players.
       ada.sink.add(
         jsonEncode({
           'type': 'command',
           'commandId': 'heal-ada-1',
+          'expectedRevision': 0,
           'command': {'type': 'heal', 'amount': 1},
         }),
       );
-      await Future<void>.delayed(const Duration(milliseconds: 25));
+      final retried = await adaInbox.next();
+      expect(retried['type'], 'state');
+      expect(retried['revision'], 1);
+      expect(room.revision, 1);
+
+      ada.sink.add(
+        jsonEncode({
+          'type': 'command',
+          'commandId': 'heal-ada-1',
+          'expectedRevision': 1,
+          'command': {'type': 'heal', 'amount': 2},
+        }),
+      );
+      final reused = await adaInbox.next();
+      expect(reused['type'], 'error');
+      expect(
+        reused['reason'],
+        'Command ID was already used for a different command.',
+      );
       expect(room.revision, 1);
     },
   );
+
+  test('never sends the seed, private log, or another hero decision', () async {
+    final ada = await _connect(server, room.code, 'ada-participant');
+    addTearDown(ada.sink.close);
+    final adaInbox = _Inbox(ada);
+    addTearDown(adaInbox.close);
+    await adaInbox.next();
+    await adaInbox.next();
+
+    final boris = await _connect(server, room.code, 'boris-participant');
+    addTearDown(boris.sink.close);
+    final borisInbox = _Inbox(boris);
+    addTearDown(borisInbox.close);
+    await borisInbox.next();
+    await borisInbox.next();
+
+    ada.sink.add(
+      jsonEncode({
+        'type': 'command',
+        'commandId': 'ada-private-roll',
+        'expectedRevision': 0,
+        'command': {'type': 'skillCheck', 'stat': 'science'},
+      }),
+    );
+    final adaState = await adaInbox.next();
+    final borisState = await borisInbox.next();
+    final adaProjection = Map<String, Object?>.from(adaState['state']! as Map);
+    final borisProjection = Map<String, Object?>.from(
+      borisState['state']! as Map,
+    );
+
+    expect(adaProjection.containsKey('seed'), isFalse);
+    expect(adaProjection['log'], isEmpty);
+    expect(
+      Map<String, Object?>.from(
+        adaProjection['pendingDecision']! as Map,
+      )['type'],
+      'reroll',
+    );
+    expect(
+      Map<String, Object?>.from(
+        borisProjection['pendingDecision']! as Map,
+      )['type'],
+      'hidden',
+    );
+  });
+
+  test('hides an active hero decision with an implicit owner', () async {
+    final manager = RoomManager();
+    final implicitOwnerRoom = manager.createRoom(
+      state: _twoHeroState(
+        pendingDecision: AwaitingEventOption(options: const ['A', 'B']),
+      ),
+      started: true,
+    );
+    final implicitOwnerServer = await shelf_io.serve(
+      manager.handler,
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    addTearDown(() => implicitOwnerServer.close(force: true));
+
+    final ada = await _connect(
+      implicitOwnerServer,
+      implicitOwnerRoom.code,
+      'ada-participant',
+    );
+    addTearDown(ada.sink.close);
+    final adaInbox = _Inbox(ada);
+    addTearDown(adaInbox.close);
+    await adaInbox.next();
+    final adaState = await adaInbox.next();
+
+    final boris = await _connect(
+      implicitOwnerServer,
+      implicitOwnerRoom.code,
+      'boris-participant',
+    );
+    addTearDown(boris.sink.close);
+    final borisInbox = _Inbox(boris);
+    addTearDown(borisInbox.close);
+    await borisInbox.next();
+    final borisState = await borisInbox.next();
+
+    final adaDecision = Map<String, Object?>.from(
+      (adaState['state']! as Map<Object?, Object?>)['pendingDecision']!
+          as Map<Object?, Object?>,
+    );
+    final borisDecision = Map<String, Object?>.from(
+      (borisState['state']! as Map<Object?, Object?>)['pendingDecision']!
+          as Map<Object?, Object?>,
+    );
+    expect(adaDecision['type'], 'eventOption');
+    expect(borisDecision, <String, Object?>{
+      'type': 'hidden',
+      'awaitingPlayerId': 'ada',
+    });
+  });
+
+  test(
+    'does not reveal another hero condition through transition events',
+    () async {
+      final manager = RoomManager();
+      final conditionServer = await shelf_io.serve(
+        manager.handler,
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      addTearDown(() => conditionServer.close(force: true));
+
+      // A dodge failure applies the condition to Ada, who owns the decision.
+      final base = _twoHeroState();
+      final withDodge = GameState(
+        seed: base.seed,
+        round: base.round,
+        phase: base.phase,
+        activePlayerId: 'ada',
+        actionsLeft: base.actionsLeft,
+        board: base.board,
+        players: base.players,
+        monsters: base.monsters,
+        decks: <String, DeckState>{
+          'conditions': DeckState(drawPile: const <String>['malaise']),
+        },
+        conditionCards: <String, ConditionCard>{
+          'malaise': ConditionCard(
+            id: 'malaise',
+            statModifiers: const <StatType, int>{StatType.strength: -1},
+          ),
+        },
+        quests: base.quests,
+        pendingDecision: const AwaitingDodge(
+          monsterDamage: 1,
+          requiredAgilitySuccesses: 1,
+          targetPlayerId: 'ada',
+        ),
+      );
+      // This separate room keeps the test focused on the recipient-specific
+      // broadcast generated by one accepted decision.
+      final eventRoom = manager.createRoom(state: withDodge, started: true);
+      final eventAda = await _connect(
+        conditionServer,
+        eventRoom.code,
+        'event-ada',
+      );
+      addTearDown(eventAda.sink.close);
+      final eventAdaInbox = _Inbox(eventAda);
+      addTearDown(eventAdaInbox.close);
+      await eventAdaInbox.next();
+      await eventAdaInbox.next();
+      final eventBoris = await _connect(
+        conditionServer,
+        eventRoom.code,
+        'event-boris',
+      );
+      addTearDown(eventBoris.sink.close);
+      final eventBorisInbox = _Inbox(eventBoris);
+      addTearDown(eventBorisInbox.close);
+      await eventBorisInbox.next();
+      await eventBorisInbox.next();
+
+      eventAda.sink.add(
+        jsonEncode(<String, Object?>{
+          'type': 'command',
+          'commandId': 'dodge-fails',
+          'expectedRevision': 0,
+          'command': <String, Object?>{
+            'type': 'resolveDecision',
+            'choice': <String, Object?>{'type': 'dodge'},
+          },
+        }),
+      );
+      final ownState = await eventAdaInbox.next();
+      final otherState = await eventBorisInbox.next();
+      expect(jsonEncode(ownState), contains('condition_drawn'));
+      expect(jsonEncode(otherState), isNot(contains('condition_drawn')));
+    },
+  );
+
+  test('waits for every roster hero to be claimed before starting', () async {
+    final manager = RoomManager();
+    final waitingRoom = manager.createRoom(state: _threeHeroState());
+    final waitingServer = await shelf_io.serve(
+      manager.handler,
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    addTearDown(() => waitingServer.close(force: true));
+
+    final ada = await _connectLobby(
+      waitingServer,
+      waitingRoom.code,
+      'ada-participant',
+    );
+    addTearDown(ada.sink.close);
+    final adaInbox = _Inbox(ada);
+    addTearDown(adaInbox.close);
+    await adaInbox.next();
+    await adaInbox.next();
+
+    final boris = await _connectLobby(
+      waitingServer,
+      waitingRoom.code,
+      'boris-participant',
+    );
+    addTearDown(boris.sink.close);
+    final borisInbox = _Inbox(boris);
+    addTearDown(borisInbox.close);
+    await borisInbox.next();
+    await borisInbox.next();
+    await adaInbox.next();
+
+    ada.sink.add(jsonEncode(<String, Object?>{'type': 'ready', 'ready': true}));
+    await adaInbox.next();
+    await borisInbox.next();
+    boris.sink.add(
+      jsonEncode(<String, Object?>{'type': 'ready', 'ready': true}),
+    );
+
+    expect((await adaInbox.next())['type'], 'lobby');
+    expect((await borisInbox.next())['type'], 'lobby');
+  });
 }
 
 Future<IOWebSocketChannel> _connect(
@@ -115,6 +388,24 @@ Future<IOWebSocketChannel> _connect(
       host: InternetAddress.loopbackIPv4.address,
       port: server.port,
       path: '/rooms/$roomCode/ws',
+      queryParameters: {'participantId': participantId},
+    ),
+  );
+  await channel.ready;
+  return channel;
+}
+
+Future<IOWebSocketChannel> _connectLobby(
+  HttpServer server,
+  String roomCode,
+  String participantId,
+) async {
+  final channel = IOWebSocketChannel.connect(
+    Uri(
+      scheme: 'ws',
+      host: InternetAddress.loopbackIPv4.address,
+      port: server.port,
+      path: '/rooms/$roomCode/lobby/ws',
       queryParameters: {'participantId': participantId},
     ),
   );
@@ -176,7 +467,10 @@ void _expectPrivateCards(
   expect(jsonEncode(envelope), isNot(contains(hiddenCard)));
 }
 
-GameState _twoHeroState() => GameState(
+GameState _twoHeroState({
+  PendingDecision? pendingDecision,
+  Iterable<PlayerState>? players,
+}) => GameState(
   seed: 8,
   round: 1,
   phase: GamePhase.playersTurn,
@@ -193,14 +487,36 @@ GameState _twoHeroState() => GameState(
       ventColor: VentColor.none,
     ),
   ],
-  players: [
-    _player('ada', damage: 1, card: 'ada-private-card'),
-    _player('boris', card: 'boris-secret-card'),
-  ],
+  players:
+      players ??
+      [
+        _player('ada', damage: 1, card: 'ada-private-card'),
+        _player('boris', card: 'boris-secret-card'),
+      ],
   monsters: const [],
   decks: const {},
   quests: QuestState(),
+  pendingDecision: pendingDecision,
 );
+
+GameState _threeHeroState() {
+  final base = _twoHeroState();
+  return GameState(
+    seed: base.seed,
+    round: base.round,
+    phase: base.phase,
+    activePlayerId: base.activePlayerId,
+    actionsLeft: base.actionsLeft,
+    board: base.board,
+    players: <PlayerState>[
+      ...base.players,
+      _player('clara', card: 'clara-private-card'),
+    ],
+    monsters: base.monsters,
+    decks: base.decks,
+    quests: base.quests,
+  );
+}
 
 PlayerState _player(String id, {required String card, int damage = 0}) =>
     PlayerState(

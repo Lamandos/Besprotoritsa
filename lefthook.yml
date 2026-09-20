@@ -4,3 +4,5 @@ pre-commit:
       run: dart format --set-exit-if-changed .
     analyze:
       run: dart analyze
+    test:
+      run: bash tool/run_checks.sh

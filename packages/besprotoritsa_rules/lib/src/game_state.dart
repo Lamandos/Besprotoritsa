@@ -669,10 +669,12 @@ final class AttackRollContext extends RollContext {
   const AttackRollContext({
     required this.playerId,
     required this.targetInstanceId,
+    this.preAttackDamage = 0,
   }) : super();
 
   final PlayerId playerId;
   final String targetInstanceId;
+  final int preAttackDamage;
 }
 
 /// A pending attempt to prevent incoming monster damage with agility hits.
@@ -765,6 +767,17 @@ final class AwaitingHeroReplacement extends PendingDecision {
 
   final PlayerId playerId;
   final List<CharacterId> characterIds;
+}
+
+/// A privacy-preserving projection that another hero must make a decision.
+///
+/// This is used only by clients that are not entitled to receive the decision
+/// details. It still blocks local commands while the authoritative room waits.
+@immutable
+final class AwaitingOtherPlayerDecision extends PendingDecision {
+  const AwaitingOtherPlayerDecision({required this.awaitingPlayerId});
+
+  final PlayerId awaitingPlayerId;
 }
 
 /// The authoritative, complete game state. Collections are copied on input.
@@ -954,6 +967,7 @@ final class ProjectedPlayerState {
     required this.characterId,
     required this.coord,
     required this.damage,
+    required this.health,
     required this.credits,
     required this.equipped,
     required this.alive,
@@ -982,6 +996,7 @@ final class ProjectedPlayerState {
       characterId: state.characterId,
       coord: state.coord,
       damage: state.damage,
+      health: state.health,
       credits: state.credits,
       equipped: state.equipped,
       alive: state.alive,
@@ -998,6 +1013,7 @@ final class ProjectedPlayerState {
   final CharacterId characterId;
   final HexCoord coord;
   final int damage;
+  final int health;
   final int credits;
   final EquippedGear equipped;
   final bool alive;

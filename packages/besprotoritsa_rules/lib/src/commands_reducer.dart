@@ -900,10 +900,17 @@ GameStepResult _attack(
   DiceRoller dice,
 ) {
   final player = _activePlayer(state)!;
+  final hooks = _activeEffectHooks(state, player);
+  final preAttackHooks = hooks.whereType<PreAttackDamageHook>();
+  final preAttackDamage = preAttackHooks.isEmpty
+      ? 0
+      : const EffectEngine()
+            .resolvePreAttackRoll(dice.rollDice(1), preAttackHooks)
+            .targetDamage;
   final diceRoll = dice.rollDice(_heroAttackDice(player, state));
   final roll = const EffectEngine().resolveRoll(
     diceRoll,
-    _activeEffectHooks(state, player),
+    hooks,
   );
   if (roll.rerollsAvailable > 0) {
     return GameStepResult(
@@ -918,6 +925,7 @@ GameStepResult _attack(
           context: AttackRollContext(
             playerId: player.id,
             targetInstanceId: targetInstanceId,
+            preAttackDamage: preAttackDamage,
           ),
         ),
         logEntry: 'attack-roll:${player.id}:$targetInstanceId',
@@ -931,6 +939,7 @@ GameStepResult _attack(
       targetInstanceId,
       diceRoll,
       consumesAction: true,
+      preAttackDamage: preAttackDamage,
     ),
   );
 }
@@ -941,12 +950,14 @@ GameState _resolveAttackRoll(
   String targetInstanceId,
   List<int> dice, {
   required bool consumesAction,
+  int preAttackDamage = 0,
 }) {
   final player = _playerById(state, playerId)!;
   final monster = _monsterById(state, targetInstanceId)!;
   final hooks = _activeEffectHooks(state, player);
   final roll = const EffectEngine().resolveRoll(dice, hooks);
-  final damage = (roll.hits - monster.defense).clamp(0, roll.hits);
+  final damage =
+      preAttackDamage + (roll.hits - monster.defense).clamp(0, roll.hits);
   final defeated = monster.damage + damage >= monster.health;
   final collateral = defeated
       ? const EffectEngine()
@@ -1299,6 +1310,10 @@ GameStepResult _resolveDecision(
       state,
       pending,
       choice,
+    ),
+    AwaitingOtherPlayerDecision() => GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
     ),
   };
 }
@@ -1654,6 +1669,7 @@ GameState _completeRoll(
       context.targetInstanceId,
       pending.dice,
       consumesAction: false,
+      preAttackDamage: context.preAttackDamage,
     );
   }
   if (context is! SkillCheckContext) return _resumeAutomaticPhase(state);

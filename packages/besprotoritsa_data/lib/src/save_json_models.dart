@@ -174,6 +174,32 @@ abstract final class SaveJsonModels {
         },
       );
 
+  static Map<String, Object?> cardDefinitionToJson(CardDefinition card) => {
+    'id': card.id,
+    'category': card.type.name,
+    'slots': card.slots.map((slot) => slot.name).toList(),
+    'cost': card.cost,
+    'stats': {
+      for (final entry in card.staticEffects.modifiers.entries)
+        entry.key.name: entry.value,
+    },
+    'range': card.staticEffects.range,
+    'behaviorIds': card.behaviorIds,
+  };
+
+  static CardDefinition cardDefinitionFromJson(Map<String, Object?> json) {
+    // CardDefinition validates semantic constraints such as enum members and
+    // non-negative cost with ArgumentError. Saved and posted JSON must surface
+    // those as client format errors instead of server failures.
+    try {
+      return CardDefinition.fromJson(json);
+      // ArgumentError carries the semantic validation detail for the response.
+      // ignore: avoid_catching_errors
+    } on ArgumentError catch (error) {
+      throw FormatException('Invalid card definition: ${error.message}');
+    }
+  }
+
   static Map<String, Object?> incomingDamageToJson(IncomingDamage damage) => {
     'target_player_id': damage.targetPlayerId,
     'amount': damage.amount,
@@ -258,6 +284,10 @@ abstract final class SaveJsonModels {
           'player_id': decision.playerId,
           'character_ids': decision.characterIds,
         },
+        AwaitingOtherPlayerDecision() => {
+          'type': 'other_player',
+          'awaiting_player_id': decision.awaitingPlayerId,
+        },
       };
 
   static PendingDecision? decisionFromJson(Object? value) {
@@ -295,6 +325,9 @@ abstract final class SaveJsonModels {
       'hero_replacement' => AwaitingHeroReplacement(
         playerId: _string(json, 'player_id'),
         characterIds: _strings(json, 'character_ids'),
+      ),
+      'other_player' => AwaitingOtherPlayerDecision(
+        awaitingPlayerId: _string(json, 'awaiting_player_id'),
       ),
       final type => throw FormatException(
         'Unknown pending decision type: $type.',
@@ -409,6 +442,7 @@ Map<String, Object?>? _contextToJson(RollContext? context) => switch (context) {
     'type': 'attack',
     'player_id': context.playerId,
     'target_instance_id': context.targetInstanceId,
+    'pre_attack_damage': context.preAttackDamage,
   },
 };
 
@@ -419,6 +453,7 @@ RollContext? _contextFromJson(Object? value) {
     'attack' => AttackRollContext(
       playerId: _string(json, 'player_id'),
       targetInstanceId: _string(json, 'target_instance_id'),
+      preAttackDamage: _optionalInt(json, 'pre_attack_damage') ?? 0,
     ),
     'skill' || null => SkillCheckContext(
       playerId: _string(json, 'player_id'),
