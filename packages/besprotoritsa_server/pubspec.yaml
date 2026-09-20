@@ -8,6 +8,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  besprotoritsa_data:
+    path: ../besprotoritsa_data
   besprotoritsa_rules:
     path: ../besprotoritsa_rules
   shelf: ^1.4.2

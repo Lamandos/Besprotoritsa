@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_web_socket/shelf_web_socket.dart';
@@ -41,20 +42,56 @@ final class RoomManager {
   /// Finds a room by its five-letter code.
   GameRoom? room(String code) => _rooms[code.toUpperCase()];
 
-  /// Shelf handler exposing WebSockets at `/rooms/<code>/ws`.
+  /// Shelf handler for room creation and game/lobby WebSockets.
   ///
   /// The participant id is supplied as the required `participantId` query
   /// parameter. A participant reconnects to their previously assigned hero.
   Handler get handler => _route;
 
-  FutureOr<Response> _route(Request request) {
+  FutureOr<Response> _route(Request request) async {
+    if (request.method == 'OPTIONS') {
+      return Response(204, headers: _corsHeaders);
+    }
     final segments = request.url.pathSegments;
-    if (segments.length != 3 || segments[0] != 'rooms' || segments[2] != 'ws') {
-      return Response.notFound('Expected /rooms/<code>/ws.');
+    if (request.method == 'POST' &&
+        segments.length == 1 &&
+        segments[0] == 'rooms') {
+      try {
+        final decoded = jsonDecode(await request.readAsString());
+        if (decoded is! Map<Object?, Object?>) {
+          return Response(400, body: 'Room state must be a JSON object.');
+        }
+        final room = createRoom(
+          state: GameStateJsonCodec().fromJson(
+            decoded.map((key, value) => MapEntry(key.toString(), value)),
+          ),
+        );
+        return Response.ok(
+          jsonEncode(<String, String>{'roomCode': room.code}),
+          headers: const {
+            'content-type': 'application/json',
+            ..._corsHeaders,
+          },
+        );
+      } on FormatException catch (error) {
+        return Response(400, body: error.message);
+      }
+    }
+    if (segments.isEmpty || segments.first != 'rooms') {
+      return Response.notFound('Expected POST /rooms or a room WebSocket.');
     }
     final participantId = request.url.queryParameters['participantId'];
     if (participantId == null || participantId.isEmpty) {
       return Response(400, body: 'participantId is required.');
+    }
+    if (segments.length == 4 && segments[2] == 'lobby' && segments[3] == 'ws') {
+      return handlerForLobby(
+        roomCode: segments[1],
+        participantId: participantId,
+      )(request);
+    }
+    if (segments.length != 3 || segments[2] != 'ws') {
+      return Response.notFound('Expected /rooms/<code>/(lobby/)ws.');
     }
     return handlerForRoom(
       roomCode: segments[1],
@@ -78,10 +115,29 @@ final class RoomManager {
     });
   }
 
+  /// Returns a handler for the character-selection lobby of a room.
+  Handler handlerForLobby({
+    required String roomCode,
+    required String participantId,
+  }) => webSocketHandler((channel, protocol) {
+    final room = this.room(roomCode);
+    if (room == null) {
+      channel.sink.close(1008, 'Unknown room.');
+      return;
+    }
+    room.connectLobby(channel, participantId);
+  });
+
   String _newRoomCode() => String.fromCharCodes(
     List<int>.generate(5, (_) => 65 + _random.nextInt(26)),
   );
 }
+
+const Map<String, String> _corsHeaders = <String, String>{
+  'access-control-allow-origin': '*',
+  'access-control-allow-methods': 'POST, OPTIONS',
+  'access-control-allow-headers': 'content-type',
+};
 
 /// One authoritative game, its claimed heroes, and live client connections.
 final class GameRoom {
@@ -97,6 +153,7 @@ final class GameRoom {
   final DiceRoller _dice;
   final Map<String, _Participant> _participants = <String, _Participant>{};
   final Set<String> _processedCommandIds = <String>{};
+  final Set<String> _readyParticipantIds = <String>{};
 
   GameState _state;
   int _revision = 0;
@@ -148,6 +205,98 @@ final class GameRoom {
     );
   }
 
+  /// Connects a participant to the lobby and broadcasts its current roster.
+  void connectLobby(WebSocketChannel channel, String participantId) {
+    final participant = _participants[participantId] ?? _assign(participantId);
+    if (participant == null) {
+      channel.sink.close(1008, 'No unassigned heroes remain.');
+      return;
+    }
+    participant.lobbyChannel?.sink.close(1000, 'Reconnected elsewhere.');
+    participant.lobbyChannel = channel;
+    _broadcastLobby();
+    channel.stream.listen(
+      (Object? message) => _onLobbyMessage(participant, message),
+      onDone: () {
+        if (identical(participant.lobbyChannel, channel)) {
+          participant.lobbyChannel = null;
+          _readyParticipantIds.remove(participant.id);
+          _broadcastLobby();
+        }
+      },
+      onError: (_, _) {},
+    );
+  }
+
+  void _onLobbyMessage(_Participant participant, Object? message) {
+    try {
+      final envelope = _jsonObject(message);
+      switch (envelope['type']) {
+        case 'selectHero':
+          final heroId = _requiredString(envelope, 'heroId');
+          final known = _state.players.any((player) => player.id == heroId);
+          final taken = _participants.values.any(
+            (other) => other.id != participant.id && other.heroId == heroId,
+          );
+          if (!known || taken) {
+            _sendLobbyError(participant, 'Hero is not available.');
+          } else {
+            participant.heroId = heroId;
+            _readyParticipantIds.remove(participant.id);
+            _broadcastLobby();
+          }
+        case 'ready':
+          if (envelope['ready'] == true) {
+            _readyParticipantIds.add(participant.id);
+          } else {
+            _readyParticipantIds.remove(participant.id);
+          }
+          _broadcastLobby();
+        default:
+          _sendLobbyError(participant, 'Unsupported lobby message type.');
+      }
+    } on FormatException catch (error) {
+      _sendLobbyError(participant, error.message);
+    }
+  }
+
+  void _broadcastLobby() {
+    final participants = _participants.values
+        .map(
+          (participant) => <String, Object?>{
+            'participantId': participant.id,
+            'heroId': participant.heroId,
+            'ready': _readyParticipantIds.contains(participant.id),
+          },
+        )
+        .toList();
+    final allReady =
+        participants.length >= 2 &&
+        participants.every((entry) => entry['ready'] == true);
+    final message = <String, Object?>{
+      'type': allReady ? 'started' : 'lobby',
+      'roomCode': code,
+      'participants': participants,
+      'heroes': _state.players
+          .map(
+            (player) => <String, String>{
+              'id': player.id,
+              'characterId': player.characterId,
+            },
+          )
+          .toList(),
+    };
+    for (final participant in _participants.values) {
+      participant.lobbyChannel?.sink.add(jsonEncode(message));
+    }
+  }
+
+  void _sendLobbyError(_Participant participant, String reason) {
+    participant.lobbyChannel?.sink.add(
+      jsonEncode(<String, String>{'type': 'error', 'reason': reason}),
+    );
+  }
+
   _Participant? _assign(String participantId) {
     final assignedHeroIds = _participants.values
         .map((participant) => participant.heroId)
@@ -193,7 +342,7 @@ final class GameRoom {
       }
       _state = result.state;
       _revision++;
-      _broadcastState();
+      _broadcastState(result.events);
     } on FormatException catch (error) {
       _sendError(participant, error.message);
       // Command constructors reject malformed numeric values with
@@ -204,19 +353,23 @@ final class GameRoom {
     }
   }
 
-  void _broadcastState() {
+  void _broadcastState([List<GameEvent> events = const <GameEvent>[]]) {
     for (final participant in _participants.values) {
-      _sendState(participant);
+      _sendState(participant, events);
     }
   }
 
-  void _sendState(_Participant participant) {
+  void _sendState(
+    _Participant participant, [
+    List<GameEvent> events = const <GameEvent>[],
+  ]) {
     _send(
       participant,
       <String, Object?>{
         'type': 'state',
         'revision': _revision,
         'state': _projectedStateToJson(projectFor(_state, participant.heroId)),
+        'events': events.map(_eventToJson).toList(),
       },
     );
   }
@@ -239,9 +392,45 @@ final class _Participant {
   _Participant({required this.id, required this.heroId});
 
   final String id;
-  final PlayerId heroId;
+  PlayerId heroId;
   WebSocketChannel? channel;
+  WebSocketChannel? lobbyChannel;
 }
+
+Map<String, Object?> _eventToJson(GameEvent event) => switch (event) {
+  HexEntered() => <String, Object?>{
+    'type': 'hex_entered',
+    'player_id': event.playerId,
+    'from': _coordToJson(event.from),
+    'to': _coordToJson(event.to),
+  },
+  ColocationTriggered() => <String, Object?>{
+    'type': 'colocation_triggered',
+    'player_id': event.playerId,
+    'coord': _coordToJson(event.coord),
+  },
+  DamageDealt() => <String, Object?>{
+    'type': 'damage_dealt',
+    'player_id': event.playerId,
+    'amount': event.amount,
+  },
+  ConditionDrawn() => <String, Object?>{
+    'type': 'condition_drawn',
+    'player_id': event.playerId,
+    'condition_id': event.conditionId,
+  },
+  MvpDemonstrationCompleted() => <String, Object?>{
+    'type': 'mvp_demonstration_completed',
+    'quest_id': event.questId,
+    'player_id': event.playerId,
+  },
+  HeroDied() => <String, Object?>{
+    'type': 'hero_died',
+    'player_id': event.playerId,
+    'restless_instance_id': event.restlessInstanceId,
+    'coord': _coordToJson(event.coord),
+  },
+};
 
 Map<String, Object?> _jsonObject(Object? raw) {
   final decoded = raw is String ? jsonDecode(raw) : raw;
@@ -480,10 +669,15 @@ Map<String, Object?>? _pendingDecisionToJson(PendingDecision? decision) {
       'type': 'eventOption',
       'options': options,
     },
-    AwaitingTerminalPick() => const <String, Object?>{'type': 'terminalPick'},
-    AwaitingHeroReplacement(:final characterIds) => <String, Object?>{
-      'type': 'heroReplacement',
-      'characterIds': characterIds,
+    AwaitingTerminalPick(:final playerId) => <String, Object?>{
+      'type': 'terminalPick',
+      'playerId': playerId,
     },
+    AwaitingHeroReplacement(:final playerId, :final characterIds) =>
+      <String, Object?>{
+        'type': 'heroReplacement',
+        'playerId': playerId,
+        'characterIds': characterIds,
+      },
   };
 }

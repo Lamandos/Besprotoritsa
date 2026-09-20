@@ -3,6 +3,7 @@
 
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/game_session_screen.dart';
+import 'package:besprotoritsa_app/src/menu/multiplayer_lobby_screens.dart';
 import 'package:besprotoritsa_app/src/menu/roster_selection_screen.dart';
 import 'package:besprotoritsa_app/src/menu/tutorial_and_rules_screens.dart';
 import 'package:besprotoritsa_app/src/storage/platform_game_storage.dart';
@@ -74,6 +75,12 @@ class _MenuContents extends StatelessWidget {
         onPressed: () =>
             _push(context, RosterSelectionScreen(storage: storage)),
         child: Text(strings.newGame),
+      ),
+      const SizedBox(height: 12),
+      FilledButton.tonal(
+        key: const ValueKey<String>('multiplayer-button'),
+        onPressed: () => _push(context, const MultiplayerEntryScreen()),
+        child: const Text('Сетевая игра'),
       ),
       const SizedBox(height: 12),
       FilledButton.tonal(
