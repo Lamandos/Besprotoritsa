@@ -48,6 +48,10 @@ class GameStateJsonCodec {
       for (final entry in state.conditionCards.entries)
         entry.key: SaveJsonModels.conditionToJson(entry.value),
     },
+    'card_definitions': {
+      for (final entry in state.cardDefinitions.entries)
+        entry.key: SaveJsonModels.cardDefinitionToJson(entry.value),
+    },
     'pending_damage': state.pendingDamage
         .map(SaveJsonModels.incomingDamageToJson)
         .toList(),
@@ -101,6 +105,16 @@ class GameStateJsonCodec {
       conditionCards: _objectMap(json, 'condition_cards').map(
         (id, value) => MapEntry(id, SaveJsonModels.conditionFromJson(value)),
       ),
+      cardDefinitions:
+          _objectMapOrDefault(
+            json['card_definitions'],
+            'card_definitions',
+          ).map(
+            (id, value) => MapEntry(
+              id,
+              SaveJsonModels.cardDefinitionFromJson(value),
+            ),
+          ),
       pendingDamage: _objects(
         json,
         'pending_damage',

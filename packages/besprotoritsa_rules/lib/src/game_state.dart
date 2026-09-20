@@ -954,6 +954,7 @@ final class ProjectedPlayerState {
     required this.characterId,
     required this.coord,
     required this.damage,
+    required this.health,
     required this.credits,
     required this.equipped,
     required this.alive,
@@ -982,6 +983,7 @@ final class ProjectedPlayerState {
       characterId: state.characterId,
       coord: state.coord,
       damage: state.damage,
+      health: state.health,
       credits: state.credits,
       equipped: state.equipped,
       alive: state.alive,
@@ -998,6 +1000,7 @@ final class ProjectedPlayerState {
   final CharacterId characterId;
   final HexCoord coord;
   final int damage;
+  final int health;
   final int credits;
   final EquippedGear equipped;
   final bool alive;

@@ -17,14 +17,14 @@ GameState createMvpGameState({List<String>? characterIds}) {
   final players = isDefaultRoster
       ? <PlayerState>[
           _player('ada', 'engineer', const HexCoord(0, 0)),
-          _player('boris', 'guard', const HexCoord(1, -1)),
+          _player('boris', 'guard', const HexCoord(0, 0)),
         ]
       : List<PlayerState>.generate(
           roster.length,
           (index) => _player(
             'hero-${index + 1}',
             roster[index],
-            index.isEven ? const HexCoord(0, 0) : const HexCoord(1, -1),
+            const HexCoord(0, 0),
           ),
         );
   return GameState(
@@ -56,13 +56,6 @@ GameState createMvpGameState({List<String>? characterIds}) {
         exits: const {HexEdge.north},
         locationId: 'crew-mess',
       ),
-      _tile(
-        id: 'guard-post',
-        coord: const HexCoord(1, -1),
-        type: HexTileType.compartment,
-        opened: true,
-        exits: const {HexEdge.southWest},
-      ),
     ],
     players: players,
     monsters: [
@@ -72,11 +65,11 @@ GameState createMvpGameState({List<String>? characterIds}) {
         coord: const HexCoord(0, 1),
         damage: 0,
         health: 2,
-        attack: 1,
+        attack: 2,
       ),
     ],
     decks: {
-      'conditions': DeckState(drawPile: const ['malaise']),
+      'conditions': DeckState(drawPile: const ['malaise', 'concussion']),
       'events': DeckState(drawPile: const ['cabin-noise']),
     },
     conditionCards: {
@@ -84,26 +77,100 @@ GameState createMvpGameState({List<String>? characterIds}) {
         id: 'malaise',
         statModifiers: const {StatType.strength: -1},
       ),
+      'concussion': ConditionCard(
+        id: 'concussion',
+        statModifiers: const {StatType.repair: -1},
+      ),
     },
+    cardDefinitions: _mvpCards,
     quests: QuestState(storyQuestIds: const ['chapter-1-awakening']),
   );
 }
 
-PlayerState _player(String id, String characterId, HexCoord coord) =>
-    PlayerState(
-      id: id,
-      characterId: characterId,
-      coord: coord,
-      damage: 0,
-      credits: 0,
-      backpack: const [],
-      equipped: const EquippedGear(),
-      carriedMods: const [],
-      implanted: const [],
-      conditions: const [],
-      alive: true,
-      stats: const PlayerStats(science: 1, agility: 1),
-    );
+PlayerState _player(String id, String characterId, HexCoord coord) {
+  final definition = _mvpCharacters[characterId] ?? _fallbackCharacter;
+  return PlayerState(
+    id: id,
+    characterId: characterId,
+    coord: coord,
+    damage: 0,
+    health: definition.health,
+    credits: 3,
+    backpack: const [],
+    equipped: definition.equipped,
+    carriedMods: const [],
+    implanted: const [],
+    conditions: const [],
+    alive: true,
+    stats: definition.stats,
+  );
+}
+
+const _fallbackCharacter = _MvpCharacter(
+  health: 10,
+  stats: PlayerStats(),
+  equipped: EquippedGear(),
+);
+
+const _mvpCharacters = <String, _MvpCharacter>{
+  'engineer': _MvpCharacter(
+    health: 10,
+    stats: PlayerStats(
+      strength: 3,
+      combatStrength: 3,
+      science: 2,
+      repair: 3,
+      endurance: 2,
+      agility: 1,
+    ),
+    equipped: EquippedGear(robot: 'gu4-rd'),
+  ),
+  'guard': _MvpCharacter(
+    health: 11,
+    stats: PlayerStats(
+      strength: 3,
+      combatStrength: 3,
+      science: 1,
+      repair: 1,
+      endurance: 3,
+      agility: 3,
+    ),
+    equipped: EquippedGear(weapon: 'pistol'),
+  ),
+};
+
+final _mvpCards = <CardId, CardDefinition>{
+  'pistol': CardDefinition(
+    id: 'pistol',
+    type: ItemType.weapon,
+    slots: const <ItemSlot>{ItemSlot.weapon},
+    cost: 0,
+    staticEffects: CardStaticEffects(const <CardStat, int>{
+      CardStat.strength: 2,
+    }),
+    behaviorIds: const <String>['pistol_attack_reroll'],
+  ),
+  'gu4-rd': CardDefinition(
+    id: 'gu4-rd',
+    type: ItemType.robot,
+    slots: const <ItemSlot>{ItemSlot.robot},
+    cost: 0,
+    staticEffects: CardStaticEffects(const <CardStat, int>{}),
+    behaviorIds: const <String>['gu4_rd_pre_attack_roll'],
+  ),
+};
+
+final class _MvpCharacter {
+  const _MvpCharacter({
+    required this.health,
+    required this.stats,
+    required this.equipped,
+  });
+
+  final int health;
+  final PlayerStats stats;
+  final EquippedGear equipped;
+}
 
 HexTile _tile({
   required String id,

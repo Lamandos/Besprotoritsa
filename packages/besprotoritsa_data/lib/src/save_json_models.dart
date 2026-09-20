@@ -174,6 +174,22 @@ abstract final class SaveJsonModels {
         },
       );
 
+  static Map<String, Object?> cardDefinitionToJson(CardDefinition card) => {
+    'id': card.id,
+    'category': card.type.name,
+    'slots': card.slots.map((slot) => slot.name).toList(),
+    'cost': card.cost,
+    'stats': {
+      for (final entry in card.staticEffects.modifiers.entries)
+        entry.key.name: entry.value,
+    },
+    'range': card.staticEffects.range,
+    'behaviorIds': card.behaviorIds,
+  };
+
+  static CardDefinition cardDefinitionFromJson(Map<String, Object?> json) =>
+      CardDefinition.fromJson(json);
+
   static Map<String, Object?> incomingDamageToJson(IncomingDamage damage) => {
     'target_player_id': damage.targetPlayerId,
     'amount': damage.amount,

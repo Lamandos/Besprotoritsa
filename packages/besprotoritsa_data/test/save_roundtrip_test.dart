@@ -100,6 +100,16 @@ GameState _interruptedState() => GameState(
       statModifiers: const {StatType.strength: -1},
     ),
   },
+  cardDefinitions: {
+    'pistol': CardDefinition(
+      id: 'pistol',
+      type: ItemType.weapon,
+      slots: const {ItemSlot.weapon},
+      cost: 2,
+      staticEffects: CardStaticEffects(const {CardStat.strength: 1}, range: 2),
+      behaviorIds: const ['pistol_attack_reroll'],
+    ),
+  },
   pendingDamage: const [
     IncomingDamage(
       targetPlayerId: 'boris',

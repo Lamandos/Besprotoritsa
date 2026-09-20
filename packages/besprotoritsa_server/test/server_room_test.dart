@@ -14,7 +14,7 @@ void main() {
 
   setUp(() async {
     final manager = RoomManager();
-    room = manager.createRoom(state: _twoHeroState());
+    room = manager.createRoom(state: _twoHeroState(), started: true);
     server = await shelf_io.serve(
       manager.handler,
       InternetAddress.loopbackIPv4,
@@ -80,6 +80,7 @@ void main() {
         jsonEncode({
           'type': 'command',
           'commandId': 'heal-ada-1',
+          'expectedRevision': 0,
           'command': {'type': 'heal', 'amount': 1},
         }),
       );
@@ -95,6 +96,7 @@ void main() {
         jsonEncode({
           'type': 'command',
           'commandId': 'heal-ada-1',
+          'expectedRevision': 1,
           'command': {'type': 'heal', 'amount': 1},
         }),
       );
@@ -102,6 +104,52 @@ void main() {
       expect(room.revision, 1);
     },
   );
+
+  test('never sends the seed, private log, or another hero decision', () async {
+    final ada = await _connect(server, room.code, 'ada-participant');
+    addTearDown(ada.sink.close);
+    final adaInbox = _Inbox(ada);
+    addTearDown(adaInbox.close);
+    await adaInbox.next();
+    await adaInbox.next();
+
+    final boris = await _connect(server, room.code, 'boris-participant');
+    addTearDown(boris.sink.close);
+    final borisInbox = _Inbox(boris);
+    addTearDown(borisInbox.close);
+    await borisInbox.next();
+    await borisInbox.next();
+
+    ada.sink.add(
+      jsonEncode({
+        'type': 'command',
+        'commandId': 'ada-private-roll',
+        'expectedRevision': 0,
+        'command': {'type': 'skillCheck', 'stat': 'science'},
+      }),
+    );
+    final adaState = await adaInbox.next();
+    final borisState = await borisInbox.next();
+    final adaProjection = Map<String, Object?>.from(adaState['state']! as Map);
+    final borisProjection = Map<String, Object?>.from(
+      borisState['state']! as Map,
+    );
+
+    expect(adaProjection.containsKey('seed'), isFalse);
+    expect(adaProjection['log'], isEmpty);
+    expect(
+      Map<String, Object?>.from(
+        adaProjection['pendingDecision']! as Map,
+      )['type'],
+      'reroll',
+    );
+    expect(
+      Map<String, Object?>.from(
+        borisProjection['pendingDecision']! as Map,
+      )['type'],
+      'hidden',
+    );
+  });
 }
 
 Future<IOWebSocketChannel> _connect(

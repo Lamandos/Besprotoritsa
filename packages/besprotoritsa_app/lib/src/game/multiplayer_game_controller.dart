@@ -92,6 +92,7 @@ class MultiplayerGameController extends GameSessionController {
       jsonEncode(<String, Object?>{
         'type': 'command',
         'commandId': '$participantId-${++_nextCommand}',
+        'expectedRevision': _revision,
         'command': _commandToJson(command),
       }),
     );

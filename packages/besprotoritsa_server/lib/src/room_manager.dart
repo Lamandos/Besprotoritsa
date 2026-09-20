@@ -18,10 +18,12 @@ final class RoomManager {
   /// Uses secure room-code generation and state-seeded dice by default.
   RoomManager({
     Random? random,
-    DiceRoller Function(GameState state)? dice,
+    DiceRoller Function(GameState state, int revision)? dice,
     Directory? persistenceDirectory,
   }) : _random = random ?? Random.secure(),
-       _dice = dice ?? ((state) => SeededDiceRoller(state.seed)),
+       _dice =
+           dice ??
+           ((state, revision) => SeededDiceRoller(state.seed ^ revision)),
        _persistence = persistenceDirectory == null
            ? null
            : FileRoomPersistence(persistenceDirectory) {
@@ -29,12 +31,12 @@ final class RoomManager {
   }
 
   final Random _random;
-  final DiceRoller Function(GameState state) _dice;
+  final DiceRoller Function(GameState state, int revision) _dice;
   final FileRoomPersistence? _persistence;
   final Map<String, GameRoom> _rooms = <String, GameRoom>{};
 
   /// Creates a room with a collision-free five-letter uppercase code.
-  GameRoom createRoom({required GameState state}) {
+  GameRoom createRoom({required GameState state, bool started = false}) {
     late String code;
     do {
       code = _newRoomCode();
@@ -43,9 +45,10 @@ final class RoomManager {
     final room = GameRoom._(
       code: code,
       state: state,
-      dice: _dice(state),
+      diceFactory: _dice,
       random: _random,
       persistence: _persistence,
+      started: started,
     );
     _rooms[code] = room;
     room.persist();
@@ -64,7 +67,7 @@ final class RoomManager {
       _rooms[snapshot.code] = GameRoom._(
         code: snapshot.code,
         state: snapshot.state,
-        dice: _dice(snapshot.state),
+        diceFactory: _dice,
         random: _random,
         persistence: persistence,
         participants: snapshot.participants,
@@ -72,6 +75,7 @@ final class RoomManager {
         commandJournal: snapshot.commandJournal,
         readyParticipantIds: snapshot.readyParticipantIds,
         revision: snapshot.revision,
+        started: snapshot.started,
       );
     }
   }
@@ -195,7 +199,7 @@ final class GameRoom {
   GameRoom._({
     required this.code,
     required GameState state,
-    required DiceRoller dice,
+    required DiceRoller Function(GameState state, int revision) diceFactory,
     required Random random,
     required FileRoomPersistence? persistence,
     Map<String, _Participant> participants = const <String, _Participant>{},
@@ -203,19 +207,21 @@ final class GameRoom {
     List<Map<String, Object?>> commandJournal = const <Map<String, Object?>>[],
     Set<String> readyParticipantIds = const <String>{},
     int revision = 0,
+    bool started = false,
   }) : _state = state,
-       _dice = dice,
+       _diceFactory = diceFactory,
        _random = random,
        _persistence = persistence,
        _participants = Map<String, _Participant>.from(participants),
        _processedCommandIds = Set<String>.from(processedCommandIds),
        _commandJournal = List<Map<String, Object?>>.from(commandJournal),
        _readyParticipantIds = Set<String>.from(readyParticipantIds),
-       _revision = revision;
+       _revision = revision,
+       _started = started;
 
   /// Stable public join code.
   final String code;
-  final DiceRoller _dice;
+  final DiceRoller Function(GameState state, int revision) _diceFactory;
   final Random _random;
   final FileRoomPersistence? _persistence;
   final Map<String, _Participant> _participants;
@@ -225,6 +231,7 @@ final class GameRoom {
 
   GameState _state;
   int _revision;
+  bool _started;
 
   /// Current state revision. It changes only after an accepted command.
   int get revision => _revision;
@@ -248,6 +255,10 @@ final class GameRoom {
       return;
     }
 
+    if (!_started) {
+      channel.sink.close(1008, 'The room has not started yet.');
+      return;
+    }
     final participant = _authenticate(participantId, reconnectToken);
     if (participant == null) {
       channel.sink.close(1008, 'Invalid reconnect token or no heroes remain.');
@@ -321,6 +332,10 @@ final class GameRoom {
   void _onLobbyMessage(_Participant participant, Object? message) {
     try {
       final envelope = _jsonObject(message);
+      if (_started) {
+        _sendLobbyError(participant, 'The room has already started.');
+        return;
+      }
       switch (envelope['type']) {
         case 'selectHero':
           final heroId = _requiredString(envelope, 'heroId');
@@ -342,6 +357,7 @@ final class GameRoom {
           } else {
             _readyParticipantIds.remove(participant.id);
           }
+          if (_allParticipantsReady()) _started = true;
           persist();
           _broadcastLobby();
         default:
@@ -362,9 +378,7 @@ final class GameRoom {
           },
         )
         .toList();
-    final allReady =
-        participants.length >= 2 &&
-        participants.every((entry) => entry['ready'] == true);
+    final allReady = _started || _allParticipantsReady();
     final message = <String, Object?>{
       'type': allReady ? 'started' : 'lobby',
       'roomCode': code,
@@ -382,6 +396,10 @@ final class GameRoom {
       participant.lobbyChannel?.sink.add(jsonEncode(message));
     }
   }
+
+  bool _allParticipantsReady() =>
+      _participants.length >= 2 &&
+      _participants.keys.every(_readyParticipantIds.contains);
 
   void _sendLobbyError(_Participant participant, String reason) {
     participant.lobbyChannel?.sink.add(
@@ -437,7 +455,14 @@ final class GameRoom {
         return;
       }
       final commandId = _requiredString(envelope, 'commandId');
-      if (_processedCommandIds.contains(commandId)) return;
+      final expectedRevision = _requiredInt(envelope, 'expectedRevision');
+      if (expectedRevision != _revision) {
+        _sendError(participant, 'State revision is stale.');
+        _sendState(participant);
+        return;
+      }
+      final commandKey = '${participant.id}:$commandId';
+      if (_processedCommandIds.contains(commandKey)) return;
 
       final command = _commandFromJson(_object(envelope, 'command'));
       if (_state.activePlayerId != participant.heroId) {
@@ -450,7 +475,7 @@ final class GameRoom {
         return;
       }
 
-      final result = step(_state, command, _dice);
+      final result = step(_state, command, _diceFactory(_state, _revision));
       if (!result.isAccepted) {
         _sendError(participant, result.rejection.runtimeType.toString());
         return;
@@ -467,12 +492,13 @@ final class GameRoom {
         _saveSnapshot(
           state: result.state,
           revision: nextRevision,
-          processedCommandIds: <String>{..._processedCommandIds, commandId},
+          processedCommandIds: <String>{..._processedCommandIds, commandKey},
           commandJournal: <Map<String, Object?>>[
             ..._commandJournal,
             journalEntry,
           ],
           readyParticipantIds: _readyParticipantIds,
+          started: _started,
         );
       } on FileSystemException catch (_) {
         _sendError(participant, 'Could not persist room state.');
@@ -480,7 +506,7 @@ final class GameRoom {
       }
       _state = result.state;
       _revision = nextRevision;
-      _processedCommandIds.add(commandId);
+      _processedCommandIds.add(commandKey);
       _commandJournal.add(journalEntry);
       _broadcastState(result.events);
     } on FormatException catch (error) {
@@ -508,7 +534,10 @@ final class GameRoom {
       <String, Object?>{
         'type': 'state',
         'revision': _revision,
-        'state': _projectedStateToJson(projectFor(_state, participant.heroId)),
+        'state': _projectedStateToJson(
+          projectFor(_state, participant.heroId),
+          participant.heroId,
+        ),
         'events': events.map(_eventToJson).toList(),
       },
     );
@@ -534,6 +563,7 @@ final class GameRoom {
     processedCommandIds: _processedCommandIds,
     commandJournal: _commandJournal,
     readyParticipantIds: _readyParticipantIds,
+    started: _started,
   );
 
   void _saveSnapshot({
@@ -542,6 +572,7 @@ final class GameRoom {
     required Set<String> processedCommandIds,
     required List<Map<String, Object?>> commandJournal,
     required Set<String> readyParticipantIds,
+    required bool started,
   }) {
     _persistence?._save(
       _RoomSnapshot(
@@ -552,6 +583,7 @@ final class GameRoom {
         processedCommandIds: processedCommandIds,
         commandJournal: commandJournal,
         readyParticipantIds: readyParticipantIds,
+        started: started,
       ),
     );
   }
@@ -610,6 +642,7 @@ final class FileRoomPersistence {
           .toList(),
       'processedCommandIds': snapshot.processedCommandIds.toList(),
       'readyParticipantIds': snapshot.readyParticipantIds.toList(),
+      'started': snapshot.started,
       // Keeping the journal in the snapshot makes recovery independent of an
       // interrupted journal-file replacement.
       'commandJournal': snapshot.commandJournal,
@@ -677,9 +710,13 @@ final class FileRoomPersistence {
     final processed = json['processedCommandIds'];
     final ready = json['readyParticipantIds'];
     final journal = json['commandJournal'];
+    // Snapshots written before lobby state was persisted represented rooms that
+    // were immediately playable, so retain that behaviour on upgrade.
+    final started = json['started'] ?? true;
     if (processed is! List<Object?> ||
         ready is! List<Object?> ||
-        journal is! List<Object?>) {
+        journal is! List<Object?> ||
+        started is! bool) {
       throw const FormatException('Room snapshot has an invalid command log.');
     }
     return _RoomSnapshot(
@@ -700,6 +737,7 @@ final class FileRoomPersistence {
         return id;
       }).toSet(),
       commandJournal: journal.map<Map<String, Object?>>(_jsonObject).toList(),
+      started: started,
     );
   }
 
@@ -727,6 +765,7 @@ final class _RoomSnapshot {
     required this.processedCommandIds,
     required this.readyParticipantIds,
     required this.commandJournal,
+    required this.started,
   });
 
   final String code;
@@ -736,6 +775,7 @@ final class _RoomSnapshot {
   final Set<String> processedCommandIds;
   final Set<String> readyParticipantIds;
   final List<Map<String, Object?>> commandJournal;
+  final bool started;
 }
 
 Map<String, Object?> _eventToJson(GameEvent event) => switch (event) {
@@ -910,29 +950,30 @@ DecisionChoice _choiceFromJson(Map<String, Object?> json) {
   };
 }
 
-Map<String, Object?> _projectedStateToJson(PlayerGameState state) =>
-    <String, Object?>{
-      'schemaVersion': state.schemaVersion,
-      'seed': state.seed,
-      'round': state.round,
-      'phase': state.phase.name,
-      'activePlayerId': state.activePlayerId,
-      'actionsLeft': state.actionsLeft,
-      'board': state.board.map(_projectedTileToJson).toList(),
-      'players': state.players.map(_projectedPlayerToJson).toList(),
-      'monsters': state.monsters.map(_monsterToJson).toList(),
-      'decks': {
-        for (final entry in state.decks.entries)
-          entry.key: entry.value.cardsRemaining,
-      },
-      'quests': {
-        'storyQuestIds': state.quests.storyQuestIds,
-        'personalTasks': state.quests.personalTasks,
-        'hiddenPersonalTaskCounts': state.quests.hiddenPersonalTaskCounts,
-      },
-      'log': state.log,
-      'pendingDecision': _pendingDecisionToJson(state.pendingDecision),
-    };
+Map<String, Object?> _projectedStateToJson(
+  PlayerGameState state,
+  PlayerId viewerId,
+) => <String, Object?>{
+  'schemaVersion': state.schemaVersion,
+  'round': state.round,
+  'phase': state.phase.name,
+  'activePlayerId': state.activePlayerId,
+  'actionsLeft': state.actionsLeft,
+  'board': state.board.map(_projectedTileToJson).toList(),
+  'players': state.players.map(_projectedPlayerToJson).toList(),
+  'monsters': state.monsters.map(_monsterToJson).toList(),
+  'decks': {
+    for (final entry in state.decks.entries)
+      entry.key: entry.value.cardsRemaining,
+  },
+  'quests': {
+    'storyQuestIds': state.quests.storyQuestIds,
+    'personalTasks': state.quests.personalTasks,
+    'hiddenPersonalTaskCounts': state.quests.hiddenPersonalTaskCounts,
+  },
+  'log': const <String>[],
+  'pendingDecision': _pendingDecisionToJson(state.pendingDecision, viewerId),
+};
 
 Map<String, Object?> _projectedTileToJson(ProjectedHexTile tile) =>
     <String, Object?>{
@@ -956,6 +997,7 @@ Map<String, Object?> _projectedPlayerToJson(ProjectedPlayerState player) =>
       'characterId': player.characterId,
       'coord': _coordToJson(player.coord),
       'damage': player.damage,
+      'health': player.health,
       'credits': player.credits,
       'equipped': {
         'weapon': player.equipped.weapon,
@@ -991,8 +1033,28 @@ Map<String, int> _coordToJson(HexCoord coord) => <String, int>{
   'r': coord.r,
 };
 
-Map<String, Object?>? _pendingDecisionToJson(PendingDecision? decision) {
+Map<String, Object?>? _pendingDecisionToJson(
+  PendingDecision? decision,
+  PlayerId viewerId,
+) {
   if (decision == null) return null;
+  final ownerId = switch (decision) {
+    AwaitingRerollChoice(:final context) => switch (context) {
+      AttackRollContext(:final playerId) => playerId,
+      SkillCheckContext(:final playerId) => playerId,
+      null => null,
+    },
+    AwaitingDodge(:final targetPlayerId) => targetPlayerId,
+    AwaitingEventOption(:final playerId) => playerId,
+    AwaitingTerminalPick(:final playerId) => playerId,
+    AwaitingHeroReplacement(:final playerId) => playerId,
+  };
+  if (ownerId != null && ownerId != viewerId) {
+    return <String, Object?>{
+      'type': 'hidden',
+      'awaitingPlayerId': ownerId,
+    };
+  }
   return switch (decision) {
     AwaitingRerollChoice(:final dice, :final availableRerolls) =>
       <String, Object?>{
@@ -1010,10 +1072,12 @@ Map<String, Object?>? _pendingDecisionToJson(PendingDecision? decision) {
       'type': 'eventOption',
       'options': options,
     },
-    AwaitingTerminalPick(:final playerId) => <String, Object?>{
-      'type': 'terminalPick',
-      'playerId': playerId,
-    },
+    AwaitingTerminalPick(:final playerId, :final offeredCards) =>
+      <String, Object?>{
+        'type': 'terminalPick',
+        'playerId': playerId,
+        'offeredCards': offeredCards,
+      },
     AwaitingHeroReplacement(:final playerId, :final characterIds) =>
       <String, Object?>{
         'type': 'heroReplacement',

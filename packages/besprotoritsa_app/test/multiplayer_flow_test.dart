@@ -13,7 +13,10 @@ void main() {
     'two multiplayer clients receive the confirmed authoritative transition',
     () async {
       final manager = RoomManager();
-      final room = manager.createRoom(state: createMvpGameState());
+      final room = manager.createRoom(
+        state: createMvpGameState(),
+        started: true,
+      );
       final server = await shelf_io.serve(
         manager.handler,
         InternetAddress.loopbackIPv4,
@@ -48,26 +51,26 @@ void main() {
       expect(boris.read(gameControllerProvider).players, hasLength(2));
 
       expect(
-        adaController.dispatch(const MoveCommand(HexCoord(1, -1))),
+        adaController.dispatch(const MoveCommand(HexCoord(0, 1))),
         isTrue,
       );
       expect(adaController.isWaitingForConfirmation, isTrue);
 
-      await _until(() => ada.read(gameControllerProvider).actionsLeft == 1);
-      await _until(() => boris.read(gameControllerProvider).actionsLeft == 1);
+      await _until(() => ada.read(gameControllerProvider).actionsLeft == 0);
+      await _until(() => boris.read(gameControllerProvider).actionsLeft == 0);
 
       expect(room.revision, 1);
       expect(
         ada.read(gameControllerProvider).players.first.coord,
-        const HexCoord(1, -1),
+        const HexCoord(0, 1),
       );
       expect(
         boris.read(gameControllerProvider).players.first.coord,
-        const HexCoord(1, -1),
+        const HexCoord(0, 1),
       );
       expect(adaController.isWaitingForConfirmation, isFalse);
-      expect(ada.read(eventQueueProvider).history, hasLength(1));
-      expect(boris.read(eventQueueProvider).history, hasLength(1));
+      expect(ada.read(eventQueueProvider).history, hasLength(2));
+      expect(boris.read(eventQueueProvider).history, hasLength(2));
     },
   );
 }
