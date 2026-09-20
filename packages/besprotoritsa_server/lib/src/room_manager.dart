@@ -399,6 +399,16 @@ final class GameRoom {
 
   bool _allParticipantsReady() =>
       _participants.length >= 2 &&
+      _participants.values
+              .map((participant) => participant.heroId)
+              .toSet()
+              .length ==
+          _state.players.length &&
+      _state.players.every(
+        (player) => _participants.values.any(
+          (participant) => participant.heroId == player.id,
+        ),
+      ) &&
       _participants.keys.every(_readyParticipantIds.contains);
 
   void _sendLobbyError(_Participant participant, String reason) {
@@ -456,13 +466,18 @@ final class GameRoom {
       }
       final commandId = _requiredString(envelope, 'commandId');
       final expectedRevision = _requiredInt(envelope, 'expectedRevision');
+      final commandKey = '${participant.id}:$commandId';
+      if (_processedCommandIds.contains(commandKey)) {
+        // The original response may have been lost. Re-send the authoritative
+        // outcome without applying or broadcasting the command again.
+        _sendState(participant);
+        return;
+      }
       if (expectedRevision != _revision) {
         _sendError(participant, 'State revision is stale.');
         _sendState(participant);
         return;
       }
-      final commandKey = '${participant.id}:$commandId';
-      if (_processedCommandIds.contains(commandKey)) return;
 
       final command = _commandFromJson(_object(envelope, 'command'));
       if (_state.activePlayerId != participant.heroId) {
@@ -972,7 +987,11 @@ Map<String, Object?> _projectedStateToJson(
     'hiddenPersonalTaskCounts': state.quests.hiddenPersonalTaskCounts,
   },
   'log': const <String>[],
-  'pendingDecision': _pendingDecisionToJson(state.pendingDecision, viewerId),
+  'pendingDecision': _pendingDecisionToJson(
+    state.pendingDecision,
+    viewerId,
+    state.activePlayerId,
+  ),
 };
 
 Map<String, Object?> _projectedTileToJson(ProjectedHexTile tile) =>
@@ -1036,16 +1055,17 @@ Map<String, int> _coordToJson(HexCoord coord) => <String, int>{
 Map<String, Object?>? _pendingDecisionToJson(
   PendingDecision? decision,
   PlayerId viewerId,
+  PlayerId? activePlayerId,
 ) {
   if (decision == null) return null;
   final ownerId = switch (decision) {
     AwaitingRerollChoice(:final context) => switch (context) {
       AttackRollContext(:final playerId) => playerId,
       SkillCheckContext(:final playerId) => playerId,
-      null => null,
+      null => activePlayerId,
     },
-    AwaitingDodge(:final targetPlayerId) => targetPlayerId,
-    AwaitingEventOption(:final playerId) => playerId,
+    AwaitingDodge(:final targetPlayerId) => targetPlayerId ?? activePlayerId,
+    AwaitingEventOption(:final playerId) => playerId ?? activePlayerId,
     AwaitingTerminalPick(:final playerId) => playerId,
     AwaitingHeroReplacement(:final playerId) => playerId,
   };

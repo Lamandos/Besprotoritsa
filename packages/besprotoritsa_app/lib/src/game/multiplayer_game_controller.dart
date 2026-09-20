@@ -85,7 +85,9 @@ class MultiplayerGameController extends GameSessionController {
 
   @override
   bool dispatch(GameCommand command) {
-    if (_channel == null || _waitingForConfirmation) return false;
+    if (_channel == null || _revision < 0 || _waitingForConfirmation) {
+      return false;
+    }
     _waitingForConfirmation = true;
     _lastError = null;
     _channel!.sink.add(

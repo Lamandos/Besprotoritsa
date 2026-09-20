@@ -90,17 +90,20 @@ void main() {
       expect(borisUpdated['revision'], 1);
       expect(room.revision, 1);
 
-      // The same id is an idempotent retry: it neither steps rules nor
-      // broadcasts.
+      // The same id is an idempotent retry. A stale retry replays the
+      // authoritative outcome to the original participant without stepping
+      // rules or broadcasting to other players.
       ada.sink.add(
         jsonEncode({
           'type': 'command',
           'commandId': 'heal-ada-1',
-          'expectedRevision': 1,
+          'expectedRevision': 0,
           'command': {'type': 'heal', 'amount': 1},
         }),
       );
-      await Future<void>.delayed(const Duration(milliseconds: 25));
+      final retried = await adaInbox.next();
+      expect(retried['type'], 'state');
+      expect(retried['revision'], 1);
       expect(room.revision, 1);
     },
   );
@@ -150,6 +153,102 @@ void main() {
       'hidden',
     );
   });
+
+  test('hides an active hero decision with an implicit owner', () async {
+    final manager = RoomManager();
+    final implicitOwnerRoom = manager.createRoom(
+      state: _twoHeroState(
+        pendingDecision: AwaitingEventOption(options: const ['A', 'B']),
+      ),
+      started: true,
+    );
+    final implicitOwnerServer = await shelf_io.serve(
+      manager.handler,
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    addTearDown(() => implicitOwnerServer.close(force: true));
+
+    final ada = await _connect(
+      implicitOwnerServer,
+      implicitOwnerRoom.code,
+      'ada-participant',
+    );
+    addTearDown(ada.sink.close);
+    final adaInbox = _Inbox(ada);
+    addTearDown(adaInbox.close);
+    await adaInbox.next();
+    final adaState = await adaInbox.next();
+
+    final boris = await _connect(
+      implicitOwnerServer,
+      implicitOwnerRoom.code,
+      'boris-participant',
+    );
+    addTearDown(boris.sink.close);
+    final borisInbox = _Inbox(boris);
+    addTearDown(borisInbox.close);
+    await borisInbox.next();
+    final borisState = await borisInbox.next();
+
+    final adaDecision = Map<String, Object?>.from(
+      (adaState['state']! as Map<Object?, Object?>)['pendingDecision']!
+          as Map<Object?, Object?>,
+    );
+    final borisDecision = Map<String, Object?>.from(
+      (borisState['state']! as Map<Object?, Object?>)['pendingDecision']!
+          as Map<Object?, Object?>,
+    );
+    expect(adaDecision['type'], 'eventOption');
+    expect(borisDecision, <String, Object?>{
+      'type': 'hidden',
+      'awaitingPlayerId': 'ada',
+    });
+  });
+
+  test('waits for every roster hero to be claimed before starting', () async {
+    final manager = RoomManager();
+    final waitingRoom = manager.createRoom(state: _threeHeroState());
+    final waitingServer = await shelf_io.serve(
+      manager.handler,
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    addTearDown(() => waitingServer.close(force: true));
+
+    final ada = await _connectLobby(
+      waitingServer,
+      waitingRoom.code,
+      'ada-participant',
+    );
+    addTearDown(ada.sink.close);
+    final adaInbox = _Inbox(ada);
+    addTearDown(adaInbox.close);
+    await adaInbox.next();
+    await adaInbox.next();
+
+    final boris = await _connectLobby(
+      waitingServer,
+      waitingRoom.code,
+      'boris-participant',
+    );
+    addTearDown(boris.sink.close);
+    final borisInbox = _Inbox(boris);
+    addTearDown(borisInbox.close);
+    await borisInbox.next();
+    await borisInbox.next();
+    await adaInbox.next();
+
+    ada.sink.add(jsonEncode(<String, Object?>{'type': 'ready', 'ready': true}));
+    await adaInbox.next();
+    await borisInbox.next();
+    boris.sink.add(
+      jsonEncode(<String, Object?>{'type': 'ready', 'ready': true}),
+    );
+
+    expect((await adaInbox.next())['type'], 'lobby');
+    expect((await borisInbox.next())['type'], 'lobby');
+  });
 }
 
 Future<IOWebSocketChannel> _connect(
@@ -163,6 +262,24 @@ Future<IOWebSocketChannel> _connect(
       host: InternetAddress.loopbackIPv4.address,
       port: server.port,
       path: '/rooms/$roomCode/ws',
+      queryParameters: {'participantId': participantId},
+    ),
+  );
+  await channel.ready;
+  return channel;
+}
+
+Future<IOWebSocketChannel> _connectLobby(
+  HttpServer server,
+  String roomCode,
+  String participantId,
+) async {
+  final channel = IOWebSocketChannel.connect(
+    Uri(
+      scheme: 'ws',
+      host: InternetAddress.loopbackIPv4.address,
+      port: server.port,
+      path: '/rooms/$roomCode/lobby/ws',
       queryParameters: {'participantId': participantId},
     ),
   );
@@ -224,7 +341,7 @@ void _expectPrivateCards(
   expect(jsonEncode(envelope), isNot(contains(hiddenCard)));
 }
 
-GameState _twoHeroState() => GameState(
+GameState _twoHeroState({PendingDecision? pendingDecision}) => GameState(
   seed: 8,
   round: 1,
   phase: GamePhase.playersTurn,
@@ -248,7 +365,27 @@ GameState _twoHeroState() => GameState(
   monsters: const [],
   decks: const {},
   quests: QuestState(),
+  pendingDecision: pendingDecision,
 );
+
+GameState _threeHeroState() {
+  final base = _twoHeroState();
+  return GameState(
+    seed: base.seed,
+    round: base.round,
+    phase: base.phase,
+    activePlayerId: base.activePlayerId,
+    actionsLeft: base.actionsLeft,
+    board: base.board,
+    players: <PlayerState>[
+      ...base.players,
+      _player('clara', card: 'clara-private-card'),
+    ],
+    monsters: base.monsters,
+    decks: base.decks,
+    quests: base.quests,
+  );
+}
 
 PlayerState _player(String id, {required String card, int damage = 0}) =>
     PlayerState(

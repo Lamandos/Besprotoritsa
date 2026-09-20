@@ -137,6 +137,42 @@ const _mvpCharacters = <String, _MvpCharacter>{
     ),
     equipped: EquippedGear(weapon: 'pistol'),
   ),
+  'scientist': _MvpCharacter(
+    health: 9,
+    stats: PlayerStats(
+      strength: 2,
+      combatStrength: 2,
+      science: 4,
+      repair: 2,
+      endurance: 2,
+      agility: 2,
+    ),
+    equipped: EquippedGear(),
+  ),
+  'mechanic': _MvpCharacter(
+    health: 10,
+    stats: PlayerStats(
+      strength: 2,
+      combatStrength: 2,
+      science: 2,
+      repair: 3,
+      endurance: 2,
+      agility: 2,
+    ),
+    equipped: EquippedGear(robot: 'gu4-rd'),
+  ),
+  'healer': _MvpCharacter(
+    health: 10,
+    stats: PlayerStats(
+      strength: 2,
+      combatStrength: 2,
+      science: 3,
+      repair: 2,
+      endurance: 3,
+      agility: 2,
+    ),
+    equipped: EquippedGear(),
+  ),
 };
 
 final _mvpCards = <CardId, CardDefinition>{
