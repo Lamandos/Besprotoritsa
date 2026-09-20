@@ -1,3 +1,4 @@
+// Public data is documented on the containing types; member names are direct.
 // ignore_for_file: public_member_api_docs
 
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
@@ -24,7 +25,12 @@ final class ProjectedGameStateCodec {
     decks: _object(json, 'decks').map(
       (id, count) => MapEntry(
         id,
-        DeckState(drawPile: List<String>.filled(count as int, 'hidden-card')),
+        DeckState(
+          drawPile: List<String>.filled(
+            _valueInt(count, 'deck count'),
+            'hidden-card',
+          ),
+        ),
       ),
     ),
     quests: _quests(_object(json, 'quests')),
@@ -57,7 +63,7 @@ final class ProjectedGameStateCodec {
       exits: _values(
         tile,
         'exits',
-      ).map((value) => HexEdge.values[value as int]).toSet(),
+      ).map((value) => HexEdge.values[_valueInt(value, 'exit')]).toSet(),
       locationId: tile['locationId'] as String?,
       hasTerminal: tile['hasTerminal'] == true,
       ventColor: _enum(VentColor.values, _string(tile, 'ventColor')),
@@ -169,14 +175,26 @@ int _int(Map<String, Object?> json, String key, {int? fallback}) {
   return value;
 }
 
-List<String> _strings(Object? value) =>
-    (value as List<Object?>? ?? const <Object?>[])
-        .map((entry) => entry as String)
-        .toList();
+List<String> _strings(Object? value) {
+  if (value == null) return const <String>[];
+  if (value is! List<Object?> || value.any((entry) => entry is! String)) {
+    throw const FormatException('Expected string array.');
+  }
+  return value.cast<String>();
+}
 
-List<int> _ints(Object? value) => (value as List<Object?>? ?? const <Object?>[])
-    .map((entry) => entry as int)
-    .toList();
+List<int> _ints(Object? value) {
+  if (value == null) return const <int>[];
+  if (value is! List<Object?> || value.any((entry) => entry is! int)) {
+    throw const FormatException('Expected integer array.');
+  }
+  return value.cast<int>();
+}
+
+int _valueInt(Object? value, String name) {
+  if (value is! int) throw FormatException('$name must be an integer.');
+  return value;
+}
 
 HexCoord _coord(Map<String, Object?> json) =>
     HexCoord(_int(json, 'q'), _int(json, 'r'));

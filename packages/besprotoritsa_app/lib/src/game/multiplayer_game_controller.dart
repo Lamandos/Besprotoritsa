@@ -1,3 +1,4 @@
+// Public data is documented on the containing types; member names are direct.
 // ignore_for_file: public_member_api_docs
 
 import 'dart:async';
@@ -94,7 +95,7 @@ class MultiplayerGameController extends GameSessionController {
         case 'joined':
           break;
         case 'state':
-          final revision = envelope['revision'] as int;
+          final revision = _requiredInt(envelope['revision'], 'revision');
           if (revision < _revision) {
             return;
           }
@@ -285,10 +286,17 @@ List<GameEvent> _events(Object? raw) {
         restlessInstanceId: json['restless_instance_id']! as String,
         coord: _eventCoord(_object(json['coord'])),
       ),
-      _ => throw FormatException('Unknown game event.'),
+      _ => throw const FormatException('Unknown game event.'),
     };
   }).toList();
 }
 
-HexCoord _eventCoord(Map<String, Object?> json) =>
-    HexCoord(json['q']! as int, json['r']! as int);
+HexCoord _eventCoord(Map<String, Object?> json) => HexCoord(
+  _requiredInt(json['q'], 'q'),
+  _requiredInt(json['r'], 'r'),
+);
+
+int _requiredInt(Object? value, String name) {
+  if (value is! int) throw FormatException('$name must be an integer.');
+  return value;
+}

@@ -1,3 +1,4 @@
+// Public data is documented on the containing types; member names are direct.
 // ignore_for_file: public_member_api_docs
 
 import 'dart:math';
@@ -213,7 +214,7 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
                   SwitchListTile(
                     key: const ValueKey<String>('lobby-ready-switch'),
                     value: _self(snapshot)?.ready ?? false,
-                    onChanged: (ready) => _client.setReady(ready),
+                    onChanged: (ready) => _client.setReady(ready: ready),
                     title: const Text('Я готов'),
                   ),
                   if (snapshot.started)
@@ -317,4 +318,5 @@ class MultiplayerGameSessionScreen extends StatelessWidget {
 }
 
 String _newParticipantId() =>
-    'player-${DateTime.now().microsecondsSinceEpoch}-${Random().nextInt(1 << 32)}';
+    'player-${DateTime.now().microsecondsSinceEpoch}-'
+    '${Random().nextInt(1 << 32)}';

@@ -1,3 +1,4 @@
+// Public data is documented on the containing types; member names are direct.
 // ignore_for_file: public_member_api_docs
 
 import 'dart:async';
@@ -83,8 +84,9 @@ class MultiplayerLobbyClient {
     }
     final json = _object(jsonDecode(response.body));
     final code = json['roomCode'];
-    if (code is! String)
+    if (code is! String) {
       throw const FormatException('Server returned no room code.');
+    }
     return code;
   }
 
@@ -115,7 +117,7 @@ class MultiplayerLobbyClient {
   });
 
   /// Sets this participant's readiness flag on the server.
-  void setReady(bool ready) => _send(<String, Object?>{
+  void setReady({required bool ready}) => _send(<String, Object?>{
     'type': 'ready',
     'ready': ready,
   });
@@ -175,13 +177,15 @@ class MultiplayerLobbyClient {
 }
 
 Map<String, Object?> _object(Object? raw) {
-  if (raw is! Map<Object?, Object?>)
+  if (raw is! Map<Object?, Object?>) {
     throw const FormatException('Expected JSON object.');
+  }
   return raw.map((key, value) => MapEntry(key.toString(), value));
 }
 
 List<Map<String, Object?>> _objects(Object? value) {
-  if (value is! List<Object?>)
+  if (value is! List<Object?>) {
     throw const FormatException('Expected JSON array.');
+  }
   return value.map(_object).toList();
 }
