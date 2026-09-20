@@ -21,6 +21,12 @@ final class KillEffectsResult {
   final Map<String, int> damageByEnemyId;
 }
 
+final class PreAttackEffectsResult {
+  const PreAttackEffectsResult({required this.targetDamage});
+
+  final int targetDamage;
+}
+
 final class EffectEngine {
   const EffectEngine();
 
@@ -49,6 +55,18 @@ final class EffectEngine {
         (sum, hook) => sum + hook.rerollsPerAttack,
       ),
     );
+  }
+
+  PreAttackEffectsResult resolvePreAttackRoll(
+    Iterable<int> dice,
+    Iterable<EffectHook> hooks,
+  ) {
+    final hits = dice.where((die) => die >= 4).length;
+    final targetDamage = hooks.whereType<PreAttackDamageHook>().fold(
+      0,
+      (damage, hook) => damage + hits * hook.damagePerSuccess,
+    );
+    return PreAttackEffectsResult(targetDamage: targetDamage);
   }
 
   KillEffectsResult resolveKill({

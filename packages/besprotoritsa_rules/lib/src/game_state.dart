@@ -669,10 +669,12 @@ final class AttackRollContext extends RollContext {
   const AttackRollContext({
     required this.playerId,
     required this.targetInstanceId,
+    this.preAttackDamage = 0,
   }) : super();
 
   final PlayerId playerId;
   final String targetInstanceId;
+  final int preAttackDamage;
 }
 
 /// A pending attempt to prevent incoming monster damage with agility hits.

@@ -110,7 +110,7 @@ final class EffectRegistry {
       behavior: MonsterBehavior.explodesOnColocation,
     ),
     ModifyRollHook('pistol_attack_reroll', rerollsPerAttack: 1),
-    OnDamageHook('gu4_rd_pre_attack_roll', target: EffectDamageTarget.target),
+    PreAttackDamageHook('gu4_rd_pre_attack_roll', damagePerSuccess: 1),
     CardBehaviorHook('combat.ignoreEnemyDefense'),
     CardBehaviorHook('combat.addHit'),
     CardBehaviorHook('combat.useScienceInsteadOfStrength'),

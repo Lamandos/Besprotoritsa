@@ -466,8 +466,18 @@ final class GameRoom {
       }
       final commandId = _requiredString(envelope, 'commandId');
       final expectedRevision = _requiredInt(envelope, 'expectedRevision');
+      final commandJson = _object(envelope, 'command');
       final commandKey = '${participant.id}:$commandId';
       if (_processedCommandIds.contains(commandKey)) {
+        final previousCommand = _previousCommand(commandKey);
+        if (previousCommand == null ||
+            _canonicalJson(previousCommand) != _canonicalJson(commandJson)) {
+          _sendError(
+            participant,
+            'Command ID was already used for a different command.',
+          );
+          return;
+        }
         // The original response may have been lost. Re-send the authoritative
         // outcome without applying or broadcasting the command again.
         _sendState(participant);
@@ -479,7 +489,7 @@ final class GameRoom {
         return;
       }
 
-      final command = _commandFromJson(_object(envelope, 'command'));
+      final command = _commandFromJson(commandJson);
       if (_state.activePlayerId != participant.heroId) {
         _sendError(participant, 'Only the active hero may issue commands.');
         return;
@@ -501,7 +511,7 @@ final class GameRoom {
         'participantId': participant.id,
         'heroId': participant.heroId,
         'commandId': commandId,
-        'command': _object(envelope, 'command'),
+        'command': commandJson,
       };
       try {
         _saveSnapshot(
@@ -540,6 +550,20 @@ final class GameRoom {
     }
   }
 
+  Map<String, Object?>? _previousCommand(String commandKey) {
+    for (final entry in _commandJournal) {
+      final participantId = entry['participantId'];
+      final commandId = entry['commandId'];
+      if (participantId is String &&
+          commandId is String &&
+          '$participantId:$commandId' == commandKey) {
+        final command = entry['command'];
+        return command is Map<String, Object?> ? command : null;
+      }
+    }
+    return null;
+  }
+
   void _sendState(
     _Participant participant, [
     List<GameEvent> events = const <GameEvent>[],
@@ -553,7 +577,14 @@ final class GameRoom {
           projectFor(_state, participant.heroId),
           participant.heroId,
         ),
-        'events': events.map(_eventToJson).toList(),
+        'events': events
+            .where(
+              (event) =>
+                  event is! ConditionDrawn ||
+                  event.playerId == participant.heroId,
+            )
+            .map(_eventToJson)
+            .toList(),
       },
     );
   }
@@ -876,6 +907,28 @@ Map<String, Object?> _object(Map<String, Object?> json, String key) {
   });
 }
 
+String _canonicalJson(Object? value) => jsonEncode(_canonicalJsonValue(value));
+
+Object? _canonicalJsonValue(Object? value) {
+  if (value is List<Object?>) {
+    return value.map(_canonicalJsonValue).toList();
+  }
+  if (value is Map) {
+    final entries =
+        value.entries
+            .map(
+              (entry) => MapEntry(
+                entry.key.toString(),
+                _canonicalJsonValue(entry.value),
+              ),
+            )
+            .toList()
+          ..sort((left, right) => left.key.compareTo(right.key));
+    return Map<String, Object?>.fromEntries(entries);
+  }
+  return value;
+}
+
 String _requiredString(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! String || value.isEmpty) {
@@ -1104,6 +1157,7 @@ Map<String, Object?>? _pendingDecisionToJson(
         'type': 'reroll',
         'dice': dice,
         'availableRerolls': availableRerolls,
+        'maxDicePerReroll': decision.maxDicePerReroll,
       },
     AwaitingDodge(:final monsterDamage, :final requiredAgilitySuccesses) =>
       <String, Object?>{

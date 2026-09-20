@@ -66,6 +66,13 @@ final class OnDamageHook extends EffectHook {
   final int? matchingFace;
 }
 
+/// Makes a separate die roll before an attack and damages its target on hits.
+final class PreAttackDamageHook extends EffectHook {
+  const PreAttackDamageHook(super.behaviorId, {this.damagePerSuccess = 0});
+
+  final int damagePerSuccess;
+}
+
 final class OnKillHook extends EffectHook {
   const OnKillHook(super.behaviorId, {this.damageToEnemiesInSameSector = 0});
 

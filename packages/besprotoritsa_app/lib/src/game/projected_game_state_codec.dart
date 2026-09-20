@@ -118,6 +118,7 @@ final class ProjectedGameStateCodec {
       'reroll' => AwaitingRerollChoice(
         dice: _ints(json['dice']),
         availableRerolls: _int(json, 'availableRerolls'),
+        maxDicePerReroll: _int(json, 'maxDicePerReroll', fallback: 999),
         window: const DecisionWindow(remainingTicks: 1),
       ),
       'dodge' => AwaitingDodge(

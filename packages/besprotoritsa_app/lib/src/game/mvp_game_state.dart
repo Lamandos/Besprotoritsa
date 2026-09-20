@@ -95,8 +95,8 @@ PlayerState _player(String id, String characterId, HexCoord coord) {
     coord: coord,
     damage: 0,
     health: definition.health,
-    credits: 3,
-    backpack: const [],
+    credits: definition.credits,
+    backpack: definition.startItems,
     equipped: definition.equipped,
     carriedMods: const [],
     implanted: const [],
@@ -109,6 +109,8 @@ PlayerState _player(String id, String characterId, HexCoord coord) {
 const _fallbackCharacter = _MvpCharacter(
   health: 10,
   stats: PlayerStats(),
+  credits: 3,
+  startItems: <CardId>[],
   equipped: EquippedGear(),
 );
 
@@ -123,6 +125,8 @@ const _mvpCharacters = <String, _MvpCharacter>{
       endurance: 2,
       agility: 1,
     ),
+    credits: 3,
+    startItems: <CardId>[],
     equipped: EquippedGear(robot: 'gu4-rd'),
   ),
   'guard': _MvpCharacter(
@@ -135,22 +139,26 @@ const _mvpCharacters = <String, _MvpCharacter>{
       endurance: 3,
       agility: 3,
     ),
+    credits: 3,
+    startItems: <CardId>[],
     equipped: EquippedGear(weapon: 'pistol'),
   ),
   'scientist': _MvpCharacter(
-    health: 9,
+    health: 8,
     stats: PlayerStats(
       strength: 2,
       combatStrength: 2,
       science: 4,
       repair: 2,
-      endurance: 2,
+      endurance: 1,
       agility: 2,
     ),
+    credits: 5,
+    startItems: <CardId>['lucky-socks'],
     equipped: EquippedGear(),
   ),
   'mechanic': _MvpCharacter(
-    health: 10,
+    health: 9,
     stats: PlayerStats(
       strength: 2,
       combatStrength: 2,
@@ -159,18 +167,22 @@ const _mvpCharacters = <String, _MvpCharacter>{
       endurance: 2,
       agility: 2,
     ),
-    equipped: EquippedGear(robot: 'gu4-rd'),
+    credits: 4,
+    startItems: <CardId>['hard-hat'],
+    equipped: EquippedGear(),
   ),
   'healer': _MvpCharacter(
-    health: 10,
+    health: 8,
     stats: PlayerStats(
       strength: 2,
       combatStrength: 2,
       science: 3,
       repair: 2,
-      endurance: 3,
+      endurance: 2,
       agility: 2,
     ),
+    credits: 4,
+    startItems: <CardId>['medic-bag'],
     equipped: EquippedGear(),
   ),
 };
@@ -200,11 +212,15 @@ final class _MvpCharacter {
   const _MvpCharacter({
     required this.health,
     required this.stats,
+    required this.credits,
+    required this.startItems,
     required this.equipped,
   });
 
   final int health;
   final PlayerStats stats;
+  final int credits;
+  final List<CardId> startItems;
   final EquippedGear equipped;
 }
 
