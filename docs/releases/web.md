@@ -74,6 +74,14 @@ the production SKWasm configuration. If hosting under a project subpath,
 rebuild with a matching slash-delimited `--base-href`, for example
 `--base-href="/Besprotoritsa/"`.
 
+This repository publishes automatically using
+[`deploy-web.yml`](../../.github/workflows/deploy-web.yml): every push to `main`
+builds the Flutter web app and deploys it to GitHub Pages at
+`https://lamandos.github.io/Besprotoritsa/`. Before its first run, open the
+repository's **Settings → Pages** and set **Build and deployment → Source** to
+**GitHub Actions**. The workflow can also be started manually from the
+repository's **Actions** tab.
+
 ### Nginx
 
 Use [besprotoritsa-web.conf](../../deploy/nginx/besprotoritsa-web.conf) inside
