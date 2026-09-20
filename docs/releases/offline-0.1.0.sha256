@@ -1,0 +1,13 @@
+# Besprotoritsa offline 0.1.0 — SHA-256
+#
+# Recorded 2026-09-20 from the release build outputs.  Paths are relative to
+# the repository root.  For the macOS application, the executable checksum is
+# accompanied by `codesign --verify --deep --strict` (recorded as passed).
+#
+50c2fcfb655495e56225a94638777a053d7755ae7140320bd691a57d4e4846fe  packages/besprotoritsa_app/build/web/main.dart.js
+6a2bdc7f82955968613d2417d932728c795f6baac6bfae8894a5e3208f502937  packages/besprotoritsa_app/build/web/main.dart.mjs
+c2dea504f3b1a738264eb25283589ecf5e4a949b49f77d56826f5403557aa4a8  packages/besprotoritsa_app/build/web/main.dart.wasm
+0608b0900b5aa90b489649195565a30c59ea5b463b76a660873a2b8723ecf23f  packages/besprotoritsa_app/build/web/service_worker.js
+4f25cbcf7af46501305c86879c5c444720154ec39b74555f39ac43dc87b3a658  packages/besprotoritsa_app/build/macos/Build/Products/Release/Besprotoritsa.app/Contents/MacOS/Besprotoritsa
+9ad1034a125141454c89d7453310173cee0f011d9317d616fed5bff8b074e1d4  packages/besprotoritsa_app/build/app/outputs/flutter-apk/app-release.apk
+87885534c3aae37f7c2db05b248c6c6157a7b28f878a1545ab2a9830d9d116c4  packages/besprotoritsa_app/build/app/outputs/bundle/release/app-release.aab
