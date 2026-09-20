@@ -734,26 +734,48 @@ final class FileRoomPersistence {
         started is! bool) {
       throw const FormatException('Room snapshot has an invalid command log.');
     }
+    final commandJournal = journal
+        .map<Map<String, Object?>>(_jsonObject)
+        .toList();
     return _RoomSnapshot(
       code: code,
       state: state,
       revision: revision,
       participants: participants,
-      processedCommandIds: processed.map((id) {
-        if (id is! String) {
-          throw const FormatException('Command ids must be strings.');
-        }
-        return id;
-      }).toSet(),
+      processedCommandIds: _migrateProcessedCommandIds(
+        processed,
+        commandJournal,
+      ),
       readyParticipantIds: ready.map((id) {
         if (id is! String) {
           throw const FormatException('Ready participant ids must be strings.');
         }
         return id;
       }).toSet(),
-      commandJournal: journal.map<Map<String, Object?>>(_jsonObject).toList(),
+      commandJournal: commandJournal,
       started: started,
     );
+  }
+
+  Set<String> _migrateProcessedCommandIds(
+    List<Object?> processed,
+    List<Map<String, Object?>> commandJournal,
+  ) {
+    for (final id in processed) {
+      if (id is! String) {
+        throw const FormatException('Command ids must be strings.');
+      }
+    }
+    // Snapshots before participant-scoped idempotency stored bare command
+    // ids. Every accepted command is journaled, so rebuild the current keys
+    // from that authoritative participant metadata during restoration.
+    return commandJournal.map(_commandKeyFromJournal).toSet();
+  }
+
+  String _commandKeyFromJournal(Map<String, Object?> entry) {
+    final participantId = _requiredString(entry, 'participantId');
+    final commandId = _requiredString(entry, 'commandId');
+    return '$participantId:$commandId';
   }
 
   void _writeAtomically(File target, String contents) {
@@ -1068,6 +1090,7 @@ Map<String, Object?>? _pendingDecisionToJson(
     AwaitingEventOption(:final playerId) => playerId ?? activePlayerId,
     AwaitingTerminalPick(:final playerId) => playerId,
     AwaitingHeroReplacement(:final playerId) => playerId,
+    AwaitingOtherPlayerDecision(:final awaitingPlayerId) => awaitingPlayerId,
   };
   if (ownerId != null && ownerId != viewerId) {
     return <String, Object?>{
@@ -1104,5 +1127,9 @@ Map<String, Object?>? _pendingDecisionToJson(
         'playerId': playerId,
         'characterIds': characterIds,
       },
+    AwaitingOtherPlayerDecision(:final awaitingPlayerId) => <String, Object?>{
+      'type': 'hidden',
+      'awaitingPlayerId': awaitingPlayerId,
+    },
   };
 }

@@ -53,6 +53,13 @@ void main() {
       ).readAsStringSync(),
       contains('heal-before-crash'),
     );
+    // Snapshots from before participant-scoped command ids stored bare ids.
+    // Preserve that legacy shape to verify restoration migrates it.
+    final snapshotFile = File('${directory.path}/${created.code}.room.json');
+    final legacySnapshot = Map<String, Object?>.from(
+      jsonDecode(snapshotFile.readAsStringSync()) as Map<Object?, Object?>,
+    )..['processedCommandIds'] = <String>['heal-before-crash'];
+    snapshotFile.writeAsStringSync(jsonEncode(legacySnapshot));
 
     // Simulate a process crash: a fresh manager knows only what reached disk.
     await server.close(force: true);
@@ -86,6 +93,21 @@ void main() {
       (state['state']! as Map<Object?, Object?>).containsKey('seed'),
       isFalse,
     );
+
+    // The retry retains its original revision, so it proves the bare legacy
+    // id was migrated before the stale-revision check.
+    reconnected.sink.add(
+      jsonEncode(<String, Object?>{
+        'type': 'command',
+        'commandId': 'heal-before-crash',
+        'expectedRevision': 0,
+        'command': <String, Object?>{'type': 'heal', 'amount': 1},
+      }),
+    );
+    final retried = await reconnectedInbox.next();
+    expect(retried['type'], 'state');
+    expect(retried['revision'], 1);
+    expect(restored.revision, 1);
 
     // Boris has a valid session, but not Ada's active hero. His command is
     // rejected rather than being applied to the active player.

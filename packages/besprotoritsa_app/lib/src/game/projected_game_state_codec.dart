@@ -129,7 +129,9 @@ final class ProjectedGameStateCodec {
         offeredCards: _strings(json['offeredCards']),
         playerId: _string(json, 'playerId'),
       ),
-      'hidden' => null,
+      'hidden' => AwaitingOtherPlayerDecision(
+        awaitingPlayerId: _string(json, 'awaitingPlayerId'),
+      ),
       'heroReplacement' => AwaitingHeroReplacement(
         playerId: _string(json, 'playerId'),
         characterIds: _strings(json['characterIds']),

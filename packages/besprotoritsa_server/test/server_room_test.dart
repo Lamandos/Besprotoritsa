@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:besprotoritsa_server/besprotoritsa_server.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
@@ -39,6 +40,35 @@ void main() {
 
     expect(response.statusCode, HttpStatus.ok);
     expect(await response.transform(utf8.decoder).join(), 'ok\n');
+  });
+
+  test('rejects an invalid posted card definition with bad request', () async {
+    final document = GameStateJsonCodec().toJson(_twoHeroState())
+      ..['card_definitions'] = <String, Object?>{
+        'invalid-card': <String, Object?>{
+          'id': 'invalid-card',
+          'category': 'unknown',
+          'slots': <String>[],
+          'cost': 0,
+          'stats': <String, int>{},
+          'behaviorIds': <String>[],
+        },
+      };
+    final client = HttpClient();
+    addTearDown(client.close);
+    final request = await client.postUrl(
+      Uri(
+        scheme: 'http',
+        host: InternetAddress.loopbackIPv4.address,
+        port: server.port,
+        path: '/rooms',
+      ),
+    );
+    request.headers.contentType = ContentType.json;
+    request.write(jsonEncode(document));
+    final response = await request.close();
+
+    expect(response.statusCode, HttpStatus.badRequest);
   });
 
   test(

@@ -767,6 +767,17 @@ final class AwaitingHeroReplacement extends PendingDecision {
   final List<CharacterId> characterIds;
 }
 
+/// A privacy-preserving projection that another hero must make a decision.
+///
+/// This is used only by clients that are not entitled to receive the decision
+/// details. It still blocks local commands while the authoritative room waits.
+@immutable
+final class AwaitingOtherPlayerDecision extends PendingDecision {
+  const AwaitingOtherPlayerDecision({required this.awaitingPlayerId});
+
+  final PlayerId awaitingPlayerId;
+}
+
 /// The authoritative, complete game state. Collections are copied on input.
 @immutable
 final class GameState {

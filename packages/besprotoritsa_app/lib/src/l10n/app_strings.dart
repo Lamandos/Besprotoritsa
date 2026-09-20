@@ -80,6 +80,7 @@ class AppStrings {
   String get eventOptionPrompt => _value('eventOptionPrompt');
   String get terminalPickPrompt => _value('terminalPickPrompt');
   String get replacementHeroPrompt => _value('replacementHeroPrompt');
+  String get waitingForOtherPlayer => _value('waitingForOtherPlayer');
 
   String roundStatus(int round, int actions) =>
       '${_value('roundPrefix')}$round · ${_value('actionsPrefix')}$actions';
@@ -202,6 +203,7 @@ const Map<String, String> _ruValues = <String, String>{
   'eventOptionPrompt': 'Выберите вариант события.',
   'terminalPickPrompt': 'Выберите припас в терминале.',
   'replacementHeroPrompt': 'Выберите героя на замену.',
+  'waitingForOtherPlayer': 'Ожидание решения другого игрока.',
   'roundPrefix': 'Раунд ',
   'actionsPrefix': 'действий: ',
   'animationPrefix': 'Анимация: ',

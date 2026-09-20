@@ -1300,6 +1300,10 @@ GameStepResult _resolveDecision(
       pending,
       choice,
     ),
+    AwaitingOtherPlayerDecision() => GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
+    ),
   };
 }
 

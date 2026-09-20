@@ -207,6 +207,8 @@ class SaveSystem {
         requirePlayer(playerId, 'pending_decision.player_id');
       case AwaitingHeroReplacement(:final playerId):
         requirePlayer(playerId, 'pending_decision.player_id');
+      case AwaitingOtherPlayerDecision(:final awaitingPlayerId):
+        requirePlayer(awaitingPlayerId, 'pending_decision.awaiting_player_id');
       case null:
         break;
     }

@@ -946,6 +946,7 @@ List<Widget> _decisionActions(
         child: Text(strings.chooseCommand(characterId)),
       ),
   ],
+  AwaitingOtherPlayerDecision() => const [],
 };
 
 List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
@@ -1008,6 +1009,7 @@ String _decisionPrompt(PendingDecision decision, AppStrings strings) =>
       AwaitingEventOption() => strings.eventOptionPrompt,
       AwaitingTerminalPick() => strings.terminalPickPrompt,
       AwaitingHeroReplacement() => strings.replacementHeroPrompt,
+      AwaitingOtherPlayerDecision() => strings.waitingForOtherPlayer,
     };
 
 class _HexClipper extends CustomClipper<Path> {
