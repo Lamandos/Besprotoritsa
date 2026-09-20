@@ -978,6 +978,9 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
         strings.attackCommand(monster.monsterId),
         AttackCommand(monster.instanceId),
       ),
+    for (final stat in StatType.values)
+      _NamedCommand('Проверка: ${_statLabel(stat)}', SkillCheckCommand(stat)),
+    const _NamedCommand('Использовать терминал', UseTerminalCommand()),
     _NamedCommand(strings.next, const EndTurnCommand()),
   ];
   return [
@@ -985,6 +988,15 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
       if (validate(state, candidate.command) == null) candidate,
   ];
 }
+
+String _statLabel(StatType stat) => switch (stat) {
+  StatType.strength => 'сила',
+  StatType.combatStrength => 'боевая сила',
+  StatType.science => 'наука',
+  StatType.repair => 'ремонт',
+  StatType.endurance => 'выносливость',
+  StatType.agility => 'ловкость',
+};
 
 class _NamedCommand {
   const _NamedCommand(this.label, this.command);

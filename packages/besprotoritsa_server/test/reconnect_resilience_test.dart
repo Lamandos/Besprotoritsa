@@ -40,9 +40,9 @@ void main() {
     ada.sink.add(
       jsonEncode(<String, Object?>{
         'type': 'command',
-        'commandId': 'heal-before-crash',
+        'commandId': 'end-turn-before-crash',
         'expectedRevision': 0,
-        'command': <String, Object?>{'type': 'heal', 'amount': 1},
+        'command': <String, Object?>{'type': 'endTurn'},
       }),
     );
     final updated = await adaInbox.next();
@@ -51,14 +51,14 @@ void main() {
       File(
         '${directory.path}/${created.code}.commands.json',
       ).readAsStringSync(),
-      contains('heal-before-crash'),
+      contains('end-turn-before-crash'),
     );
     // Snapshots from before participant-scoped command ids stored bare ids.
     // Preserve that legacy shape to verify restoration migrates it.
     final snapshotFile = File('${directory.path}/${created.code}.room.json');
     final legacySnapshot = Map<String, Object?>.from(
       jsonDecode(snapshotFile.readAsStringSync()) as Map<Object?, Object?>,
-    )..['processedCommandIds'] = <String>['heal-before-crash'];
+    )..['processedCommandIds'] = <String>['end-turn-before-crash'];
     snapshotFile.writeAsStringSync(jsonEncode(legacySnapshot));
 
     // Simulate a process crash: a fresh manager knows only what reached disk.
@@ -68,10 +68,7 @@ void main() {
     expect(restored, isNotNull);
     expect(restored!.revision, 1);
     expect(restored.state.seed, 8);
-    expect(
-      restored.state.players.singleWhere((player) => player.id == 'ada').damage,
-      0,
-    );
+    expect(restored.state.activePlayerId, 'boris');
 
     server = await _serve(restoredManager);
     final reconnected = await _connect(
@@ -99,9 +96,9 @@ void main() {
     reconnected.sink.add(
       jsonEncode(<String, Object?>{
         'type': 'command',
-        'commandId': 'heal-before-crash',
+        'commandId': 'end-turn-before-crash',
         'expectedRevision': 0,
-        'command': <String, Object?>{'type': 'heal', 'amount': 1},
+        'command': <String, Object?>{'type': 'endTurn'},
       }),
     );
     final retried = await reconnectedInbox.next();
@@ -109,8 +106,8 @@ void main() {
     expect(retried['revision'], 1);
     expect(restored.revision, 1);
 
-    // Boris has a valid session, but not Ada's active hero. His command is
-    // rejected rather than being applied to the active player.
+    // Ada has a valid session, but Boris owns the active hero after Ada ended
+    // her turn. Ada's command is rejected rather than being applied to Boris.
     final borisReconnected = await _connect(
       server,
       created.code,
@@ -122,22 +119,22 @@ void main() {
     addTearDown(borisReconnectInbox.close);
     await borisReconnectInbox.next();
     await borisReconnectInbox.next();
-    borisReconnected.sink.add(
+    reconnected.sink.add(
       jsonEncode(<String, Object?>{
         'type': 'command',
-        'commandId': 'boris-cannot-control-ada',
+        'commandId': 'ada-cannot-control-boris',
         'expectedRevision': 1,
-        'command': <String, Object?>{'type': 'heal', 'amount': 1},
+        'command': <String, Object?>{'type': 'endTurn'},
       }),
     );
-    final rejected = await borisReconnectInbox.next();
+    final rejected = await reconnectedInbox.next();
     expect(rejected['type'], 'error');
     expect(rejected['reason'], 'Only the active hero may issue commands.');
     expect(restored.revision, 1);
 
     // The restarted room derives its roller from the persisted revision, so
     // the next outcome cannot restart the initial pseudo-random sequence.
-    reconnected.sink.add(
+    borisReconnected.sink.add(
       jsonEncode(<String, Object?>{
         'type': 'command',
         'commandId': 'roll-after-restart',
@@ -145,7 +142,7 @@ void main() {
         'command': <String, Object?>{'type': 'skillCheck', 'stat': 'science'},
       }),
     );
-    final rolled = await reconnectedInbox.next();
+    final rolled = await borisReconnectInbox.next();
     final pending = Map<String, Object?>.from(
       (rolled['state']! as Map<Object?, Object?>)['pendingDecision']!
           as Map<Object?, Object?>,

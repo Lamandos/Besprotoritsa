@@ -26,4 +26,16 @@ void main() {
     expect(healer.credits, 4);
     expect(healer.backpack, ['medic-bag']);
   });
+
+  test('does not discard extra heroes when the first two use default ids', () {
+    final state = createMvpGameState(
+      characterIds: const ['engineer', 'guard', 'scientist'],
+    );
+
+    expect(state.players.map((player) => player.characterId), [
+      'engineer',
+      'guard',
+      'scientist',
+    ]);
+  });
 }

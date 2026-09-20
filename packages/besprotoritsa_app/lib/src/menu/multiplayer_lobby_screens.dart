@@ -11,7 +11,7 @@ import 'package:besprotoritsa_app/src/mvp/mvp_game_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Entry screen for creating a room or joining one with its five-letter code.
+/// Entry screen for creating a room or joining one with a 128-bit invite code.
 class MultiplayerEntryScreen extends StatefulWidget {
   const MultiplayerEntryScreen({super.key});
 
@@ -61,8 +61,8 @@ class _MultiplayerEntryScreenState extends State<MultiplayerEntryScreen> {
             key: const ValueKey<String>('join-room-code'),
             controller: _room,
             textCapitalization: TextCapitalization.characters,
-            maxLength: 5,
-            decoration: const InputDecoration(labelText: 'Код комнаты'),
+            maxLength: 32,
+            decoration: const InputDecoration(labelText: 'Код приглашения'),
           ),
           FilledButton.tonal(
             key: const ValueKey<String>('join-room-button'),
@@ -96,8 +96,10 @@ class _MultiplayerEntryScreenState extends State<MultiplayerEntryScreen> {
 
   void _join() {
     final code = _room.text.trim().toUpperCase();
-    if (!RegExp(r'^[A-Z]{5}$').hasMatch(code)) {
-      _showError(const FormatException('Введите пятибуквенный код комнаты.'));
+    if (!RegExp(r'^[A-F0-9]{32}$').hasMatch(code)) {
+      _showError(
+        const FormatException('Введите 32-символьный код приглашения.'),
+      );
       return;
     }
     _openLobby(_serverUri(), code);
@@ -321,6 +323,10 @@ class MultiplayerGameSessionScreen extends StatelessWidget {
   );
 }
 
+final Random _participantRandom = Random.secure();
+
 String _newParticipantId() =>
-    'player-${DateTime.now().microsecondsSinceEpoch}-'
-    '${Random().nextInt(1 << 32)}';
+    'player-${List<String>.generate(
+      16,
+      (_) => _participantRandom.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join()}';

@@ -27,6 +27,10 @@ void main() {
         findsOneWidget,
       );
       expect(queue.isPlaying, isFalse);
+      expect(
+        find.text('Проверка: наука', skipOffstage: false),
+        findsOneWidget,
+      );
 
       await tester.tap(find.text('Ход: 0, 1'));
       await tester.pump();

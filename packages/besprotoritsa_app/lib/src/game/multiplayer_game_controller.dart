@@ -35,6 +35,7 @@ class MultiplayerGameController extends GameSessionController {
   Timer? _reconnectTimer;
   String? _reconnectToken;
   int _nextCommand = 0;
+  int _reconnectAttempt = 0;
   int _revision = -1;
   bool _waitingForConfirmation = false;
   bool _connected = false;
@@ -88,14 +89,15 @@ class MultiplayerGameController extends GameSessionController {
     if (_channel == null || _revision < 0 || _waitingForConfirmation) {
       return false;
     }
+    final commandJson = _commandToJson(command);
     _waitingForConfirmation = true;
     _lastError = null;
     _channel!.sink.add(
       jsonEncode(<String, Object?>{
         'type': 'command',
-        'commandId': '$participantId-${++_nextCommand}',
+        'commandId': _newCommandId(),
         'expectedRevision': _revision,
-        'command': _commandToJson(command),
+        'command': commandJson,
       }),
     );
     return true;
@@ -116,6 +118,7 @@ class MultiplayerGameController extends GameSessionController {
           final events = _events(envelope['events']);
           state = _codec.decode(_object(envelope['state']));
           _revision = revision;
+          _reconnectAttempt = 0;
           _waitingForConfirmation = false;
           ref.read(eventQueueProvider).enqueue(events);
           if (!_connected) {
@@ -143,11 +146,20 @@ class MultiplayerGameController extends GameSessionController {
 
   void _scheduleReconnect() {
     if (_isClosed || _reconnectTimer != null) return;
-    _reconnectTimer = Timer(const Duration(milliseconds: 300), () {
+    final exponent = _reconnectAttempt > 6 ? 6 : _reconnectAttempt;
+    final delay = Duration(milliseconds: 300 * (1 << exponent));
+    _reconnectAttempt++;
+    _reconnectTimer = Timer(delay, () {
       _reconnectTimer = null;
       unawaited(connect());
     });
   }
+
+  /// Avoids reusing a participant-scoped command id after the controller has
+  /// been recreated during a reconnect or navigation restoration.
+  String _newCommandId() =>
+      '$participantId-${DateTime.now().microsecondsSinceEpoch}-'
+      '${++_nextCommand}';
 
   /// Closes the game socket and cancels its listener.
   Future<void> close() async {
@@ -191,10 +203,10 @@ Map<String, Object?> _commandToJson(GameCommand command) => switch (command) {
     'choice': _choiceToJson(choice),
   },
   EndTurnCommand() => const <String, Object?>{'type': 'endTurn'},
-  HealCommand(:final amount) => <String, Object?>{
-    'type': 'heal',
-    'amount': amount,
-  },
+  HealCommand() => throw UnsupportedError(
+    'Healing is resolved by an authoritative item or effect, '
+    'not a client command.',
+  ),
   EquipCommand(:final cardId, :final weaponSlot) => <String, Object?>{
     'type': 'equip',
     'cardId': cardId,
@@ -205,12 +217,10 @@ Map<String, Object?> _commandToJson(GameCommand command) => switch (command) {
     'slot': slot.name,
     'weaponSlot': weaponSlot,
   },
-  ReceiveCardCommand(:final cardId, :final implantImmediately) =>
-    <String, Object?>{
-      'type': 'receiveCard',
-      'cardId': cardId,
-      'implantImmediately': implantImmediately,
-    },
+  ReceiveCardCommand() => throw UnsupportedError(
+    'Card rewards are resolved by an authoritative deck or effect, '
+    'not a client command.',
+  ),
   ImplantModificationCommand(:final cardId) => <String, Object?>{
     'type': 'implantModification',
     'cardId': cardId,
