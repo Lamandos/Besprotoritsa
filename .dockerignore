@@ -1,0 +1,10 @@
+.git
+.dart_tool
+**/.dart_tool
+**/build
+build
+tmp
+materials
+packages/besprotoritsa_app/*
+!packages/besprotoritsa_app/pubspec.yaml
+.DS_Store

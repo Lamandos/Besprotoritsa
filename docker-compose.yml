@@ -1,0 +1,17 @@
+services:
+  besprotoritsa-server:
+    build:
+      context: .
+      dockerfile: packages/besprotoritsa_server/Dockerfile
+    image: besprotoritsa-server:latest
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+      PERSISTENCE_DIRECTORY: /data
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - besprotoritsa-server-data:/data
+
+volumes:
+  besprotoritsa-server-data:

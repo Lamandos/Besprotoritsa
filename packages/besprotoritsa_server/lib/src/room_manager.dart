@@ -90,6 +90,16 @@ final class RoomManager {
       return Response(204, headers: _corsHeaders);
     }
     final segments = request.url.pathSegments;
+    if (request.method == 'GET' &&
+        segments.length == 1 &&
+        segments.first == 'healthz') {
+      return Response.ok(
+        'ok\n',
+        headers: const <String, String>{
+          'content-type': 'text/plain; charset=utf-8',
+        },
+      );
+    }
     if (request.method == 'POST' &&
         segments.length == 1 &&
         segments[0] == 'rooms') {

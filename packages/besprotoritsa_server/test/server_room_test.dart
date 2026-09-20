@@ -24,6 +24,23 @@ void main() {
 
   tearDown(() => server.close(force: true));
 
+  test('reports readiness at GET /healthz', () async {
+    final client = HttpClient();
+    addTearDown(client.close);
+    final request = await client.getUrl(
+      Uri(
+        scheme: 'http',
+        host: InternetAddress.loopbackIPv4.address,
+        port: server.port,
+        path: '/healthz',
+      ),
+    );
+    final response = await request.close();
+
+    expect(response.statusCode, HttpStatus.ok);
+    expect(await response.transform(utf8.decoder).join(), 'ok\n');
+  });
+
   test(
     'projects each WebSocket state with the other hero cards hidden',
     () async {
