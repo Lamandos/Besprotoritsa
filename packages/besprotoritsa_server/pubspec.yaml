@@ -1,0 +1,19 @@
+name: besprotoritsa_server
+description: Authoritative Shelf and WebSocket server for Besprotoritsa games.
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+resolution: workspace
+
+dependencies:
+  besprotoritsa_rules:
+    path: ../besprotoritsa_rules
+  shelf: ^1.4.2
+  shelf_web_socket: ^3.0.0
+  web_socket_channel: ^3.0.3
+
+dev_dependencies:
+  test: ^1.25.15
+  very_good_analysis: ^9.0.0

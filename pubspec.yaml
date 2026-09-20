@@ -9,6 +9,7 @@ workspace:
   - packages/besprotoritsa_rules
   - packages/besprotoritsa_data
   - packages/besprotoritsa_app
+  - packages/besprotoritsa_server
 
 dev_dependencies:
   crypto: ^3.0.6
