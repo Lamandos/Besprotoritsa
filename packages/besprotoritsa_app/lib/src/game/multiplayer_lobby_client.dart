@@ -61,9 +61,13 @@ class MultiplayerLobbyClient {
       StreamController<LobbySnapshot>.broadcast();
   WebSocketChannel? _channel;
   StreamSubscription<Object?>? _subscription;
+  String? _reconnectToken;
 
   /// A broadcast stream of the server's complete lobby snapshots.
   Stream<LobbySnapshot> get snapshots => _snapshots.stream;
+
+  /// Token issued by the room; pass it to the game controller on transition.
+  String? get reconnectToken => _reconnectToken;
 
   /// Creates a server room from the selected scenario and returns its code.
   static Future<String> createRoom({
@@ -99,7 +103,10 @@ class MultiplayerLobbyClient {
           '//',
           '/',
         ),
-        queryParameters: <String, String>{'participantId': participantId},
+        queryParameters: <String, String>{
+          'participantId': participantId,
+          if (_reconnectToken case final token?) 'reconnectToken': token,
+        },
       ),
     );
     _channel = channel;
@@ -135,6 +142,11 @@ class MultiplayerLobbyClient {
         _snapshots.addError(
           StateError(json['reason'] as String? ?? 'Lobby error.'),
         );
+        return;
+      }
+      if (json['type'] == 'joined') {
+        final token = json['reconnectToken'];
+        if (token is String && token.isNotEmpty) _reconnectToken = token;
         return;
       }
       if (json['type'] != 'lobby' && json['type'] != 'started') return;

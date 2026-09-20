@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
@@ -15,12 +16,21 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 /// connect with a participant id.
 final class RoomManager {
   /// Uses secure room-code generation and state-seeded dice by default.
-  RoomManager({Random? random, DiceRoller Function(GameState state)? dice})
-    : _random = random ?? Random.secure(),
-      _dice = dice ?? ((state) => SeededDiceRoller(state.seed));
+  RoomManager({
+    Random? random,
+    DiceRoller Function(GameState state)? dice,
+    Directory? persistenceDirectory,
+  }) : _random = random ?? Random.secure(),
+       _dice = dice ?? ((state) => SeededDiceRoller(state.seed)),
+       _persistence = persistenceDirectory == null
+           ? null
+           : FileRoomPersistence(persistenceDirectory) {
+    _restoreRooms();
+  }
 
   final Random _random;
   final DiceRoller Function(GameState state) _dice;
+  final FileRoomPersistence? _persistence;
   final Map<String, GameRoom> _rooms = <String, GameRoom>{};
 
   /// Creates a room with a collision-free five-letter uppercase code.
@@ -34,9 +44,36 @@ final class RoomManager {
       code: code,
       state: state,
       dice: _dice(state),
+      random: _random,
+      persistence: _persistence,
     );
     _rooms[code] = room;
+    room.persist();
     return room;
+  }
+
+  /// Restores every complete room snapshot found in the persistence directory.
+  ///
+  /// A malformed or interrupted file is ignored. Atomic replacement means that
+  /// the preceding complete snapshot remains available after a process crash.
+  void _restoreRooms() {
+    final persistence = _persistence;
+    if (persistence == null) return;
+    for (final snapshot in persistence._loadSnapshots()) {
+      if (_rooms.containsKey(snapshot.code)) continue;
+      _rooms[snapshot.code] = GameRoom._(
+        code: snapshot.code,
+        state: snapshot.state,
+        dice: _dice(snapshot.state),
+        random: _random,
+        persistence: persistence,
+        participants: snapshot.participants,
+        processedCommandIds: snapshot.processedCommandIds,
+        commandJournal: snapshot.commandJournal,
+        readyParticipantIds: snapshot.readyParticipantIds,
+        revision: snapshot.revision,
+      );
+    }
   }
 
   /// Finds a room by its five-letter code.
@@ -88,6 +125,7 @@ final class RoomManager {
       return handlerForLobby(
         roomCode: segments[1],
         participantId: participantId,
+        reconnectToken: request.url.queryParameters['reconnectToken'],
       )(request);
     }
     if (segments.length != 3 || segments[2] != 'ws') {
@@ -96,6 +134,7 @@ final class RoomManager {
     return handlerForRoom(
       roomCode: segments[1],
       participantId: participantId,
+      reconnectToken: request.url.queryParameters['reconnectToken'],
     )(request);
   }
 
@@ -104,6 +143,7 @@ final class RoomManager {
   Handler handlerForRoom({
     required String roomCode,
     required String participantId,
+    String? reconnectToken,
   }) {
     return webSocketHandler((channel, protocol) {
       final room = this.room(roomCode);
@@ -111,7 +151,7 @@ final class RoomManager {
         channel.sink.close(1008, 'Unknown room.');
         return;
       }
-      room.connect(channel, participantId);
+      room.connect(channel, participantId, reconnectToken: reconnectToken);
     });
   }
 
@@ -119,13 +159,14 @@ final class RoomManager {
   Handler handlerForLobby({
     required String roomCode,
     required String participantId,
+    String? reconnectToken,
   }) => webSocketHandler((channel, protocol) {
     final room = this.room(roomCode);
     if (room == null) {
       channel.sink.close(1008, 'Unknown room.');
       return;
     }
-    room.connectLobby(channel, participantId);
+    room.connectLobby(channel, participantId, reconnectToken: reconnectToken);
   });
 
   String _newRoomCode() => String.fromCharCodes(
@@ -145,18 +186,35 @@ final class GameRoom {
     required this.code,
     required GameState state,
     required DiceRoller dice,
+    required Random random,
+    required FileRoomPersistence? persistence,
+    Map<String, _Participant> participants = const <String, _Participant>{},
+    Set<String> processedCommandIds = const <String>{},
+    List<Map<String, Object?>> commandJournal = const <Map<String, Object?>>[],
+    Set<String> readyParticipantIds = const <String>{},
+    int revision = 0,
   }) : _state = state,
-       _dice = dice;
+       _dice = dice,
+       _random = random,
+       _persistence = persistence,
+       _participants = Map<String, _Participant>.from(participants),
+       _processedCommandIds = Set<String>.from(processedCommandIds),
+       _commandJournal = List<Map<String, Object?>>.from(commandJournal),
+       _readyParticipantIds = Set<String>.from(readyParticipantIds),
+       _revision = revision;
 
   /// Stable public join code.
   final String code;
   final DiceRoller _dice;
-  final Map<String, _Participant> _participants = <String, _Participant>{};
-  final Set<String> _processedCommandIds = <String>{};
-  final Set<String> _readyParticipantIds = <String>{};
+  final Random _random;
+  final FileRoomPersistence? _persistence;
+  final Map<String, _Participant> _participants;
+  final Set<String> _processedCommandIds;
+  final List<Map<String, Object?>> _commandJournal;
+  final Set<String> _readyParticipantIds;
 
   GameState _state;
-  int _revision = 0;
+  int _revision;
 
   /// Current state revision. It changes only after an accepted command.
   int get revision => _revision;
@@ -166,15 +224,23 @@ final class GameRoom {
   GameState get state => _state;
 
   /// Connects [participantId], assigning an unclaimed hero on first connect.
-  void connect(WebSocketChannel channel, String participantId) {
+  ///
+  /// Existing participant identities require their opaque [reconnectToken].
+  /// This prevents a caller from impersonating a hero merely by guessing an
+  /// id embedded in a lobby message.
+  void connect(
+    WebSocketChannel channel,
+    String participantId, {
+    String? reconnectToken,
+  }) {
     if (participantId.isEmpty) {
       channel.sink.close(1008, 'participantId must not be empty.');
       return;
     }
 
-    final participant = _participants[participantId] ?? _assign(participantId);
+    final participant = _authenticate(participantId, reconnectToken);
     if (participant == null) {
-      channel.sink.close(1008, 'No unassigned heroes remain.');
+      channel.sink.close(1008, 'Invalid reconnect token or no heroes remain.');
       return;
     }
 
@@ -187,6 +253,7 @@ final class GameRoom {
         'roomCode': code,
         'participantId': participant.id,
         'heroId': participant.heroId,
+        'reconnectToken': participant.reconnectToken,
         'revision': _revision,
       },
     );
@@ -206,14 +273,26 @@ final class GameRoom {
   }
 
   /// Connects a participant to the lobby and broadcasts its current roster.
-  void connectLobby(WebSocketChannel channel, String participantId) {
-    final participant = _participants[participantId] ?? _assign(participantId);
+  void connectLobby(
+    WebSocketChannel channel,
+    String participantId, {
+    String? reconnectToken,
+  }) {
+    final participant = _authenticate(participantId, reconnectToken);
     if (participant == null) {
-      channel.sink.close(1008, 'No unassigned heroes remain.');
+      channel.sink.close(1008, 'Invalid reconnect token or no heroes remain.');
       return;
     }
     participant.lobbyChannel?.sink.close(1000, 'Reconnected elsewhere.');
     participant.lobbyChannel = channel;
+    participant.lobbyChannel!.sink.add(
+      jsonEncode(<String, Object?>{
+        'type': 'joined',
+        'participantId': participant.id,
+        'heroId': participant.heroId,
+        'reconnectToken': participant.reconnectToken,
+      }),
+    );
     _broadcastLobby();
     channel.stream.listen(
       (Object? message) => _onLobbyMessage(participant, message),
@@ -221,6 +300,7 @@ final class GameRoom {
         if (identical(participant.lobbyChannel, channel)) {
           participant.lobbyChannel = null;
           _readyParticipantIds.remove(participant.id);
+          persist();
           _broadcastLobby();
         }
       },
@@ -243,6 +323,7 @@ final class GameRoom {
           } else {
             participant.heroId = heroId;
             _readyParticipantIds.remove(participant.id);
+            persist();
             _broadcastLobby();
           }
         case 'ready':
@@ -251,6 +332,7 @@ final class GameRoom {
           } else {
             _readyParticipantIds.remove(participant.id);
           }
+          persist();
           _broadcastLobby();
         default:
           _sendLobbyError(participant, 'Unsupported lobby message type.');
@@ -309,12 +391,35 @@ final class GameRoom {
       }
     }
     if (hero == null) return null;
-    final participant = _Participant(id: participantId, heroId: hero.id);
+    final participant = _Participant(
+      id: participantId,
+      heroId: hero.id,
+      reconnectToken: _newReconnectToken(),
+    );
     _participants[participantId] = participant;
+    persist();
     return participant;
   }
 
-  Future<void> _onMessage(_Participant participant, Object? message) async {
+  _Participant? _authenticate(String participantId, String? reconnectToken) {
+    if (reconnectToken != null && reconnectToken.isNotEmpty) {
+      for (final participant in _participants.values) {
+        if (participant.reconnectToken == reconnectToken) {
+          return participant.id == participantId ? participant : null;
+        }
+      }
+      return null;
+    }
+    if (_participants.containsKey(participantId)) return null;
+    return _assign(participantId);
+  }
+
+  String _newReconnectToken() => List<String>.generate(
+    32,
+    (_) => _random.nextInt(16).toRadixString(16),
+  ).join();
+
+  void _onMessage(_Participant participant, Object? message) {
     try {
       final envelope = _jsonObject(message);
       if (envelope['type'] != 'command') {
@@ -322,7 +427,7 @@ final class GameRoom {
         return;
       }
       final commandId = _requiredString(envelope, 'commandId');
-      if (!_processedCommandIds.add(commandId)) return;
+      if (_processedCommandIds.contains(commandId)) return;
 
       final command = _commandFromJson(_object(envelope, 'command'));
       if (_state.activePlayerId != participant.heroId) {
@@ -340,8 +445,33 @@ final class GameRoom {
         _sendError(participant, result.rejection.runtimeType.toString());
         return;
       }
+      final nextRevision = _revision + 1;
+      final journalEntry = <String, Object?>{
+        'revision': nextRevision,
+        'participantId': participant.id,
+        'heroId': participant.heroId,
+        'commandId': commandId,
+        'command': _object(envelope, 'command'),
+      };
+      try {
+        _saveSnapshot(
+          state: result.state,
+          revision: nextRevision,
+          processedCommandIds: <String>{..._processedCommandIds, commandId},
+          commandJournal: <Map<String, Object?>>[
+            ..._commandJournal,
+            journalEntry,
+          ],
+          readyParticipantIds: _readyParticipantIds,
+        );
+      } on FileSystemException catch (_) {
+        _sendError(participant, 'Could not persist room state.');
+        return;
+      }
       _state = result.state;
-      _revision++;
+      _revision = nextRevision;
+      _processedCommandIds.add(commandId);
+      _commandJournal.add(journalEntry);
       _broadcastState(result.events);
     } on FormatException catch (error) {
       _sendError(participant, error.message);
@@ -386,15 +516,216 @@ final class GameRoom {
   void _send(_Participant participant, Map<String, Object?> message) {
     participant.channel?.sink.add(jsonEncode(message));
   }
+
+  /// Makes initial room creation and participant claims crash-safe as well.
+  void persist() => _saveSnapshot(
+    state: _state,
+    revision: _revision,
+    processedCommandIds: _processedCommandIds,
+    commandJournal: _commandJournal,
+    readyParticipantIds: _readyParticipantIds,
+  );
+
+  void _saveSnapshot({
+    required GameState state,
+    required int revision,
+    required Set<String> processedCommandIds,
+    required List<Map<String, Object?>> commandJournal,
+    required Set<String> readyParticipantIds,
+  }) {
+    _persistence?._save(
+      _RoomSnapshot(
+        code: code,
+        state: state,
+        revision: revision,
+        participants: _participants,
+        processedCommandIds: processedCommandIds,
+        commandJournal: commandJournal,
+        readyParticipantIds: readyParticipantIds,
+      ),
+    );
+  }
 }
 
 final class _Participant {
-  _Participant({required this.id, required this.heroId});
+  _Participant({
+    required this.id,
+    required this.heroId,
+    required this.reconnectToken,
+  });
 
   final String id;
   PlayerId heroId;
+  final String reconnectToken;
   WebSocketChannel? channel;
   WebSocketChannel? lobbyChannel;
+}
+
+/// Synchronous, file-backed storage for server-owned room snapshots.
+///
+/// The game loop writes a complete snapshot and complete command journal to
+/// temporary sibling files, flushes them, then renames them into place. A
+/// retained previous snapshot provides a recovery fallback if a filesystem or
+/// host interrupts a replacement at an unfortunate moment.
+final class FileRoomPersistence {
+  /// Creates persistence rooted at [directory].
+  FileRoomPersistence(Directory directory)
+    : _directory = directory,
+      _codec = GameStateJsonCodec() {
+    if (!_directory.existsSync()) _directory.createSync(recursive: true);
+  }
+
+  final Directory _directory;
+  final GameStateJsonCodec _codec;
+
+  /// Writes an authoritative snapshot and its command journal atomically.
+  void _save(_RoomSnapshot snapshot) {
+    final encodedJournal = jsonEncode(<String, Object?>{
+      'roomCode': snapshot.code,
+      'commands': snapshot.commandJournal,
+    });
+    final encodedSnapshot = jsonEncode(<String, Object?>{
+      'version': 1,
+      'roomCode': snapshot.code,
+      'revision': snapshot.revision,
+      'state': _codec.toJson(snapshot.state),
+      'participants': snapshot.participants.values
+          .map(
+            (participant) => <String, String>{
+              'participantId': participant.id,
+              'heroId': participant.heroId,
+              'reconnectToken': participant.reconnectToken,
+            },
+          )
+          .toList(),
+      'processedCommandIds': snapshot.processedCommandIds.toList(),
+      'readyParticipantIds': snapshot.readyParticipantIds.toList(),
+      // Keeping the journal in the snapshot makes recovery independent of an
+      // interrupted journal-file replacement.
+      'commandJournal': snapshot.commandJournal,
+    });
+    _writeAtomically(_journalFile(snapshot.code), encodedJournal);
+    _writeAtomically(_snapshotFile(snapshot.code), encodedSnapshot);
+  }
+
+  /// Reads the latest valid snapshot for every room. Invalid files are skipped
+  /// and the previous complete snapshot is used when it exists.
+  Iterable<_RoomSnapshot> _loadSnapshots() sync* {
+    final candidates = <String>{
+      for (final entity in _directory.listSync())
+        if (entity is File && entity.path.endsWith('.room.json'))
+          entity.uri.pathSegments.last.replaceFirst('.room.json', ''),
+      for (final entity in _directory.listSync())
+        if (entity is File && entity.path.endsWith('.room.json.bak'))
+          entity.uri.pathSegments.last.replaceFirst('.room.json.bak', ''),
+    };
+    for (final code in candidates) {
+      _RoomSnapshot? snapshot;
+      for (final file in <File>[_snapshotFile(code), _backupFile(code)]) {
+        if (!file.existsSync()) continue;
+        try {
+          snapshot = _decodeSnapshot(file.readAsStringSync());
+          break;
+        } on FormatException catch (_) {
+          // Try the previous complete snapshot next.
+        } on Object catch (_) {
+          // A single damaged room must not prevent unrelated rooms restoring.
+        }
+      }
+      if (snapshot != null) yield snapshot;
+    }
+  }
+
+  File _snapshotFile(String code) => File('${_directory.path}/$code.room.json');
+  File _journalFile(String code) =>
+      File('${_directory.path}/$code.commands.json');
+  File _backupFile(String code) => File('${_snapshotFile(code).path}.bak');
+
+  _RoomSnapshot _decodeSnapshot(String source) {
+    final raw = jsonDecode(source);
+    if (raw is! Map<Object?, Object?>) {
+      throw const FormatException('Room snapshot must be an object.');
+    }
+    final json = raw.map((key, value) => MapEntry(key.toString(), value));
+    final code = _requiredString(json, 'roomCode');
+    final revision = _requiredInt(json, 'revision');
+    final state = _codec.fromJson(_object(json, 'state'));
+    final participants = <String, _Participant>{};
+    final participantJson = json['participants'];
+    if (participantJson is! List<Object?>) {
+      throw const FormatException('participants must be an array.');
+    }
+    for (final rawParticipant in participantJson) {
+      final participant = _jsonObject(rawParticipant);
+      final id = _requiredString(participant, 'participantId');
+      participants[id] = _Participant(
+        id: id,
+        heroId: _requiredString(participant, 'heroId'),
+        reconnectToken: _requiredString(participant, 'reconnectToken'),
+      );
+    }
+    final processed = json['processedCommandIds'];
+    final ready = json['readyParticipantIds'];
+    final journal = json['commandJournal'];
+    if (processed is! List<Object?> ||
+        ready is! List<Object?> ||
+        journal is! List<Object?>) {
+      throw const FormatException('Room snapshot has an invalid command log.');
+    }
+    return _RoomSnapshot(
+      code: code,
+      state: state,
+      revision: revision,
+      participants: participants,
+      processedCommandIds: processed.map((id) {
+        if (id is! String) {
+          throw const FormatException('Command ids must be strings.');
+        }
+        return id;
+      }).toSet(),
+      readyParticipantIds: ready.map((id) {
+        if (id is! String) {
+          throw const FormatException('Ready participant ids must be strings.');
+        }
+        return id;
+      }).toSet(),
+      commandJournal: journal.map<Map<String, Object?>>(_jsonObject).toList(),
+    );
+  }
+
+  void _writeAtomically(File target, String contents) {
+    final temporary = File(
+      '${target.path}.tmp-${DateTime.now().microsecondsSinceEpoch}',
+    );
+    final backup = File('${target.path}.bak');
+    try {
+      temporary.writeAsStringSync(contents, flush: true);
+      if (target.existsSync()) target.copySync(backup.path);
+      temporary.renameSync(target.path);
+    } finally {
+      if (temporary.existsSync()) temporary.deleteSync();
+    }
+  }
+}
+
+final class _RoomSnapshot {
+  const _RoomSnapshot({
+    required this.code,
+    required this.state,
+    required this.revision,
+    required this.participants,
+    required this.processedCommandIds,
+    required this.readyParticipantIds,
+    required this.commandJournal,
+  });
+
+  final String code;
+  final GameState state;
+  final int revision;
+  final Map<String, _Participant> participants;
+  final Set<String> processedCommandIds;
+  final Set<String> readyParticipantIds;
+  final List<Map<String, Object?>> commandJournal;
 }
 
 Map<String, Object?> _eventToJson(GameEvent event) => switch (event) {

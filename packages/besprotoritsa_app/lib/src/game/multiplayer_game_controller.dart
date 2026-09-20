@@ -20,8 +20,10 @@ class MultiplayerGameController extends GameSessionController {
     required this.serverUri,
     required this.roomCode,
     required this.participantId,
+    String? reconnectToken,
     GameState? placeholderState,
-  }) : _placeholderState = placeholderState;
+  }) : _reconnectToken = reconnectToken,
+       _placeholderState = placeholderState;
 
   final Uri serverUri;
   final String roomCode;
@@ -30,12 +32,19 @@ class MultiplayerGameController extends GameSessionController {
   final ProjectedGameStateCodec _codec = const ProjectedGameStateCodec();
   WebSocketChannel? _channel;
   StreamSubscription<Object?>? _subscription;
+  Timer? _reconnectTimer;
+  String? _reconnectToken;
   int _nextCommand = 0;
   int _revision = -1;
   bool _waitingForConfirmation = false;
   bool _connected = false;
   String? _lastError;
   Completer<void>? _connectedCompleter;
+  bool _isClosed = false;
+
+  /// Opaque token used to resume this participant after a dropped socket.
+  /// Persist this value with the session if the controller itself is recreated.
+  String? get reconnectToken => _reconnectToken;
 
   /// Whether a command has been sent but has not yet been confirmed.
   bool get isWaitingForConfirmation => _waitingForConfirmation;
@@ -57,19 +66,20 @@ class MultiplayerGameController extends GameSessionController {
   /// Opens (or reopens) the room WebSocket.
   Future<void> connect() async {
     if (_channel != null) return connected;
+    _isClosed = false;
     try {
       final channel = WebSocketChannel.connect(_gameUri());
       _channel = channel;
       await channel.ready;
       _subscription = channel.stream.listen(
         _onMessage,
-        onDone: _onDisconnected,
-        onError: (_, _) => _onDisconnected(),
+        onDone: () => _onDisconnected(channel),
+        onError: (_, _) => _onDisconnected(channel),
       );
     } on Object catch (error) {
       _lastError = error.toString();
-      (_connectedCompleter ??= Completer<void>()).completeError(error);
       _channel = null;
+      _scheduleReconnect();
     }
   }
 
@@ -93,7 +103,8 @@ class MultiplayerGameController extends GameSessionController {
       final envelope = _object(raw is String ? jsonDecode(raw) : raw);
       switch (envelope['type']) {
         case 'joined':
-          break;
+          final token = envelope['reconnectToken'];
+          if (token is String && token.isNotEmpty) _reconnectToken = token;
         case 'state':
           final revision = _requiredInt(envelope['revision'], 'revision');
           if (revision < _revision) {
@@ -120,17 +131,26 @@ class MultiplayerGameController extends GameSessionController {
     }
   }
 
-  void _onDisconnected() {
+  void _onDisconnected(WebSocketChannel channel) {
+    if (!identical(_channel, channel)) return;
     _channel = null;
     _waitingForConfirmation = false;
-    if (!_connected) {
-      final error = StateError('Disconnected before receiving a game state.');
-      (_connectedCompleter ??= Completer<void>()).completeError(error);
-    }
+    _scheduleReconnect();
+  }
+
+  void _scheduleReconnect() {
+    if (_isClosed || _reconnectTimer != null) return;
+    _reconnectTimer = Timer(const Duration(milliseconds: 300), () {
+      _reconnectTimer = null;
+      unawaited(connect());
+    });
   }
 
   /// Closes the game socket and cancels its listener.
   Future<void> close() async {
+    _isClosed = true;
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     await _subscription?.cancel();
     _subscription = null;
     await _channel?.sink.close();
@@ -140,7 +160,10 @@ class MultiplayerGameController extends GameSessionController {
   Uri _gameUri() => serverUri.replace(
     scheme: serverUri.scheme == 'https' ? 'wss' : 'ws',
     path: '${serverUri.path}/rooms/$roomCode/ws'.replaceAll('//', '/'),
-    queryParameters: <String, String>{'participantId': participantId},
+    queryParameters: <String, String>{
+      'participantId': participantId,
+      if (_reconnectToken case final token?) 'reconnectToken': token,
+    },
   );
 }
 

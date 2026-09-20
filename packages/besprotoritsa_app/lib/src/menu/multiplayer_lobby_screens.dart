@@ -249,6 +249,7 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
           serverUri: widget.serverUri,
           roomCode: widget.roomCode,
           participantId: widget.participantId,
+          reconnectToken: _client.reconnectToken,
         ),
       ),
     );
@@ -295,12 +296,14 @@ class MultiplayerGameSessionScreen extends StatelessWidget {
     required this.serverUri,
     required this.roomCode,
     required this.participantId,
+    this.reconnectToken,
     super.key,
   });
 
   final Uri serverUri;
   final String roomCode;
   final String participantId;
+  final String? reconnectToken;
 
   @override
   Widget build(BuildContext context) => ProviderScope(
@@ -310,6 +313,7 @@ class MultiplayerGameSessionScreen extends StatelessWidget {
           serverUri: serverUri,
           roomCode: roomCode,
           participantId: participantId,
+          reconnectToken: reconnectToken,
         ),
       ),
     ],
