@@ -47,34 +47,67 @@ void main() {
     );
     final updated = await adaInbox.next();
     expect(updated['revision'], 1);
-    expect(
-      File(
-        '${directory.path}/${created.code}.commands.json',
-      ).readAsStringSync(),
-      contains('end-turn-before-crash'),
+    final journalFile = File(
+      '${directory.path}/${created.code}.commands.ndjson',
     );
+    expect(journalFile.readAsStringSync(), contains('end-turn-before-crash'));
     final persistedSnapshot = File(
       '${directory.path}/${created.code}.room.json',
     ).readAsStringSync();
     expect(persistedSnapshot, contains('reconnectTokenHash'));
     expect(persistedSnapshot, isNot(contains(adaToken)));
     expect(persistedSnapshot, isNot(contains(borisToken)));
-    // Snapshots from before participant-scoped command ids stored bare ids.
-    // Preserve that legacy shape to verify restoration migrates it.
-    final snapshotFile = File('${directory.path}/${created.code}.room.json');
-    final legacySnapshot = Map<String, Object?>.from(
-      jsonDecode(snapshotFile.readAsStringSync()) as Map<Object?, Object?>,
-    )..['processedCommandIds'] = <String>['end-turn-before-crash'];
-    snapshotFile.writeAsStringSync(jsonEncode(legacySnapshot));
+    final committedJournal = journalFile.readAsLinesSync();
+    // Simulate a crash after a journal append and before snapshot replacement.
+    final orphanedEntry = jsonEncode(<String, Object?>{
+      'revision': 2,
+      'participantId': 'ada-participant',
+      'commandId': 'orphaned-command',
+      'command': <String, Object?>{},
+    });
+    journalFile.writeAsStringSync(
+      '${journalFile.readAsStringSync()}$orphanedEntry\n',
+      flush: true,
+    );
 
     // Simulate a process crash: a fresh manager knows only what reached disk.
     await server.close(force: true);
-    final restoredManager = RoomManager(persistenceDirectory: directory);
-    final restored = restoredManager.room(created.code);
+    var restoredManager = RoomManager(persistenceDirectory: directory);
+    var restored = restoredManager.room(created.code);
     expect(restored, isNotNull);
-    expect(restored!.revision, 1);
-    expect(restored.state.seed, 8);
-    expect(restored.state.activePlayerId, 'boris');
+    final recoveredRoom = restored!;
+    expect(recoveredRoom.revision, 1);
+    expect(recoveredRoom.state.seed, 8);
+    expect(recoveredRoom.state.activePlayerId, 'boris');
+    expect(journalFile.readAsLinesSync(), hasLength(1));
+
+    // Snapshots from before journalEntryCount embedded the authoritative log.
+    // Ignore stale supplemental records and rebuild NDJSON from that snapshot.
+    final snapshotFile = File('${directory.path}/${created.code}.room.json');
+    final legacySnapshot =
+        Map<String, Object?>.from(
+            jsonDecode(snapshotFile.readAsStringSync())
+                as Map<Object?, Object?>,
+          )
+          ..['processedCommandIds'] = <String>['end-turn-before-crash']
+          ..['commandJournal'] = committedJournal
+          ..remove('journalEntryCount');
+    snapshotFile.writeAsStringSync(jsonEncode(legacySnapshot));
+    final staleLegacyEntry = jsonEncode(<String, Object?>{
+      'revision': 2,
+      'participantId': 'ada-participant',
+      'commandId': 'stale-legacy-suffix',
+      'command': <String, Object?>{},
+    });
+    journalFile.writeAsStringSync(
+      '${journalFile.readAsStringSync()}$staleLegacyEntry\n',
+      flush: true,
+    );
+    restoredManager = RoomManager(persistenceDirectory: directory);
+    restored = restoredManager.room(created.code);
+    expect(restored, isNotNull);
+    final restoredRoom = restored!;
+    expect(journalFile.readAsLinesSync(), hasLength(1));
 
     server = await _serve(restoredManager);
     final reconnected = await _connect(
@@ -110,7 +143,7 @@ void main() {
     final retried = await reconnectedInbox.next();
     expect(retried['type'], 'state');
     expect(retried['revision'], 1);
-    expect(restored.revision, 1);
+    expect(restoredRoom.revision, 1);
 
     // Ada has a valid session, but Boris owns the active hero after Ada ended
     // her turn. Ada's command is rejected rather than being applied to Boris.
@@ -136,7 +169,7 @@ void main() {
     final rejected = await reconnectedInbox.next();
     expect(rejected['type'], 'error');
     expect(rejected['reason'], 'Only the active hero may issue commands.');
-    expect(restored.revision, 1);
+    expect(restoredRoom.revision, 1);
 
     // The restarted room derives its roller from the persisted revision, so
     // the next outcome cannot restart the initial pseudo-random sequence.
@@ -154,7 +187,7 @@ void main() {
           as Map<Object?, Object?>,
     );
     expect(pending['dice'], SeededDiceRoller(8 ^ 1).rollDice(1));
-    expect(restored.revision, 2);
+    expect(restoredRoom.revision, 2);
   });
 }
 

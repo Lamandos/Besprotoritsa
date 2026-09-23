@@ -7,6 +7,7 @@ import 'package:besprotoritsa_app/src/game/game_controller.dart';
 import 'package:besprotoritsa_app/src/game/multiplayer_game_controller.dart';
 import 'package:besprotoritsa_app/src/game/multiplayer_lobby_client.dart';
 import 'package:besprotoritsa_app/src/mvp/mvp_game_screen.dart';
+import 'package:besprotoritsa_app/src/storage/multiplayer_identity_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -86,7 +87,7 @@ class _MultiplayerEntryScreenState extends State<MultiplayerEntryScreen> {
         contentSetId: 'mvp',
         partySize: 2,
       );
-      if (mounted) _openLobby(serverUri, code);
+      if (mounted) await _openLobby(serverUri, code);
     } on Object catch (error) {
       _showError(error);
     } finally {
@@ -94,7 +95,7 @@ class _MultiplayerEntryScreenState extends State<MultiplayerEntryScreen> {
     }
   }
 
-  void _join() {
+  Future<void> _join() async {
     final code = _room.text.trim().toUpperCase();
     if (!RegExp(r'^[A-F0-9]{32}$').hasMatch(code)) {
       _showError(
@@ -102,7 +103,7 @@ class _MultiplayerEntryScreenState extends State<MultiplayerEntryScreen> {
       );
       return;
     }
-    _openLobby(_serverUri(), code);
+    await _openLobby(_serverUri(), code);
   }
 
   Uri _serverUri() {
@@ -113,15 +114,24 @@ class _MultiplayerEntryScreenState extends State<MultiplayerEntryScreen> {
     return uri;
   }
 
-  void _openLobby(Uri serverUri, String roomCode) => Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => MultiplayerLobbyScreen(
-        serverUri: serverUri,
-        roomCode: roomCode,
-        participantId: _newParticipantId(),
-      ),
-    ),
-  );
+  Future<void> _openLobby(Uri serverUri, String roomCode) async {
+    try {
+      final identity = await MultiplayerIdentityStore.load(serverUri, roomCode);
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => MultiplayerLobbyScreen(
+            serverUri: serverUri,
+            roomCode: roomCode,
+            participantId: identity?.participantId ?? _newParticipantId(),
+            reconnectToken: identity?.reconnectToken,
+          ),
+        ),
+      );
+    } on Object catch (error) {
+      _showError(error);
+    }
+  }
 
   void _showError(Object error) {
     if (!mounted) return;
@@ -137,12 +147,14 @@ class MultiplayerLobbyScreen extends StatefulWidget {
     required this.serverUri,
     required this.roomCode,
     required this.participantId,
+    this.reconnectToken,
     super.key,
   });
 
   final Uri serverUri;
   final String roomCode;
   final String participantId;
+  final String? reconnectToken;
 
   @override
   State<MultiplayerLobbyScreen> createState() => _MultiplayerLobbyScreenState();
@@ -160,6 +172,15 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
       serverUri: widget.serverUri,
       roomCode: widget.roomCode,
       participantId: widget.participantId,
+      reconnectToken: widget.reconnectToken,
+      onReconnectToken: (token) => MultiplayerIdentityStore.save(
+        widget.serverUri,
+        widget.roomCode,
+        MultiplayerIdentity(
+          participantId: widget.participantId,
+          reconnectToken: token,
+        ),
+      ),
     );
     _client.snapshots.listen(
       (snapshot) => mounted ? setState(() => _snapshot = snapshot) : null,

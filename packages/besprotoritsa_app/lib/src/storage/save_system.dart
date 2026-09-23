@@ -222,10 +222,13 @@ class SaveSystem {
           requirePlayer(playerId, 'game_events.player_id');
         case HeroDied(:final playerId, :final restlessInstanceId):
           requirePlayer(playerId, 'game_events.player_id');
-          requireMonster(
-            restlessInstanceId,
-            'game_events.restless_instance_id',
-          );
+          // The event is historical: its Restless may already have been
+          // defeated and removed from the live monster list.
+          if (restlessInstanceId.isEmpty) {
+            throw const FormatException(
+              'game_events.restless_instance_id must not be empty.',
+            );
+          }
       }
     }
   }

@@ -1,3 +1,6 @@
+// Async filesystem calls are intentional: writes must not block socket events.
+// ignore_for_file: avoid_slow_async_io
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -403,6 +406,7 @@ const Map<String, String> _corsHeaders = <String, String>{
 
 const int _maxRoomRequestBytes = 1024 * 1024;
 const int _maxWebSocketMessageCharacters = 64 * 1024;
+const int _maxQueuedRoomMessages = 32;
 const int _maxParticipantIdCharacters = 128;
 
 Future<String> _readBoundedRequest(Request request) async {
@@ -497,6 +501,8 @@ final class GameRoom {
   int _prngState;
   bool _archived = false;
   DateTime _lastActivity = DateTime.now().toUtc();
+  Future<void> _messageQueue = Future<void>.value();
+  int _pendingMessageCount = 0;
 
   /// Current state revision. It changes only after an accepted command.
   int get revision => _revision;
@@ -783,6 +789,33 @@ final class GameRoom {
 
   void _onMessage(_Participant participant, Object? message) {
     try {
+      _rejectOversizedSocketMessage(message);
+    } on RequestTooLarge catch (error) {
+      _sendError(participant, error.message);
+      unawaited(participant.channel?.sink.close(4009, error.message));
+      return;
+    }
+    if (_pendingMessageCount >= _maxQueuedRoomMessages) {
+      const reason = 'Too many pending room messages.';
+      _sendError(participant, reason);
+      unawaited(participant.channel?.sink.close(4008, reason));
+      return;
+    }
+    _pendingMessageCount++;
+    final operation = _messageQueue.then((_) async {
+      try {
+        await _handleMessage(participant, message);
+      } finally {
+        _pendingMessageCount--;
+      }
+    });
+    _messageQueue = operation.catchError((Object error, StackTrace stack) {
+      _sendError(participant, 'Room command failed: $error');
+    });
+  }
+
+  Future<void> _handleMessage(_Participant participant, Object? message) async {
+    try {
       _touch();
       _rejectOversizedSocketMessage(message);
       final envelope = _jsonObject(message);
@@ -859,18 +892,23 @@ final class GameRoom {
         'commandId': commandId,
         'command': commandJson,
       };
-      _saveSnapshot(
-        state: result.state,
-        revision: nextRevision,
-        processedCommandIds: <String>{..._processedCommandIds, commandKey},
-        commandJournal: <Map<String, Object?>>[
-          ..._commandJournal,
-          journalEntry,
-        ],
-        readyParticipantIds: _readyParticipantIds,
-        started: _started,
-        prngState: nextPrngState,
-      );
+      try {
+        await _saveSnapshot(
+          state: result.state,
+          revision: nextRevision,
+          processedCommandIds: <String>{..._processedCommandIds, commandKey},
+          commandJournal: <Map<String, Object?>>[
+            ..._commandJournal,
+            journalEntry,
+          ],
+          readyParticipantIds: _readyParticipantIds,
+          started: _started,
+          prngState: nextPrngState,
+        );
+      } on Object catch (error) {
+        _sendError(participant, 'Could not persist command: $error');
+        return;
+      }
       _state = result.state;
       _revision = nextRevision;
       _prngState = nextPrngState;
@@ -879,7 +917,7 @@ final class GameRoom {
       _broadcastState(result.events);
     } on RequestTooLarge catch (error) {
       _sendError(participant, error.message);
-      participant.channel?.sink.close(4009, error.message);
+      unawaited(participant.channel?.sink.close(4009, error.message));
     } on FormatException catch (error) {
       _sendError(participant, error.message);
       // Command constructors reject malformed numeric values with
@@ -950,17 +988,21 @@ final class GameRoom {
   }
 
   /// Makes initial room creation and participant claims crash-safe as well.
-  void persist() => _saveSnapshot(
-    state: _state,
-    revision: _revision,
-    processedCommandIds: _processedCommandIds,
-    commandJournal: _commandJournal,
-    readyParticipantIds: _readyParticipantIds,
-    started: _started,
-    prngState: _prngState,
-  );
+  void persist() {
+    unawaited(
+      _saveSnapshot(
+        state: _state,
+        revision: _revision,
+        processedCommandIds: _processedCommandIds,
+        commandJournal: _commandJournal,
+        readyParticipantIds: _readyParticipantIds,
+        started: _started,
+        prngState: _prngState,
+      ).catchError((Object _) {}),
+    );
+  }
 
-  void _saveSnapshot({
+  Future<void> _saveSnapshot({
     required GameState state,
     required int revision,
     required Set<String> processedCommandIds,
@@ -969,7 +1011,9 @@ final class GameRoom {
     required bool started,
     required int prngState,
   }) {
-    _persistence?._save(
+    final persistence = _persistence;
+    if (persistence == null) return Future<void>.value();
+    return persistence._save(
       _RoomSnapshot(
         code: code,
         state: state,
@@ -977,6 +1021,8 @@ final class GameRoom {
         participants: _participants,
         processedCommandIds: processedCommandIds,
         commandJournal: commandJournal,
+        journalEntryCount: commandJournal.length,
+        hasJournalEntryCount: true,
         readyParticipantIds: readyParticipantIds,
         started: started,
         prngState: prngState,
@@ -1027,16 +1073,20 @@ final class FileRoomPersistence {
   final Map<String, int> _journalOffsets = <String, int>{};
 
   /// Enqueues an authoritative snapshot without blocking the room loop.
-  void _save(_RoomSnapshot snapshot) {
-    _writeQueue = _writeQueue.then((_) => _saveSynchronously(snapshot));
+  Future<void> _save(_RoomSnapshot snapshot) {
+    final operation = _writeQueue.then((_) => _saveAsynchronously(snapshot));
+    // Keep the serialization chain usable after an I/O failure, while the
+    // returned future still reports that failure to the command handler.
+    _writeQueue = operation.catchError((Object _, StackTrace _) {});
+    return operation;
   }
 
-  void _saveSynchronously(_RoomSnapshot snapshot) {
-    _appendNewJournalEntries(snapshot);
-    final encodedJournal = jsonEncode(<String, Object?>{
-      'roomCode': snapshot.code,
-      'commands': snapshot.commandJournal,
-    });
+  Future<void> _saveAsynchronously(_RoomSnapshot snapshot) async {
+    final journalFile = _incrementalJournalFile(snapshot.code);
+    final originalLength = await journalFile.exists()
+        ? await journalFile.length()
+        : 0;
+    final originalOffset = _journalOffsets[snapshot.code] ?? 0;
     final encodedSnapshot = jsonEncode(<String, Object?>{
       'version': 1,
       'roomCode': snapshot.code,
@@ -1055,15 +1105,23 @@ final class FileRoomPersistence {
       'processedCommandIds': snapshot.processedCommandIds.toList(),
       'readyParticipantIds': snapshot.readyParticipantIds.toList(),
       'started': snapshot.started,
-      // Keeping the journal in the snapshot makes recovery independent of an
-      // interrupted journal-file replacement.
-      'commandJournal': snapshot.commandJournal,
+      'journalEntryCount': snapshot.commandJournal.length,
     });
-    _writeAtomically(_journalFile(snapshot.code), encodedJournal);
-    _writeAtomically(_snapshotFile(snapshot.code), encodedSnapshot);
+    try {
+      await _appendNewJournalEntries(snapshot);
+      await _writeAtomically(_snapshotFile(snapshot.code), encodedSnapshot);
+    } on Object {
+      if (await journalFile.exists()) {
+        final handle = await journalFile.open(mode: FileMode.append);
+        await handle.truncate(originalLength);
+        await handle.close();
+      }
+      _journalOffsets[snapshot.code] = originalOffset;
+      rethrow;
+    }
   }
 
-  void _appendNewJournalEntries(_RoomSnapshot snapshot) {
+  Future<void> _appendNewJournalEntries(_RoomSnapshot snapshot) async {
     final offset = _journalOffsets[snapshot.code] ?? 0;
     if (offset >= snapshot.commandJournal.length) return;
     final file = _incrementalJournalFile(snapshot.code);
@@ -1071,7 +1129,11 @@ final class FileRoomPersistence {
         .skip(offset)
         .map(jsonEncode)
         .join('\n');
-    file.writeAsStringSync('$additions\n', mode: FileMode.append, flush: true);
+    await file.writeAsString(
+      '$additions\n',
+      mode: FileMode.append,
+      flush: true,
+    );
     _journalOffsets[snapshot.code] = snapshot.commandJournal.length;
   }
 
@@ -1091,7 +1153,7 @@ final class FileRoomPersistence {
       for (final file in <File>[_snapshotFile(code), _backupFile(code)]) {
         if (!file.existsSync()) continue;
         try {
-          snapshot = _decodeSnapshot(file.readAsStringSync());
+          snapshot = _restoreJournal(_decodeSnapshot(file.readAsStringSync()));
           break;
         } on FormatException catch (_) {
           // Try the previous complete snapshot next.
@@ -1104,8 +1166,6 @@ final class FileRoomPersistence {
   }
 
   File _snapshotFile(String code) => File('${_directory.path}/$code.room.json');
-  File _journalFile(String code) =>
-      File('${_directory.path}/$code.commands.json');
   File _incrementalJournalFile(String code) =>
       File('${_directory.path}/$code.commands.ndjson');
   File _backupFile(String code) => File('${_snapshotFile(code).path}.bak');
@@ -1136,13 +1196,20 @@ final class FileRoomPersistence {
     }
     final processed = json['processedCommandIds'];
     final ready = json['readyParticipantIds'];
-    final journal = json['commandJournal'];
+    final journalValue = json['commandJournal'];
+    final journal = journalValue ?? const <Object?>[];
+    final hasJournalEntryCount = json.containsKey('journalEntryCount');
+    final journalEntryCount =
+        json['journalEntryCount'] ??
+        (journal is List<Object?> ? journal.length : null);
     // Snapshots written before lobby state was persisted represented rooms that
     // were immediately playable, so retain that behaviour on upgrade.
     final started = json['started'] ?? true;
     if (processed is! List<Object?> ||
         ready is! List<Object?> ||
         journal is! List<Object?> ||
+        journalEntryCount is! int ||
+        journalEntryCount < 0 ||
         started is! bool) {
       throw const FormatException('Room snapshot has an invalid command log.');
     }
@@ -1166,6 +1233,8 @@ final class FileRoomPersistence {
         return id;
       }).toSet(),
       commandJournal: commandJournal,
+      journalEntryCount: journalEntryCount,
+      hasJournalEntryCount: hasJournalEntryCount,
       started: started,
     );
   }
@@ -1182,6 +1251,10 @@ final class FileRoomPersistence {
     // Snapshots before participant-scoped idempotency stored bare command
     // ids. Every accepted command is journaled, so rebuild the current keys
     // from that authoritative participant metadata during restoration.
+    if (commandJournal.isEmpty &&
+        processed.cast<String>().every((id) => id.contains(':'))) {
+      return processed.cast<String>().toSet();
+    }
     return commandJournal.map(_commandKeyFromJournal).toSet();
   }
 
@@ -1191,17 +1264,89 @@ final class FileRoomPersistence {
     return '$participantId:$commandId';
   }
 
-  void _writeAtomically(File target, String contents) {
+  _RoomSnapshot _restoreJournal(_RoomSnapshot snapshot) {
+    final file = _incrementalJournalFile(snapshot.code);
+    if (!snapshot.hasJournalEntryCount) {
+      // Legacy snapshots embed the authoritative journal; old NDJSON files
+      // could contain duplicate entries from process-local offset resets.
+      final contents = snapshot.commandJournal.map(jsonEncode).join('\n');
+      file.writeAsStringSync(
+        contents.isEmpty ? '' : '$contents\n',
+        flush: true,
+      );
+      _journalOffsets[snapshot.code] = snapshot.commandJournal.length;
+      return snapshot;
+    }
+    if (snapshot.journalEntryCount == 0) {
+      if (file.existsSync() && file.lengthSync() > 0) {
+        file.openSync(mode: FileMode.append)
+          ..truncateSync(0)
+          ..closeSync();
+      }
+      _journalOffsets[snapshot.code] = 0;
+      return snapshot;
+    }
+    if (!file.existsSync()) {
+      if (snapshot.commandJournal.length == snapshot.journalEntryCount) {
+        _journalOffsets[snapshot.code] = 0;
+        return snapshot;
+      }
+      throw const FormatException('Command journal is missing.');
+    }
+    final lines = file.readAsLinesSync();
+    final committedLines = lines.take(snapshot.journalEntryCount).toList();
+    final entries = committedLines
+        .map<Map<String, Object?>>((line) => _jsonObject(jsonDecode(line)))
+        .toList();
+    if (entries.length != snapshot.journalEntryCount) {
+      if (snapshot.commandJournal.length == snapshot.journalEntryCount) {
+        _journalOffsets[snapshot.code] = 0;
+        return snapshot;
+      }
+      throw const FormatException('Command journal is incomplete.');
+    }
+    final committedContents = '${committedLines.join('\n')}\n';
+    final committedLength = utf8.encode(committedContents).length;
+    final currentContents = file.readAsStringSync();
+    if (currentContents != committedContents) {
+      // Restore runs before the manager begins accepting socket events.
+      if (currentContents.startsWith(committedContents)) {
+        file.openSync(mode: FileMode.append)
+          ..truncateSync(committedLength)
+          ..closeSync();
+      } else if (committedContents.startsWith(currentContents)) {
+        file.writeAsStringSync(committedContents, flush: true);
+      } else {
+        throw const FormatException('Command journal prefix is invalid.');
+      }
+    }
+    _journalOffsets[snapshot.code] = entries.length;
+    return _RoomSnapshot(
+      code: snapshot.code,
+      state: snapshot.state,
+      revision: snapshot.revision,
+      prngState: snapshot.prngState,
+      participants: snapshot.participants,
+      processedCommandIds: snapshot.processedCommandIds,
+      readyParticipantIds: snapshot.readyParticipantIds,
+      commandJournal: entries,
+      journalEntryCount: entries.length,
+      hasJournalEntryCount: true,
+      started: snapshot.started,
+    );
+  }
+
+  Future<void> _writeAtomically(File target, String contents) async {
     final temporary = File(
       '${target.path}.tmp-${DateTime.now().microsecondsSinceEpoch}',
     );
     final backup = File('${target.path}.bak');
     try {
-      temporary.writeAsStringSync(contents, flush: true);
-      if (target.existsSync()) target.copySync(backup.path);
-      temporary.renameSync(target.path);
+      await temporary.writeAsString(contents, flush: true);
+      if (await target.exists()) await target.copy(backup.path);
+      await temporary.rename(target.path);
     } finally {
-      if (temporary.existsSync()) temporary.deleteSync();
+      if (await temporary.exists()) await temporary.delete();
     }
   }
 }
@@ -1236,6 +1381,8 @@ final class _RoomSnapshot {
     required this.processedCommandIds,
     required this.readyParticipantIds,
     required this.commandJournal,
+    required this.journalEntryCount,
+    required this.hasJournalEntryCount,
     required this.started,
   });
 
@@ -1247,6 +1394,8 @@ final class _RoomSnapshot {
   final Set<String> processedCommandIds;
   final Set<String> readyParticipantIds;
   final List<Map<String, Object?>> commandJournal;
+  final int journalEntryCount;
+  final bool hasJournalEntryCount;
   final bool started;
 }
 
