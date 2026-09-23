@@ -608,6 +608,7 @@ final class GameRoom {
       channel.sink.close(4008, 'Room connection limit reached.');
       return;
     }
+    _touch();
     participant.lobbyChannel?.sink.close(1000, 'Reconnected elsewhere.');
     participant.lobbyChannel = channel;
     participant.lobbyChannel!.sink.add(
@@ -638,6 +639,7 @@ final class GameRoom {
     try {
       _rejectOversizedSocketMessage(message);
       final envelope = _jsonObject(message);
+      _touch();
       if (_started) {
         _sendLobbyError(participant, 'The room has already started.');
         return;
