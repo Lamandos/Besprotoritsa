@@ -286,6 +286,7 @@ final class JsonSchemaValidator {
   }
 
   bool _matchesType(Object? value, String type) => switch (type) {
+    'null' => value == null,
     'object' => value is Map<String, Object?>,
     'array' => value is List,
     'string' => value is String,
