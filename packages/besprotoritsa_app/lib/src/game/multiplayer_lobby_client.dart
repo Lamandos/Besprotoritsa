@@ -50,16 +50,20 @@ class MultiplayerLobbyClient {
     required this.serverUri,
     required this.roomCode,
     required this.participantId,
-  });
+    String? reconnectToken,
+    this.onReconnectToken,
+  }) : _reconnectToken = reconnectToken;
 
   final Uri serverUri;
   final String roomCode;
   final String participantId;
+  final Future<void> Function(String token)? onReconnectToken;
   final StreamController<LobbySnapshot> _snapshots =
       StreamController<LobbySnapshot>.broadcast();
   WebSocketChannel? _channel;
   StreamSubscription<Object?>? _subscription;
   String? _reconnectToken;
+  Future<void> _identityWrite = Future<void>.value();
 
   /// A broadcast stream of the server's complete lobby snapshots.
   Stream<LobbySnapshot> get snapshots => _snapshots.stream;
@@ -153,7 +157,13 @@ class MultiplayerLobbyClient {
       }
       if (json['type'] == 'joined') {
         final token = json['reconnectToken'];
-        if (token is String && token.isNotEmpty) _reconnectToken = token;
+        if (token is String && token.isNotEmpty) {
+          _reconnectToken = token;
+          final persist = onReconnectToken;
+          if (persist != null) {
+            _identityWrite = _identityWrite.then((_) => persist(token));
+          }
+        }
         return;
       }
       if (json['type'] != 'lobby' && json['type'] != 'started') return;
@@ -191,6 +201,7 @@ class MultiplayerLobbyClient {
   Future<void> close() async {
     await _subscription?.cancel();
     await _channel?.sink.close();
+    await _identityWrite;
     await _snapshots.close();
   }
 }
