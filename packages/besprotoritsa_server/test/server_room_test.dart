@@ -11,10 +11,11 @@ import 'package:web_socket_channel/io.dart';
 
 void main() {
   late HttpServer server;
+  late RoomManager manager;
   late GameRoom room;
 
   setUp(() async {
-    final manager = RoomManager();
+    manager = RoomManager();
     room = manager.createRoom(state: _twoHeroState(), started: true);
     server = await shelf_io.serve(
       manager.handler,
@@ -151,6 +152,66 @@ void main() {
         'Command ID was already used for a different command.',
       );
       expect(room.revision, 1);
+    },
+  );
+
+  test(
+    'does not send monsters in fog or carried gear on visible monsters',
+    () async {
+      final privateRoom = manager.createRoom(
+        state: _twoHeroState(
+          board: [
+            HexTile(
+              id: 'anabiosis',
+              coord: const HexCoord(0, 0),
+              type: HexTileType.start,
+              opened: true,
+              exits: const {HexEdge.south},
+              hasTerminal: false,
+              ventColor: VentColor.none,
+            ),
+            HexTile(
+              id: 'fog',
+              coord: const HexCoord(0, 1),
+              type: HexTileType.corridor,
+              opened: false,
+              exits: const {HexEdge.north},
+              hasTerminal: false,
+              ventColor: VentColor.none,
+            ),
+          ],
+          monsters: [
+            MonsterInstance(
+              instanceId: 'visible',
+              monsterId: 'restless',
+              coord: const HexCoord(0, 0),
+              damage: 0,
+              carriedGear: const ['private-gear'],
+            ),
+            MonsterInstance(
+              instanceId: 'hidden',
+              monsterId: 'ghoul',
+              coord: const HexCoord(0, 1),
+              damage: 0,
+            ),
+          ],
+        ),
+        started: true,
+      );
+      final ada = await _connect(server, privateRoom.code, 'ada-participant');
+      addTearDown(ada.sink.close);
+      final inbox = _Inbox(ada);
+      addTearDown(inbox.close);
+      await inbox.next();
+      final envelope = await inbox.next();
+      final state = Map<String, Object?>.from(envelope['state']! as Map);
+      final monsters = (state['monsters']! as List<Object?>)
+          .map((monster) => Map<String, Object?>.from(monster! as Map))
+          .toList();
+
+      expect(monsters.map((monster) => monster['instanceId']), ['visible']);
+      expect(monsters.single.containsKey('carriedGear'), isFalse);
+      expect(jsonEncode(envelope), isNot(contains('private-gear')));
     },
   );
 
@@ -577,30 +638,34 @@ void _expectPrivateCards(
 GameState _twoHeroState({
   PendingDecision? pendingDecision,
   Iterable<PlayerState>? players,
+  Iterable<HexTile>? board,
+  Iterable<MonsterInstance> monsters = const [],
 }) => GameState(
   seed: 8,
   round: 1,
   phase: GamePhase.playersTurn,
   activePlayerId: 'ada',
   actionsLeft: 2,
-  board: [
-    HexTile(
-      id: 'anabiosis',
-      coord: const HexCoord(0, 0),
-      type: HexTileType.start,
-      opened: true,
-      exits: const {},
-      hasTerminal: false,
-      ventColor: VentColor.none,
-    ),
-  ],
+  board:
+      board ??
+      [
+        HexTile(
+          id: 'anabiosis',
+          coord: const HexCoord(0, 0),
+          type: HexTileType.start,
+          opened: true,
+          exits: const {},
+          hasTerminal: false,
+          ventColor: VentColor.none,
+        ),
+      ],
   players:
       players ??
       [
         _player('ada', damage: 1, card: 'ada-private-card'),
         _player('boris', card: 'boris-secret-card'),
       ],
-  monsters: const [],
+  monsters: monsters,
   decks: const {},
   quests: QuestState(),
   pendingDecision: pendingDecision,

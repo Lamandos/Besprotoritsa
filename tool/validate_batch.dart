@@ -10,18 +10,29 @@ Future<void> main(List<String> arguments) async {
   }
 
   final document = await _readObject('content/monsters.json');
-  final cards = _cardsForBatch(document, request.batch);
-  final expectedSize = _expectedBatchSize(document, request.batch);
-  _require(
-    cards.length == expectedSize,
-    'Batch ${request.batch} must contain $expectedSize cards.',
-  );
-  _requireUniqueIds(cards);
-  await _validateCards(cards);
-  await _validateTranslations(cards);
-  stdout.writeln(
-    'Validated monsters batch ${request.batch}: ${cards.length} card types.',
-  );
+  final rawBatchSizes = document['batchSizes'];
+  if (rawBatchSizes is! Map<String, Object?>) {
+    throw const FormatException(
+      'content/monsters.json must declare batchSizes.',
+    );
+  }
+  final batches = request.all
+      ? rawBatchSizes.keys.map(int.parse)
+      : <int>[request.batch!];
+  for (final batch in batches) {
+    final cards = _cardsForBatch(document, batch);
+    final expectedSize = _expectedBatchSize(document, batch);
+    _require(
+      cards.length == expectedSize,
+      'Batch $batch must contain $expectedSize cards.',
+    );
+    _requireUniqueIds(cards);
+    await _validateCards(cards);
+    await _validateTranslations(cards);
+    stdout.writeln(
+      'Validated monsters batch $batch: ${cards.length} card types.',
+    );
+  }
 }
 
 int _expectedBatchSize(Map<String, Object?> document, int batch) {
@@ -112,14 +123,20 @@ void _require(bool condition, String message) {
 }
 
 final class BatchRequest {
-  const BatchRequest({required this.deck, required this.batch});
+  const BatchRequest({required this.deck, this.batch, this.all = false});
 
   factory BatchRequest.parse(List<String> arguments) {
+    if (arguments.length == 3 &&
+        arguments[0] == '--deck' &&
+        arguments[2] == '--all') {
+      return BatchRequest(deck: arguments[1], all: true);
+    }
     if (arguments.length != 4 ||
         arguments[0] != '--deck' ||
         arguments[2] != '--batch') {
       throw const FormatException(
-        'Usage: dart run tool/validate_batch.dart --deck <deck> --batch <number>',
+        'Usage: dart run tool/validate_batch.dart --deck monsters '
+        '[--batch <number>|--all]',
       );
     }
     final batch = int.tryParse(arguments[3]);
@@ -130,5 +147,6 @@ final class BatchRequest {
   }
 
   final String deck;
-  final int batch;
+  final int? batch;
+  final bool all;
 }

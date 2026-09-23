@@ -38,7 +38,21 @@ void main() {
           conditions: const ['wound'],
         ),
       ],
-      monsters: const [],
+      monsters: [
+        MonsterInstance(
+          instanceId: 'visible-ghoul',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          carriedGear: const ['secret-gear'],
+        ),
+        MonsterInstance(
+          instanceId: 'hidden-ghoul',
+          monsterId: 'ghoul',
+          coord: const HexCoord(1, 0),
+          damage: 0,
+        ),
+      ],
       decks: {
         'events': DeckState(drawPile: const ['event-2', 'event-1']),
       },
@@ -64,6 +78,10 @@ void main() {
     expect(other.hiddenCardCount, 2);
     expect(view.quests.personalTasks, ['ada-task']);
     expect(view.quests.hiddenPersonalTaskCounts, {'boris': 1});
+    expect(view.monsters.map((monster) => monster.instanceId), [
+      'visible-ghoul',
+    ]);
+    expect(view.monsters.single.carriedGear, ['secret-gear']);
   });
 
   test('state collections cannot be changed through their public API', () {

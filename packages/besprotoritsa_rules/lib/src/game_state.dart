@@ -1116,7 +1116,12 @@ PlayerGameState projectFor(GameState fullState, PlayerId viewerId) {
         isViewer: player.id == viewerId,
       ),
     ),
-    monsters: fullState.monsters,
+    // A token in an unopened sector would disclose both the contents and the
+    // position of fogged map space.  Monsters become public only once their
+    // sector has been opened, just like the tile that contains them.
+    monsters: fullState.monsters.where(
+      (monster) => fullState.tileAt(monster.coord)?.opened ?? false,
+    ),
     decks: {
       for (final entry in fullState.decks.entries)
         entry.key: DeckSummary(entry.value.cardsRemaining),

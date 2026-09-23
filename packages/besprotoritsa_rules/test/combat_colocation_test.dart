@@ -132,6 +132,46 @@ void main() {
   });
 
   group('resolveColocation', () {
+    test('replacement selection resumes damage queued for another hero', () {
+      var state = resolveColocation(
+        _state(
+          monster: _monster(attack: 1),
+          players: [
+            _player(damage: 2),
+            _player(id: 'boris', damage: 2),
+          ],
+          reserveHeroes: [
+            ReserveHero(
+              characterId: 'scientist',
+              health: 3,
+              stats: const PlayerStats(),
+            ),
+          ],
+        ),
+      );
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([1]),
+      ).state;
+      expect(state.pendingDecision, isA<AwaitingHeroReplacement>());
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(
+          SelectReplacementHeroChoice('scientist'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(state.pendingDecision, isA<AwaitingDodge>());
+      expect(
+        (state.pendingDecision! as AwaitingDodge).targetPlayerId,
+        'boris',
+      );
+    });
+
     test('a Boil spawned under a hero detonates once and is removed', () {
       final spawned = spawnBoil(
         _state(player: _player()),
@@ -190,6 +230,7 @@ GameState _state({
   PlayerState? player,
   Iterable<PlayerState>? players,
   MonsterInstance? monster,
+  Iterable<ReserveHero> reserveHeroes = const [],
   Iterable<String> conditions = const ['concussion'],
   Map<CardId, CardDefinition> cards = const <CardId, CardDefinition>{},
 }) => GameState(
@@ -205,6 +246,7 @@ GameState _state({
   ],
   players: players ?? [player ?? _player()],
   monsters: [if (monster != null) monster],
+  reserveHeroes: reserveHeroes,
   decks: {
     'conditions': DeckState(drawPile: conditions),
   },
@@ -238,6 +280,7 @@ PlayerState _player({
   int agility = 1,
   int weaponModifier = 0,
   int damage = 0,
+  int health = 3,
   Iterable<String> conditions = const [],
   EquippedGear equipped = const EquippedGear(),
 }) => PlayerState(
@@ -245,6 +288,7 @@ PlayerState _player({
   characterId: '$id-character',
   coord: const HexCoord(0, 0),
   damage: damage,
+  health: health,
   credits: 0,
   backpack: const [],
   equipped: equipped,

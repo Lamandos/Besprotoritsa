@@ -111,6 +111,36 @@ void main() {
     );
   });
 
+  test('a full backpack does not make defeating a Restless throw', () {
+    final hero = _hero(
+      backpack: const ['supply', 'supply', 'supply'],
+      stats: const PlayerStats(strength: 1),
+    );
+    final state = _state(
+      player: hero,
+      monsters: [
+        RestlessMonster(
+          instanceId: 'restless-1',
+          coord: hero.coord,
+          attack: 1,
+          defense: 0,
+          carriedGear: const ['power-blade'],
+        ),
+      ],
+    );
+
+    final result = step(
+      state,
+      const AttackCommand('restless-1'),
+      FixedDiceRoller([6]),
+    );
+
+    expect(result.isAccepted, isTrue);
+    expect(result.state.monsters, isEmpty);
+    expect(result.state.players.single.backpack, hero.backpack);
+    expect(result.state.log.last, contains('unclaimed:power-blade'));
+  });
+
   test('the team loses immediately when a lethal hero has no reserve', () {
     final hero = _hero(damage: 2);
     var state = _state(player: hero);
