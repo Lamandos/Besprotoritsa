@@ -64,6 +64,7 @@ final class RoomManager {
   final FileRoomPersistence? _persistence;
   final TrustedContentRepository _content;
   final Map<String, GameRoom> _rooms = <String, GameRoom>{};
+  int _archivedRoomCount = 0;
   final Map<String, List<DateTime>> _creationAttempts =
       <String, List<DateTime>>{};
 
@@ -91,6 +92,7 @@ final class RoomManager {
 
   /// Creates a room with a collision-free 128-bit uppercase invite code.
   GameRoom createRoom({required GameState state, bool started = false}) {
+    _archiveExpiredRooms();
     if (state.players.length < 2 || state.players.length > 4) {
       throw ArgumentError.value(
         state.players.length,
@@ -98,7 +100,7 @@ final class RoomManager {
         'A room requires 2 to 4 heroes.',
       );
     }
-    if (_rooms.length >= maxRooms) {
+    if (_rooms.length - _archivedRoomCount >= maxRooms) {
       throw const RoomCapacityExceeded(
         'The server has reached its room capacity.',
       );
@@ -151,7 +153,7 @@ final class RoomManager {
     if (persistence == null) return;
     for (final snapshot in persistence._loadSnapshots()) {
       if (_rooms.containsKey(snapshot.code)) continue;
-      _rooms[snapshot.code] = GameRoom._(
+      final restored = GameRoom._(
         code: snapshot.code,
         state: snapshot.state,
         diceFactory: _dice,
@@ -163,11 +165,18 @@ final class RoomManager {
         readyParticipantIds: snapshot.readyParticipantIds,
         revision: snapshot.revision,
         started: snapshot.started,
+        archived: snapshot.archived,
+        lastActivity: snapshot.lastActivity,
         prngState: snapshot.prngState,
         maxCommandJournalEntries: maxCommandJournalEntries,
         maxConnections: maxConnectionsPerRoom,
         idleTtl: roomIdleTtl,
       );
+      if (!restored.isArchived) {
+        restored.archiveIfExpired(DateTime.now().toUtc());
+      }
+      if (restored.isArchived) _archivedRoomCount++;
+      _rooms[snapshot.code] = restored;
     }
   }
 
@@ -378,13 +387,29 @@ final class RoomManager {
     (_) => _random.nextInt(256).toRadixString(16).padLeft(2, '0'),
   ).join().toUpperCase();
 
-  String _requestSource(Request request) =>
-      request.headers['x-forwarded-for'] ?? 'anonymous';
+  String _requestSource(Request request) {
+    final forwarded = request.headers['x-forwarded-for'];
+    if (forwarded != null) {
+      // Nginx appends the address it observed at the right edge of this list.
+      final address = forwarded.split(',').last.trim();
+      if (address.isNotEmpty) return address;
+    }
+    final connection = request.context['shelf.io.connection_info'];
+    if (connection is HttpConnectionInfo) {
+      return connection.remoteAddress.address;
+    }
+    return 'anonymous';
+  }
 
   bool _allowCreation(String source) {
     final now = DateTime.now().toUtc();
-    final attempts = _creationAttempts.putIfAbsent(source, () => <DateTime>[])
-      ..removeWhere((attempt) => now.difference(attempt) > createRateWindow);
+    _creationAttempts.removeWhere((_, attempts) {
+      attempts.removeWhere(
+        (attempt) => now.difference(attempt) > createRateWindow,
+      );
+      return attempts.isEmpty;
+    });
+    final attempts = _creationAttempts.putIfAbsent(source, () => <DateTime>[]);
     if (attempts.length >= createRateLimit) return false;
     attempts.add(now);
     return true;
@@ -393,7 +418,9 @@ final class RoomManager {
   void _archiveExpiredRooms() {
     final now = DateTime.now().toUtc();
     for (final room in _rooms.values) {
+      final wasArchived = room.isArchived;
       room.archiveIfExpired(now);
+      if (!wasArchived && room.isArchived) _archivedRoomCount++;
     }
   }
 }
@@ -467,6 +494,8 @@ final class GameRoom {
     int revision = 0,
     bool started = false,
     int? prngState,
+    bool archived = false,
+    DateTime? lastActivity,
   }) : _state = state,
        _diceFactory = diceFactory,
        _random = random,
@@ -478,6 +507,8 @@ final class GameRoom {
        _revision = revision,
        _started = started,
        _prngState = prngState ?? state.seed,
+       _archived = archived,
+       _lastActivity = lastActivity ?? DateTime.now().toUtc(),
        _maxCommandJournalEntries = maxCommandJournalEntries,
        _maxConnections = maxConnections,
        _idleTtl = idleTtl;
@@ -499,8 +530,8 @@ final class GameRoom {
   int _revision;
   bool _started;
   int _prngState;
-  bool _archived = false;
-  DateTime _lastActivity = DateTime.now().toUtc();
+  bool _archived;
+  DateTime _lastActivity;
   Future<void> _messageQueue = Future<void>.value();
   int _pendingMessageCount = 0;
 
@@ -545,18 +576,17 @@ final class GameRoom {
       channel.sink.close(4003, 'The room has not started yet.');
       return;
     }
+    if (!_hasConnectionSlot(participantId, reconnectToken, lobby: false)) {
+      channel.sink.close(4008, 'Room connection limit reached.');
+      return;
+    }
     final participant = _authenticate(participantId, reconnectToken);
     if (participant == null) {
       channel.sink.close(4003, 'Invalid reconnect token or no heroes remain.');
       return;
     }
 
-    if (_connectedSocketCount >= _maxConnections &&
-        participant.channel == null) {
-      channel.sink.close(4008, 'Room connection limit reached.');
-      return;
-    }
-
+    _touch();
     participant.channel?.sink.close(1000, 'Reconnected elsewhere.');
     participant.channel = channel;
     _send(
@@ -604,14 +634,13 @@ final class GameRoom {
       channel.sink.close(4003, 'participantId must be 1..128 characters.');
       return;
     }
+    if (!_hasConnectionSlot(participantId, reconnectToken, lobby: true)) {
+      channel.sink.close(4008, 'Room connection limit reached.');
+      return;
+    }
     final participant = _authenticate(participantId, reconnectToken);
     if (participant == null) {
       channel.sink.close(4003, 'Invalid reconnect token or no heroes remain.');
-      return;
-    }
-    if (_connectedSocketCount >= _maxConnections &&
-        participant.lobbyChannel == null) {
-      channel.sink.close(4008, 'Room connection limit reached.');
       return;
     }
     _touch();
@@ -785,7 +814,22 @@ final class GameRoom {
         (participant.lobbyChannel == null ? 0 : 1),
   );
 
-  void _touch() => _lastActivity = DateTime.now().toUtc();
+  bool _hasConnectionSlot(
+    String participantId,
+    String? reconnectToken, {
+    required bool lobby,
+  }) {
+    if (_connectedSocketCount < _maxConnections) return true;
+    final participant = _participants[participantId];
+    if (participant == null || reconnectToken == null) return false;
+    final channel = lobby ? participant.lobbyChannel : participant.channel;
+    return channel != null && participant.matchesReconnectToken(reconnectToken);
+  }
+
+  void _touch() {
+    _lastActivity = DateTime.now().toUtc();
+    persist();
+  }
 
   void _onMessage(_Participant participant, Object? message) {
     try {
@@ -856,7 +900,10 @@ final class GameRoom {
         return;
       }
 
-      final command = _commandFromJson(commandJson);
+      final command = _commandFromJson(
+        commandJson,
+        _state.players.firstWhere((player) => player.id == participant.heroId),
+      );
       final controller = command is ResolvePendingDecisionCommand
           ? _pendingDecisionOwner(
               _state.pendingDecision,
@@ -904,6 +951,8 @@ final class GameRoom {
           readyParticipantIds: _readyParticipantIds,
           started: _started,
           prngState: nextPrngState,
+          archived: _archived,
+          lastActivity: _lastActivity,
         );
       } on Object catch (error) {
         _sendError(participant, 'Could not persist command: $error');
@@ -998,6 +1047,8 @@ final class GameRoom {
         readyParticipantIds: _readyParticipantIds,
         started: _started,
         prngState: _prngState,
+        archived: _archived,
+        lastActivity: _lastActivity,
       ).catchError((Object _) {}),
     );
   }
@@ -1010,6 +1061,8 @@ final class GameRoom {
     required Set<String> readyParticipantIds,
     required bool started,
     required int prngState,
+    required bool archived,
+    required DateTime lastActivity,
   }) {
     final persistence = _persistence;
     if (persistence == null) return Future<void>.value();
@@ -1026,6 +1079,8 @@ final class GameRoom {
         readyParticipantIds: readyParticipantIds,
         started: started,
         prngState: prngState,
+        archived: archived,
+        lastActivity: lastActivity,
       ),
     );
   }
@@ -1105,6 +1160,8 @@ final class FileRoomPersistence {
       'processedCommandIds': snapshot.processedCommandIds.toList(),
       'readyParticipantIds': snapshot.readyParticipantIds.toList(),
       'started': snapshot.started,
+      'archived': snapshot.archived,
+      'lastActivity': snapshot.lastActivity.toIso8601String(),
       'journalEntryCount': snapshot.commandJournal.length,
     });
     try {
@@ -1153,7 +1210,9 @@ final class FileRoomPersistence {
       for (final file in <File>[_snapshotFile(code), _backupFile(code)]) {
         if (!file.existsSync()) continue;
         try {
-          snapshot = _restoreJournal(_decodeSnapshot(file.readAsStringSync()));
+          snapshot = _restoreJournal(
+            _decodeSnapshot(file.readAsStringSync(), file.lastModifiedSync()),
+          );
           break;
         } on FormatException catch (_) {
           // Try the previous complete snapshot next.
@@ -1170,7 +1229,7 @@ final class FileRoomPersistence {
       File('${_directory.path}/$code.commands.ndjson');
   File _backupFile(String code) => File('${_snapshotFile(code).path}.bak');
 
-  _RoomSnapshot _decodeSnapshot(String source) {
+  _RoomSnapshot _decodeSnapshot(String source, DateTime modifiedAt) {
     final raw = jsonDecode(source);
     if (raw is! Map<Object?, Object?>) {
       throw const FormatException('Room snapshot must be an object.');
@@ -1205,6 +1264,11 @@ final class FileRoomPersistence {
     // Snapshots written before lobby state was persisted represented rooms that
     // were immediately playable, so retain that behaviour on upgrade.
     final started = json['started'] ?? true;
+    final archived = json['archived'] ?? false;
+    final lastActivityValue = json['lastActivity'];
+    final lastActivity = lastActivityValue is String
+        ? DateTime.tryParse(lastActivityValue)?.toUtc()
+        : modifiedAt.toUtc();
     if (processed is! List<Object?> ||
         ready is! List<Object?> ||
         journal is! List<Object?> ||
@@ -1236,6 +1300,8 @@ final class FileRoomPersistence {
       journalEntryCount: journalEntryCount,
       hasJournalEntryCount: hasJournalEntryCount,
       started: started,
+      archived: archived == true,
+      lastActivity: lastActivity ?? modifiedAt.toUtc(),
     );
   }
 
@@ -1333,6 +1399,8 @@ final class FileRoomPersistence {
       journalEntryCount: entries.length,
       hasJournalEntryCount: true,
       started: snapshot.started,
+      archived: snapshot.archived,
+      lastActivity: snapshot.lastActivity,
     );
   }
 
@@ -1384,6 +1452,8 @@ final class _RoomSnapshot {
     required this.journalEntryCount,
     required this.hasJournalEntryCount,
     required this.started,
+    required this.archived,
+    required this.lastActivity,
   });
 
   final String code;
@@ -1397,6 +1467,8 @@ final class _RoomSnapshot {
   final int journalEntryCount;
   final bool hasJournalEntryCount;
   final bool started;
+  final bool archived;
+  final DateTime lastActivity;
 }
 
 Map<String, Object?> _eventToJson(GameEvent event) => switch (event) {
@@ -1536,22 +1608,18 @@ List<Object?> _optionalList(Map<String, Object?> json, String key) {
   return value;
 }
 
-bool _optionalBool(Map<String, Object?> json, String key) {
-  final value = json[key];
-  if (value == null) return false;
-  if (value is! bool) throw FormatException('"$key" must be a boolean.');
-  return value;
-}
-
-GameCommand _commandFromJson(Map<String, Object?> json) {
+GameCommand _commandFromJson(
+  Map<String, Object?> json,
+  PlayerState player,
+) {
   final type = _requiredString(json, 'type');
   return switch (type) {
     'move' => MoveCommand(_coord(json)),
     'airlockMove' => AirlockMoveCommand(
       _coord(json),
       AirlockEquipment(
-        hasSpaceSuit: _optionalBool(json, 'hasSpaceSuit'),
-        hasOxygenTank: _optionalBool(json, 'hasOxygenTank'),
+        hasSpaceSuit: _ownsAirlockGear(player, 'spacesuit'),
+        hasOxygenTank: _ownsAirlockGear(player, 'oxygen-tank'),
       ),
     ),
     'closeCorridor' => CloseCorridorCommand(_coord(json)),
@@ -1593,6 +1661,18 @@ GameCommand _commandFromJson(Map<String, Object?> json) {
     ),
     _ => throw FormatException('Unknown command type "$type".'),
   };
+}
+
+bool _ownsAirlockGear(PlayerState player, String gearId) {
+  final equipped = <String?>[
+    player.equipped.armor,
+    player.equipped.clothing,
+    player.equipped.robot,
+    player.equipped.weapon,
+    player.equipped.secondWeapon,
+  ];
+  return player.backpack.any((id) => id.startsWith(gearId)) ||
+      equipped.any((id) => id?.startsWith(gearId) ?? false);
 }
 
 HexCoord _coord(Map<String, Object?> json) => HexCoord(

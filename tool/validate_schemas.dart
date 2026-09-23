@@ -136,6 +136,8 @@ void _validateSchemaNode(Map<String, Object?> node, String source) {
     source,
     '"additionalProperties"',
   );
+  _validateSchemaAlternatives(node['anyOf'], source, '"anyOf"');
+  _validateSchemaAlternatives(node['oneOf'], source, '"oneOf"');
   final defs = node[r'$defs'];
   if (defs is Map<String, Object?>) {
     for (final child in defs.values) {
@@ -148,6 +150,24 @@ void _validateSchemaNode(Map<String, Object?> node, String source) {
     }
   } else if (defs != null) {
     throw SchemaValidationException('$source: \$defs must be an object.');
+  }
+}
+
+void _validateSchemaAlternatives(Object? value, String source, String keyword) {
+  if (value == null) return;
+  if (value is! List || value.isEmpty) {
+    throw SchemaValidationException(
+      '$source: $keyword must be a non-empty array.',
+    );
+  }
+  for (final schema in value) {
+    if (schema is Map<String, Object?>) {
+      _validateSchemaNode(schema, source);
+    } else if (schema is! bool) {
+      throw SchemaValidationException(
+        '$source: each $keyword entry must be an object or boolean.',
+      );
+    }
   }
 }
 
@@ -181,14 +201,55 @@ final class JsonSchemaValidator {
     final reference = schema[r'$ref'];
     if (reference != null) {
       _validate(value, _resolveReference(reference, path), path);
-      return;
     }
+    _validateAlternatives(value, schema['anyOf'], path, exactlyOne: false);
+    _validateAlternatives(value, schema['oneOf'], path, exactlyOne: true);
     _validateEnum(value, schema['enum'], path);
     _validateType(value, schema['type'], path);
     _validateNumbers(value, schema, path);
     _validateString(value, schema['pattern'], path);
     _validateObject(value, schema, path);
     _validateArray(value, schema, path);
+  }
+
+  void _validateAlternatives(
+    Object? value,
+    Object? alternatives,
+    String path, {
+    required bool exactlyOne,
+  }) {
+    if (alternatives == null) return;
+    if (alternatives is! List<Object?>) {
+      throw SchemaValidationException('$path: alternatives must be an array.');
+    }
+    final schemas = alternatives;
+    var matches = 0;
+    for (final alternative in schemas) {
+      try {
+        if (alternative == true) {
+          matches++;
+        } else if (alternative == false) {
+          continue;
+        } else if (alternative is Map<String, Object?>) {
+          _validate(value, alternative, path);
+          matches++;
+        } else {
+          throw SchemaValidationException(
+            '$path: alternatives must be schema objects or booleans.',
+          );
+        }
+      } on SchemaValidationException {
+        // A failed branch is expected while alternatives are being tested.
+      }
+    }
+    if ((exactlyOne && matches != 1) || (!exactlyOne && matches == 0)) {
+      final keyword = exactlyOne ? 'oneOf' : 'anyOf';
+      throw SchemaValidationException(
+        '$path: expected '
+        '${exactlyOne ? 'exactly one' : 'at least one'} '
+        '$keyword alternative to match.',
+      );
+    }
   }
 
   Map<String, Object?> _resolveReference(Object? reference, String path) {

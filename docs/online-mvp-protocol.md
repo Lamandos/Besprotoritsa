@@ -16,6 +16,9 @@
 }
 ```
 
+`mode.difficulty` accepts `easy`, `normal`, or `hard` (default `normal`) and
+sets the number of successful dice hits required by skill checks to 1, 2, or 3.
+
 Сервер загружает `content/mvp`, создаёт cryptographically secure seed и хранит
 его вместе с отдельным состоянием PRNG. Нельзя передавать `GameState`, колоды,
 карту, seed или идентификаторы героев. Нынешний доверенный набор `mvp` содержит
