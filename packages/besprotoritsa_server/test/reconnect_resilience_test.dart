@@ -53,6 +53,12 @@ void main() {
       ).readAsStringSync(),
       contains('end-turn-before-crash'),
     );
+    final persistedSnapshot = File(
+      '${directory.path}/${created.code}.room.json',
+    ).readAsStringSync();
+    expect(persistedSnapshot, contains('reconnectTokenHash'));
+    expect(persistedSnapshot, isNot(contains(adaToken)));
+    expect(persistedSnapshot, isNot(contains(borisToken)));
     // Snapshots from before participant-scoped command ids stored bare ids.
     // Preserve that legacy shape to verify restoration migrates it.
     final snapshotFile = File('${directory.path}/${created.code}.room.json');
@@ -170,13 +176,16 @@ Future<IOWebSocketChannel> _connect(
       host: InternetAddress.loopbackIPv4.address,
       port: server.port,
       path: '/rooms/$roomCode/ws',
-      queryParameters: <String, String>{
-        'participantId': participantId,
-        if (reconnectToken != null) 'reconnectToken': reconnectToken,
-      },
     ),
   );
   await channel.ready;
+  channel.sink.add(
+    jsonEncode(<String, Object?>{
+      'type': 'authenticate',
+      'participantId': participantId,
+      if (reconnectToken != null) 'reconnectToken': reconnectToken,
+    }),
+  );
   return channel;
 }
 

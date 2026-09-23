@@ -12,6 +12,7 @@ dependencies:
     path: ../besprotoritsa_data
   besprotoritsa_rules:
     path: ../besprotoritsa_rules
+  crypto: ^3.0.6
   shelf: ^1.4.2
   shelf_web_socket: ^3.0.0
   web_socket_channel: ^3.0.3

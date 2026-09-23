@@ -6,7 +6,6 @@ import 'dart:math';
 import 'package:besprotoritsa_app/src/game/game_controller.dart';
 import 'package:besprotoritsa_app/src/game/multiplayer_game_controller.dart';
 import 'package:besprotoritsa_app/src/game/multiplayer_lobby_client.dart';
-import 'package:besprotoritsa_app/src/game/mvp_game_state.dart';
 import 'package:besprotoritsa_app/src/mvp/mvp_game_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -84,7 +83,8 @@ class _MultiplayerEntryScreenState extends State<MultiplayerEntryScreen> {
       final serverUri = _serverUri();
       final code = await MultiplayerLobbyClient.createRoom(
         serverUri: serverUri,
-        initialState: createMvpGameState(),
+        contentSetId: 'mvp',
+        partySize: 2,
       );
       if (mounted) _openLobby(serverUri, code);
     } on Object catch (error) {
