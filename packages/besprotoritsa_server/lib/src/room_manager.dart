@@ -20,6 +20,7 @@ final class RoomManager {
     Random? random,
     DiceRoller Function(GameState state, int revision)? dice,
     Directory? persistenceDirectory,
+    this.maxRooms = 1000,
   }) : _random = random ?? Random.secure(),
        _dice =
            dice ??
@@ -35,8 +36,24 @@ final class RoomManager {
   final FileRoomPersistence? _persistence;
   final Map<String, GameRoom> _rooms = <String, GameRoom>{};
 
-  /// Creates a room with a collision-free five-letter uppercase code.
+  /// Upper bound for process-local rooms, protecting the server from unlimited
+  /// unauthenticated room creation. Completed rooms can be archived separately.
+  final int maxRooms;
+
+  /// Creates a room with a collision-free 128-bit uppercase invite code.
   GameRoom createRoom({required GameState state, bool started = false}) {
+    if (state.players.length < 2 || state.players.length > 4) {
+      throw ArgumentError.value(
+        state.players.length,
+        'state.players',
+        'A room requires 2 to 4 heroes.',
+      );
+    }
+    if (_rooms.length >= maxRooms) {
+      throw const RoomCapacityExceeded(
+        'The server has reached its room capacity.',
+      );
+    }
     late String code;
     do {
       code = _newRoomCode();
@@ -80,7 +97,7 @@ final class RoomManager {
     }
   }
 
-  /// Finds a room by its five-letter code.
+  /// Finds a room by its case-insensitive invite code.
   GameRoom? room(String code) => _rooms[code.toUpperCase()];
 
   /// Shelf handler for room creation and game/lobby WebSockets.
@@ -108,6 +125,10 @@ final class RoomManager {
         segments.length == 1 &&
         segments[0] == 'rooms') {
       try {
+        if (request.contentLength case final length?
+            when length > _maxRoomRequestBytes) {
+          return Response(413, body: 'Room state is too large.');
+        }
         final decoded = jsonDecode(await request.readAsString());
         if (decoded is! Map<Object?, Object?>) {
           return Response(400, body: 'Room state must be a JSON object.');
@@ -126,6 +147,12 @@ final class RoomManager {
         );
       } on FormatException catch (error) {
         return Response(400, body: error.message);
+        // GameState constructors use ArgumentError for invalid decoded input.
+        // ignore: avoid_catching_errors
+      } on ArgumentError catch (error) {
+        return Response(400, body: error.message?.toString());
+      } on RoomCapacityExceeded catch (error) {
+        return Response(503, body: error.message);
       }
     }
     if (segments.isEmpty || segments.first != 'rooms') {
@@ -183,9 +210,10 @@ final class RoomManager {
     room.connectLobby(channel, participantId, reconnectToken: reconnectToken);
   });
 
-  String _newRoomCode() => String.fromCharCodes(
-    List<int>.generate(5, (_) => 65 + _random.nextInt(26)),
-  );
+  String _newRoomCode() => List<String>.generate(
+    16,
+    (_) => _random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join().toUpperCase();
 }
 
 const Map<String, String> _corsHeaders = <String, String>{
@@ -193,6 +221,17 @@ const Map<String, String> _corsHeaders = <String, String>{
   'access-control-allow-methods': 'POST, OPTIONS',
   'access-control-allow-headers': 'content-type',
 };
+
+const int _maxRoomRequestBytes = 1024 * 1024;
+
+/// Raised when a process has reached its configured room limit.
+final class RoomCapacityExceeded implements Exception {
+  /// Creates a capacity error with a client-safe explanation.
+  const RoomCapacityExceeded(this.message);
+
+  /// Explanation suitable for the HTTP response body.
+  final String message;
+}
 
 /// One authoritative game, its claimed heroes, and live client connections.
 final class GameRoom {
@@ -490,8 +529,19 @@ final class GameRoom {
       }
 
       final command = _commandFromJson(commandJson);
-      if (_state.activePlayerId != participant.heroId) {
-        _sendError(participant, 'Only the active hero may issue commands.');
+      final controller = command is ResolvePendingDecisionCommand
+          ? _pendingDecisionOwner(
+              _state.pendingDecision,
+              _state.activePlayerId,
+            )
+          : _state.activePlayerId;
+      if (controller != participant.heroId) {
+        _sendError(
+          participant,
+          command is ResolvePendingDecisionCommand
+              ? 'Only the hero awaiting this decision may resolve it.'
+              : 'Only the active hero may issue commands.',
+        );
         return;
       }
       final rejection = validate(_state, command);
@@ -943,6 +993,38 @@ int _requiredInt(Map<String, Object?> json, String key) {
   return value;
 }
 
+int? _optionalInt(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value == null) return null;
+  if (value is! int) throw FormatException('"$key" must be an integer.');
+  return value;
+}
+
+String? _optionalString(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value == null) return null;
+  if (value is! String || value.isEmpty) {
+    throw FormatException('"$key" must be a non-empty string or null.');
+  }
+  return value;
+}
+
+List<Object?> _optionalList(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value == null) return const <Object?>[];
+  if (value is! List<Object?>) {
+    throw FormatException('"$key" must be an array.');
+  }
+  return value;
+}
+
+bool _optionalBool(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value == null) return false;
+  if (value is! bool) throw FormatException('"$key" must be a boolean.');
+  return value;
+}
+
 GameCommand _commandFromJson(Map<String, Object?> json) {
   final type = _requiredString(json, 'type');
   return switch (type) {
@@ -950,8 +1032,8 @@ GameCommand _commandFromJson(Map<String, Object?> json) {
     'airlockMove' => AirlockMoveCommand(
       _coord(json),
       AirlockEquipment(
-        hasSpaceSuit: json['hasSpaceSuit'] == true,
-        hasOxygenTank: json['hasOxygenTank'] == true,
+        hasSpaceSuit: _optionalBool(json, 'hasSpaceSuit'),
+        hasOxygenTank: _optionalBool(json, 'hasOxygenTank'),
       ),
     ),
     'closeCorridor' => CloseCorridorCommand(_coord(json)),
@@ -963,18 +1045,13 @@ GameCommand _commandFromJson(Map<String, Object?> json) {
       _choiceFromJson(_object(json, 'choice')),
     ),
     'endTurn' => const EndTurnCommand(),
-    'heal' => HealCommand(_requiredInt(json, 'amount')),
     'equip' => EquipCommand(
       _requiredString(json, 'cardId'),
-      weaponSlot: (json['weaponSlot'] as int?) ?? 0,
+      weaponSlot: _optionalInt(json, 'weaponSlot') ?? 0,
     ),
     'unequip' => UnequipCommand(
       _enumByName(ItemSlot.values, json, 'slot'),
-      weaponSlot: (json['weaponSlot'] as int?) ?? 0,
-    ),
-    'receiveCard' => ReceiveCardCommand(
-      _requiredString(json, 'cardId'),
-      implantImmediately: json['implantImmediately'] == true,
+      weaponSlot: _optionalInt(json, 'weaponSlot') ?? 0,
     ),
     'implantModification' => ImplantModificationCommand(
       _requiredString(json, 'cardId'),
@@ -991,10 +1068,10 @@ GameCommand _commandFromJson(Map<String, Object?> json) {
     ),
     'exchange' => ExchangeCommand(
       partnerId: _requiredString(json, 'partnerId'),
-      giveCardId: json['giveCardId'] as String?,
-      receiveCardId: json['receiveCardId'] as String?,
-      giveCredits: (json['giveCredits'] as int?) ?? 0,
-      receiveCredits: (json['receiveCredits'] as int?) ?? 0,
+      giveCardId: _optionalString(json, 'giveCardId'),
+      receiveCardId: _optionalString(json, 'receiveCardId'),
+      giveCredits: _optionalInt(json, 'giveCredits') ?? 0,
+      receiveCredits: _optionalInt(json, 'receiveCredits') ?? 0,
     ),
     _ => throw FormatException('Unknown command type "$type".'),
   };
@@ -1021,13 +1098,12 @@ DecisionChoice _choiceFromJson(Map<String, Object?> json) {
   return switch (_requiredString(json, 'type')) {
     'keepRoll' => const KeepRollChoice(),
     'reroll' => RerollChoice(
-      diceIndexes: (json['diceIndexes'] as List<Object?>? ?? const <Object?>[])
-          .map((index) {
-            if (index is! int) {
-              throw const FormatException('diceIndexes must contain integers.');
-            }
-            return index;
-          }),
+      diceIndexes: _optionalList(json, 'diceIndexes').map((index) {
+        if (index is! int) {
+          throw const FormatException('diceIndexes must contain integers.');
+        }
+        return index;
+      }),
     ),
     'dodge' => const DodgeChoice(),
     'eventOption' => EventOptionChoice(_requiredString(json, 'option')),
@@ -1133,18 +1209,7 @@ Map<String, Object?>? _pendingDecisionToJson(
   PlayerId? activePlayerId,
 ) {
   if (decision == null) return null;
-  final ownerId = switch (decision) {
-    AwaitingRerollChoice(:final context) => switch (context) {
-      AttackRollContext(:final playerId) => playerId,
-      SkillCheckContext(:final playerId) => playerId,
-      null => activePlayerId,
-    },
-    AwaitingDodge(:final targetPlayerId) => targetPlayerId ?? activePlayerId,
-    AwaitingEventOption(:final playerId) => playerId ?? activePlayerId,
-    AwaitingTerminalPick(:final playerId) => playerId,
-    AwaitingHeroReplacement(:final playerId) => playerId,
-    AwaitingOtherPlayerDecision(:final awaitingPlayerId) => awaitingPlayerId,
-  };
+  final ownerId = _pendingDecisionOwner(decision, activePlayerId);
   if (ownerId != null && ownerId != viewerId) {
     return <String, Object?>{
       'type': 'hidden',
@@ -1185,5 +1250,28 @@ Map<String, Object?>? _pendingDecisionToJson(
       'type': 'hidden',
       'awaitingPlayerId': awaitingPlayerId,
     },
+  };
+}
+
+/// Returns the only hero permitted to resolve the current pending decision.
+///
+/// The resolver is deliberately shared by authorization and serialization so a
+/// client never sees a decision that its participant cannot answer.
+PlayerId? _pendingDecisionOwner(
+  PendingDecision? decision,
+  PlayerId? activePlayerId,
+) {
+  if (decision == null) return null;
+  return switch (decision) {
+    AwaitingRerollChoice(:final context) => switch (context) {
+      AttackRollContext(:final playerId) => playerId,
+      SkillCheckContext(:final playerId) => playerId,
+      null => activePlayerId,
+    },
+    AwaitingDodge(:final targetPlayerId) => targetPlayerId ?? activePlayerId,
+    AwaitingEventOption(:final playerId) => playerId ?? activePlayerId,
+    AwaitingTerminalPick(:final playerId) => playerId,
+    AwaitingHeroReplacement(:final playerId) => playerId,
+    AwaitingOtherPlayerDecision(:final awaitingPlayerId) => awaitingPlayerId,
   };
 }

@@ -88,7 +88,7 @@ void main() {
       final borisJoined = await borisInbox.next();
       final borisState = await borisInbox.next();
 
-      expect(room.code, matches(RegExp(r'^[A-Z]{5}$')));
+      expect(room.code, matches(RegExp(r'^[A-F0-9]{32}$')));
       expect(adaJoined['heroId'], 'ada');
       expect(borisJoined['heroId'], 'boris');
       _expectPrivateCards(
@@ -109,9 +109,9 @@ void main() {
       ada.sink.add(
         jsonEncode({
           'type': 'command',
-          'commandId': 'heal-ada-1',
+          'commandId': 'end-turn-ada-1',
           'expectedRevision': 0,
-          'command': {'type': 'heal', 'amount': 1},
+          'command': {'type': 'endTurn'},
         }),
       );
       final adaUpdated = await adaInbox.next();
@@ -126,9 +126,9 @@ void main() {
       ada.sink.add(
         jsonEncode({
           'type': 'command',
-          'commandId': 'heal-ada-1',
+          'commandId': 'end-turn-ada-1',
           'expectedRevision': 0,
-          'command': {'type': 'heal', 'amount': 1},
+          'command': {'type': 'endTurn'},
         }),
       );
       final retried = await adaInbox.next();
@@ -139,9 +139,9 @@ void main() {
       ada.sink.add(
         jsonEncode({
           'type': 'command',
-          'commandId': 'heal-ada-1',
+          'commandId': 'end-turn-ada-1',
           'expectedRevision': 1,
-          'command': {'type': 'heal', 'amount': 2},
+          'command': {'type': 'skillCheck', 'stat': 'science'},
         }),
       );
       final reused = await adaInbox.next();
@@ -250,6 +250,113 @@ void main() {
       'type': 'hidden',
       'awaitingPlayerId': 'ada',
     });
+  });
+
+  test('only the pending-decision owner can resolve a dodge', () async {
+    final manager = RoomManager();
+    final decisionRoom = manager.createRoom(
+      state: _twoHeroState(
+        pendingDecision: const AwaitingDodge(
+          monsterDamage: 1,
+          requiredAgilitySuccesses: 1,
+          targetPlayerId: 'boris',
+        ),
+      ),
+      started: true,
+    );
+    final decisionServer = await shelf_io.serve(
+      manager.handler,
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    addTearDown(() => decisionServer.close(force: true));
+
+    final ada = await _connect(
+      decisionServer,
+      decisionRoom.code,
+      'owner-ada',
+    );
+    addTearDown(ada.sink.close);
+    final adaInbox = _Inbox(ada);
+    addTearDown(adaInbox.close);
+    await adaInbox.next();
+    await adaInbox.next();
+    final boris = await _connect(
+      decisionServer,
+      decisionRoom.code,
+      'owner-boris',
+    );
+    addTearDown(boris.sink.close);
+    final borisInbox = _Inbox(boris);
+    addTearDown(borisInbox.close);
+    await borisInbox.next();
+    await borisInbox.next();
+
+    ada.sink.add(
+      jsonEncode(<String, Object?>{
+        'type': 'command',
+        'commandId': 'ada-cannot-dodge-for-boris',
+        'expectedRevision': 0,
+        'command': <String, Object?>{
+          'type': 'resolveDecision',
+          'choice': <String, Object?>{'type': 'dodge'},
+        },
+      }),
+    );
+    final rejected = await adaInbox.next();
+    expect(
+      rejected['reason'],
+      'Only the hero awaiting this decision may resolve it.',
+    );
+    expect(decisionRoom.revision, 0);
+
+    boris.sink.add(
+      jsonEncode(<String, Object?>{
+        'type': 'command',
+        'commandId': 'boris-dodges',
+        'expectedRevision': 0,
+        'command': <String, Object?>{
+          'type': 'resolveDecision',
+          'choice': <String, Object?>{'type': 'dodge'},
+        },
+      }),
+    );
+    expect((await adaInbox.next())['revision'], 1);
+    expect((await borisInbox.next())['revision'], 1);
+    expect(decisionRoom.revision, 1);
+  });
+
+  test('rejects privileged state-mutating messages from a client', () async {
+    final ada = await _connect(server, room.code, 'privileged-ada');
+    addTearDown(ada.sink.close);
+    final inbox = _Inbox(ada);
+    addTearDown(inbox.close);
+    await inbox.next();
+    await inbox.next();
+
+    for (final command in <Map<String, Object?>>[
+      <String, Object?>{'type': 'heal', 'amount': 99},
+      <String, Object?>{
+        'type': 'receiveCard',
+        'cardId': 'ada-private-card',
+      },
+      <String, Object?>{
+        'type': 'equip',
+        'cardId': 'ada-private-card',
+        'weaponSlot': 'not-an-integer',
+      },
+    ]) {
+      ada.sink.add(
+        jsonEncode(<String, Object?>{
+          'type': 'command',
+          'commandId': 'forbidden-${command['type']}',
+          'expectedRevision': 0,
+          'command': command,
+        }),
+      );
+      expect((await inbox.next())['type'], 'error');
+      expect(room.revision, 0);
+    }
   });
 
   test(

@@ -214,6 +214,11 @@ final class ExchangeUnavailable extends CommandRejection {
   const ExchangeUnavailable();
 }
 
+/// A command carried invalid numeric input that must never rely on assertions.
+final class InvalidCommandArguments extends CommandRejection {
+  const InvalidCommandArguments();
+}
+
 sealed class DecisionChoice {
   const DecisionChoice();
 }
@@ -297,6 +302,17 @@ CommandRejection? validate(GameState state, GameCommand command) {
 
   if (command is EndTurnCommand) {
     return null;
+  }
+
+  if (command case HealCommand(:final amount) when amount <= 0) {
+    return const InvalidCommandArguments();
+  }
+
+  if (command case ExchangeCommand(
+    :final giveCredits,
+    :final receiveCredits,
+  ) when giveCredits < 0 || receiveCredits < 0) {
+    return const InvalidCommandArguments();
   }
 
   if (command is ImplantModificationCommand && state.actionsTakenThisTurn > 0) {

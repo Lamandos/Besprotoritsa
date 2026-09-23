@@ -13,7 +13,8 @@ GameState createMvpGameState({List<String>? characterIds}) {
       'Expected 2..4 heroes.',
     );
   }
-  final isDefaultRoster = roster[0] == 'engineer' && roster[1] == 'guard';
+  final isDefaultRoster =
+      roster.length == 2 && roster[0] == 'engineer' && roster[1] == 'guard';
   final players = isDefaultRoster
       ? <PlayerState>[
           _player('ada', 'engineer', const HexCoord(0, 0)),
