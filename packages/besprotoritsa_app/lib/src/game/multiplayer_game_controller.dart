@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:besprotoritsa_app/src/game/game_controller.dart';
 import 'package:besprotoritsa_app/src/game/mvp_game_state.dart';
 import 'package:besprotoritsa_app/src/game/projected_game_state_codec.dart';
+import 'package:besprotoritsa_app/src/game/wire_game_state.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -42,6 +43,7 @@ class MultiplayerGameController extends GameSessionController {
   String? _lastError;
   Completer<void>? _connectedCompleter;
   bool _isClosed = false;
+  WireGameState? _wireState;
 
   /// Opaque token used to resume this participant after a dropped socket.
   /// Persist this value with the session if the controller itself is recreated.
@@ -52,6 +54,9 @@ class MultiplayerGameController extends GameSessionController {
 
   /// Last rejection or transport error reported by the server.
   String? get lastError => _lastError;
+
+  /// Latest versioned server payload; it is never a rules-engine state.
+  WireGameState? get wireState => _wireState;
 
   /// Completes when the initial projected state has arrived from the server.
   Future<void> get connected =>
@@ -72,6 +77,13 @@ class MultiplayerGameController extends GameSessionController {
       final channel = WebSocketChannel.connect(_gameUri());
       _channel = channel;
       await channel.ready;
+      channel.sink.add(
+        jsonEncode(<String, Object?>{
+          'type': 'authenticate',
+          'participantId': participantId,
+          if (_reconnectToken case final token?) 'reconnectToken': token,
+        }),
+      );
       _subscription = channel.stream.listen(
         _onMessage,
         onDone: () => _onDisconnected(channel),
@@ -116,7 +128,8 @@ class MultiplayerGameController extends GameSessionController {
             return;
           }
           final events = _events(envelope['events']);
-          state = _codec.decode(_object(envelope['state']));
+          _wireState = WireGameState.fromJson(_object(envelope['state']));
+          state = _codec.decode(_wireState!.document);
           _revision = revision;
           _reconnectAttempt = 0;
           _waitingForConfirmation = false;
@@ -175,10 +188,6 @@ class MultiplayerGameController extends GameSessionController {
   Uri _gameUri() => serverUri.replace(
     scheme: serverUri.scheme == 'https' ? 'wss' : 'ws',
     path: '${serverUri.path}/rooms/$roomCode/ws'.replaceAll('//', '/'),
-    queryParameters: <String, String>{
-      'participantId': participantId,
-      if (_reconnectToken case final token?) 'reconnectToken': token,
-    },
   );
 }
 

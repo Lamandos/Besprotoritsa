@@ -4,8 +4,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:besprotoritsa_data/besprotoritsa_data.dart';
-import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -69,10 +67,12 @@ class MultiplayerLobbyClient {
   /// Token issued by the room; pass it to the game controller on transition.
   String? get reconnectToken => _reconnectToken;
 
-  /// Creates a server room from the selected scenario and returns its code.
+  /// Creates a room from a content set installed on the authoritative server.
   static Future<String> createRoom({
     required Uri serverUri,
-    required GameState initialState,
+    required String contentSetId,
+    required int partySize,
+    Map<String, Object?> mode = const <String, Object?>{},
   }) async {
     final endpoint = serverUri.replace(
       scheme: serverUri.scheme == 'ws' ? 'http' : serverUri.scheme,
@@ -81,7 +81,11 @@ class MultiplayerLobbyClient {
     final response = await http.post(
       endpoint,
       headers: const {'content-type': 'application/json'},
-      body: jsonEncode(GameStateJsonCodec().toJson(initialState)),
+      body: jsonEncode(<String, Object?>{
+        'contentSetId': contentSetId,
+        'partySize': partySize,
+        'mode': mode,
+      }),
     );
     if (response.statusCode != 200) {
       throw StateError('Could not create room: ${response.body}');
@@ -103,14 +107,17 @@ class MultiplayerLobbyClient {
           '//',
           '/',
         ),
-        queryParameters: <String, String>{
-          'participantId': participantId,
-          if (_reconnectToken case final token?) 'reconnectToken': token,
-        },
       ),
     );
     _channel = channel;
     await channel.ready;
+    channel.sink.add(
+      jsonEncode(<String, Object?>{
+        'type': 'authenticate',
+        'participantId': participantId,
+        if (_reconnectToken case final token?) 'reconnectToken': token,
+      }),
+    );
     _subscription = channel.stream.listen(
       _onMessage,
       onError: _snapshots.addError,

@@ -13,9 +13,15 @@ Future<void> main(List<String> arguments) async {
   final persistenceDirectory = Directory(
     Platform.environment['PERSISTENCE_DIRECTORY'] ?? '/data',
   );
+  final contentDirectory = Directory(
+    Platform.environment['CONTENT_DIRECTORY'] ?? 'content',
+  );
   await persistenceDirectory.create(recursive: true);
 
-  final manager = RoomManager(persistenceDirectory: persistenceDirectory);
+  final manager = RoomManager(
+    persistenceDirectory: persistenceDirectory,
+    contentDirectory: contentDirectory,
+  );
   final server = await shelf_io.serve(
     manager.handler,
     InternetAddress.anyIPv4,

@@ -18,6 +18,7 @@ COPY packages/besprotoritsa_data/lib packages/besprotoritsa_data/lib
 COPY packages/besprotoritsa_rules/lib packages/besprotoritsa_rules/lib
 COPY packages/besprotoritsa_server/lib packages/besprotoritsa_server/lib
 COPY packages/besprotoritsa_server/bin packages/besprotoritsa_server/bin
+COPY content content
 
 RUN install -d -o 65532 -g 65532 /out/data \
  && dart compile exe packages/besprotoritsa_server/bin/server.dart -o /out/server
@@ -28,9 +29,11 @@ WORKDIR /app
 
 COPY --from=build --chown=nonroot:nonroot /out/server /app/server
 COPY --from=build --chown=nonroot:nonroot /out/data /data
+COPY --from=build --chown=nonroot:nonroot /app/content /app/content
 
 ENV PORT=8080 \
-    PERSISTENCE_DIRECTORY=/data
+    PERSISTENCE_DIRECTORY=/data \
+    CONTENT_DIRECTORY=/app/content
 
 VOLUME ["/data"]
 EXPOSE 8080

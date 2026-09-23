@@ -6,6 +6,8 @@ import 'dart:typed_data';
 
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
+import 'package:besprotoritsa_server/src/trusted_content_repository.dart';
+import 'package:crypto/crypto.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_web_socket/shelf_web_socket.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -21,15 +23,23 @@ final class RoomManager {
     Random? random,
     DiceRoller Function(GameState state, int revision)? dice,
     Directory? persistenceDirectory,
+    Directory? contentDirectory,
     this.maxRooms = 1000,
     this.maxCommandJournalEntries = 10000,
+    this.maxConnectionsPerRoom = 4,
+    this.roomIdleTtl = const Duration(hours: 12),
+    this.createRateLimit = 10,
+    this.createRateWindow = const Duration(minutes: 1),
   }) : _random = random ?? Random.secure(),
        _dice =
            dice ??
            ((state, revision) => SeededDiceRoller(state.seed ^ revision)),
        _persistence = persistenceDirectory == null
            ? null
-           : FileRoomPersistence(persistenceDirectory) {
+           : FileRoomPersistence(persistenceDirectory),
+       _content = TrustedContentRepository(
+         contentDirectory ?? Directory('content'),
+       ) {
     if (maxRooms < 1) {
       throw ArgumentError.value(maxRooms, 'maxRooms', 'Must be positive.');
     }
@@ -40,13 +50,19 @@ final class RoomManager {
         'Must be positive.',
       );
     }
+    if (maxConnectionsPerRoom < 1 || createRateLimit < 1) {
+      throw ArgumentError('Connection and rate limits must be positive.');
+    }
     _restoreRooms();
   }
 
   final Random _random;
   final DiceRoller Function(GameState state, int revision) _dice;
   final FileRoomPersistence? _persistence;
+  final TrustedContentRepository _content;
   final Map<String, GameRoom> _rooms = <String, GameRoom>{};
+  final Map<String, List<DateTime>> _creationAttempts =
+      <String, List<DateTime>>{};
 
   /// Upper bound for process-local rooms, protecting the server from unlimited
   /// unauthenticated room creation. Completed rooms can be archived separately.
@@ -57,6 +73,18 @@ final class RoomManager {
   /// The journal is embedded in every snapshot, so leaving it unbounded turns
   /// a long-lived room into unbounded memory, disk, and write latency growth.
   final int maxCommandJournalEntries;
+
+  /// Maximum simultaneously open lobby/game sockets for one room.
+  final int maxConnectionsPerRoom;
+
+  /// Inactive rooms are archived and cannot accept new players after this.
+  final Duration roomIdleTtl;
+
+  /// Fixed-window protection for unauthenticated room creation.
+  final int createRateLimit;
+
+  /// Duration of the room-creation rate-limit window.
+  final Duration createRateWindow;
 
   /// Creates a room with a collision-free 128-bit uppercase invite code.
   GameRoom createRoom({required GameState state, bool started = false}) {
@@ -85,10 +113,30 @@ final class RoomManager {
       persistence: _persistence,
       started: started,
       maxCommandJournalEntries: maxCommandJournalEntries,
+      maxConnections: maxConnectionsPerRoom,
+      idleTtl: roomIdleTtl,
     );
     _rooms[code] = room;
     room.persist();
     return room;
+  }
+
+  /// Creates a game from a trusted server content set and CSPRNG entropy.
+  ///
+  /// No client-controlled state reaches the reducer through this entrypoint.
+  GameRoom createAuthoritativeRoom({
+    required String contentSetId,
+    required int partySize,
+    required Map<String, Object?> mode,
+  }) {
+    final seed = _random.nextInt(0x7fffffff);
+    final state = _content.createGame(
+      contentSetId: contentSetId,
+      partySize: partySize,
+      mode: mode,
+      seed: seed,
+    );
+    return createRoom(state: state);
   }
 
   /// Restores every complete room snapshot found in the persistence directory.
@@ -112,7 +160,10 @@ final class RoomManager {
         readyParticipantIds: snapshot.readyParticipantIds,
         revision: snapshot.revision,
         started: snapshot.started,
+        prngState: snapshot.prngState,
         maxCommandJournalEntries: maxCommandJournalEntries,
+        maxConnections: maxConnectionsPerRoom,
+        idleTtl: roomIdleTtl,
       );
     }
   }
@@ -122,11 +173,12 @@ final class RoomManager {
 
   /// Shelf handler for room creation and game/lobby WebSockets.
   ///
-  /// The participant id is supplied as the required `participantId` query
-  /// parameter. A participant reconnects to their previously assigned hero.
+  /// New clients authenticate in their first WebSocket message. The legacy
+  /// participant-id query is accepted only for token-free local integrations.
   Handler get handler => _route;
 
   FutureOr<Response> _route(Request request) async {
+    _archiveExpiredRooms();
     if (request.method == 'OPTIONS') {
       return Response(204, headers: _corsHeaders);
     }
@@ -151,12 +203,31 @@ final class RoomManager {
         }
         final decoded = jsonDecode(await _readBoundedRequest(request));
         if (decoded is! Map<Object?, Object?>) {
-          return Response(400, body: 'Room state must be a JSON object.');
+          return Response(400, body: 'Room request must be a JSON object.');
         }
-        final room = createRoom(
-          state: GameStateJsonCodec().fromJson(
-            decoded.map((key, value) => MapEntry(key.toString(), value)),
-          ),
+        final source = _requestSource(request);
+        if (!_allowCreation(source)) {
+          return Response(429, body: 'Too many room creation requests.');
+        }
+        final document = decoded.map(
+          (key, value) => MapEntry(key.toString(), value),
+        );
+        const allowedRoomFields = <String>{
+          'contentSetId',
+          'partySize',
+          'mode',
+        };
+        if (document.keys.any((key) => !allowedRoomFields.contains(key))) {
+          throw const FormatException(
+            'Room request contains an unknown field.',
+          );
+        }
+        final room = createAuthoritativeRoom(
+          contentSetId: _requiredString(document, 'contentSetId'),
+          partySize: _requiredInt(document, 'partySize'),
+          mode: document['mode'] == null
+              ? const <String, Object?>{}
+              : _object(document, 'mode'),
         );
         return Response.ok(
           jsonEncode(<String, String>{'roomCode': room.code}),
@@ -180,26 +251,93 @@ final class RoomManager {
     if (segments.isEmpty || segments.first != 'rooms') {
       return Response.notFound('Expected POST /rooms or a room WebSocket.');
     }
-    final participantId = request.url.queryParameters['participantId'];
-    if (!_isValidParticipantId(participantId)) {
-      return Response(400, body: 'participantId must be 1..128 characters.');
-    }
     if (segments.length == 4 && segments[2] == 'lobby' && segments[3] == 'ws') {
+      final participantId = request.url.queryParameters['participantId'];
+      if (participantId == null) {
+        return _authenticatedSocket(segments[1], lobby: true)(request);
+      }
+      if (!_isValidParticipantId(participantId)) {
+        return Response(400, body: 'participantId must be 1..128 characters.');
+      }
       return handlerForLobby(
         roomCode: segments[1],
-        participantId: participantId!,
-        reconnectToken: request.url.queryParameters['reconnectToken'],
+        participantId: participantId,
       )(request);
     }
     if (segments.length != 3 || segments[2] != 'ws') {
       return Response.notFound('Expected /rooms/<code>/(lobby/)ws.');
     }
+    final participantId = request.url.queryParameters['participantId'];
+    if (participantId == null) {
+      return _authenticatedSocket(segments[1])(request);
+    }
+    if (!_isValidParticipantId(participantId)) {
+      return Response(400, body: 'participantId must be 1..128 characters.');
+    }
     return handlerForRoom(
       roomCode: segments[1],
-      participantId: participantId!,
-      reconnectToken: request.url.queryParameters['reconnectToken'],
+      participantId: participantId,
     )(request);
   }
+
+  /// Authenticates a socket with its first message, so bearer tokens never
+  /// appear in URLs, reverse-proxy logs, browser history, or referrers.
+  Handler _authenticatedSocket(String roomCode, {bool lobby = false}) =>
+      webSocketHandler((channel, protocol) {
+        final remaining = StreamController<Object?>();
+        var authenticated = false;
+        channel.stream.listen(
+          (Object? raw) {
+            if (authenticated) {
+              remaining.add(raw);
+              return;
+            }
+            try {
+              final auth = _jsonObject(raw);
+              if (auth['type'] != 'authenticate') {
+                channel.sink.close(4003, 'Authenticate first.');
+                return;
+              }
+              final participantId = _requiredString(auth, 'participantId');
+              final token = auth['reconnectToken'];
+              if (token != null && token is! String) {
+                throw const FormatException('reconnectToken must be a string.');
+              }
+              if (lobby) {
+                final room = this.room(roomCode);
+                if (room == null) {
+                  channel.sink.close(4004, 'Unknown room.');
+                } else {
+                  room.connectLobby(
+                    channel,
+                    participantId,
+                    reconnectToken: token as String?,
+                    messages: remaining.stream,
+                  );
+                }
+              } else {
+                final room = this.room(roomCode);
+                if (room == null) {
+                  channel.sink.close(4004, 'Unknown room.');
+                } else {
+                  room.connect(
+                    channel,
+                    participantId,
+                    reconnectToken: token as String?,
+                    messages: remaining.stream,
+                  );
+                }
+              }
+              authenticated = true;
+            } on FormatException catch (error) {
+              channel.sink.close(4003, error.message);
+            }
+          },
+          onDone: remaining.close,
+          onError: remaining.addError,
+          cancelOnError: true,
+        );
+      });
 
   /// Returns a handler for one room and participant, suitable for mounting at
   /// any application-specific route.
@@ -211,7 +349,7 @@ final class RoomManager {
     return webSocketHandler((channel, protocol) {
       final room = this.room(roomCode);
       if (room == null) {
-        channel.sink.close(1008, 'Unknown room.');
+        channel.sink.close(4004, 'Unknown room.');
         return;
       }
       room.connect(channel, participantId, reconnectToken: reconnectToken);
@@ -226,7 +364,7 @@ final class RoomManager {
   }) => webSocketHandler((channel, protocol) {
     final room = this.room(roomCode);
     if (room == null) {
-      channel.sink.close(1008, 'Unknown room.');
+      channel.sink.close(4004, 'Unknown room.');
       return;
     }
     room.connectLobby(channel, participantId, reconnectToken: reconnectToken);
@@ -236,6 +374,25 @@ final class RoomManager {
     16,
     (_) => _random.nextInt(256).toRadixString(16).padLeft(2, '0'),
   ).join().toUpperCase();
+
+  String _requestSource(Request request) =>
+      request.headers['x-forwarded-for'] ?? 'anonymous';
+
+  bool _allowCreation(String source) {
+    final now = DateTime.now().toUtc();
+    final attempts = _creationAttempts.putIfAbsent(source, () => <DateTime>[])
+      ..removeWhere((attempt) => now.difference(attempt) > createRateWindow);
+    if (attempts.length >= createRateLimit) return false;
+    attempts.add(now);
+    return true;
+  }
+
+  void _archiveExpiredRooms() {
+    final now = DateTime.now().toUtc();
+    for (final room in _rooms.values) {
+      room.archiveIfExpired(now);
+    }
+  }
 }
 
 const Map<String, String> _corsHeaders = <String, String>{
@@ -297,12 +454,15 @@ final class GameRoom {
     required Random random,
     required FileRoomPersistence? persistence,
     required int maxCommandJournalEntries,
+    required int maxConnections,
+    required Duration idleTtl,
     Map<String, _Participant> participants = const <String, _Participant>{},
     Set<String> processedCommandIds = const <String>{},
     List<Map<String, Object?>> commandJournal = const <Map<String, Object?>>[],
     Set<String> readyParticipantIds = const <String>{},
     int revision = 0,
     bool started = false,
+    int? prngState,
   }) : _state = state,
        _diceFactory = diceFactory,
        _random = random,
@@ -313,7 +473,10 @@ final class GameRoom {
        _readyParticipantIds = Set<String>.from(readyParticipantIds),
        _revision = revision,
        _started = started,
-       _maxCommandJournalEntries = maxCommandJournalEntries;
+       _prngState = prngState ?? state.seed,
+       _maxCommandJournalEntries = maxCommandJournalEntries,
+       _maxConnections = maxConnections,
+       _idleTtl = idleTtl;
 
   /// Stable public join code.
   final String code;
@@ -325,10 +488,15 @@ final class GameRoom {
   final List<Map<String, Object?>> _commandJournal;
   final Set<String> _readyParticipantIds;
   final int _maxCommandJournalEntries;
+  final int _maxConnections;
+  final Duration _idleTtl;
 
   GameState _state;
   int _revision;
   bool _started;
+  int _prngState;
+  bool _archived = false;
+  DateTime _lastActivity = DateTime.now().toUtc();
 
   /// Current state revision. It changes only after an accepted command.
   int get revision => _revision;
@@ -336,6 +504,16 @@ final class GameRoom {
   /// Current authoritative state. Callers must not send this to clients;
   /// [projectFor] is applied for every outbound state message.
   GameState get state => _state;
+
+  /// Whether the immutable room record has outlived its active lifecycle.
+  bool get isArchived => _archived;
+
+  /// Archives an inactive room while retaining its snapshot for audit/replay.
+  void archiveIfExpired(DateTime now) {
+    if (_archived || now.difference(_lastActivity) < _idleTtl) return;
+    _archived = true;
+    persist();
+  }
 
   /// Connects [participantId], assigning an unclaimed hero on first connect.
   ///
@@ -346,19 +524,30 @@ final class GameRoom {
     WebSocketChannel channel,
     String participantId, {
     String? reconnectToken,
+    Stream<Object?>? messages,
   }) {
     if (!_isValidParticipantId(participantId)) {
-      channel.sink.close(1008, 'participantId must be 1..128 characters.');
+      channel.sink.close(4003, 'participantId must be 1..128 characters.');
       return;
     }
 
+    if (_archived) {
+      channel.sink.close(4003, 'The room has expired.');
+      return;
+    }
     if (!_started) {
-      channel.sink.close(1008, 'The room has not started yet.');
+      channel.sink.close(4003, 'The room has not started yet.');
       return;
     }
     final participant = _authenticate(participantId, reconnectToken);
     if (participant == null) {
-      channel.sink.close(1008, 'Invalid reconnect token or no heroes remain.');
+      channel.sink.close(4003, 'Invalid reconnect token or no heroes remain.');
+      return;
+    }
+
+    if (_connectedSocketCount >= _maxConnections &&
+        participant.channel == null) {
+      channel.sink.close(4008, 'Room connection limit reached.');
       return;
     }
 
@@ -377,14 +566,18 @@ final class GameRoom {
     );
     _sendState(participant);
 
-    channel.stream.listen(
+    (messages ?? channel.stream).listen(
       (Object? message) => _onMessage(participant, message),
       onDone: () {
-        if (identical(participant.channel, channel)) participant.channel = null;
+        if (identical(participant.channel, channel)) {
+          participant.channel = null;
+          _touch();
+        }
       },
       onError: (_, _) {
         if (identical(participant.channel, channel)) {
           participant.channel = null;
+          _touch();
         }
       },
     );
@@ -395,16 +588,27 @@ final class GameRoom {
     WebSocketChannel channel,
     String participantId, {
     String? reconnectToken,
+    Stream<Object?>? messages,
   }) {
+    if (_archived) {
+      channel.sink.close(4003, 'The room has expired.');
+      return;
+    }
     if (!_isValidParticipantId(participantId)) {
-      channel.sink.close(1008, 'participantId must be 1..128 characters.');
+      channel.sink.close(4003, 'participantId must be 1..128 characters.');
       return;
     }
     final participant = _authenticate(participantId, reconnectToken);
     if (participant == null) {
-      channel.sink.close(1008, 'Invalid reconnect token or no heroes remain.');
+      channel.sink.close(4003, 'Invalid reconnect token or no heroes remain.');
       return;
     }
+    if (_connectedSocketCount >= _maxConnections &&
+        participant.lobbyChannel == null) {
+      channel.sink.close(4008, 'Room connection limit reached.');
+      return;
+    }
+    _touch();
     participant.lobbyChannel?.sink.close(1000, 'Reconnected elsewhere.');
     participant.lobbyChannel = channel;
     participant.lobbyChannel!.sink.add(
@@ -416,12 +620,13 @@ final class GameRoom {
       }),
     );
     _broadcastLobby();
-    channel.stream.listen(
+    (messages ?? channel.stream).listen(
       (Object? message) => _onLobbyMessage(participant, message),
       onDone: () {
         if (identical(participant.lobbyChannel, channel)) {
           participant.lobbyChannel = null;
           _readyParticipantIds.remove(participant.id);
+          _touch();
           persist();
           _broadcastLobby();
         }
@@ -434,6 +639,7 @@ final class GameRoom {
     try {
       _rejectOversizedSocketMessage(message);
       final envelope = _jsonObject(message);
+      _touch();
       if (_started) {
         _sendLobbyError(participant, 'The room has already started.');
         return;
@@ -467,7 +673,7 @@ final class GameRoom {
       }
     } on RequestTooLarge catch (error) {
       _sendLobbyError(participant, error.message);
-      participant.lobbyChannel?.sink.close(1009, error.message);
+      participant.lobbyChannel?.sink.close(4009, error.message);
     } on FormatException catch (error) {
       _sendLobbyError(participant, error.message);
     }
@@ -534,10 +740,12 @@ final class GameRoom {
       }
     }
     if (hero == null) return null;
+    final reconnectToken = _newReconnectToken();
     final participant = _Participant(
       id: participantId,
       heroId: hero.id,
-      reconnectToken: _newReconnectToken(),
+      reconnectTokenHash: _tokenHash(reconnectToken),
+      reconnectToken: reconnectToken,
     );
     _participants[participantId] = participant;
     persist();
@@ -547,7 +755,8 @@ final class GameRoom {
   _Participant? _authenticate(String participantId, String? reconnectToken) {
     if (reconnectToken != null && reconnectToken.isNotEmpty) {
       for (final participant in _participants.values) {
-        if (participant.reconnectToken == reconnectToken) {
+        if (participant.matchesReconnectToken(reconnectToken)) {
+          participant.reconnectToken = reconnectToken;
           return participant.id == participantId ? participant : null;
         }
       }
@@ -559,11 +768,22 @@ final class GameRoom {
 
   String _newReconnectToken() => List<String>.generate(
     32,
-    (_) => _random.nextInt(16).toRadixString(16),
+    (_) => _random.nextInt(256).toRadixString(16).padLeft(2, '0'),
   ).join();
+
+  int get _connectedSocketCount => _participants.values.fold(
+    0,
+    (count, participant) =>
+        count +
+        (participant.channel == null ? 0 : 1) +
+        (participant.lobbyChannel == null ? 0 : 1),
+  );
+
+  void _touch() => _lastActivity = DateTime.now().toUtc();
 
   void _onMessage(_Participant participant, Object? message) {
     try {
+      _touch();
       _rejectOversizedSocketMessage(message);
       final envelope = _jsonObject(message);
       if (envelope['type'] != 'command') {
@@ -631,6 +851,7 @@ final class GameRoom {
         return;
       }
       final nextRevision = _revision + 1;
+      final nextPrngState = _advancePrng(_prngState);
       final journalEntry = <String, Object?>{
         'revision': nextRevision,
         'participantId': participant.id,
@@ -638,30 +859,27 @@ final class GameRoom {
         'commandId': commandId,
         'command': commandJson,
       };
-      try {
-        _saveSnapshot(
-          state: result.state,
-          revision: nextRevision,
-          processedCommandIds: <String>{..._processedCommandIds, commandKey},
-          commandJournal: <Map<String, Object?>>[
-            ..._commandJournal,
-            journalEntry,
-          ],
-          readyParticipantIds: _readyParticipantIds,
-          started: _started,
-        );
-      } on FileSystemException catch (_) {
-        _sendError(participant, 'Could not persist room state.');
-        return;
-      }
+      _saveSnapshot(
+        state: result.state,
+        revision: nextRevision,
+        processedCommandIds: <String>{..._processedCommandIds, commandKey},
+        commandJournal: <Map<String, Object?>>[
+          ..._commandJournal,
+          journalEntry,
+        ],
+        readyParticipantIds: _readyParticipantIds,
+        started: _started,
+        prngState: nextPrngState,
+      );
       _state = result.state;
       _revision = nextRevision;
+      _prngState = nextPrngState;
       _processedCommandIds.add(commandKey);
       _commandJournal.add(journalEntry);
       _broadcastState(result.events);
     } on RequestTooLarge catch (error) {
       _sendError(participant, error.message);
-      participant.channel?.sink.close(1009, error.message);
+      participant.channel?.sink.close(4009, error.message);
     } on FormatException catch (error) {
       _sendError(participant, error.message);
       // Command constructors reject malformed numeric values with
@@ -704,6 +922,7 @@ final class GameRoom {
         'state': _projectedStateToJson(
           projectFor(_state, participant.heroId),
           participant.heroId,
+          _state,
         ),
         'events': events
             .where(
@@ -738,6 +957,7 @@ final class GameRoom {
     commandJournal: _commandJournal,
     readyParticipantIds: _readyParticipantIds,
     started: _started,
+    prngState: _prngState,
   );
 
   void _saveSnapshot({
@@ -747,6 +967,7 @@ final class GameRoom {
     required List<Map<String, Object?>> commandJournal,
     required Set<String> readyParticipantIds,
     required bool started,
+    required int prngState,
   }) {
     _persistence?._save(
       _RoomSnapshot(
@@ -758,31 +979,40 @@ final class GameRoom {
         commandJournal: commandJournal,
         readyParticipantIds: readyParticipantIds,
         started: started,
+        prngState: prngState,
       ),
     );
   }
+
+  int _advancePrng(int current) => (current * 1103515245 + 12345) & 0x7fffffff;
 }
 
 final class _Participant {
   _Participant({
     required this.id,
     required this.heroId,
-    required this.reconnectToken,
+    required this.reconnectTokenHash,
+    this.reconnectToken,
   });
 
   final String id;
   PlayerId heroId;
-  final String reconnectToken;
+
+  /// SHA-256 digest persisted at rest; the bearer token itself is ephemeral.
+  final String reconnectTokenHash;
+  String? reconnectToken;
   WebSocketChannel? channel;
   WebSocketChannel? lobbyChannel;
+
+  bool matchesReconnectToken(String token) =>
+      _constantTimeEquals(_tokenHash(token), reconnectTokenHash);
 }
 
-/// Synchronous, file-backed storage for server-owned room snapshots.
+/// Queued file-backed storage for server-owned room snapshots.
 ///
-/// The game loop writes a complete snapshot and complete command journal to
-/// temporary sibling files, flushes them, then renames them into place. A
-/// retained previous snapshot provides a recovery fallback if a filesystem or
-/// host interrupts a replacement at an unfortunate moment.
+/// Mutations enqueue a compact journal append and an atomic snapshot write,
+/// keeping socket handling independent from filesystem latency. A retained
+/// previous snapshot provides a recovery fallback after an interrupted write.
 final class FileRoomPersistence {
   /// Creates persistence rooted at [directory].
   FileRoomPersistence(Directory directory)
@@ -793,9 +1023,16 @@ final class FileRoomPersistence {
 
   final Directory _directory;
   final GameStateJsonCodec _codec;
+  Future<void> _writeQueue = Future<void>.value();
+  final Map<String, int> _journalOffsets = <String, int>{};
 
-  /// Writes an authoritative snapshot and its command journal atomically.
+  /// Enqueues an authoritative snapshot without blocking the room loop.
   void _save(_RoomSnapshot snapshot) {
+    _writeQueue = _writeQueue.then((_) => _saveSynchronously(snapshot));
+  }
+
+  void _saveSynchronously(_RoomSnapshot snapshot) {
+    _appendNewJournalEntries(snapshot);
     final encodedJournal = jsonEncode(<String, Object?>{
       'roomCode': snapshot.code,
       'commands': snapshot.commandJournal,
@@ -804,13 +1041,14 @@ final class FileRoomPersistence {
       'version': 1,
       'roomCode': snapshot.code,
       'revision': snapshot.revision,
+      'prngState': snapshot.prngState,
       'state': _codec.toJson(snapshot.state),
       'participants': snapshot.participants.values
           .map(
             (participant) => <String, String>{
               'participantId': participant.id,
               'heroId': participant.heroId,
-              'reconnectToken': participant.reconnectToken,
+              'reconnectTokenHash': participant.reconnectTokenHash,
             },
           )
           .toList(),
@@ -823,6 +1061,18 @@ final class FileRoomPersistence {
     });
     _writeAtomically(_journalFile(snapshot.code), encodedJournal);
     _writeAtomically(_snapshotFile(snapshot.code), encodedSnapshot);
+  }
+
+  void _appendNewJournalEntries(_RoomSnapshot snapshot) {
+    final offset = _journalOffsets[snapshot.code] ?? 0;
+    if (offset >= snapshot.commandJournal.length) return;
+    final file = _incrementalJournalFile(snapshot.code);
+    final additions = snapshot.commandJournal
+        .skip(offset)
+        .map(jsonEncode)
+        .join('\n');
+    file.writeAsStringSync('$additions\n', mode: FileMode.append, flush: true);
+    _journalOffsets[snapshot.code] = snapshot.commandJournal.length;
   }
 
   /// Reads the latest valid snapshot for every room. Invalid files are skipped
@@ -856,6 +1106,8 @@ final class FileRoomPersistence {
   File _snapshotFile(String code) => File('${_directory.path}/$code.room.json');
   File _journalFile(String code) =>
       File('${_directory.path}/$code.commands.json');
+  File _incrementalJournalFile(String code) =>
+      File('${_directory.path}/$code.commands.ndjson');
   File _backupFile(String code) => File('${_snapshotFile(code).path}.bak');
 
   _RoomSnapshot _decodeSnapshot(String source) {
@@ -866,6 +1118,7 @@ final class FileRoomPersistence {
     final json = raw.map((key, value) => MapEntry(key.toString(), value));
     final code = _requiredString(json, 'roomCode');
     final revision = _requiredInt(json, 'revision');
+    final prngState = json['prngState'];
     final state = _codec.fromJson(_object(json, 'state'));
     final participants = <String, _Participant>{};
     final participantJson = json['participants'];
@@ -878,7 +1131,7 @@ final class FileRoomPersistence {
       participants[id] = _Participant(
         id: id,
         heroId: _requiredString(participant, 'heroId'),
-        reconnectToken: _requiredString(participant, 'reconnectToken'),
+        reconnectTokenHash: _participantTokenHash(participant),
       );
     }
     final processed = json['processedCommandIds'];
@@ -900,6 +1153,7 @@ final class FileRoomPersistence {
       code: code,
       state: state,
       revision: revision,
+      prngState: prngState is int ? prngState : state.seed,
       participants: participants,
       processedCommandIds: _migrateProcessedCommandIds(
         processed,
@@ -952,11 +1206,32 @@ final class FileRoomPersistence {
   }
 }
 
+String _participantTokenHash(Map<String, Object?> participant) {
+  final storedHash = participant['reconnectTokenHash'];
+  if (storedHash is String && storedHash.isNotEmpty) return storedHash;
+  // One-time migration from snapshots created before tokens were protected at
+  // rest. The next persistence pass removes the raw legacy field.
+  return _tokenHash(_requiredString(participant, 'reconnectToken'));
+}
+
+String _tokenHash(String token) =>
+    sha256.convert(utf8.encode(token)).toString();
+
+bool _constantTimeEquals(String left, String right) {
+  if (left.length != right.length) return false;
+  var mismatch = 0;
+  for (var index = 0; index < left.length; index++) {
+    mismatch |= left.codeUnitAt(index) ^ right.codeUnitAt(index);
+  }
+  return mismatch == 0;
+}
+
 final class _RoomSnapshot {
   const _RoomSnapshot({
     required this.code,
     required this.state,
     required this.revision,
+    required this.prngState,
     required this.participants,
     required this.processedCommandIds,
     required this.readyParticipantIds,
@@ -967,6 +1242,7 @@ final class _RoomSnapshot {
   final String code;
   final GameState state;
   final int revision;
+  final int prngState;
   final Map<String, _Participant> participants;
   final Set<String> processedCommandIds;
   final Set<String> readyParticipantIds;
@@ -1212,12 +1488,15 @@ DecisionChoice _choiceFromJson(Map<String, Object?> json) {
 Map<String, Object?> _projectedStateToJson(
   PlayerGameState state,
   PlayerId viewerId,
+  GameState fullState,
 ) => <String, Object?>{
+  'wireVersion': 1,
   'schemaVersion': state.schemaVersion,
   'round': state.round,
   'phase': state.phase.name,
   'activePlayerId': state.activePlayerId,
   'actionsLeft': state.actionsLeft,
+  'isComplete': fullState.isComplete,
   'board': state.board.map(_projectedTileToJson).toList(),
   'players': state.players.map(_projectedPlayerToJson).toList(),
   'monsters': state.monsters.map(_monsterToJson).toList(),
@@ -1226,8 +1505,22 @@ Map<String, Object?> _projectedStateToJson(
       entry.key: entry.value.cardsRemaining,
   },
   'quests': {
-    'storyQuestIds': state.quests.storyQuestIds,
-    'personalTasks': state.quests.personalTasks,
+    'story': state.quests.storyQuestIds
+        .map(
+          (id) => <String, String>{
+            'id': id,
+            'status': fullState.quests.statusOf(id).name,
+          },
+        )
+        .toList(),
+    'personal': state.quests.personalTasks
+        .map(
+          (id) => <String, String>{
+            'id': id,
+            'status': fullState.quests.statusOf(id).name,
+          },
+        )
+        .toList(),
     'hiddenPersonalTaskCounts': state.quests.hiddenPersonalTaskCounts,
   },
   'log': const <String>[],

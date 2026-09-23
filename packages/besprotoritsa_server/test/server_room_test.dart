@@ -43,6 +43,37 @@ void main() {
     expect(await response.transform(utf8.decoder).join(), 'ok\n');
   });
 
+  test('creates a room only from trusted content parameters', () async {
+    final client = HttpClient();
+    addTearDown(client.close);
+    final endpoint = Uri(
+      scheme: 'http',
+      host: InternetAddress.loopbackIPv4.address,
+      port: server.port,
+      path: '/rooms',
+    );
+    final request = await client.postUrl(endpoint);
+    request.headers.contentType = ContentType.json;
+    request.write(
+      jsonEncode(<String, Object?>{
+        'contentSetId': 'mvp',
+        'partySize': 2,
+        'mode': <String, Object?>{'difficulty': 'normal'},
+      }),
+    );
+    final response = await request.close();
+
+    expect(response.statusCode, HttpStatus.ok);
+    final created = Map<String, Object?>.from(
+      jsonDecode(await response.transform(utf8.decoder).join()) as Map,
+    );
+    final code = created['roomCode']! as String;
+    final authoritative = manager.room(code);
+    expect(authoritative, isNotNull);
+    expect(authoritative!.state.players, hasLength(2));
+    expect(authoritative.state.seed, isNot(0));
+  });
+
   test('rejects an invalid posted card definition with bad request', () async {
     final document = GameStateJsonCodec().toJson(_twoHeroState())
       ..['card_definitions'] = <String, Object?>{

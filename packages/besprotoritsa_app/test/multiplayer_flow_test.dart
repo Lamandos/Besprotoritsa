@@ -69,6 +69,12 @@ void main() {
         const HexCoord(0, 1),
       );
       expect(adaController.isWaitingForConfirmation, isFalse);
+      await _until(
+        () => ada.read(eventQueueProvider).history.length == 2,
+      );
+      await _until(
+        () => boris.read(eventQueueProvider).history.length == 2,
+      );
       expect(ada.read(eventQueueProvider).history, hasLength(2));
       expect(boris.read(eventQueueProvider).history, hasLength(2));
     },

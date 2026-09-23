@@ -35,6 +35,7 @@ final class ProjectedGameStateCodec {
     ),
     quests: _quests(_object(json, 'quests')),
     log: _strings(json['log']),
+    isComplete: json['isComplete'] == true,
     pendingDecision: _pendingDecision(json['pendingDecision']),
   );
 
@@ -107,9 +108,21 @@ final class ProjectedGameStateCodec {
     carriedGear: _strings(json['carriedGear']),
   );
 
-  QuestState _quests(Map<String, Object?> json) => QuestState(
-    storyQuestIds: _strings(json['storyQuestIds']),
-  );
+  QuestState _quests(Map<String, Object?> json) {
+    final story = _questEntries(json['story'] ?? json['storyQuestIds']);
+    final personal = _questEntries(json['personal'] ?? json['personalTasks']);
+    return QuestState(
+      storyQuestIds: story.map((entry) => entry.id),
+      // This codec is a presentation adapter for the existing shared UI. The
+      // typed wire model remains the source of network truth; never infer
+      // another player's personal tasks here.
+      personalTasksByPlayer: const <String, List<String>>{},
+      statuses: <String, QuestStatus>{
+        for (final entry in <_QuestEntry>[...story, ...personal])
+          entry.id: entry.status,
+      },
+    );
+  }
 
   PendingDecision? _pendingDecision(Object? raw) {
     if (raw == null) return null;
@@ -140,6 +153,30 @@ final class ProjectedGameStateCodec {
       _ => null,
     };
   }
+}
+
+final class _QuestEntry {
+  const _QuestEntry(this.id, this.status);
+
+  final String id;
+  final QuestStatus status;
+}
+
+List<_QuestEntry> _questEntries(Object? raw) {
+  if (raw is! List<Object?>) return const <_QuestEntry>[];
+  if (raw.every((entry) => entry is String)) {
+    return raw
+        .cast<String>()
+        .map((id) => _QuestEntry(id, QuestStatus.active))
+        .toList();
+  }
+  return raw.map((entry) {
+    final json = _map(entry);
+    return _QuestEntry(
+      _string(json, 'id'),
+      QuestStatus.values.byName(_string(json, 'status')),
+    );
+  }).toList();
 }
 
 Map<String, Object?> _map(Object? value) {
