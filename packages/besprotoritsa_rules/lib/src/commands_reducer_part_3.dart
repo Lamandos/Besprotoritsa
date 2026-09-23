@@ -22,7 +22,7 @@ bool _isActionCommand(GameCommand command) =>
 GameState _applyInventoryCommand(GameState state, GameCommand command) {
   final player = _activePlayer(state);
   if (player == null) {
-    throw InventoryRuleViolation('There is no active player.');
+    throw const InventoryRuleViolation('There is no active player.');
   }
   final definitions = state.cardDefinitions;
   final updated = switch (command) {

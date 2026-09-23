@@ -406,6 +406,7 @@ const Map<String, String> _corsHeaders = <String, String>{
 
 const int _maxRoomRequestBytes = 1024 * 1024;
 const int _maxWebSocketMessageCharacters = 64 * 1024;
+const int _maxQueuedRoomMessages = 32;
 const int _maxParticipantIdCharacters = 128;
 
 Future<String> _readBoundedRequest(Request request) async {
@@ -501,6 +502,7 @@ final class GameRoom {
   bool _archived = false;
   DateTime _lastActivity = DateTime.now().toUtc();
   Future<void> _messageQueue = Future<void>.value();
+  int _pendingMessageCount = 0;
 
   /// Current state revision. It changes only after an accepted command.
   int get revision => _revision;
@@ -786,9 +788,27 @@ final class GameRoom {
   void _touch() => _lastActivity = DateTime.now().toUtc();
 
   void _onMessage(_Participant participant, Object? message) {
-    final operation = _messageQueue.then(
-      (_) => _handleMessage(participant, message),
-    );
+    try {
+      _rejectOversizedSocketMessage(message);
+    } on RequestTooLarge catch (error) {
+      _sendError(participant, error.message);
+      unawaited(participant.channel?.sink.close(4009, error.message));
+      return;
+    }
+    if (_pendingMessageCount >= _maxQueuedRoomMessages) {
+      const reason = 'Too many pending room messages.';
+      _sendError(participant, reason);
+      unawaited(participant.channel?.sink.close(4008, reason));
+      return;
+    }
+    _pendingMessageCount++;
+    final operation = _messageQueue.then((_) async {
+      try {
+        await _handleMessage(participant, message);
+      } finally {
+        _pendingMessageCount--;
+      }
+    });
     _messageQueue = operation.catchError((Object error, StackTrace stack) {
       _sendError(participant, 'Room command failed: $error');
     });
@@ -1002,6 +1022,7 @@ final class GameRoom {
         processedCommandIds: processedCommandIds,
         commandJournal: commandJournal,
         journalEntryCount: commandJournal.length,
+        hasJournalEntryCount: true,
         readyParticipantIds: readyParticipantIds,
         started: started,
         prngState: prngState,
@@ -1091,7 +1112,7 @@ final class FileRoomPersistence {
       await _writeAtomically(_snapshotFile(snapshot.code), encodedSnapshot);
     } on Object {
       if (await journalFile.exists()) {
-        final handle = await journalFile.open(mode: FileMode.writeOnly);
+        final handle = await journalFile.open(mode: FileMode.append);
         await handle.truncate(originalLength);
         await handle.close();
       }
@@ -1177,6 +1198,7 @@ final class FileRoomPersistence {
     final ready = json['readyParticipantIds'];
     final journalValue = json['commandJournal'];
     final journal = journalValue ?? const <Object?>[];
+    final hasJournalEntryCount = json.containsKey('journalEntryCount');
     final journalEntryCount =
         json['journalEntryCount'] ??
         (journal is List<Object?> ? journal.length : null);
@@ -1212,6 +1234,7 @@ final class FileRoomPersistence {
       }).toSet(),
       commandJournal: commandJournal,
       journalEntryCount: journalEntryCount,
+      hasJournalEntryCount: hasJournalEntryCount,
       started: started,
     );
   }
@@ -1243,7 +1266,23 @@ final class FileRoomPersistence {
 
   _RoomSnapshot _restoreJournal(_RoomSnapshot snapshot) {
     final file = _incrementalJournalFile(snapshot.code);
+    if (!snapshot.hasJournalEntryCount) {
+      // Legacy snapshots embed the authoritative journal; old NDJSON files
+      // could contain duplicate entries from process-local offset resets.
+      final contents = snapshot.commandJournal.map(jsonEncode).join('\n');
+      file.writeAsStringSync(
+        contents.isEmpty ? '' : '$contents\n',
+        flush: true,
+      );
+      _journalOffsets[snapshot.code] = snapshot.commandJournal.length;
+      return snapshot;
+    }
     if (snapshot.journalEntryCount == 0) {
+      if (file.existsSync() && file.lengthSync() > 0) {
+        file.openSync(mode: FileMode.append)
+          ..truncateSync(0)
+          ..closeSync();
+      }
       _journalOffsets[snapshot.code] = 0;
       return snapshot;
     }
@@ -1254,18 +1293,32 @@ final class FileRoomPersistence {
       }
       throw const FormatException('Command journal is missing.');
     }
-    final entries = <Map<String, Object?>>[];
-    for (final line in file.readAsLinesSync().take(
-      snapshot.journalEntryCount,
-    )) {
-      if (line.isNotEmpty) entries.add(_jsonObject(jsonDecode(line)));
-    }
+    final lines = file.readAsLinesSync();
+    final committedLines = lines.take(snapshot.journalEntryCount).toList();
+    final entries = committedLines
+        .map<Map<String, Object?>>((line) => _jsonObject(jsonDecode(line)))
+        .toList();
     if (entries.length != snapshot.journalEntryCount) {
       if (snapshot.commandJournal.length == snapshot.journalEntryCount) {
         _journalOffsets[snapshot.code] = 0;
         return snapshot;
       }
       throw const FormatException('Command journal is incomplete.');
+    }
+    final committedContents = '${committedLines.join('\n')}\n';
+    final committedLength = utf8.encode(committedContents).length;
+    final currentContents = file.readAsStringSync();
+    if (currentContents != committedContents) {
+      // Restore runs before the manager begins accepting socket events.
+      if (currentContents.startsWith(committedContents)) {
+        file.openSync(mode: FileMode.append)
+          ..truncateSync(committedLength)
+          ..closeSync();
+      } else if (committedContents.startsWith(currentContents)) {
+        file.writeAsStringSync(committedContents, flush: true);
+      } else {
+        throw const FormatException('Command journal prefix is invalid.');
+      }
     }
     _journalOffsets[snapshot.code] = entries.length;
     return _RoomSnapshot(
@@ -1278,6 +1331,7 @@ final class FileRoomPersistence {
       readyParticipantIds: snapshot.readyParticipantIds,
       commandJournal: entries,
       journalEntryCount: entries.length,
+      hasJournalEntryCount: true,
       started: snapshot.started,
     );
   }
@@ -1328,6 +1382,7 @@ final class _RoomSnapshot {
     required this.readyParticipantIds,
     required this.commandJournal,
     required this.journalEntryCount,
+    required this.hasJournalEntryCount,
     required this.started,
   });
 
@@ -1340,6 +1395,7 @@ final class _RoomSnapshot {
   final Set<String> readyParticipantIds;
   final List<Map<String, Object?>> commandJournal;
   final int journalEntryCount;
+  final bool hasJournalEntryCount;
   final bool started;
 }
 

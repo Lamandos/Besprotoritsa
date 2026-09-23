@@ -14,7 +14,15 @@ Future<String?> readIdentity(String key) async {
 Future<void> writeIdentity(String key, String value) async {
   final file = await _file(key);
   await file.parent.create(recursive: true);
-  await file.writeAsString(value, flush: true);
+  final temporary = File(
+    '${file.path}.tmp-${DateTime.now().microsecondsSinceEpoch}',
+  );
+  try {
+    await temporary.writeAsString(value, flush: true);
+    await temporary.rename(file.path);
+  } finally {
+    if (await temporary.exists()) await temporary.delete();
+  }
 }
 
 Future<File> _file(String key) async {

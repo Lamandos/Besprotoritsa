@@ -65,7 +65,7 @@ CommandRejection? validate(GameState state, GameCommand command) {
         InventoryRules.discard(player, cardId);
       } else if (command case WithdrawFromChestCommand(:final cardId)) {
         if (!state.chestCards.contains(cardId)) {
-          throw InventoryRuleViolation('The card is not in the chest.');
+          throw const InventoryRuleViolation('The card is not in the chest.');
         }
         InventoryRules.receive(player, cardId, state.cardDefinitions);
       }

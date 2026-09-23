@@ -1,6 +1,9 @@
 // API documentation is retained in the original library source.
 // ignore_for_file: public_member_api_docs
 
+// Preserve model constructor parameter order while splitting this library.
+// ignore_for_file: always_put_required_named_parameters_first
+
 part of 'game_state.dart';
 
 sealed class PendingDecision {

@@ -161,7 +161,11 @@ class MultiplayerLobbyClient {
           _reconnectToken = token;
           final persist = onReconnectToken;
           if (persist != null) {
-            _identityWrite = _identityWrite.then((_) => persist(token));
+            _identityWrite = _identityWrite
+                .then((_) => persist(token))
+                .catchError((Object error) {
+                  if (!_snapshots.isClosed) _snapshots.addError(error);
+                });
           }
         }
         return;
