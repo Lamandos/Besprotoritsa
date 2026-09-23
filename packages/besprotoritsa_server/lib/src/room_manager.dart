@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
@@ -21,6 +22,7 @@ final class RoomManager {
     DiceRoller Function(GameState state, int revision)? dice,
     Directory? persistenceDirectory,
     this.maxRooms = 1000,
+    this.maxCommandJournalEntries = 10000,
   }) : _random = random ?? Random.secure(),
        _dice =
            dice ??
@@ -28,6 +30,16 @@ final class RoomManager {
        _persistence = persistenceDirectory == null
            ? null
            : FileRoomPersistence(persistenceDirectory) {
+    if (maxRooms < 1) {
+      throw ArgumentError.value(maxRooms, 'maxRooms', 'Must be positive.');
+    }
+    if (maxCommandJournalEntries < 1) {
+      throw ArgumentError.value(
+        maxCommandJournalEntries,
+        'maxCommandJournalEntries',
+        'Must be positive.',
+      );
+    }
     _restoreRooms();
   }
 
@@ -39,6 +51,12 @@ final class RoomManager {
   /// Upper bound for process-local rooms, protecting the server from unlimited
   /// unauthenticated room creation. Completed rooms can be archived separately.
   final int maxRooms;
+
+  /// Upper bound for the durable idempotency journal of one active room.
+  ///
+  /// The journal is embedded in every snapshot, so leaving it unbounded turns
+  /// a long-lived room into unbounded memory, disk, and write latency growth.
+  final int maxCommandJournalEntries;
 
   /// Creates a room with a collision-free 128-bit uppercase invite code.
   GameRoom createRoom({required GameState state, bool started = false}) {
@@ -66,6 +84,7 @@ final class RoomManager {
       random: _random,
       persistence: _persistence,
       started: started,
+      maxCommandJournalEntries: maxCommandJournalEntries,
     );
     _rooms[code] = room;
     room.persist();
@@ -93,6 +112,7 @@ final class RoomManager {
         readyParticipantIds: snapshot.readyParticipantIds,
         revision: snapshot.revision,
         started: snapshot.started,
+        maxCommandJournalEntries: maxCommandJournalEntries,
       );
     }
   }
@@ -129,7 +149,7 @@ final class RoomManager {
             when length > _maxRoomRequestBytes) {
           return Response(413, body: 'Room state is too large.');
         }
-        final decoded = jsonDecode(await request.readAsString());
+        final decoded = jsonDecode(await _readBoundedRequest(request));
         if (decoded is! Map<Object?, Object?>) {
           return Response(400, body: 'Room state must be a JSON object.');
         }
@@ -153,19 +173,21 @@ final class RoomManager {
         return Response(400, body: error.message?.toString());
       } on RoomCapacityExceeded catch (error) {
         return Response(503, body: error.message);
+      } on RequestTooLarge catch (error) {
+        return Response(413, body: error.message);
       }
     }
     if (segments.isEmpty || segments.first != 'rooms') {
       return Response.notFound('Expected POST /rooms or a room WebSocket.');
     }
     final participantId = request.url.queryParameters['participantId'];
-    if (participantId == null || participantId.isEmpty) {
-      return Response(400, body: 'participantId is required.');
+    if (!_isValidParticipantId(participantId)) {
+      return Response(400, body: 'participantId must be 1..128 characters.');
     }
     if (segments.length == 4 && segments[2] == 'lobby' && segments[3] == 'ws') {
       return handlerForLobby(
         roomCode: segments[1],
-        participantId: participantId,
+        participantId: participantId!,
         reconnectToken: request.url.queryParameters['reconnectToken'],
       )(request);
     }
@@ -174,7 +196,7 @@ final class RoomManager {
     }
     return handlerForRoom(
       roomCode: segments[1],
-      participantId: participantId,
+      participantId: participantId!,
       reconnectToken: request.url.queryParameters['reconnectToken'],
     )(request);
   }
@@ -223,6 +245,30 @@ const Map<String, String> _corsHeaders = <String, String>{
 };
 
 const int _maxRoomRequestBytes = 1024 * 1024;
+const int _maxWebSocketMessageCharacters = 64 * 1024;
+const int _maxParticipantIdCharacters = 128;
+
+Future<String> _readBoundedRequest(Request request) async {
+  final bytes = BytesBuilder(copy: false);
+  var length = 0;
+  await for (final chunk in request.read()) {
+    length += chunk.length;
+    if (length > _maxRoomRequestBytes) {
+      throw const RequestTooLarge('Room state is too large.');
+    }
+    bytes.add(chunk);
+  }
+  try {
+    return utf8.decode(bytes.takeBytes());
+  } on FormatException {
+    throw const FormatException('Room state must be UTF-8 JSON.');
+  }
+}
+
+bool _isValidParticipantId(String? value) =>
+    value != null &&
+    value.isNotEmpty &&
+    value.length <= _maxParticipantIdCharacters;
 
 /// Raised when a process has reached its configured room limit.
 final class RoomCapacityExceeded implements Exception {
@@ -230,6 +276,15 @@ final class RoomCapacityExceeded implements Exception {
   const RoomCapacityExceeded(this.message);
 
   /// Explanation suitable for the HTTP response body.
+  final String message;
+}
+
+/// Raised when a request or socket message exceeds a protocol memory limit.
+final class RequestTooLarge implements Exception {
+  /// Creates a client-safe size-limit error.
+  const RequestTooLarge(this.message);
+
+  /// Explanation suitable for the HTTP response body or WebSocket peer.
   final String message;
 }
 
@@ -241,6 +296,7 @@ final class GameRoom {
     required DiceRoller Function(GameState state, int revision) diceFactory,
     required Random random,
     required FileRoomPersistence? persistence,
+    required int maxCommandJournalEntries,
     Map<String, _Participant> participants = const <String, _Participant>{},
     Set<String> processedCommandIds = const <String>{},
     List<Map<String, Object?>> commandJournal = const <Map<String, Object?>>[],
@@ -256,7 +312,8 @@ final class GameRoom {
        _commandJournal = List<Map<String, Object?>>.from(commandJournal),
        _readyParticipantIds = Set<String>.from(readyParticipantIds),
        _revision = revision,
-       _started = started;
+       _started = started,
+       _maxCommandJournalEntries = maxCommandJournalEntries;
 
   /// Stable public join code.
   final String code;
@@ -267,6 +324,7 @@ final class GameRoom {
   final Set<String> _processedCommandIds;
   final List<Map<String, Object?>> _commandJournal;
   final Set<String> _readyParticipantIds;
+  final int _maxCommandJournalEntries;
 
   GameState _state;
   int _revision;
@@ -289,8 +347,8 @@ final class GameRoom {
     String participantId, {
     String? reconnectToken,
   }) {
-    if (participantId.isEmpty) {
-      channel.sink.close(1008, 'participantId must not be empty.');
+    if (!_isValidParticipantId(participantId)) {
+      channel.sink.close(1008, 'participantId must be 1..128 characters.');
       return;
     }
 
@@ -338,6 +396,10 @@ final class GameRoom {
     String participantId, {
     String? reconnectToken,
   }) {
+    if (!_isValidParticipantId(participantId)) {
+      channel.sink.close(1008, 'participantId must be 1..128 characters.');
+      return;
+    }
     final participant = _authenticate(participantId, reconnectToken);
     if (participant == null) {
       channel.sink.close(1008, 'Invalid reconnect token or no heroes remain.');
@@ -370,6 +432,7 @@ final class GameRoom {
 
   void _onLobbyMessage(_Participant participant, Object? message) {
     try {
+      _rejectOversizedSocketMessage(message);
       final envelope = _jsonObject(message);
       if (_started) {
         _sendLobbyError(participant, 'The room has already started.');
@@ -402,6 +465,9 @@ final class GameRoom {
         default:
           _sendLobbyError(participant, 'Unsupported lobby message type.');
       }
+    } on RequestTooLarge catch (error) {
+      _sendLobbyError(participant, error.message);
+      participant.lobbyChannel?.sink.close(1009, error.message);
     } on FormatException catch (error) {
       _sendLobbyError(participant, error.message);
     }
@@ -498,12 +564,17 @@ final class GameRoom {
 
   void _onMessage(_Participant participant, Object? message) {
     try {
+      _rejectOversizedSocketMessage(message);
       final envelope = _jsonObject(message);
       if (envelope['type'] != 'command') {
         _sendError(participant, 'Unsupported message type.');
         return;
       }
-      final commandId = _requiredString(envelope, 'commandId');
+      final commandId = _requiredString(
+        envelope,
+        'commandId',
+        maxLength: _maxParticipantIdCharacters,
+      );
       final expectedRevision = _requiredInt(envelope, 'expectedRevision');
       final commandJson = _object(envelope, 'command');
       final commandKey = '${participant.id}:$commandId';
@@ -525,6 +596,10 @@ final class GameRoom {
       if (expectedRevision != _revision) {
         _sendError(participant, 'State revision is stale.');
         _sendState(participant);
+        return;
+      }
+      if (_commandJournal.length >= _maxCommandJournalEntries) {
+        _sendError(participant, 'Room command limit has been reached.');
         return;
       }
 
@@ -584,6 +659,9 @@ final class GameRoom {
       _processedCommandIds.add(commandKey);
       _commandJournal.add(journalEntry);
       _broadcastState(result.events);
+    } on RequestTooLarge catch (error) {
+      _sendError(participant, error.message);
+      participant.channel?.sink.close(1009, error.message);
     } on FormatException catch (error) {
       _sendError(participant, error.message);
       // Command constructors reject malformed numeric values with
@@ -959,6 +1037,15 @@ Map<String, Object?> _object(Map<String, Object?> json, String key) {
 
 String _canonicalJson(Object? value) => jsonEncode(_canonicalJsonValue(value));
 
+void _rejectOversizedSocketMessage(Object? message) {
+  if (message is String && message.length > _maxWebSocketMessageCharacters) {
+    throw const RequestTooLarge('WebSocket message is too large.');
+  }
+  if (message is List<int> && message.length > _maxWebSocketMessageCharacters) {
+    throw const RequestTooLarge('WebSocket message is too large.');
+  }
+}
+
 Object? _canonicalJsonValue(Object? value) {
   if (value is List<Object?>) {
     return value.map(_canonicalJsonValue).toList();
@@ -979,9 +1066,15 @@ Object? _canonicalJsonValue(Object? value) {
   return value;
 }
 
-String _requiredString(Map<String, Object?> json, String key) {
+String _requiredString(
+  Map<String, Object?> json,
+  String key, {
+  int? maxLength,
+}) {
   final value = json[key];
-  if (value is! String || value.isEmpty) {
+  if (value is! String ||
+      value.isEmpty ||
+      (maxLength != null && value.length > maxLength)) {
     throw FormatException('"$key" must be a non-empty string.');
   }
   return value;
@@ -1195,7 +1288,6 @@ Map<String, Object?> _monsterToJson(MonsterInstance monster) =>
       'defense': monster.defense,
       'attack': monster.attack,
       'movement': monster.movement,
-      'carriedGear': monster.carriedGear,
     };
 
 Map<String, int> _coordToJson(HexCoord coord) => <String, int>{

@@ -7,6 +7,7 @@
   "required": ["id", "statModifiers", "behaviorId", "nameKey", "descKey"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
+    "copies": { "type": "integer", "minimum": 1 },
     "statModifiers": {
       "type": "object",
       "additionalProperties": { "type": "number" }

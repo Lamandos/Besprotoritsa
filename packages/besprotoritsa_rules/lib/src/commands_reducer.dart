@@ -304,6 +304,13 @@ CommandRejection? validate(GameState state, GameCommand command) {
     return null;
   }
 
+  // A fallen hero stays in the turn order until the replacement transition
+  // reaches its normal end-turn boundary.  It may end that turn, but can
+  // never issue another game action while dead.
+  if (_activePlayer(state)?.alive != true) {
+    return const ActionUnavailableInPhase();
+  }
+
   if (command case HealCommand(:final amount) when amount <= 0) {
     return const InvalidCommandArguments();
   }
@@ -1000,8 +1007,11 @@ GameState _resolveAttackRoll(
     player,
     damage: player.damage + roll.ownerDamage,
   );
+  var unclaimedLoot = const <CardId>[];
   if (defeated && monster.monsterId == RestlessMonster.restlessMonsterId) {
-    awardedPlayer = _awardRestlessTrophies(awardedPlayer, monster, state);
+    final loot = _awardRestlessTrophies(awardedPlayer, monster, state);
+    awardedPlayer = loot.player;
+    unclaimedLoot = loot.unclaimed;
   }
   return resolveHeroDeaths(
     _copyState(
@@ -1016,21 +1026,38 @@ GameState _resolveAttackRoll(
         if (!defeated) _copyMonster(monster, damage: monster.damage + damage),
         ...monsters,
       ],
-      logEntry: _attackLog(player, monster, damage, defeated),
+      logEntry: _attackLog(
+        player,
+        monster,
+        damage,
+        defeated,
+        unclaimedLoot: unclaimedLoot,
+      ),
     ),
   );
 }
 
-PlayerState _awardRestlessTrophies(
+({PlayerState player, List<CardId> unclaimed}) _awardRestlessTrophies(
   PlayerState player,
   MonsterInstance restless,
   GameState state,
 ) {
   var awarded = player;
+  final unclaimed = <CardId>[];
   for (final cardId in restless.carriedGear) {
-    awarded = InventoryRules.receive(awarded, cardId, state.cardDefinitions);
+    try {
+      awarded = InventoryRules.receive(awarded, cardId, state.cardDefinitions);
+    } on BackpackCapacityExceeded {
+      // Combat has already resolved.  A full backpack must not turn a valid
+      // kill into an uncaught reducer exception or duplicate its effects.
+      unclaimed.add(cardId);
+    } on InventoryRuleViolation {
+      // Corrupt/legacy content cannot be equipped as a reward.  Preserve a
+      // deterministic completed combat and make the omission auditable.
+      unclaimed.add(cardId);
+    }
   }
-  return awarded;
+  return (player: awarded, unclaimed: unclaimed);
 }
 
 /// Converts every newly lethal hero into a Restless monster.
@@ -1191,10 +1218,12 @@ String _attackLog(
   PlayerState player,
   MonsterInstance monster,
   int damage,
-  bool defeated,
-) =>
+  bool defeated, {
+  List<CardId> unclaimedLoot = const <CardId>[],
+}) =>
     'attack:${player.id}:${monster.instanceId}:$damage'
-    '${defeated ? ':defeated' : ''}';
+    '${defeated ? ':defeated' : ''}'
+    '${unclaimedLoot.isEmpty ? '' : ':unclaimed:${unclaimedLoot.join(',')}'}';
 
 int _heroAttackDice(PlayerState player, GameState state) =>
     _statDice(player, state, StatType.strength) + player.weaponModifier;
@@ -1362,18 +1391,21 @@ GameStepResult _resolveHeroReplacement(
   final selectedReserve = reserve;
   final queued = Map<PlayerId, ReserveHero>.of(state.queuedReplacements)
     ..[pending.playerId] = selectedReserve;
-  return GameStepResult(
-    state: _copyState(
-      state,
-      reserveHeroes: state.reserveHeroes.where(
-        (hero) => hero.characterId != selectedReserve.characterId,
-      ),
-      queuedReplacements: queued,
-      clearPendingDecision: true,
-      logEntry:
-          'replacement-selected:'
-          '${pending.playerId}:${selectedReserve.characterId}',
+  final selected = _copyState(
+    state,
+    reserveHeroes: state.reserveHeroes.where(
+      (hero) => hero.characterId != selectedReserve.characterId,
     ),
+    queuedReplacements: queued,
+    clearPendingDecision: true,
+    logEntry:
+        'replacement-selected:'
+        '${pending.playerId}:${selectedReserve.characterId}',
+  );
+  // A death can interrupt a queue of monster/boil damage.  Choosing a reserve
+  // must return to that queue before any new player command becomes legal.
+  return GameStepResult(
+    state: _resumeAutomaticPhase(_startNextIncomingDamage(selected)),
   );
 }
 
