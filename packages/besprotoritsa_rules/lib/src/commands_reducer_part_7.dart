@@ -96,6 +96,7 @@ GameStepResult _resolveEventOption(
     context: SkillCheckContext(
       playerId: playerId,
       stat: StatType.agility,
+      difficulty: selected.difficulty,
       eventId: pending.eventId,
     ),
     consumesAction: false,

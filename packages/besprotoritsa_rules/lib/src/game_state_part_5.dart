@@ -11,6 +11,7 @@ final class GameState {
   GameState({
     this.schemaVersion = 1,
     required this.seed,
+    this.difficulty = 1,
     required this.round,
     required this.phase,
     required this.activePlayerId,
@@ -57,6 +58,9 @@ final class GameState {
     }
     if (round < 1) {
       throw ArgumentError.value(round, 'round', 'Round must be at least 1.');
+    }
+    if (difficulty < 1) {
+      throw ArgumentError.value(difficulty, 'difficulty', 'Must be positive.');
     }
     _requireNonNegative(actionsLeft, 'actionsLeft');
     _requireNonNegative(monsterTurnIndex, 'monsterTurnIndex');
@@ -111,6 +115,9 @@ final class GameState {
 
   final int schemaVersion;
   final int seed;
+
+  /// Required successful hits for skill checks in this game.
+  final int difficulty;
   final int round;
   final GamePhase phase;
   final PlayerId? activePlayerId;

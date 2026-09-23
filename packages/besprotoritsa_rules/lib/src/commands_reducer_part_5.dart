@@ -152,6 +152,7 @@ GameStepResult _startPlayerSkillCheck(
     context: SkillCheckContext(
       playerId: player.id,
       stat: stat,
+      difficulty: state.difficulty,
       questId: completesQuest ? 'chapter-1-awakening' : null,
     ),
   );

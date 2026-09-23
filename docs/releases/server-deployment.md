@@ -55,6 +55,10 @@ location / {
 }
 ```
 
+The server uses the rightmost address in `X-Forwarded-For` for room creation
+limits. Nginx appends the client address it observed there, so any values a
+client supplied earlier in the header do not create new rate-limit identities.
+
 ## TLS certificate with Let's Encrypt / Certbot
 
 Before requesting a certificate, replace `api.example.com` below with the

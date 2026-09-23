@@ -28,6 +28,7 @@ class GameStateJsonCodec {
   Map<String, Object?> toJson(GameState state) => {
     'schema_version': currentSaveSchemaVersion,
     'seed': state.seed,
+    'difficulty': state.difficulty,
     'round': state.round,
     'phase': state.phase.name,
     'active_player_id': state.activePlayerId,
@@ -62,7 +63,7 @@ class GameStateJsonCodec {
     },
     'quests': SaveJsonModels.questsToJson(state.quests),
     'log': state.log,
-    'game_events': state.gameEvents.map(SaveJsonModels.eventToJson).toList(),
+    'game_events': state.gameEvents.map(SaveJsonEventModels.toJson).toList(),
     'is_complete': state.isComplete,
     'monster_turn_index': state.monsterTurnIndex,
     'monster_steps_remaining': state.monsterStepsRemaining,
@@ -76,6 +77,7 @@ class GameStateJsonCodec {
     return GameState(
       schemaVersion: _int(json, 'schema_version'),
       seed: _int(json, 'seed'),
+      difficulty: _intOrDefault(json, 'difficulty', defaultValue: 1),
       round: _int(json, 'round'),
       phase: SaveJsonModels.gamePhaseFromJson(_string(json, 'phase')),
       activePlayerId: _nullableString(
@@ -128,7 +130,7 @@ class GameStateJsonCodec {
       gameEvents: _objects(
         json,
         'game_events',
-      ).map(SaveJsonModels.eventFromJson),
+      ).map(SaveJsonEventModels.fromJson),
       isComplete: _bool(json, 'is_complete'),
       monsterTurnIndex: _int(json, 'monster_turn_index'),
       monsterStepsRemaining: _int(json, 'monster_steps_remaining'),

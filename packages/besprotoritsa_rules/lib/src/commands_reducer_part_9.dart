@@ -148,6 +148,7 @@ GameState _copyState(
 }) => GameState(
   schemaVersion: state.schemaVersion,
   seed: state.seed,
+  difficulty: state.difficulty,
   round: round ?? state.round,
   phase: phase ?? state.phase,
   activePlayerId: clearActivePlayerId

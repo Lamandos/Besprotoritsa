@@ -33,12 +33,18 @@ final class TrustedContentRepository {
       throw const FormatException('Unsupported room mode parameter.');
     }
     final difficulty = mode['difficulty'];
-    if (difficulty != null && difficulty is! String) {
-      throw const FormatException('mode.difficulty must be a string.');
-    }
+    final difficultyLevel = switch (difficulty ?? 'normal') {
+      'easy' => 1,
+      'normal' => 2,
+      'hard' => 3,
+      _ => throw const FormatException(
+        'mode.difficulty must be easy, normal, or hard.',
+      ),
+    };
     return _MvpContentLoader(rootDirectory).load(
       partySize: partySize,
       seed: seed,
+      difficulty: difficultyLevel,
     );
   }
 }
@@ -48,7 +54,11 @@ final class _MvpContentLoader {
 
   final Directory _root;
 
-  GameState load({required int partySize, required int seed}) {
+  GameState load({
+    required int partySize,
+    required int seed,
+    required int difficulty,
+  }) {
     final mvp = Directory('${_root.path}/mvp');
     if (!mvp.existsSync()) {
       throw const FormatException('Trusted MVP content is not installed.');
@@ -88,6 +98,7 @@ final class _MvpContentLoader {
     });
     return GameState(
       seed: seed,
+      difficulty: difficulty,
       round: 1,
       phase: GamePhase.playersTurn,
       activePlayerId: players.first.id,
