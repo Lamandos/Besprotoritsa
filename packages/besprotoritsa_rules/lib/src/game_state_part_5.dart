@@ -37,7 +37,13 @@ final class GameState {
     this.actionsTakenThisTurn = 0,
     this.pendingDecision,
   }) : board = List.unmodifiable(board),
-       players = List.unmodifiable(players),
+       players = List.unmodifiable([
+         for (final player in players)
+           if (phase == GamePhase.playersTurn && player.id == activePlayerId)
+             player.withActionPoints(actionsLeft)
+           else
+             player,
+       ]),
        monsters = List.unmodifiable(monsters),
        boils = List.unmodifiable(boils),
        reserveHeroes = List.unmodifiable(reserveHeroes),

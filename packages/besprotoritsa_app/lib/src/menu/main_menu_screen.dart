@@ -8,6 +8,7 @@ import 'package:besprotoritsa_app/src/menu/roster_selection_screen.dart';
 import 'package:besprotoritsa_app/src/menu/tutorial_and_rules_screens.dart';
 import 'package:besprotoritsa_app/src/storage/platform_game_storage.dart';
 import 'package:besprotoritsa_app/src/storage/save_system.dart';
+import 'package:besprotoritsa_app/src/theme/besprotoritsa_theme.dart';
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:flutter/material.dart';
@@ -28,16 +29,25 @@ class MainMenuScreen extends ConsumerWidget {
     final storage = ref.read(gameStorageProvider);
     return Scaffold(
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) => Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: 460,
-                minHeight: constraints.maxHeight,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: _MenuContents(storage: storage, strings: strings),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(0, -.55),
+              radius: 1.15,
+              colors: [Color(0xFF443324), Color(0xFF211A15), Color(0xFF15120F)],
+            ),
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) => Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 560,
+                  minHeight: constraints.maxHeight,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: _MenuContents(storage: storage, strings: strings),
+                ),
               ),
             ),
           ),
@@ -54,59 +64,134 @@ class _MenuContents extends StatelessWidget {
   final AppStrings strings;
 
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisAlignment: MainAxisAlignment.center,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      Text(
-        strings.appTitle,
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.displaySmall,
+  Widget build(BuildContext context) => SingleChildScrollView(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 560),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(22, 28, 22, 24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF3A2C21), Color(0xFF211B16)],
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: BesprotoritsaTheme.bronze, width: 1.4),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black38,
+                  blurRadius: 22,
+                  offset: Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.flare,
+                  size: 40,
+                  color: BesprotoritsaTheme.bronze,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  strings.appTitle.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    color: BesprotoritsaTheme.bone,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 3,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black54,
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Row(
+                  children: [
+                    Expanded(
+                      child: Divider(color: BesprotoritsaTheme.bronze),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        '✥  ✥  ✥',
+                        style: TextStyle(
+                          color: BesprotoritsaTheme.bronze,
+                          letterSpacing: 4,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Divider(color: BesprotoritsaTheme.bronze),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  strings.menuSubtitle,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: BesprotoritsaTheme.bark,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+          FilledButton.icon(
+            key: const ValueKey<String>('new-game-button'),
+            onPressed: () =>
+                _push(context, RosterSelectionScreen(storage: storage)),
+            icon: const Icon(Icons.explore_outlined),
+            label: Text(strings.newGame),
+          ),
+          const SizedBox(height: 10),
+          FilledButton.tonalIcon(
+            key: const ValueKey<String>('multiplayer-button'),
+            onPressed: () => _push(context, const MultiplayerEntryScreen()),
+            icon: const Icon(Icons.groups_outlined),
+            label: const Text('Сетевая игра'),
+          ),
+          const SizedBox(height: 10),
+          FilledButton.tonalIcon(
+            key: const ValueKey<String>('continue-button'),
+            onPressed: () => _continueGame(context, storage, strings),
+            icon: const Icon(Icons.restore),
+            label: Text(strings.continueGame),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            key: const ValueKey<String>('load-game-button'),
+            onPressed: () => _push(context, SaveSlotsScreen(storage: storage)),
+            icon: const Icon(Icons.inventory_2_outlined),
+            label: Text(strings.loadGame),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            key: const ValueKey<String>('tutorial-button'),
+            onPressed: () => _push(context, const TutorialScreen()),
+            icon: const Icon(Icons.menu_book_outlined),
+            label: Text(strings.tutorial),
+          ),
+          const SizedBox(height: 4),
+          TextButton.icon(
+            key: const ValueKey<String>('rules-button'),
+            onPressed: () => _push(context, const RulesReferenceScreen()),
+            icon: const Icon(Icons.rule_folder_outlined),
+            label: Text(strings.rulesReference),
+          ),
+        ],
       ),
-      const SizedBox(height: 8),
-      Text(
-        strings.menuSubtitle,
-        textAlign: TextAlign.center,
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-      const SizedBox(height: 40),
-      FilledButton(
-        key: const ValueKey<String>('new-game-button'),
-        onPressed: () =>
-            _push(context, RosterSelectionScreen(storage: storage)),
-        child: Text(strings.newGame),
-      ),
-      const SizedBox(height: 12),
-      FilledButton.tonal(
-        key: const ValueKey<String>('multiplayer-button'),
-        onPressed: () => _push(context, const MultiplayerEntryScreen()),
-        child: const Text('Сетевая игра'),
-      ),
-      const SizedBox(height: 12),
-      FilledButton.tonal(
-        key: const ValueKey<String>('continue-button'),
-        onPressed: () => _continueGame(context, storage, strings),
-        child: Text(strings.continueGame),
-      ),
-      const SizedBox(height: 12),
-      OutlinedButton(
-        key: const ValueKey<String>('load-game-button'),
-        onPressed: () => _push(context, SaveSlotsScreen(storage: storage)),
-        child: Text(strings.loadGame),
-      ),
-      const SizedBox(height: 12),
-      OutlinedButton(
-        key: const ValueKey<String>('tutorial-button'),
-        onPressed: () => _push(context, const TutorialScreen()),
-        child: Text(strings.tutorial),
-      ),
-      const SizedBox(height: 12),
-      TextButton(
-        key: const ValueKey<String>('rules-button'),
-        onPressed: () => _push(context, const RulesReferenceScreen()),
-        child: Text(strings.rulesReference),
-      ),
-    ],
+    ),
   );
 }
 

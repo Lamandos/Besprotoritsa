@@ -179,8 +179,11 @@ bool _hasAggressiveMonster(GameState state, PlayerState player) => state
 
 GameState _startNextPlayersTurn(GameState state) {
   final withReplacements = _activateQueuedReplacements(state);
+  final refreshedPlayers = [
+    for (final player in withReplacements.players) player.withActionPoints(2),
+  ];
   PlayerState? first;
-  for (final player in withReplacements.players) {
+  for (final player in refreshedPlayers) {
     if (player.alive) {
       first = player;
       break;
@@ -189,6 +192,7 @@ GameState _startNextPlayersTurn(GameState state) {
   if (first == null) {
     return _copyState(
       withReplacements,
+      players: refreshedPlayers,
       actionsLeft: 0,
       clearActivePlayerId: true,
       isComplete: true,
@@ -196,6 +200,7 @@ GameState _startNextPlayersTurn(GameState state) {
   }
   return _copyState(
     withReplacements,
+    players: refreshedPlayers,
     round: withReplacements.round + 1,
     phase: GamePhase.playersTurn,
     activePlayerId: first.id,

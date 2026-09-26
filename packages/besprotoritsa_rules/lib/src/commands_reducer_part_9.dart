@@ -101,6 +101,7 @@ PlayerState _copyPlayer(
   alive: alive ?? player.alive,
   stats: stats ?? player.stats,
   weaponModifier: weaponModifier ?? player.weaponModifier,
+  actionPoints: player.actionPoints,
 );
 
 MonsterInstance _copyMonster(

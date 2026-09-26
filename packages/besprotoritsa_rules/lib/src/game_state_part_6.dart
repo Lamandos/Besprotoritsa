@@ -44,6 +44,7 @@ final class ProjectedPlayerState {
     required this.credits,
     required this.equipped,
     required this.alive,
+    required this.actionPoints,
     required this.isViewer,
     required Iterable<CardId> backpack,
     required Iterable<CardId> carriedMods,
@@ -73,6 +74,7 @@ final class ProjectedPlayerState {
       credits: state.credits,
       equipped: state.equipped,
       alive: state.alive,
+      actionPoints: state.actionPoints,
       isViewer: isViewer,
       backpack: isViewer ? state.backpack : const [],
       carriedMods: isViewer ? state.carriedMods : const [],
@@ -90,6 +92,7 @@ final class ProjectedPlayerState {
   final int credits;
   final EquippedGear equipped;
   final bool alive;
+  final int actionPoints;
   final bool isViewer;
   final List<CardId> backpack;
   final List<CardId> carriedMods;

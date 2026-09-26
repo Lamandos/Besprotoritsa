@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:besprotoritsa_app/src/game/event_queue.dart';
 import 'package:besprotoritsa_app/src/game/game_controller.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
@@ -13,3 +15,4 @@ part 'mvp_game_screen_part_3.dart';
 part 'mvp_game_screen_part_4.dart';
 part 'mvp_game_screen_part_5.dart';
 part 'mvp_game_screen_part_6.dart';
+part 'mvp_game_screen_part_7.dart';

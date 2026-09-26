@@ -36,7 +36,9 @@ void main() {
   ) async {
     await pumpMenu(tester);
 
-    await tester.tap(find.byKey(const ValueKey<String>('rules-button')));
+    final rulesButton = find.byKey(const ValueKey<String>('rules-button'));
+    await tester.ensureVisible(rulesButton);
+    await tester.tap(rulesButton);
     await tester.pumpAndSettle();
     expect(find.text('Справочник правил'), findsOneWidget);
     expect(find.text('Движение'), findsOneWidget);

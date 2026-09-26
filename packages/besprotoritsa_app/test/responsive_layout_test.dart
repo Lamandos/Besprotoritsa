@@ -61,9 +61,8 @@ void main() {
 
     expect(find.byKey(mvpWideLayoutKey), findsOneWidget);
     expect(find.byKey(mvpCompactLayoutKey), findsNothing);
-    expect(find.text('Отряд героев'), findsOneWidget);
-    expect(find.text('Журнал'), findsOneWidget);
-    expect(find.text('Активные задания'), findsOneWidget);
+    expect(find.text('СОСТАВ ЭКИПАЖА'), findsOneWidget);
+    expect(find.text('СОБЫТИЕ'), findsOneWidget);
     expect(find.byKey(mvpBoardInteractiveViewerKey), findsOneWidget);
   });
 }

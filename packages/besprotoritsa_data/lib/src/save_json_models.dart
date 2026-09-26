@@ -56,6 +56,7 @@ abstract final class SaveJsonModels {
     'alive': player.alive,
     'stats': _statsToJson(player.stats),
     'weapon_modifier': player.weaponModifier,
+    'action_points': player.actionPoints,
   };
   static PlayerState playerFromJson(Map<String, Object?> json) {
     final equipped = _object(json, 'equipped');
@@ -83,6 +84,7 @@ abstract final class SaveJsonModels {
       alive: _bool(json, 'alive'),
       stats: _statsFromJson(_object(json, 'stats')),
       weaponModifier: _int(json, 'weapon_modifier'),
+      actionPoints: _optionalInt(json, 'action_points') ?? 2,
     );
   }
 

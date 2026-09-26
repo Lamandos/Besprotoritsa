@@ -93,6 +93,7 @@ final class ProjectedGameStateCodec {
       implanted: _strings(json['implanted']),
       conditions: _strings(json['conditions']),
       alive: json['alive'] == true,
+      actionPoints: _int(json, 'actionPoints', fallback: 2),
     );
   }
 
@@ -138,7 +139,10 @@ final class ProjectedGameStateCodec {
         monsterDamage: _int(json, 'monsterDamage'),
         requiredAgilitySuccesses: _int(json, 'requiredAgilitySuccesses'),
       ),
-      'eventOption' => AwaitingEventOption(options: _strings(json['options'])),
+      'eventOption' => AwaitingEventOption(
+        options: _strings(json['options']),
+        eventId: json['eventId'] as String?,
+      ),
       'terminalPick' => AwaitingTerminalPick(
         offeredCards: _strings(json['offeredCards']),
         playerId: _string(json, 'playerId'),

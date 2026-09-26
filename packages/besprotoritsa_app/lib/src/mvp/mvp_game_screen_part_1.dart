@@ -32,6 +32,9 @@ const mvpInventorySheetKey = ValueKey<String>('mvp-inventory-sheet');
 /// Quest journal sheet root.
 const mvpJournalSheetKey = ValueKey<String>('mvp-journal-sheet');
 
+/// Wide and compact movement confirmation trigger.
+const mvpMoveConfirmButtonKey = ValueKey<String>('mvp-move-confirm-button');
+
 /// Compact-layout inventory trigger.
 const mvpInventoryButtonKey = ValueKey<String>('mvp-inventory-button');
 
@@ -147,50 +150,70 @@ class _MvpGameLayout extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final blocked = queue.isPlaying || state.pendingDecision != null;
     final strings = AppStrings.of(context);
+    final screenSize = MediaQuery.sizeOf(context);
+    final isWide =
+        screenSize.width >= _wideLayoutMinimumWidth &&
+        screenSize.width > screenSize.height;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(strings.mvpTitle),
-        actions: [
-          if (onManualSaveRequested != null)
-            IconButton(
-              key: const ValueKey<String>('manual-save-button'),
-              tooltip: 'Сохранить партию',
-              constraints: const BoxConstraints.tightFor(
-                width: 48,
-                height: 48,
-              ),
-              onPressed: () => onManualSaveRequested!(state),
-              icon: const Icon(Icons.save_outlined),
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide =
-                constraints.maxWidth >= _wideLayoutMinimumWidth &&
-                constraints.maxWidth > constraints.maxHeight;
-            return Stack(
-              children: [
-                if (isWide)
-                  _WideGameLayout(
-                    key: mvpWideLayoutKey,
-                    state: state,
-                    queue: queue,
-                    blocked: blocked,
-                  )
-                else
-                  _CompactGameLayout(
-                    key: mvpCompactLayoutKey,
-                    state: state,
-                    queue: queue,
-                    blocked: blocked,
+      appBar: isWide
+          ? null
+          : AppBar(
+              title: Text(strings.mvpTitle),
+              actions: [
+                if (onManualSaveRequested != null)
+                  IconButton(
+                    key: const ValueKey<String>('manual-save-button'),
+                    tooltip: 'Сохранить партию',
+                    constraints: const BoxConstraints.tightFor(
+                      width: 48,
+                      height: 48,
+                    ),
+                    onPressed: () => onManualSaveRequested!(state),
+                    icon: const Icon(Icons.save_outlined),
                   ),
-                if (state.pendingDecision != null && !queue.isPlaying)
-                  _PendingDecisionModal(decision: state.pendingDecision!),
               ],
-            );
-          },
+            ),
+      endDrawer: Drawer(
+        key: mvpJournalSheetKey,
+        width: screenSize.width < 400 ? screenSize.width * .9 : 400,
+        child: _JournalPanel(state: state, queue: queue),
+      ),
+      drawerScrimColor: Colors.black87,
+      body: Builder(
+        builder: (scaffoldContext) => SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final useWideLayout =
+                  constraints.maxWidth >= _wideLayoutMinimumWidth &&
+                  constraints.maxWidth > constraints.maxHeight;
+              void openLog() => Scaffold.of(scaffoldContext).openEndDrawer();
+              return Stack(
+                children: [
+                  if (useWideLayout)
+                    _WideGameLayout(
+                      key: mvpWideLayoutKey,
+                      state: state,
+                      queue: queue,
+                      blocked: blocked,
+                      onOpenLog: openLog,
+                      onManualSaveRequested: onManualSaveRequested == null
+                          ? null
+                          : () => onManualSaveRequested!(state),
+                    )
+                  else
+                    _CompactGameLayout(
+                      key: mvpCompactLayoutKey,
+                      state: state,
+                      queue: queue,
+                      blocked: blocked,
+                      onOpenLog: openLog,
+                    ),
+                  if (state.pendingDecision != null && !queue.isPlaying)
+                    _PendingDecisionModal(decision: state.pendingDecision!),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
