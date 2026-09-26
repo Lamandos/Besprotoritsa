@@ -93,6 +93,7 @@ final class ProjectedGameStateCodec {
       implanted: _strings(json['implanted']),
       conditions: _strings(json['conditions']),
       alive: json['alive'] == true,
+      actionPoints: _int(json, 'actionPoints', fallback: 2),
     );
   }
 

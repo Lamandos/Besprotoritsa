@@ -232,7 +232,7 @@ GameState _endTurn(GameState state) {
   return _copyState(
     state,
     activePlayerId: state.players[nextIndex].id,
-    actionsLeft: 2,
+    actionsLeft: state.players[nextIndex].actionPoints,
     actionsTakenThisTurn: 0,
     logEntry: 'end-turn:${state.activePlayerId}',
   );

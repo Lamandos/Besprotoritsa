@@ -3,6 +3,7 @@
 
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/main_menu_screen.dart';
+import 'package:besprotoritsa_app/src/theme/besprotoritsa_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -24,10 +25,7 @@ class BesprotoritsaApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
-      ),
+      theme: BesprotoritsaTheme.data,
       home: const MainMenuScreen(),
     );
   }

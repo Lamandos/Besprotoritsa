@@ -4,6 +4,7 @@
 import 'package:besprotoritsa_app/src/game/mvp_game_state.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/game_session_screen.dart';
+import 'package:besprotoritsa_app/src/theme/besprotoritsa_theme.dart';
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:flutter/material.dart';
 
@@ -40,14 +41,52 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(strings.rosterSubtitle),
-              const SizedBox(height: 8),
-              ValueListenableBuilder<Set<String>>(
-                valueListenable: _selected,
-                builder: (context, selected, _) => Text(
-                  strings.rosterCount(selected.length),
-                  key: const ValueKey<String>('roster-count'),
-                  style: Theme.of(context).textTheme.titleMedium,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2D241C),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFF765A3C)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.groups_2_outlined,
+                      size: 30,
+                      color: BesprotoritsaTheme.bronze,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            strings.rosterSubtitle,
+                            style: const TextStyle(
+                              color: BesprotoritsaTheme.bark,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          ValueListenableBuilder<Set<String>>(
+                            valueListenable: _selected,
+                            builder: (context, selected, _) => Text(
+                              strings.rosterCount(selected.length),
+                              key: const ValueKey<String>('roster-count'),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: BesprotoritsaTheme.bone,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: BesprotoritsaTheme.bronze,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
@@ -119,10 +158,14 @@ class _RosterList extends StatelessWidget {
           child: CheckboxListTile(
             key: ValueKey<String>('hero-${hero.id}'),
             value: isSelected,
+            activeColor: BesprotoritsaTheme.bronze,
+            checkColor: BesprotoritsaTheme.ink,
             onChanged: (_) => onChanged(hero.id),
             title: Text(hero.name(strings)),
             subtitle: Text(hero.stats(strings)),
-            secondary: isSelected ? const Icon(Icons.check_circle) : null,
+            secondary: isSelected
+                ? const Icon(Icons.verified, color: BesprotoritsaTheme.bronze)
+                : const Icon(Icons.person_outline, color: Color(0xFFB6A68B)),
           ),
         );
       },

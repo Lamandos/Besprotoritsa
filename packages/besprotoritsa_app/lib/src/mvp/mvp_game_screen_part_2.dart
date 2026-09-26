@@ -4,43 +4,163 @@
 part of 'mvp_game_screen.dart';
 
 /// Three fixed regions give landscape displays an at-a-glance game overview.
-class _WideGameLayout extends StatelessWidget {
+class _WideGameLayout extends StatefulWidget {
   const _WideGameLayout({
     required this.state,
     required this.queue,
     required this.blocked,
+    required this.onOpenLog,
+    required this.onManualSaveRequested,
     super.key,
   });
 
   final GameState state;
   final EventQueue queue;
   final bool blocked;
+  final VoidCallback onOpenLog;
+  final VoidCallback? onManualSaveRequested;
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      SizedBox(width: 256, child: _HeroRosterPanel(state: state)),
-      const VerticalDivider(width: 1),
-      Expanded(
-        child: Column(
-          children: [
-            _GameStatus(state: state, queue: queue),
-            Expanded(child: HexBoardWidget(state: state)),
-            AbsorbPointer(
-              absorbing: blocked,
-              child: _CommandPanel(state: state, compact: true),
+  State<_WideGameLayout> createState() => _WideGameLayoutState();
+}
+
+class _WideGameLayoutState extends State<_WideGameLayout> {
+  String? _selectedPlayerId;
+  HexCoord? _selectedDestination;
+
+  String _selectedPlayer(GameState state) {
+    if (_selectedPlayerId != null &&
+        state.players.any((player) => player.id == _selectedPlayerId)) {
+      return _selectedPlayerId!;
+    }
+    return state.activePlayerId ?? state.players.first.id;
+  }
+
+  void _selectPlayer(String playerId) {
+    setState(() {
+      _selectedPlayerId = playerId;
+      _selectedDestination = null;
+    });
+  }
+
+  void _selectDestination(HexCoord destination) =>
+      setState(() => _selectedDestination = destination);
+
+  @override
+  Widget build(BuildContext context) {
+    final state = widget.state;
+    final queue = widget.queue;
+    final selectedPlayerId = _selectedPlayer(state);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = (constraints.maxWidth / 1664)
+            .clamp(0.1, constraints.maxHeight / 928)
+            .toDouble();
+        return Center(
+          child: SizedBox(
+            width: 1664 * scale,
+            height: 928 * scale,
+            child: ClipRect(
+              child: FittedBox(
+                fit: BoxFit.fill,
+                child: SizedBox(
+                  width: 1664,
+                  height: 928,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      const Image(
+                        image: AssetImage(
+                          'assets/images/ship_bark_backdrop.png',
+                        ),
+                        fit: BoxFit.fill,
+                      ),
+                      const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Color(0x22101822), Color(0x22170805)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                      ),
+                      const CustomPaint(painter: _HullEngravingPainter()),
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        height: 126,
+                        child: _ImmersiveGameHeader(
+                          state: state,
+                          onSave: widget.onManualSaveRequested,
+                        ),
+                      ),
+                      Positioned(
+                        left: 18,
+                        top: 142,
+                        width: 340,
+                        height: 514,
+                        child: _HeroRosterPanel(
+                          state: state,
+                          selectedPlayerId: selectedPlayerId,
+                          onSelected: _selectPlayer,
+                        ),
+                      ),
+                      Positioned(
+                        left: 356,
+                        top: 146,
+                        width: 816,
+                        height: 564,
+                        child: Column(
+                          children: [
+                            _GameStatus(state: state, queue: queue),
+                            Expanded(
+                              child: HexBoardWidget(
+                                state: state,
+                                selectedPlayerId: selectedPlayerId,
+                                selectedDestination: _selectedDestination,
+                                onSelectPlayer: _selectPlayer,
+                                onSelectDestination: _selectDestination,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        right: 92,
+                        top: 142,
+                        width: 360,
+                        height: 548,
+                        child: _EventCardPanel(state: state),
+                      ),
+                      Positioned(
+                        left: 230,
+                        right: 95,
+                        bottom: 40,
+                        height: 146,
+                        child: AbsorbPointer(
+                          absorbing: widget.blocked,
+                          child: _WideActionDock(
+                            state: state,
+                            onOpenLog: widget.onOpenLog,
+                            selectedDestination: _selectedDestination,
+                            selectedPlayerId: selectedPlayerId,
+                            onClearDestination: () => setState(
+                              () => _selectedDestination = null,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
-      ),
-      const VerticalDivider(width: 1),
-      SizedBox(
-        width: 304,
-        child: _JournalPanel(state: state, queue: queue),
-      ),
-    ],
-  );
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// Portrait screens reserve the board for play and reveal supporting content
@@ -50,12 +170,14 @@ class _CompactGameLayout extends StatelessWidget {
     required this.state,
     required this.queue,
     required this.blocked,
+    required this.onOpenLog,
     super.key,
   });
 
   final GameState state;
   final EventQueue queue;
   final bool blocked;
+  final VoidCallback onOpenLog;
 
   @override
   Widget build(BuildContext context) => Stack(
@@ -75,7 +197,7 @@ class _CompactGameLayout extends StatelessWidget {
         alignment: Alignment.bottomCenter,
         child: AbsorbPointer(
           absorbing: blocked,
-          child: _MobileActionDock(state: state, queue: queue),
+          child: _MobileActionDock(state: state, onOpenLog: onOpenLog),
         ),
       ),
     ],
@@ -91,11 +213,29 @@ class _GameStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2D241C),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF765A3C)),
+      ),
       child: Row(
         children: [
-          Text(strings.roundStatus(state.round, state.actionsLeft)),
+          const Icon(
+            Icons.brightness_3_outlined,
+            size: 17,
+            color: Color(0xFFD3AD75),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            strings.roundStatus(state.round, state.actionsLeft),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              letterSpacing: .4,
+            ),
+          ),
           const Spacer(),
           if (queue.current != null)
             Chip(
@@ -114,10 +254,21 @@ class _GameStatus extends StatelessWidget {
 /// A pannable and zoomable viewport for a board with isolated static artwork.
 class HexBoardWidget extends StatefulWidget {
   /// Creates a board viewport from [state].
-  const HexBoardWidget({required this.state, super.key});
+  const HexBoardWidget({
+    required this.state,
+    this.selectedPlayerId,
+    this.selectedDestination,
+    this.onSelectPlayer,
+    this.onSelectDestination,
+    super.key,
+  });
 
   /// State rendered by this board.
   final GameState state;
+  final String? selectedPlayerId;
+  final HexCoord? selectedDestination;
+  final ValueChanged<String>? onSelectPlayer;
+  final ValueChanged<HexCoord>? onSelectDestination;
 
   @override
   State<HexBoardWidget> createState() => _HexBoardWidgetState();
@@ -160,13 +311,18 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
     if (event is! PointerScrollEvent) {
       return;
     }
-    _transformationController.value = _transformationController.value.clone()
-      ..translateByDouble(
-        -event.scrollDelta.dx,
-        -event.scrollDelta.dy,
-        0,
-        1,
-      );
+    final current = _transformationController.value;
+    final currentScale = current.getMaxScaleOnAxis();
+    final scale = (currentScale * math.exp(-event.scrollDelta.dy * .001))
+        .clamp(.65, 2.25)
+        .toDouble();
+    final factor = scale / currentScale;
+    final focalPoint = event.localPosition;
+    _transformationController.value = Matrix4.identity()
+      ..translate(focalPoint.dx, focalPoint.dy)
+      ..scale(factor)
+      ..translate(-focalPoint.dx, -focalPoint.dy)
+      ..multiply(current);
   }
 
   @override
@@ -179,26 +335,50 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
         key: mvpBoardInteractiveViewerKey,
         transformationController: _transformationController,
         constrained: false,
+        alignment: Alignment.center,
         boundaryMargin: const EdgeInsets.all(160),
         minScale: 0.65,
-        trackpadScrollCausesScale: true,
+        maxScale: 2.25,
+        panEnabled: true,
+        scaleEnabled: true,
+        trackpadScrollCausesScale: false,
         child: SizedBox(
-          width: 520,
-          height: 420,
-          child: Stack(
-            children: [
-              RepaintBoundary(
-                key: mvpBoardStaticRepaintBoundaryKey,
-                child: _StaticBoardLayer(board: widget.state.board),
-              ),
-              RepaintBoundary(
-                key: mvpBoardTokensRepaintBoundaryKey,
-                child: _TokenLayer(
-                  players: widget.state.players,
-                  monsters: widget.state.monsters,
+          width: 800,
+          height: 520,
+          child: Center(
+            child: Transform.scale(
+              scale: 1.1,
+              child: SizedBox(
+                width: 640,
+                height: 450,
+                child: Stack(
+                  children: [
+                    RepaintBoundary(
+                      key: mvpBoardStaticRepaintBoundaryKey,
+                      child: _StaticBoardLayer(
+                        board: widget.state.board,
+                        selectedDestination: widget.selectedDestination,
+                        onSelectDestination: widget.onSelectDestination,
+                      ),
+                    ),
+                    RepaintBoundary(
+                      key: mvpBoardTokensRepaintBoundaryKey,
+                      child: _TokenLayer(
+                        players: widget.state.players,
+                        monsters: widget.state.monsters,
+                        board: widget.state.board,
+                        selectedPlayerId: widget.selectedPlayerId,
+                        activePlayerId:
+                            widget.state.phase == GamePhase.playersTurn
+                            ? widget.state.activePlayerId
+                            : null,
+                        onSelectPlayer: widget.onSelectPlayer,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

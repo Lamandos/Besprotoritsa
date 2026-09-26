@@ -42,10 +42,22 @@ class _NamedCommand {
   final GameCommand command;
 }
 
-Offset _positionFor(HexCoord coord) => Offset(
-  108 + (coord.q + coord.r * .5) * 76,
-  94 + coord.r * 64,
-);
+Offset _layoutPosition(HexCoord coord, List<HexTile> board) {
+  final tile = board.where((candidate) => candidate.coord == coord).firstOrNull;
+  if (board.length == 3 && tile != null) {
+    final position = switch (tile.type) {
+      HexTileType.start => const Offset(208, 0),
+      HexTileType.corridor => const Offset(30, 220),
+      HexTileType.compartment => const Offset(386, 220),
+      HexTileType.airlock => null,
+    };
+    if (position != null) return position;
+  }
+  return Offset(
+    24 + (coord.q + coord.r * .5) * 138,
+    16 + coord.r * 118,
+  );
+}
 
 String _eventLabel(GameEvent event, AppStrings strings) => switch (event) {
   HexEntered(:final playerId, :final to) => strings.enteredEvent(
@@ -83,12 +95,12 @@ class _HexClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) => Path()
-    ..moveTo(size.width * .25, 0)
-    ..lineTo(size.width * .75, 0)
-    ..lineTo(size.width, size.height * .5)
-    ..lineTo(size.width * .75, size.height)
-    ..lineTo(size.width * .25, size.height)
-    ..lineTo(0, size.height * .5)
+    ..moveTo(size.width * .25, 2)
+    ..lineTo(size.width * .75, 2)
+    ..lineTo(size.width - 2, size.height * .5)
+    ..lineTo(size.width * .75, size.height - 2)
+    ..lineTo(size.width * .25, size.height - 2)
+    ..lineTo(2, size.height * .5)
     ..close();
 
   @override

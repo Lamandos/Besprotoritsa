@@ -210,6 +210,7 @@ final class PlayerState {
     required this.alive,
     this.stats = const PlayerStats(),
     this.weaponModifier = 0,
+    this.actionPoints = 2,
   }) : backpack = List.unmodifiable(backpack),
        carriedMods = List.unmodifiable(carriedMods),
        implanted = List.unmodifiable(implanted),
@@ -222,6 +223,7 @@ final class PlayerState {
     }
     _requireNonNegative(credits, 'credits');
     _requireNonNegative(weaponModifier, 'weaponModifier');
+    _requireNonNegative(actionPoints, 'actionPoints');
     // A load-bearing backpack can raise the effective limit to five. The
     // current effective limit depends on card definitions and is enforced by
     // InventoryRules; this model-level ceiling prevents impossible states.
@@ -259,6 +261,28 @@ final class PlayerState {
 
   /// The equipped weapon's bonus to the hero attack pool.
   final int weaponModifier;
+
+  /// Remaining action points for this character in the current round.
+  final int actionPoints;
+
+  /// Returns this character with the supplied per-round action point count.
+  PlayerState withActionPoints(int value) => PlayerState(
+    id: id,
+    characterId: characterId,
+    coord: coord,
+    damage: damage,
+    health: health,
+    credits: credits,
+    backpack: backpack,
+    equipped: equipped,
+    carriedMods: carriedMods,
+    implanted: implanted,
+    conditions: conditions,
+    alive: alive,
+    stats: stats,
+    weaponModifier: weaponModifier,
+    actionPoints: value,
+  );
 }
 
 /// A monster token on the board. [carriedGear] is used by a Restless monster.

@@ -251,5 +251,6 @@ abstract final class _InventoryChanges {
     alive: player.alive,
     stats: player.stats,
     weaponModifier: player.weaponModifier,
+    actionPoints: player.actionPoints,
   );
 }
