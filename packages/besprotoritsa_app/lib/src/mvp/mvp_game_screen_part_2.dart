@@ -53,9 +53,10 @@ class _WideGameLayoutState extends State<_WideGameLayout> {
     final selectedPlayerId = _selectedPlayer(state);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final scale = (constraints.maxWidth / 1664)
-            .clamp(0.1, constraints.maxHeight / 928)
-            .toDouble();
+        final scale = (constraints.maxWidth / 1664).clamp(
+          0.1,
+          constraints.maxHeight / 928,
+        );
         return Center(
           child: SizedBox(
             width: 1664 * scale,
@@ -229,11 +230,15 @@ class _GameStatus extends StatelessWidget {
             color: Color(0xFFD3AD75),
           ),
           const SizedBox(width: 8),
-          Text(
-            strings.roundStatus(state.round, state.actionsLeft),
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              letterSpacing: .4,
+          Flexible(
+            child: Text(
+              strings.roundStatus(state.round, state.actionsLeft),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                letterSpacing: .4,
+              ),
             ),
           ),
           const Spacer(),
@@ -313,15 +318,16 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
     }
     final current = _transformationController.value;
     final currentScale = current.getMaxScaleOnAxis();
-    final scale = (currentScale * math.exp(-event.scrollDelta.dy * .001))
-        .clamp(.65, 2.25)
-        .toDouble();
+    final scale = (currentScale * math.exp(-event.scrollDelta.dy * .001)).clamp(
+      .65,
+      2.25,
+    );
     final factor = scale / currentScale;
     final focalPoint = event.localPosition;
     _transformationController.value = Matrix4.identity()
-      ..translate(focalPoint.dx, focalPoint.dy)
-      ..scale(factor)
-      ..translate(-focalPoint.dx, -focalPoint.dy)
+      ..translateByDouble(focalPoint.dx, focalPoint.dy, 0, 1)
+      ..scaleByDouble(factor, factor, factor, 1)
+      ..translateByDouble(-focalPoint.dx, -focalPoint.dy, 0, 1)
       ..multiply(current);
   }
 
@@ -339,9 +345,6 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
         boundaryMargin: const EdgeInsets.all(160),
         minScale: 0.65,
         maxScale: 2.25,
-        panEnabled: true,
-        scaleEnabled: true,
-        trackpadScrollCausesScale: false,
         child: SizedBox(
           width: 800,
           height: 520,

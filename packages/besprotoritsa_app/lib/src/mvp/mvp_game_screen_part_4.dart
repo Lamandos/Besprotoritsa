@@ -3,56 +3,6 @@
 
 part of 'mvp_game_screen.dart';
 
-class _CommandPanel extends StatelessWidget {
-  const _CommandPanel({required this.state, required this.compact});
-
-  final GameState state;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppStrings.of(context);
-    final commands = _availableCommands(state, strings);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.keyboard_command_key,
-                size: 17,
-                color: Color(0xFFD3AD75),
-              ),
-              const SizedBox(width: 7),
-              Text(
-                strings.availableCommands.toUpperCase(),
-                style: const TextStyle(
-                  color: Color(0xFFD8C39A),
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final command in commands)
-                _CommandButton(command: command, compact: compact),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _CommandButton extends ConsumerWidget {
   const _CommandButton({required this.command, required this.compact});
 
@@ -209,7 +159,7 @@ class _HeroRosterPanel extends StatelessWidget {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(3),
                               child: LinearProgressIndicator(
-                                value: healthRatio.toDouble(),
+                                value: healthRatio,
                                 minHeight: 5,
                                 backgroundColor: const Color(0xFF201915),
                                 color: healthRatio <= .3
@@ -332,7 +282,7 @@ class _EmptyCrewSlot extends StatelessWidget {
 String _heroName(String id) => switch (id) {
   'scientist' => 'УЧЁНЫЙ',
   'guard' => 'ОХРАННИК',
-  'mechanic' => 'ИНЖЕНЕР',
+  'mechanic' || 'engineer' => 'ИНЖЕНЕР',
   'healer' => 'МЕДИК',
   _ => id.toUpperCase(),
 };
@@ -340,7 +290,7 @@ String _heroName(String id) => switch (id) {
 String _heroRole(String id) => switch (id) {
   'scientist' => 'НАУКА • АНАЛИЗ',
   'guard' => 'БЕЗОПАСНОСТЬ',
-  'mechanic' => 'РЕМОНТ • СИСТЕМЫ',
+  'mechanic' || 'engineer' => 'РЕМОНТ • СИСТЕМЫ',
   'healer' => 'МЕДИЦИНА',
   _ => 'ЧЛЕН ЭКИПАЖА',
 };
@@ -348,7 +298,7 @@ String _heroRole(String id) => switch (id) {
 IconData _heroIcon(String id) => switch (id) {
   'scientist' => Icons.science_outlined,
   'guard' => Icons.shield_outlined,
-  'mechanic' => Icons.build_outlined,
+  'mechanic' || 'engineer' => Icons.build_outlined,
   'healer' => Icons.medical_services_outlined,
   _ => Icons.person_outline,
 };
@@ -356,7 +306,7 @@ IconData _heroIcon(String id) => switch (id) {
 String _heroPortraitPath(String id) => switch (id) {
   'scientist' => 'assets/images/crew_scientist.png',
   'guard' => 'assets/images/crew_guard.png',
-  'mechanic' => 'assets/images/crew_mechanic.png',
+  'mechanic' || 'engineer' => 'assets/images/crew_mechanic.png',
   'healer' => 'assets/images/crew_healer.png',
   _ => 'assets/images/crew_scientist.png',
 };
@@ -495,7 +445,7 @@ void _showInventorySheet(
         (player) => player.id == (selectedPlayerId ?? state.activePlayerId),
       )
       .toList();
-  final PlayerState? selectedPlayer = matchingPlayers.isNotEmpty
+  final selectedPlayer = matchingPlayers.isNotEmpty
       ? matchingPlayers.first
       : state.players.isNotEmpty
       ? state.players.first

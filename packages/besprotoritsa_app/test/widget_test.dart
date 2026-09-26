@@ -10,7 +10,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Беспроторица'), findsOneWidget);
+    expect(find.text('БЕСПРОТОРИЦА'), findsOneWidget);
     expect(find.text('Новая игра'), findsOneWidget);
     expect(find.text('Продолжить'), findsOneWidget);
     expect(find.text('Загрузить партию'), findsOneWidget);

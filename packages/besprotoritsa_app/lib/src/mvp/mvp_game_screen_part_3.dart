@@ -1,6 +1,10 @@
 // API documentation is retained in the original library source.
 // ignore_for_file: public_member_api_docs
 
+// Painter coordinate expressions intentionally repeat canvas/paint receivers.
+// Keep geometric expressions readable even when they exceed 80 columns.
+// ignore_for_file: cascade_invocations, lines_longer_than_80_chars
+
 part of 'mvp_game_screen.dart';
 
 class _StaticBoardLayer extends StatelessWidget {
@@ -386,10 +390,22 @@ class _RoomTilePainter extends CustomPainter {
             coolLight,
           );
         }
-        canvas.drawLine(Offset(28, 139), Offset(size.width - 28, 139), light);
+        canvas.drawLine(
+          const Offset(28, 139),
+          Offset(size.width - 28, 139),
+          light,
+        );
       case HexTileType.corridor:
-        canvas.drawLine(Offset(24, 46), Offset(size.width - 24, 46), light);
-        canvas.drawLine(Offset(24, 57), Offset(size.width - 24, 57), metal);
+        canvas.drawLine(
+          const Offset(24, 46),
+          Offset(size.width - 24, 46),
+          light,
+        );
+        canvas.drawLine(
+          const Offset(24, 57),
+          Offset(size.width - 24, 57),
+          metal,
+        );
         for (var i = 0; i < 7; i++) {
           final y = 76 + i * 13.0;
           canvas.drawLine(Offset(50, y), Offset(size.width - 50, y), seam);
@@ -397,7 +413,7 @@ class _RoomTilePainter extends CustomPainter {
         final rail = Paint()
           ..color = const Color(0xFFBA935B)
           ..strokeWidth = 3;
-        canvas.drawLine(Offset(38, 70), Offset(38, 139), rail);
+        canvas.drawLine(const Offset(38, 70), const Offset(38, 139), rail);
         canvas.drawLine(
           Offset(size.width - 38, 70),
           Offset(size.width - 38, 139),
@@ -447,7 +463,11 @@ class _RoomTilePainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 3,
         );
-        canvas.drawLine(Offset(34, 54), Offset(size.width - 34, 54), light);
+        canvas.drawLine(
+          const Offset(34, 54),
+          Offset(size.width - 34, 54),
+          light,
+        );
     }
 
     if (!revealed) {
@@ -633,7 +653,6 @@ class _MobileActionDock extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         child: Material(
           elevation: 8,
-          borderRadius: BorderRadius.circular(28),
           color: const Color(0xFF30251D),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

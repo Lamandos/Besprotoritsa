@@ -1845,9 +1845,10 @@ Map<String, Object?>? _pendingDecisionToJson(
         'monsterDamage': monsterDamage,
         'requiredAgilitySuccesses': requiredAgilitySuccesses,
       },
-    AwaitingEventOption(:final options) => <String, Object?>{
+    AwaitingEventOption(:final options, :final eventId) => <String, Object?>{
       'type': 'eventOption',
       'options': options,
+      'eventId': eventId,
     },
     AwaitingTerminalPick(:final playerId, :final offeredCards) =>
       <String, Object?>{

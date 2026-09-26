@@ -1,5 +1,5 @@
-// API documentation is retained in the original library source.
-// ignore_for_file: public_member_api_docs
+// This part file retains original docs and readable canvas coordinate expressions.
+// ignore_for_file: public_member_api_docs, cascade_invocations, lines_longer_than_80_chars
 
 part of 'mvp_game_screen.dart';
 
@@ -120,9 +120,9 @@ class _ImmersiveGameHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 'ГЛАВА I  •  ПРОБУЖДЕНИЕ',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Color(0xFFD8C39A),
                   fontFamily: 'serif',
                   fontSize: 10,
@@ -205,12 +205,25 @@ class _EventCardPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     final activeQuests = _activeQuests(state);
-    final cardTitle = state.pendingDecision != null
-        ? strings.decisionRequired.toUpperCase()
-        : 'ШУМ В КАЮТЕ';
-    final cardCopy = state.pendingDecision == null
-        ? 'Из кают-компании доносится глухой скрежет. В полумраке мелькает тень. Возможно, вас уже заметили.'
-        : _decisionPrompt(state.pendingDecision!, strings);
+    final eventId = switch (state.pendingDecision) {
+      AwaitingEventOption(:final eventId) => eventId,
+      _ => null,
+    };
+    final cardTitle = eventId != null
+        ? _eventCardTitle(eventId)
+        : state.pendingDecision == null
+        ? 'ОЖИДАНИЕ СОБЫТИЯ'
+        : strings.decisionRequired.toUpperCase();
+    final cardCopy = switch (eventId) {
+      'cabin-noise' =>
+        'Из кают-компании доносится глухой скрежет. В полумраке мелькает тень. Возможно, вас уже заметили.',
+      null when state.pendingDecision != null => _decisionPrompt(
+        state.pendingDecision!,
+        strings,
+      ),
+      null => 'Новые сведения появятся, когда событие будет открыто.',
+      _ => _decisionPrompt(state.pendingDecision!, strings),
+    };
 
     return Container(
       decoration: BoxDecoration(
@@ -230,9 +243,9 @@ class _EventCardPanel extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
+                children: [
                   Icon(Icons.auto_stories, size: 17, color: Color(0xFF60472C)),
                   SizedBox(width: 7),
                   Text(
@@ -256,19 +269,41 @@ class _EventCardPanel extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.asset(
-                      'assets/images/cabin_noise_scene.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const ColoredBox(
-                            color: Color(0xFF30241B),
-                            child: Icon(
-                              Icons.bug_report,
-                              size: 72,
-                              color: Color(0xFFC75B32),
+                    if (eventId == 'cabin-noise')
+                      Image.asset(
+                        'assets/images/cabin_noise_scene.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const ColoredBox(
+                              color: Color(0xFF30241B),
+                              child: Icon(
+                                Icons.bug_report,
+                                size: 72,
+                                color: Color(0xFFC75B32),
+                              ),
                             ),
+                      )
+                    else
+                      const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF354049),
+                              Color(0xFF171A1B),
+                              Color(0xFF28231D),
+                            ],
                           ),
-                    ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.auto_stories_outlined,
+                            size: 58,
+                            color: Color(0xFFB99A6A),
+                          ),
+                        ),
+                      ),
                     const DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -358,6 +393,11 @@ class _EventCardPanel extends StatelessWidget {
     );
   }
 }
+
+String _eventCardTitle(String eventId) => switch (eventId) {
+  'cabin-noise' => 'ШУМ В КАЮТЕ',
+  _ => 'СОБЫТИЕ В СЕКТОРЕ',
+};
 
 class _PaperStainPainter extends CustomPainter {
   const _PaperStainPainter();
@@ -456,6 +496,7 @@ class _WideActionDock extends StatelessWidget {
     final endTurn = commands.where(
       (command) => command.command is EndTurnCommand,
     );
+    final endTurnCommand = endTurn.firstOrNull;
     final actions = commands.where(
       (command) =>
           command.command is! EndTurnCommand && command.command is! MoveCommand,
@@ -463,16 +504,16 @@ class _WideActionDock extends StatelessWidget {
     return Container(
       height: 146,
       padding: const EdgeInsets.fromLTRB(12, 10, 14, 12),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [Color(0xE6382A20), Color(0xE01B1713)],
         ),
-        border: const Border(
+        border: Border(
           top: BorderSide(color: Color(0xFF8E6B43), width: 1.4),
         ),
-        boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 14)],
+        boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 14)],
       ),
       child: Row(
         children: [
@@ -506,7 +547,12 @@ class _WideActionDock extends StatelessWidget {
           SizedBox(
             width: 338,
             height: 112,
-            child: _WideCommandButton(command: endTurn.first),
+            child: _WideCommandButton(
+              command:
+                  endTurnCommand ??
+                  _NamedCommand(strings.next, const EndTurnCommand()),
+              enabled: endTurnCommand != null,
+            ),
           ),
           IconButton(
             key: const ValueKey<String>('wide-turn-log-button-bottom'),
@@ -588,6 +634,7 @@ class _MoveConfirmButton extends ConsumerWidget {
       width: 98,
       height: 112,
       child: FilledButton(
+        key: mvpMoveConfirmButtonKey,
         style: FilledButton.styleFrom(
           backgroundColor: canMove
               ? const Color(0xFF81582F)
@@ -639,9 +686,10 @@ class _MoveConfirmButton extends ConsumerWidget {
 }
 
 class _WideCommandButton extends ConsumerWidget {
-  const _WideCommandButton({required this.command});
+  const _WideCommandButton({required this.command, this.enabled = true});
 
   final _NamedCommand command;
+  final bool enabled;
 
   bool get _isEndTurn => command.command is EndTurnCommand;
   bool get _isMove => command.command is MoveCommand;
@@ -667,12 +715,17 @@ class _WideCommandButton extends ConsumerWidget {
             children: [
               Icon(_icon, size: 28),
               const SizedBox(width: 12),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontFamily: 'serif',
-                  fontSize: 19,
-                  letterSpacing: 1.2,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'serif',
+                    fontSize: 19,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ],
@@ -708,9 +761,11 @@ class _WideCommandButton extends ConsumerWidget {
                 foregroundColor: const Color(0xFFFFE8C2),
                 side: const BorderSide(color: Color(0xFFE0A364), width: 1.4),
               ),
-              onPressed: () => ref
-                  .read(gameControllerProvider.notifier)
-                  .dispatch(command.command),
+              onPressed: enabled
+                  ? () => ref
+                        .read(gameControllerProvider.notifier)
+                        .dispatch(command.command)
+                  : null,
               child: child,
             )
           : OutlinedButton(
@@ -731,9 +786,11 @@ class _WideCommandButton extends ConsumerWidget {
                   borderRadius: BorderRadius.all(Radius.circular(3)),
                 ),
               ),
-              onPressed: () => ref
-                  .read(gameControllerProvider.notifier)
-                  .dispatch(command.command),
+              onPressed: enabled
+                  ? () => ref
+                        .read(gameControllerProvider.notifier)
+                        .dispatch(command.command)
+                  : null,
               child: child,
             ),
     );

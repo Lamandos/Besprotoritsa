@@ -32,6 +32,9 @@ const mvpInventorySheetKey = ValueKey<String>('mvp-inventory-sheet');
 /// Quest journal sheet root.
 const mvpJournalSheetKey = ValueKey<String>('mvp-journal-sheet');
 
+/// Wide and compact movement confirmation trigger.
+const mvpMoveConfirmButtonKey = ValueKey<String>('mvp-move-confirm-button');
+
 /// Compact-layout inventory trigger.
 const mvpInventoryButtonKey = ValueKey<String>('mvp-inventory-button');
 
@@ -171,6 +174,7 @@ class _MvpGameLayout extends ConsumerWidget {
               ],
             ),
       endDrawer: Drawer(
+        key: mvpJournalSheetKey,
         width: screenSize.width < 400 ? screenSize.width * .9 : 400,
         child: _JournalPanel(state: state, queue: queue),
       ),
@@ -182,8 +186,7 @@ class _MvpGameLayout extends ConsumerWidget {
               final useWideLayout =
                   constraints.maxWidth >= _wideLayoutMinimumWidth &&
                   constraints.maxWidth > constraints.maxHeight;
-              final openLog = () =>
-                  Scaffold.of(scaffoldContext).openEndDrawer();
+              void openLog() => Scaffold.of(scaffoldContext).openEndDrawer();
               return Stack(
                 children: [
                   if (useWideLayout)
