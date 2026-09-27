@@ -34,3 +34,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/sleeping_black_cat_dark_room/

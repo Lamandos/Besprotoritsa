@@ -24,9 +24,20 @@ class _WideGameLayout extends StatefulWidget {
   State<_WideGameLayout> createState() => _WideGameLayoutState();
 }
 
-class _WideGameLayoutState extends State<_WideGameLayout> {
+class _WideGameLayoutState extends State<_WideGameLayout>
+    with SingleTickerProviderStateMixin {
   String? _selectedPlayerId;
   HexCoord? _selectedDestination;
+  late final AnimationController _ambienceController = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 4),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _ambienceController.dispose();
+    super.dispose();
+  }
 
   String _selectedPlayer(GameState state) {
     if (_selectedPlayerId != null &&
@@ -67,92 +78,109 @@ class _WideGameLayoutState extends State<_WideGameLayout> {
                 child: SizedBox(
                   width: 1664,
                   height: 928,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      const Image(
-                        image: AssetImage(
-                          'assets/images/ship_bark_backdrop.png',
+                  child: AnimatedBuilder(
+                    animation: _ambienceController,
+                    builder: (context, foreground) => Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        const Image(
+                          image: AssetImage(
+                            'assets/images/ship_bark_backdrop.png',
+                          ),
+                          fit: BoxFit.fill,
                         ),
-                        fit: BoxFit.fill,
-                      ),
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Color(0x22101822), Color(0x22170805)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
+                        const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Color(0x22101822), Color(0x22170805)],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
                           ),
                         ),
-                      ),
-                      const CustomPaint(painter: _HullEngravingPainter()),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        top: 0,
-                        height: 126,
-                        child: _ImmersiveGameHeader(
-                          state: state,
-                          onSave: widget.onManualSaveRequested,
+                        const CustomPaint(painter: _HullEngravingPainter()),
+                        CustomPaint(
+                          painter: _ShipAmbientLightPainter(
+                            progress: _ambienceController.value,
+                          ),
                         ),
-                      ),
-                      Positioned(
-                        left: 18,
-                        top: 142,
-                        width: 340,
-                        height: 514,
-                        child: _HeroRosterPanel(
-                          state: state,
-                          selectedPlayerId: selectedPlayerId,
-                          onSelected: _selectPlayer,
+                        _SleepingCatBackdrop(
+                          progress: _ambienceController.value,
                         ),
-                      ),
-                      Positioned(
-                        left: 356,
-                        top: 146,
-                        width: 816,
-                        height: 564,
-                        child: Column(
-                          children: [
-                            _GameStatus(state: state, queue: queue),
-                            Expanded(
-                              child: HexBoardWidget(
-                                state: state,
-                                selectedPlayerId: selectedPlayerId,
-                                selectedDestination: _selectedDestination,
-                                onSelectPlayer: _selectPlayer,
-                                onSelectDestination: _selectDestination,
+                        if (foreground != null) foreground,
+                      ],
+                    ),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          height: 126,
+                          child: _ImmersiveGameHeader(
+                            state: state,
+                            onSave: widget.onManualSaveRequested,
+                          ),
+                        ),
+                        Positioned(
+                          left: 18,
+                          top: 142,
+                          width: 340,
+                          height: 514,
+                          child: _HeroRosterPanel(
+                            state: state,
+                            selectedPlayerId: selectedPlayerId,
+                            onSelected: _selectPlayer,
+                          ),
+                        ),
+                        Positioned(
+                          left: 356,
+                          top: 146,
+                          width: 816,
+                          height: 564,
+                          child: Column(
+                            children: [
+                              _GameStatus(state: state, queue: queue),
+                              Expanded(
+                                child: HexBoardWidget(
+                                  state: state,
+                                  selectedPlayerId: selectedPlayerId,
+                                  selectedDestination: _selectedDestination,
+                                  onSelectPlayer: _selectPlayer,
+                                  onSelectDestination: _selectDestination,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          right: 92,
+                          top: 142,
+                          width: 360,
+                          height: 548,
+                          child: _EventCardPanel(state: state),
+                        ),
+                        Positioned(
+                          left: 230,
+                          right: 95,
+                          bottom: 40,
+                          height: 146,
+                          child: AbsorbPointer(
+                            absorbing: widget.blocked,
+                            child: _WideActionDock(
+                              state: state,
+                              onOpenLog: widget.onOpenLog,
+                              selectedDestination: _selectedDestination,
+                              selectedPlayerId: selectedPlayerId,
+                              onClearDestination: () => setState(
+                                () => _selectedDestination = null,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      Positioned(
-                        right: 92,
-                        top: 142,
-                        width: 360,
-                        height: 548,
-                        child: _EventCardPanel(state: state),
-                      ),
-                      Positioned(
-                        left: 230,
-                        right: 95,
-                        bottom: 40,
-                        height: 146,
-                        child: AbsorbPointer(
-                          absorbing: widget.blocked,
-                          child: _WideActionDock(
-                            state: state,
-                            onOpenLog: widget.onOpenLog,
-                            selectedDestination: _selectedDestination,
-                            selectedPlayerId: selectedPlayerId,
-                            onClearDestination: () => setState(
-                              () => _selectedDestination = null,
-                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

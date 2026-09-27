@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:besprotoritsa_app/src/game/event_queue.dart';
 import 'package:besprotoritsa_app/src/game/game_controller.dart';
@@ -16,3 +17,4 @@ part 'mvp_game_screen_part_4.dart';
 part 'mvp_game_screen_part_5.dart';
 part 'mvp_game_screen_part_6.dart';
 part 'mvp_game_screen_part_7.dart';
+part 'mvp_game_screen_part_8.dart';
