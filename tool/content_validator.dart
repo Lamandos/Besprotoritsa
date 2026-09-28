@@ -28,6 +28,8 @@ const _mvpDirectories = <String, String>{
   'quests': 'quest',
 };
 
+const _requiredMvpCharacterFiles = ['engineer', 'guard'];
+
 final class ContentValidationReport {
   const ContentValidationReport(this.records, this.issues);
 
@@ -44,6 +46,7 @@ Future<ContentValidationReport> validateContent({
   final issues = <String>[];
   final catalog = await _loadCatalog(contentDirectory, issues);
   final selected = await _loadMvp(contentDirectory, contentSetId, issues);
+  _validateMvpCharacterFiles(contentDirectory, contentSetId, issues);
   final allRecords = [...catalog, ...selected];
   _validateSchemas(allRecords, contentDirectory, issues);
   _validateMetadata(allRecords, issues);
@@ -54,6 +57,22 @@ Future<ContentValidationReport> validateContent({
   await _validateMvpLayout(contentDirectory, selected, issues);
   await _validateCampaign(catalog, contentDirectory, issues);
   return ContentValidationReport(allRecords.length, List.unmodifiable(issues));
+}
+
+void _validateMvpCharacterFiles(
+  Directory content,
+  String contentSetId,
+  List<String> issues,
+) {
+  if (contentSetId != 'mvp') return;
+  for (final id in _requiredMvpCharacterFiles) {
+    final file = File('${content.path}/mvp/characters/$id.json');
+    if (!file.existsSync()) {
+      issues.add(
+        '${file.path} [id=$id]: required runtime character file is missing',
+      );
+    }
+  }
 }
 
 Future<List<_Record>> _loadCatalog(
@@ -180,8 +199,13 @@ void _validateSchemas(
       cache
           .putIfAbsent(schemaFile, () {
             final decoded = jsonDecode(File(schemaFile).readAsStringSync());
+            if (decoded is! Map) {
+              throw const SchemaValidationException(
+                'schema root must be a JSON object',
+              );
+            }
             return JsonSchemaValidator(
-              Map<String, Object?>.from(decoded as Map),
+              Map<String, Object?>.from(decoded),
             );
           })
           .validate(record.value);
@@ -403,6 +427,8 @@ Future<void> _validateMvpLayout(
       .map((record) => record.id)
       .whereType<String>()
       .toSet();
+  final coordinateIndexes = <String, int>{};
+  final hexIndexes = <String, int>{};
   for (var index = 0; index < coordinates.length; index++) {
     final row = coordinates[index];
     final recordId = '<coordinate-$index>';
@@ -412,10 +438,24 @@ Future<void> _validateMvpLayout(
       );
       continue;
     }
-    if (row['q'] is! int || row['r'] is! int) {
+    final q = row['q'];
+    final r = row['r'];
+    if (q is! int || r is! int) {
       issues.add(
         '${file.path} [id=$recordId]: q and r must be integers',
       );
+    } else {
+      final coordinate = '$q,$r';
+      final firstIndex = coordinateIndexes.putIfAbsent(
+        coordinate,
+        () => index,
+      );
+      if (firstIndex != index) {
+        issues.add(
+          '${file.path} [id=$recordId]: duplicate coordinate "$coordinate"; '
+          'first used by coordinate $firstIndex',
+        );
+      }
     }
     final hexId = row['hexId'];
     if (hexId is! String || !hexIds.contains(hexId)) {
@@ -423,6 +463,14 @@ Future<void> _validateMvpLayout(
         '${file.path} [id=${hexId is String ? hexId : recordId}].hexId: '
         'unknown mvp hex "$hexId"',
       );
+    } else {
+      final firstIndex = hexIndexes.putIfAbsent(hexId, () => index);
+      if (firstIndex != index) {
+        issues.add(
+          '${file.path} [id=$hexId]: duplicate layout hexId "$hexId"; '
+          'first used by coordinate $firstIndex',
+        );
+      }
     }
   }
 }
@@ -460,17 +508,8 @@ Future<void> _validateCampaign(
       'expected an array of quest IDs',
     );
   }
-  final reachable = <String>{...starts};
-  final queue = <String>[...starts];
-  while (queue.isNotEmpty) {
-    final id = queue.removeLast();
-    final next = byId[id]?.value['nextQuestIds'];
-    if (next is List) {
-      for (final target in next.whereType<String>()) {
-        if (reachable.add(target)) queue.add(target);
-      }
-    }
-  }
+  _reportPrerequisiteCycles(byId, issues);
+  final reachableTerminals = _reachableCampaignTerminals(byId, starts);
   final terminals = quests
       .where((quest) => quest.value['endsGame'] == true)
       .toList();
@@ -481,14 +520,104 @@ Future<void> _validateCampaign(
     );
   } else {
     for (final terminal in terminals.where(
-      (quest) => !reachable.contains(quest.id),
+      (quest) => !reachableTerminals.contains(quest.id),
     )) {
       issues.add(
         '${terminal.label}: terminal quest is unreachable from '
-        '${starts.join(', ')}',
+        '${starts.join(', ')} with its prerequisites',
       );
     }
   }
+}
+
+void _reportPrerequisiteCycles(
+  Map<String, _Record> quests,
+  List<String> issues,
+) {
+  final state = <String, int>{};
+  final path = <String>[];
+  final reported = <String>{};
+
+  void visit(String id) {
+    state[id] = 1;
+    path.add(id);
+    final prerequisites = quests[id]!.value['prerequisiteQuestIds'];
+    if (prerequisites is List) {
+      for (final prerequisite in prerequisites.whereType<String>()) {
+        if (!quests.containsKey(prerequisite)) continue;
+        if (state[prerequisite] == 1) {
+          final cycleStart = path.indexOf(prerequisite);
+          final cycle = [...path.skip(cycleStart), prerequisite];
+          final cycleKey = cycle.toSet().toList()..sort();
+          if (reported.add(cycleKey.join('|'))) {
+            issues.add(
+              '${quests[id]!.label}.prerequisiteQuestIds: prerequisite '
+              'cycle ${cycle.join(' -> ')}',
+            );
+          }
+        } else if (state[prerequisite] == null) {
+          visit(prerequisite);
+        }
+      }
+    }
+    path.removeLast();
+    state[id] = 2;
+  }
+
+  for (final id in quests.keys) {
+    if (state[id] == null) visit(id);
+  }
+}
+
+Set<String> _reachableCampaignTerminals(
+  Map<String, _Record> quests,
+  Set<String> starts,
+) {
+  final pending = <({Set<String> active, Set<String> completed})>[
+    (active: {...starts}, completed: <String>{}),
+  ];
+  final visited = <String>{};
+  final reachableTerminals = <String>{};
+  var cursor = 0;
+
+  while (cursor < pending.length) {
+    final current = pending[cursor++];
+    final activeIds = current.active.toList()..sort();
+    final completedIds = current.completed.toList()..sort();
+    final key = '${activeIds.join(',')}|${completedIds.join(',')}';
+    if (!visited.add(key)) continue;
+
+    for (final id in current.active) {
+      final quest = quests[id];
+      if (quest == null) continue;
+      final prerequisites = quest.value['prerequisiteQuestIds'];
+      final required = prerequisites is List
+          ? prerequisites.whereType<String>()
+          : const <String>[];
+      if (!required.every(current.completed.contains)) continue;
+
+      final completed = {...current.completed, id};
+      if (quest.value['endsGame'] == true) {
+        reachableTerminals.add(id);
+        continue;
+      }
+      final active = {...current.active}..remove(id);
+      final nextIds = quest.value['nextQuestIds'];
+      if (nextIds is List) {
+        for (final nextId in nextIds.whereType<String>()) {
+          final next = quests[nextId];
+          if (next == null || completed.contains(nextId)) continue;
+          final nextPrerequisites = next.value['prerequisiteQuestIds'];
+          final nextRequired = nextPrerequisites is List
+              ? nextPrerequisites.whereType<String>()
+              : const <String>[];
+          if (nextRequired.every(completed.contains)) active.add(nextId);
+        }
+      }
+      pending.add((active: active, completed: completed));
+    }
+  }
+  return reachableTerminals;
 }
 
 Set<String> _flattenTranslations(Map<String, Object?> root) {

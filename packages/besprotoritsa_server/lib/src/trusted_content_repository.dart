@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 
@@ -65,13 +64,27 @@ final class _MvpContentLoader {
     }
     final characterIds = <String>['engineer', 'guard'];
     const optional = <String>['scientist', 'mechanic'];
-    characterIds.addAll(optional.take(max(0, partySize - characterIds.length)));
+    final characterDirectory = Directory('${mvp.path}/characters');
+    characterIds.addAll(
+      optional.where(
+        (id) => File('${characterDirectory.path}/$id.json').existsSync(),
+      ),
+    );
+    if (partySize > characterIds.length) {
+      throw FormatException(
+        'partySize $partySize exceeds the ${characterIds.length} '
+        'characters available in content set mvp.',
+      );
+    }
+    final selectedCharacterIds = characterIds.take(partySize).toList();
     final characters = <String, Map<String, Object?>>{
-      for (final id in characterIds)
+      for (final id in selectedCharacterIds)
         id: _document(File('${mvp.path}/characters/$id.json')),
     };
-    final players = List<PlayerState>.generate(characterIds.length, (index) {
-      final id = characterIds[index];
+    final players = List<PlayerState>.generate(selectedCharacterIds.length, (
+      index,
+    ) {
+      final id = selectedCharacterIds[index];
       final character = characters[id]!;
       return PlayerState(
         id: 'hero-${index + 1}',

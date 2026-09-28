@@ -41,6 +41,12 @@ void main() {
       'layout_missing',
       'layout_malformed',
       'layout_hex_link',
+      'layout_duplicate_coordinate',
+      'layout_duplicate_hex_id',
+      'required_runtime_character',
+      'schema_root_type',
+      'quest_condition_required_field',
+      'prerequisite_cycle',
     ]) {
       test(
         'rejects $fixtureName fixture with record ID and file path',
