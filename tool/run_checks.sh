@@ -24,7 +24,5 @@ dart test packages/besprotoritsa_server
     test/save_resume_scenario_test.dart
   if [[ "${CI:-}" == true ]]; then
     xvfb-run -a flutter test integration_test/ -d linux
-  else
-    flutter test integration_test/ -d linux
   fi
 )

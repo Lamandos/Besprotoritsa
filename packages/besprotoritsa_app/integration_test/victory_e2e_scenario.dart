@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:besprotoritsa_app/besprotoritsa_app.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +15,12 @@ void main() {
     tester,
   ) async {
     const fixedSeed = 0x51A7E;
-    final graph = QuestGraph(quests: _storyQuests);
+    final questDocument =
+        jsonDecode(
+              await File('../../content/quests.json').readAsString(),
+            )
+            as Map<String, dynamic>;
+    final graph = QuestGraph.fromJson(Map<String, Object?>.from(questDocument));
     final engine = QuestEngine(graph);
     var progress = engine.initialProgress();
     QuestTransition? terminalTransition;
@@ -81,98 +89,6 @@ void main() {
     expect(find.text('Победа выживших'), findsOneWidget);
   });
 }
-
-final _storyQuests = <QuestDefinition>[
-  _quest(1, _check('crew-quarters', StatType.science), const ['quest-02']),
-  _quest(
-    2,
-    _check('engineering-control-post', StatType.repair),
-    const ['quest-03'],
-  ),
-  _quest(3, _check('reactor', StatType.repair), const ['quest-04']),
-  _quest(
-    4,
-    _check('medical-bay', StatType.science),
-    const ['quest-05', 'quest-06'],
-  ),
-  _quest(5, _check('laboratory', StatType.science), const ['quest-07']),
-  _quest(6, _check('main-computer', StatType.repair), const ['quest-07']),
-  _quest(
-    7,
-    _check('escape-pods', StatType.science),
-    const ['quest-08'],
-    prerequisites: const ['quest-05', 'quest-06'],
-  ),
-  _quest(8, _check('storage', StatType.repair), const ['quest-09', 'quest-10']),
-  _quest(
-    9,
-    const [
-      QuestCondition(
-        id: 'arrive-flight-control',
-        type: QuestConditionType.arrive,
-        locationId: 'flight-control',
-      ),
-      QuestCondition(
-        id: 'kill-viy',
-        type: QuestConditionType.killMonster,
-        monsterId: 'viy',
-      ),
-    ],
-    const ['quest-11'],
-  ),
-  _quest(10, _check('escape-pods', StatType.repair), const ['quest-11']),
-  _quest(
-    11,
-    const [
-      QuestCondition(
-        id: 'arrive-escape-pods-final',
-        type: QuestConditionType.arrive,
-        locationId: 'escape-pods',
-      ),
-      QuestCondition(
-        id: 'kill-mother',
-        type: QuestConditionType.killMonster,
-        monsterId: 'mother',
-      ),
-    ],
-    const ['quest-12'],
-    prerequisites: const ['quest-09', 'quest-10'],
-  ),
-  _quest(12, const [], const [], endsGame: true),
-];
-
-QuestDefinition _quest(
-  int number,
-  List<QuestCondition> conditions,
-  List<String> nextQuestIds, {
-  List<String> prerequisites = const [],
-  bool endsGame = false,
-}) => QuestDefinition(
-  id: 'quest-${number.toString().padLeft(2, '0')}',
-  number: number,
-  chapter: number,
-  conditions: conditions,
-  nextQuestIds: nextQuestIds,
-  prerequisites: prerequisites,
-  reward: const QuestReward(),
-  nameKey: 'quest-$number',
-  descKey: 'quest-$number-description',
-  endsGame: endsGame,
-);
-
-List<QuestCondition> _check(String locationId, StatType stat) => [
-  QuestCondition(
-    id: 'arrive-$locationId',
-    type: QuestConditionType.arrive,
-    locationId: locationId,
-  ),
-  QuestCondition(
-    id: 'check-$locationId-${stat.name}',
-    type: QuestConditionType.skillCheck,
-    locationId: locationId,
-    skill: stat,
-  ),
-];
 
 const _victoryRoute = <QuestEvent>[
   QuestArrived('crew-quarters'),

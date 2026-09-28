@@ -52,7 +52,13 @@ Future<void> _report(
     throw FormatException('${definition.path}.cards must be an array.');
   }
   var cards = rawCards.whereType<Map<String, dynamic>>().where((card) {
-    return name != 'items' || card['sourceDeck'] == 'items';
+    if (name == 'items') return card['sourceDeck'] == 'items';
+    if (name == 'monsters') {
+      final features = card['features'];
+      return card['id'] != 'boil' &&
+          !(features is List && features.contains('boss'));
+    }
+    return true;
   }).toList();
   var datasetLabel = definition.path;
   final cardSchemas = <String, List<Map<String, dynamic>>>{
@@ -113,7 +119,10 @@ Future<void> _report(
       .where((path) => File(path).existsSync())
       .toList();
   _write('Deck: $name');
-  _write('  Dataset: $datasetLabel');
+  final datasetNote = name == 'monsters'
+      ? ' (deck cards; excludes bosses and Boil reference)'
+      : '';
+  _write('  Dataset: $datasetLabel$datasetNote');
   _write('  Unique card records: ${cards.length}');
   _write('  Physical copies declared: $physicalCopies');
   for (final batch in copiesByBatch.keys.toList()..sort()) {

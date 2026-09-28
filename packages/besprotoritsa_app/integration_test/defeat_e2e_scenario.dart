@@ -8,7 +8,7 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('both heroes die in combat, become Restless, and open defeat', (
+  testWidgets('a queued replacement delays defeat until the reserve dies', (
     tester,
   ) async {
     var state = _initialState();
@@ -46,7 +46,7 @@ void main() {
 
     expect(state.players.every((hero) => !hero.alive), isTrue);
     expect(state.reserveHeroes, isEmpty);
-    expect(state.isComplete, isTrue);
+    expect(state.isComplete, isFalse);
     expect(state.pendingDecision, isNull);
     expect(
       state.monsters.whereType<RestlessMonster>().map(
@@ -54,6 +54,23 @@ void main() {
       ),
       containsAll(const [HexCoord(0, 0), HexCoord(0, 1)]),
     );
+
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    expect(state.players.first.characterId, 'scientist');
+    expect(state.players.first.alive, isTrue);
+    expect(state.queuedReplacements, isEmpty);
+
+    state = spawnMonster(
+      state,
+      _monster('ghoul-scientist', const HexCoord(0, 0)),
+    );
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(DodgeChoice()),
+      FixedDiceRoller([1]),
+    ).state;
+    expect(state.players.every((hero) => !hero.alive), isTrue);
+    expect(state.isComplete, isTrue);
 
     final container = ProviderContainer(
       overrides: [
@@ -93,7 +110,7 @@ GameState _initialState() => GameState(
   reserveHeroes: [
     ReserveHero(
       characterId: 'scientist',
-      health: 3,
+      health: 1,
       stats: const PlayerStats(science: 3),
     ),
   ],
