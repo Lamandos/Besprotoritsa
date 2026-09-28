@@ -29,6 +29,16 @@ const _mvpDirectories = <String, String>{
 };
 
 const _requiredMvpCharacterFiles = ['engineer', 'guard'];
+const _mvpHexDirections = <(int, int)>[
+  (0, -1),
+  (1, -1),
+  (1, 0),
+  (0, 1),
+  (-1, 1),
+  (-1, 0),
+];
+
+typedef _RuntimeHex = ({String id, int q, int r, Set<int> exits});
 
 final class ContentValidationReport {
   const ContentValidationReport(this.records, this.issues);
@@ -229,6 +239,12 @@ void _validateMetadata(List<_Record> records, List<String> issues) {
       }
     }
     final source = record.value['sourceDeck'];
+    if (record.namespace == 'catalog:item' && source == null) {
+      issues.add(
+        '${record.label}.sourceDeck: required for catalog item deck '
+        'accounting',
+      );
+    }
     if (source != null && !allowedSources.contains(source)) {
       issues.add('${record.label}.sourceDeck: unsupported value "$source"');
     }
@@ -359,6 +375,7 @@ void _validateReferences(
     }
     final hexIds = idsBySchema['hex'] ?? <String>{};
     final questIds = idsBySchema['quest'] ?? <String>{};
+    final monsterIds = idsBySchema['monster'] ?? <String>{};
     final itemIds = <String>{
       ...?idsBySchema['item'],
       ...?idsBySchema['special_item'],
@@ -385,6 +402,14 @@ void _validateReferences(
               !hexIds.contains(value)) {
             issues.add(
               '${record.label}.$path: unknown $prefix location "$value"',
+            );
+          }
+          if (record.schema == 'quest' &&
+              key == 'monsterId' &&
+              value is String &&
+              !monsterIds.contains(value)) {
+            issues.add(
+              '${record.label}.$path: unknown $prefix monster "$value"',
             );
           }
         });
@@ -434,6 +459,7 @@ Future<void> _validateMvpLayout(
   final coordinateIndexes = <String, int>{};
   final hexIndexes = <String, int>{};
   final hexIdsByCoordinate = <String, String>{};
+  final tilesByCoordinate = <String, _RuntimeHex>{};
   for (var index = 0; index < coordinates.length; index++) {
     final row = coordinates[index];
     final recordId = '<coordinate-$index>';
@@ -464,6 +490,18 @@ Future<void> _validateMvpLayout(
       }
       if (hexId is String) {
         hexIdsByCoordinate.putIfAbsent(coordinate, () => hexId);
+        final exits = hexesById[hexId]?.value['exits'];
+        if (!coordinateIndexes.containsKey(coordinate) ||
+            coordinateIndexes[coordinate] == index) {
+          if (exits is List && exits.every((edge) => edge is int)) {
+            tilesByCoordinate[coordinate] = (
+              id: hexId,
+              q: q,
+              r: r,
+              exits: exits.cast<int>().toSet(),
+            );
+          }
+        }
       }
     }
     if (hexId is! String || !hexIds.contains(hexId)) {
@@ -509,6 +547,79 @@ Future<void> _validateMvpLayout(
       '(0,1), which must contain a layout hex',
     );
   }
+
+  final linksByCoordinate = <String, Set<String>>{
+    for (final coordinate in tilesByCoordinate.keys) coordinate: <String>{},
+  };
+  for (final entry in tilesByCoordinate.entries) {
+    final coordinate = entry.key;
+    final tile = entry.value;
+    for (var edge = 0; edge < _mvpHexDirections.length; edge++) {
+      final direction = _mvpHexDirections[edge];
+      final adjacentCoordinate =
+          '${tile.q + direction.$1},${tile.r + direction.$2}';
+      final adjacent = tilesByCoordinate[adjacentCoordinate];
+      if (adjacent == null || coordinate.compareTo(adjacentCoordinate) >= 0) {
+        continue;
+      }
+      final hasExit = tile.exits.contains(edge);
+      final hasOppositeExit = adjacent.exits.contains((edge + 3) % 6);
+      if (hasExit != hasOppositeExit) {
+        issues.add(
+          '${file.path} [id=${tile.id}].exits: port $edge toward '
+          '${adjacent.id} does not match its opposite exit',
+        );
+      } else if (hasExit) {
+        linksByCoordinate[coordinate]!.add(adjacentCoordinate);
+        linksByCoordinate[adjacentCoordinate]!.add(coordinate);
+      }
+    }
+  }
+
+  final reachableCoordinates = <String>{};
+  final pendingCoordinates = <String>[];
+  if (tilesByCoordinate.containsKey('0,0')) {
+    reachableCoordinates.add('0,0');
+    pendingCoordinates.add('0,0');
+  }
+  for (var index = 0; index < pendingCoordinates.length; index++) {
+    for (final adjacent
+        in linksByCoordinate[pendingCoordinates[index]] ?? const <String>{}) {
+      if (reachableCoordinates.add(adjacent)) pendingCoordinates.add(adjacent);
+    }
+  }
+
+  final requiredQuestLocations = <String, String>{};
+  for (final quest in selected.where((record) => record.schema == 'quest')) {
+    _visit(quest.value, (key, value, path) {
+      if ((key == 'targetLocation' || key == 'locationId') && value is String) {
+        requiredQuestLocations.putIfAbsent(
+          value,
+          () => '${quest.label}.$path',
+        );
+      }
+    });
+  }
+  for (final entry in requiredQuestLocations.entries) {
+    String? coordinate;
+    for (final tile in tilesByCoordinate.entries) {
+      if (tile.value.id == entry.key) {
+        coordinate = tile.key;
+        break;
+      }
+    }
+    if (coordinate == null) {
+      issues.add(
+        '${entry.value}: required quest location "${entry.key}" is not '
+        'placed in ${file.path}',
+      );
+    } else if (!reachableCoordinates.contains(coordinate)) {
+      issues.add(
+        '${entry.value}: required quest location "${entry.key}" is '
+        'unreachable from anabiosis through reciprocal exits in ${file.path}',
+      );
+    }
+  }
 }
 
 Future<void> _validateCampaign(
@@ -523,6 +634,7 @@ Future<void> _validateCampaign(
       if (quest.id != null) quest.id!: quest,
   };
   final starts = <String>{};
+  final declaredStarts = <String>{};
   final questFile = File('${content.path}/quests.json');
   final root = await _read(questFile, issues);
   final initial = root?['initialQuestIds'];
@@ -535,7 +647,14 @@ Future<void> _validateCampaign(
           'unknown initial quest "$id"',
         );
       } else {
-        starts.add(id);
+        if (!declaredStarts.add(id)) {
+          issues.add(
+            '${questFile.path} [id=<campaign>].initialQuestIds[$index]: '
+            'duplicate initial quest "$id"',
+          );
+        } else {
+          starts.add(id);
+        }
       }
     }
   } else {

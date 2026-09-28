@@ -1,0 +1,1 @@
+{"operation":"remove_field","file":"items.json","path":["cards",0,"sourceDeck"],"expected":"sourceDeck: required for catalog item deck accounting"}

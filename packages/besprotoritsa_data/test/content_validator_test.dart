@@ -51,6 +51,11 @@ void main() {
       'runtime_character_health',
       'layout_runtime_hero_spawn',
       'layout_runtime_monster_spawn',
+      'quest_location_not_placed',
+      'quest_location_disconnected',
+      'quest_monster_link',
+      'source_deck_required',
+      'initial_quest_duplicate',
     ]) {
       test(
         'rejects $fixtureName fixture with record ID and file path',
@@ -77,6 +82,15 @@ void main() {
             await File(
               '${copiedContent.path}/${fixture['source']}',
             ).rename('${copiedContent.path}/${fixture['destination']}');
+          } else if (operation == 'remove_field') {
+            final relativePath = fixture['file']! as String;
+            final file = File('${copiedContent.path}/$relativePath');
+            final root = jsonDecode(await file.readAsString());
+            final segments = fixture['path']! as List<Object?>;
+            final updated = _removeAtPath(root, segments);
+            await file.writeAsString(
+              const JsonEncoder.withIndent('  ').convert(updated),
+            );
           } else {
             final relativePath = fixture['file']! as String;
             final file = File('${copiedContent.path}/$relativePath');
@@ -151,6 +165,31 @@ Object? _replaceAtPath(Object? root, List<Object?> path, Object? value) {
   if (root is List<Object?> && head is int) {
     final updated = List<Object?>.of(root);
     updated[head] = _replaceAtPath(updated[head], tail, value);
+    return updated;
+  }
+  throw StateError('Invalid fixture path: $path');
+}
+
+Object? _removeAtPath(Object? root, List<Object?> path) {
+  if (path.isEmpty) throw StateError('Cannot remove the document root.');
+  final head = path.first;
+  final tail = path.skip(1).toList();
+  if (root is Map<String, Object?> && head is String) {
+    final updated = Map<String, Object?>.of(root);
+    if (tail.isEmpty) {
+      updated.remove(head);
+    } else {
+      updated[head] = _removeAtPath(updated[head], tail);
+    }
+    return updated;
+  }
+  if (root is List<Object?> && head is int) {
+    final updated = List<Object?>.of(root);
+    if (tail.isEmpty) {
+      updated.removeAt(head);
+    } else {
+      updated[head] = _removeAtPath(updated[head], tail);
+    }
     return updated;
   }
   throw StateError('Invalid fixture path: $path');

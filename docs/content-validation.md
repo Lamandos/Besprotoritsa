@@ -20,7 +20,8 @@ dart test packages/besprotoritsa_data/test/content_validator_test.dart
 набора `content/mvp/` по схеме. Для каталога и выбранного набора он также проверяет
 дубли ID внутри пространств имён, i18n-ссылки, зарегистрированные effect ID и
 совместимость типа эффекта с местом его применения. Для выбранного набора ссылки
-на задания, локации и стартовые карты разрешаются только внутри этого набора.
+на задания, локации, монстров в проверках убийства и стартовые карты разрешаются
+только внутри этого набора. Для catalog-карт из items.json требуется sourceDeck.
 Граф сюжетных заданий каталога должен содержать достижимый терминал `endsGame` с
 учётом `prerequisiteQuestIds`; циклы prerequisites отклоняются. Для выбранного
 набора проверяются структура layout, ссылки и уникальность координат/гексов,
@@ -44,10 +45,12 @@ dart test packages/besprotoritsa_data/test/content_validator_test.dart
 ## Отрицательные фикстуры
 
 `packages/besprotoritsa_data/test/fixtures/content-audit/` содержит независимые
-поломки ссылок на задания/локации, терминального исхода и prerequisites, i18n, схемы,
+поломки ссылок на задания/локации/монстров, дубликата начального задания,
+терминального исхода и prerequisites, i18n, схемы,
 `importBatch`, `sourceDeck`, `copies`, регистрации effect ID и типа hook,
 enum-значения, уникальности ID, стартовой карты, доступности внутри выбранного
-набора и ошибок layout. Тесты `content_validator_test.dart` и
+набора, отсутствующего sourceDeck и ошибок layout. Тесты
+`content_validator_test.dart` и
 `trusted_content_repository_test.dart` проверяют, что каждая такая ошибка
 отклоняется и сообщение содержит ID записи и путь.
 
