@@ -18,6 +18,7 @@ jobs:
         with:
           channel: stable
       - run: flutter pub get
-      - run: ./tool/run_checks.sh
+      - name: Run local quality checks, including content validation
+        run: ./tool/run_checks.sh
       - name: Build server Docker image
         run: docker build -f packages/besprotoritsa_server/Dockerfile -t besprotoritsa-server:ci .

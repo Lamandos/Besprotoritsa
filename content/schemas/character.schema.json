@@ -7,7 +7,7 @@
   "required": ["id", "health", "strength", "combatStrength", "science", "repair", "endurance", "agility", "startItems", "startCredits", "diaryKey"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
-    "health": { "$ref": "#/$defs/nonNegativeInteger" },
+    "health": { "type": "integer", "minimum": 1 },
     "strength": { "$ref": "#/$defs/nonNegativeInteger" },
     "combatStrength": { "$ref": "#/$defs/nonNegativeInteger" },
     "science": { "$ref": "#/$defs/nonNegativeInteger" },

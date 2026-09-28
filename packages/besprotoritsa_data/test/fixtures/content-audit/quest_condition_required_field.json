@@ -1,0 +1,1 @@
+{"file":"quests.json","path":["quests",0,"conditions",0],"value":{"id":"missing-monster","type":"kill_monster"},"expected":"oneOf alternative to match"}

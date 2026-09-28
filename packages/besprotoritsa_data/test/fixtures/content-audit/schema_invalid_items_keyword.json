@@ -1,0 +1,1 @@
+{"file":"schemas/item.schema.json","path":["items"],"value":7,"expected":"\"items\" must be an object or boolean"}
