@@ -6,6 +6,7 @@ dart format --output=none --set-exit-if-changed .
 dart analyze --fatal-infos .
 dart run tool/validate_schemas.dart
 dart run tool/validate_content.dart
+dart run tool/content_report.dart
 dart run tool/verify_batch.dart --deck items
 dart run tool/verify_batch.dart --deck supplies
 dart run tool/verify_batch.dart --deck events

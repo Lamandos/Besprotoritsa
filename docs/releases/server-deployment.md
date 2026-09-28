@@ -23,6 +23,16 @@ docker --version
 docker compose version
 ```
 
+When building the image manually, run the command from the repository root:
+
+```sh
+docker build -f packages/besprotoritsa_server/Dockerfile \
+  -t besprotoritsa-server:latest .
+```
+
+The root context is required because the Dockerfile copies the sibling
+`packages/besprotoritsa_data/` package.
+
 ## First deployment
 
 Clone the repository on the server and start the service from its root:
