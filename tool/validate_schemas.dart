@@ -105,9 +105,70 @@ void validateSchemaDefinition(Map<String, Object?> schema, String source) {
 }
 
 void _validateSchemaNode(Map<String, Object?> node, String source) {
+  final reference = node[r'$ref'];
+  if (reference != null) {
+    _expect(
+      reference is String && reference.startsWith(r'#/$defs/'),
+      source,
+      r'"$ref" must be a supported local definition reference',
+    );
+  }
   final type = node['type'];
   if (type != null) {
-    _expect(type is String, source, '"type" must be a string');
+    _expect(
+      type is String &&
+          const {
+            'null',
+            'object',
+            'array',
+            'string',
+            'boolean',
+            'integer',
+            'number',
+          }.contains(type),
+      source,
+      '"type" must be a supported string',
+    );
+  }
+  final enumValues = node['enum'];
+  if (enumValues != null) {
+    _expect(
+      enumValues is List && enumValues.isNotEmpty,
+      source,
+      '"enum" must be a non-empty array',
+    );
+  }
+  final pattern = node['pattern'];
+  if (pattern != null) {
+    _expect(pattern is String, source, '"pattern" must be a string');
+    try {
+      RegExp(pattern as String);
+    } on FormatException {
+      throw SchemaValidationException('$source: "pattern" is not valid.');
+    }
+  }
+  for (final keyword in const ['minimum', 'maximum']) {
+    final value = node[keyword];
+    if (value != null) {
+      _expect(value is num, source, '"$keyword" must be a number');
+    }
+  }
+  final minimum = node['minimum'];
+  final maximum = node['maximum'];
+  if (minimum is num && maximum is num) {
+    _expect(minimum <= maximum, source, '"minimum" must not exceed "maximum"');
+  }
+  final minItems = node['minItems'];
+  if (minItems != null) {
+    _expect(
+      minItems is int && minItems >= 0,
+      source,
+      '"minItems" must be a non-negative integer',
+    );
+  }
+  final uniqueItems = node['uniqueItems'];
+  if (uniqueItems != null) {
+    _expect(uniqueItems is bool, source, '"uniqueItems" must be a boolean');
   }
   final required = node['required'];
   if (required != null) {

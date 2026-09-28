@@ -215,9 +215,9 @@ void _validateSchemas(
                 'schema root must be a JSON object',
               );
             }
-            return JsonSchemaValidator(
-              Map<String, Object?>.from(decoded),
-            );
+            final schema = Map<String, Object?>.from(decoded);
+            validateSchemaDefinition(schema, schemaFile);
+            return JsonSchemaValidator(schema);
           })
           .validate(record.value);
     } on SchemaValidationException catch (error) {
@@ -291,6 +291,13 @@ void _validateRuntimeCompatibility(
   };
   for (final record in records) {
     if (record.namespace == 'catalog:quest') {
+      final number = record.value['number'];
+      if (number is! int || number < 1) {
+        issues.add(
+          '${record.label} [id=${record.id ?? '<missing>'}].number: '
+          'catalog quest number must be a positive integer',
+        );
+      }
       final conditions = record.value['conditions'];
       if (conditions is! List) continue;
       final conditionIds = <String>{};
@@ -370,35 +377,41 @@ void _validateEffects(List<_Record> records, List<String> issues) {
     void validateEffect(String value, String path) {
       final hook = registry[value];
       if (hook == null) {
-        issues.add('${record.label}.$path: unregistered effectId "$value"');
+        issues.add(
+          '${record.label} [id=${record.id ?? '<missing>'}].$path: '
+          'unregistered effectId "$value"',
+        );
         return;
       }
       final isMonsterBehavior =
           record.schema == 'monster' && path == 'behaviorId';
-      final isEventOption =
-          record.schema == 'event' && path.endsWith('.behaviorId');
+      final isEventBehavior = record.schema == 'event';
       final isConditionTrigger =
           record.schema == 'condition' && path == 'behaviorId';
       if (isMonsterBehavior && hook is! MonsterBehaviorHook) {
         issues.add(
-          '${record.label}.$path: "$value" must register a MonsterBehaviorHook',
+          '${record.label} [id=${record.id ?? '<missing>'}].$path: '
+          '"$value" must register a MonsterBehaviorHook',
         );
       }
-      if (isEventOption && hook is! CardBehaviorHook) {
+      if (isEventBehavior && hook is! CardBehaviorHook) {
         issues.add(
-          '${record.label}.$path: "$value" must use an event/card trigger '
+          '${record.label} [id=${record.id ?? '<missing>'}].$path: '
+          '"$value" must use an event/card trigger '
           'hook',
         );
       }
       if (isConditionTrigger && hook is! CardBehaviorHook) {
         issues.add(
-          '${record.label}.$path: "$value" must register a condition/card '
+          '${record.label} [id=${record.id ?? '<missing>'}].$path: '
+          '"$value" must register a condition/card '
           'trigger hook',
         );
       }
       if (record.schema != 'monster' && hook is MonsterBehaviorHook) {
         issues.add(
-          '${record.label}.$path: "$value" has monster trigger type '
+          '${record.label} [id=${record.id ?? '<missing>'}].$path: '
+          '"$value" has monster trigger type '
           'outside a monster behavior',
         );
       }
@@ -468,6 +481,7 @@ void _validateReferences(
     final monsterIds = idsBySchema['monster'] ?? <String>{};
     final itemIds = <String>{
       ...?idsBySchema['item'],
+      ...?idsBySchema['supply'],
       ...?idsBySchema['special_item'],
     };
     for (final record in group) {
@@ -478,7 +492,8 @@ void _validateReferences(
             for (final target in values.whereType<String>()) {
               if (!questIds.contains(target)) {
                 issues.add(
-                  '${record.label}.$field: unknown $prefix quest "$target"',
+                  '${record.label} [id=${record.id ?? '<missing>'}].$field: '
+                  'unknown $prefix quest "$target"',
                 );
               }
             }
@@ -491,7 +506,8 @@ void _validateReferences(
               value is String &&
               !hexIds.contains(value)) {
             issues.add(
-              '${record.label}.$path: unknown $prefix location "$value"',
+              '${record.label} [id=${record.id ?? '<missing>'}].$path: '
+              'unknown $prefix location "$value"',
             );
           }
           if (record.schema == 'quest' &&
@@ -499,7 +515,18 @@ void _validateReferences(
               value is String &&
               !monsterIds.contains(value)) {
             issues.add(
-              '${record.label}.$path: unknown $prefix monster "$value"',
+              '${record.label} [id=${record.id ?? '<missing>'}].$path: '
+              'unknown $prefix monster "$value"',
+            );
+          }
+          if (record.schema == 'quest' &&
+              key == 'itemId' &&
+              value is String &&
+              !const {'item', 'supply'}.contains(value) &&
+              !itemIds.contains(value)) {
+            issues.add(
+              '${record.label} [id=${record.id ?? '<missing>'}].$path: '
+              'unknown $prefix card "$value"',
             );
           }
         });
@@ -681,6 +708,13 @@ Future<void> _validateMvpLayout(
 
   final requiredQuestLocations = <String, String>{};
   for (final quest in selected.where((record) => record.schema == 'quest')) {
+    if (quest.id == 'chapter-1-awakening' &&
+        quest.value['targetLocation'] != 'crew-mess') {
+      issues.add(
+        '${quest.label} [id=${quest.id}].targetLocation: runtime opening '
+        'quest must target "crew-mess"',
+      );
+    }
     _visit(quest.value, (key, value, path) {
       if ((key == 'targetLocation' || key == 'locationId') && value is String) {
         requiredQuestLocations.putIfAbsent(
@@ -754,6 +788,16 @@ Future<void> _validateCampaign(
     );
   }
   _reportPrerequisiteCycles(byId, issues);
+  final reachableQuests = _reachableCampaignQuests(byId, starts);
+  for (final quest in quests.where(
+    (quest) => !reachableQuests.contains(quest.id),
+  )) {
+    issues.add(
+      '${quest.label} [id=${quest.id ?? '<missing>'}]: quest is unreachable '
+      'from initial quest(s) '
+      '${starts.join(', ')}',
+    );
+  }
   final reachableTerminals = _reachableCampaignTerminals(byId, starts);
   final terminals = quests
       .where((quest) => quest.value['endsGame'] == true)
@@ -773,6 +817,23 @@ Future<void> _validateCampaign(
       );
     }
   }
+}
+
+Set<String> _reachableCampaignQuests(
+  Map<String, _Record> quests,
+  Set<String> starts,
+) {
+  final reachable = <String>{...starts};
+  final pending = <String>[...starts];
+  for (var cursor = 0; cursor < pending.length; cursor++) {
+    final record = quests[pending[cursor]];
+    final next = record?.value['nextQuestIds'];
+    if (next is! List) continue;
+    for (final id in next.whereType<String>()) {
+      if (quests.containsKey(id) && reachable.add(id)) pending.add(id);
+    }
+  }
+  return reachable;
 }
 
 void _reportPrerequisiteCycles(

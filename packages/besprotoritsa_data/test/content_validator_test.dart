@@ -63,6 +63,13 @@ void main() {
       'task_target_zero',
       'item_fractional_stat',
       'item_unknown_stat',
+      'schema_invalid_items_keyword',
+      'schema_invalid_enum_keyword',
+      'event_behavior_hook_type',
+      'mvp_opening_quest_destination',
+      'catalog_quest_number_required',
+      'campaign_side_quest_unreachable',
+      'quest_item_link',
     ]) {
       test(
         'rejects $fixtureName fixture with record ID and file path',

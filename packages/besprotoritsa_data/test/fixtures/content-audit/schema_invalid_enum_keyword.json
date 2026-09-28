@@ -1,0 +1,1 @@
+{"file":"schemas/item.schema.json","path":["properties","category","enum"],"value":"weapon","expected":"\"enum\" must be a non-empty array"}

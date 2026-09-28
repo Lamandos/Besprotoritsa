@@ -1,1 +1,1 @@
-{"file":"schemas/item.schema.json","path":["required"],"value":[1],"expected":"schema required must be an array of strings"}
+{"file":"schemas/item.schema.json","path":["required"],"value":[1],"expected":"\"required\" must be a list of strings"}

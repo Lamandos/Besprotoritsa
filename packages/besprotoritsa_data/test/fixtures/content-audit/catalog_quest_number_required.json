@@ -1,0 +1,1 @@
+{"operation":"remove_field","file":"quests.json","path":["quests",0,"number"],"expected":"catalog quest number must be a positive integer"}
