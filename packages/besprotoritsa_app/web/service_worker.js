@@ -7,7 +7,7 @@
  * the network is unavailable.
  */
 const CACHE_PREFIX = 'besprotoritsa-web';
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL = [
   './',

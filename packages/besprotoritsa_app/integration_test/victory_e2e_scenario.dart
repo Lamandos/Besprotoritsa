@@ -15,15 +15,17 @@ void main() {
     final graph = QuestGraph(quests: _storyQuests);
     final engine = QuestEngine(graph);
     var progress = engine.initialProgress();
-    var won = false;
+    QuestTransition? terminalTransition;
 
     for (final event in _victoryRoute) {
       final transition = engine.apply(progress, event);
       progress = transition.progress;
-      won = won || transition.gameWon;
+      terminalTransition = transition;
     }
 
-    expect(won, isTrue);
+    expect(terminalTransition, isNotNull);
+    final victoryTransition = terminalTransition!;
+    expect(victoryTransition.gameWon, isTrue);
     expect(
       progress.completedQuestIds,
       containsAll(<String>[
@@ -44,16 +46,15 @@ void main() {
       monsters: source.monsters,
       decks: source.decks,
       quests: QuestState(
-        storyQuestIds: [
-          for (var number = 1; number <= 12; number++)
-            'quest-${number.toString().padLeft(2, '0')}',
-        ],
+        storyQuestIds: graph.quests.map((quest) => quest.id),
         statuses: {
-          for (var number = 1; number <= 12; number++)
-            'quest-${number.toString().padLeft(2, '0')}': QuestStatus.completed,
+          for (final quest in graph.quests)
+            quest.id: progress.isCompleted(quest.id)
+                ? QuestStatus.completed
+                : QuestStatus.active,
         },
       ),
-      isComplete: true,
+      isComplete: victoryTransition.gameWon,
     );
     expect(completed.seed, fixedSeed);
     expect(completed.players.every((hero) => hero.alive), isTrue);

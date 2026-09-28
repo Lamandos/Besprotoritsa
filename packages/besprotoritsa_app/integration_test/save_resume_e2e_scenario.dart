@@ -1,10 +1,12 @@
 import 'package:besprotoritsa_app/besprotoritsa_app.dart';
+import 'package:besprotoritsa_app/src/storage/file_game_storage.dart';
 import 'package:besprotoritsa_app/src/storage/save_system.dart';
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:path_provider/path_provider.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -12,8 +14,17 @@ void main() {
   testWidgets('save and resume preserves a pending reroll byte-for-byte', (
     tester,
   ) async {
-    final storage = InMemoryGameStorage();
-    final saves = SaveSystem(storage: storage);
+    final supportDirectory = await getApplicationSupportDirectory();
+    final testDirectory = await supportDirectory.createTemp(
+      'besprotoritsa-save-e2e-',
+    );
+    addTearDown(() => testDirectory.delete(recursive: true));
+
+    FileGameStorage createStorage() => FileGameStorage(
+      directoryProvider: () async => testDirectory,
+    );
+
+    final saves = SaveSystem(storage: createStorage());
     final codec = GameStateJsonCodec();
     final firstSession = ProviderContainer(
       overrides: [
@@ -43,10 +54,11 @@ void main() {
 
     // Simulate process loss: discard every in-memory provider and state object.
     firstSession.dispose();
-    final restored = await saves.load(SaveSlots.manual.first);
+    final reopenedSaves = SaveSystem(storage: createStorage());
+    final restored = await reopenedSaves.load(SaveSlots.manual.first);
     expect(restored, isNotNull);
     expect(codec.encode(restored!), savedDocument);
-    expect(await saves.loadName(SaveSlots.manual.first), 'Раунд 3');
+    expect(await reopenedSaves.loadName(SaveSlots.manual.first), 'Раунд 3');
 
     final resumedSession = ProviderContainer(
       overrides: [

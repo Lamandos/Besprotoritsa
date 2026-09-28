@@ -51,14 +51,31 @@ Future<void> _report(
   if (rawCards is! List) {
     throw FormatException('${definition.path}.cards must be an array.');
   }
-  final cards = rawCards.whereType<Map<String, dynamic>>().where((card) {
+  var cards = rawCards.whereType<Map<String, dynamic>>().where((card) {
     return name != 'items' || card['sourceDeck'] == 'items';
   }).toList();
-  final schema = JsonSchemaValidator(
-    _readObject('content/schemas/${definition.schema}.schema.json'),
-  );
-  for (final card in cards) {
-    schema.validate(card);
+  var datasetLabel = definition.path;
+  final cardSchemas = <String, List<Map<String, dynamic>>>{
+    definition.schema: cards,
+  };
+  if (name == 'supplies') {
+    final equipmentDocument = _readObject('content/items.json');
+    final equipment = (equipmentDocument['cards']! as List)
+        .whereType<Map<String, dynamic>>()
+        .where((card) => card['sourceDeck'] == 'supplies')
+        .toList();
+    cardSchemas['item'] = equipment;
+    cards = [...cards, ...equipment];
+    datasetLabel =
+        '${definition.path} + content/items.json (sourceDeck=supplies)';
+  }
+  for (final entry in cardSchemas.entries) {
+    final schema = JsonSchemaValidator(
+      _readObject('content/schemas/${entry.key}.schema.json'),
+    );
+    for (final card in entry.value) {
+      schema.validate(card);
+    }
   }
   final ids = cards.map((card) => card['id']).toList();
   if (ids.any((id) => id is! String || id.isEmpty) ||
@@ -96,7 +113,7 @@ Future<void> _report(
       .where((path) => File(path).existsSync())
       .toList();
   _write('Deck: $name');
-  _write('  Dataset: ${definition.path}');
+  _write('  Dataset: $datasetLabel');
   _write('  Unique card records: ${cards.length}');
   _write('  Physical copies declared: $physicalCopies');
   for (final batch in copiesByBatch.keys.toList()..sort()) {
