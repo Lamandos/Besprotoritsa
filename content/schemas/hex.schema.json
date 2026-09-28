@@ -10,7 +10,7 @@
     "type": { "enum": ["start", "compartment", "corridor", "airlock"] },
     "locationNameKey": { "$ref": "#/$defs/localizationKey" },
     "hasTerminal": { "type": "boolean" },
-    "ventColor": { "$ref": "#/$defs/id" },
+    "ventColor": { "enum": ["none", "green", "red"] },
     "exits": {
       "type": "array",
       "uniqueItems": true,

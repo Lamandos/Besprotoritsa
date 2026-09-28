@@ -12,5 +12,7 @@ workspace:
   - packages/besprotoritsa_server
 
 dev_dependencies:
+  besprotoritsa_rules:
+    path: packages/besprotoritsa_rules
   crypto: ^3.0.6
   very_good_analysis: ^9.0.0

@@ -7,8 +7,8 @@
   "required": ["id", "targetType", "metric", "targetValue", "window", "rewardCredits", "nameKey", "descKey"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
-    "targetType": { "$ref": "#/$defs/id" },
-    "metric": { "$ref": "#/$defs/id" },
+    "targetType": { "enum": ["metric"] },
+    "metric": { "enum": ["boils_popped", "chest_cards", "clothing_and_armor", "combat_strength", "conditions", "credits", "dodges_without_damage", "enemies_killed", "health_at_most", "implants", "map_fragments_open", "robot_reloaded", "roll_successes", "special_items_received", "strong_enemy_solo", "supply_purchase_cost"] },
     "targetValue": { "type": "integer", "minimum": 0 },
     "window": { "enum": ["perTurn", "simultaneously", "game"] },
     "aggregation": { "enum": ["sum", "maximum", "max"] },

@@ -14,7 +14,7 @@
     "rewardCredits": { "$ref": "#/$defs/nonNegativeInteger" },
     "rewardItems": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
     "behaviorId": { "$ref": "#/$defs/id" },
-    "features": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "features": { "type": "array", "uniqueItems": true, "items": { "enum": ["blocks-exits", "boss", "explodes-on-colocation", "fast", "flees-from-heroes", "ignores-defense", "moves-through-vents", "reduces-combat-strength", "restores-health-if-alive", "scales-per-alive-monster", "scales-per-hero", "slow", "spawns-adjacent-boils-on-death", "spawns-boil-instead-of-attack", "spawns-two-boils", "stationary", "strong", "targets-lowest-health"] } },
     "copies": { "type": "integer", "minimum": 1 },
     "importBatch": { "type": "integer", "minimum": 1 },
     "scaling": {

@@ -35,12 +35,12 @@
       "required": ["id", "type"],
       "properties": {
         "id": { "$ref": "#/$defs/id" },
-        "type": { "$ref": "#/$defs/id" },
+        "type": { "enum": ["arrive", "skill_check", "kill_monster", "collect_item", "counter"] },
         "locationId": { "$ref": "#/$defs/id" },
-        "skill": { "$ref": "#/$defs/id" },
+        "skill": { "enum": ["strength", "combatStrength", "science", "repair", "endurance", "agility"] },
         "monsterId": { "$ref": "#/$defs/id" },
         "itemId": { "$ref": "#/$defs/id" },
-        "metric": { "$ref": "#/$defs/id" },
+        "metric": { "enum": ["damage_tokens_collected", "credits_collected", "agility_check_in_ventilation"] },
         "targetValue": { "type": "integer", "minimum": 1 }
       }
     }

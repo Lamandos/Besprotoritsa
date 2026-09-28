@@ -8,7 +8,7 @@
   "properties": {
     "id": { "$ref": "#/$defs/id" },
     "category": { "enum": ["weapon", "armor", "clothing", "robot", "modification"] },
-    "slots": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "slots": { "type": "array", "uniqueItems": true, "items": { "enum": ["weapon", "armor", "clothing", "robot", "modification"] } },
     "cost": { "$ref": "#/$defs/nonNegativeInteger" },
     "stats": { "type": "object", "additionalProperties": { "type": "number" } },
     "range": { "$ref": "#/$defs/nonNegativeInteger" },

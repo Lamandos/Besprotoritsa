@@ -86,6 +86,10 @@ final class EffectRegistry {
       behavior: MonsterBehavior.moveThroughVents,
     ),
     MonsterBehaviorHook(
+      'monster_moves_through_vents',
+      behavior: MonsterBehavior.moveThroughVents,
+    ),
+    MonsterBehaviorHook(
       'monster-target-lowest-health-through-vents',
       behavior: MonsterBehavior.targetLowestHealthThroughVents,
     ),
@@ -151,9 +155,13 @@ final class EffectRegistry {
     CardBehaviorHook('combat.pushUnkilledEnemy'),
     CardBehaviorHook('health.healingBonus'),
     CardBehaviorHook('damage.ignoreBoil'),
+    // Data marker for condition cards whose numeric modifiers are interpreted
+    // by the inventory/stat calculation layer.
+    CardBehaviorHook('condition_stat_modifier'),
     CardBehaviorHook('event.choice'),
     CardBehaviorHook('event.skillCheck'),
     CardBehaviorHook('event.successFailure'),
+    CardBehaviorHook('event_cabin_noise'),
     CardBehaviorHook('monster.spawn'),
     CardBehaviorHook('monster.spawnClosedFallback'),
   ]);
