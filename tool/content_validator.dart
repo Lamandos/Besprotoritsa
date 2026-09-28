@@ -45,12 +45,13 @@ Future<ContentValidationReport> validateContent({
   final catalog = await _loadCatalog(contentDirectory, issues);
   final selected = await _loadMvp(contentDirectory, contentSetId, issues);
   final allRecords = [...catalog, ...selected];
-  _validateSchemas(allRecords, issues);
+  _validateSchemas(allRecords, contentDirectory, issues);
   _validateMetadata(allRecords, issues);
   _validateUniqueIds(allRecords, issues);
   _validateEffects(allRecords, issues);
   await _validateLocalization(allRecords, contentDirectory, issues);
   _validateReferences(catalog, selected, issues);
+  await _validateMvpLayout(contentDirectory, selected, issues);
   await _validateCampaign(catalog, contentDirectory, issues);
   return ContentValidationReport(allRecords.length, List.unmodifiable(issues));
 }
@@ -90,7 +91,7 @@ Future<List<_Record>> _loadCatalog(
           row,
           '${file.path} [${entry.value.$2}][$index]',
           entry.value.$1,
-          'catalog:${entry.value.$1}',
+          _catalogNamespace(entry.value.$1, row),
         ),
       );
       final batch = row['importBatch'];
@@ -106,6 +107,13 @@ Future<List<_Record>> _loadCatalog(
     }
   }
   return records;
+}
+
+String _catalogNamespace(String schema, Map<String, Object?> value) {
+  if (schema == 'item' && value['sourceDeck'] == 'supplies') {
+    return 'catalog:supply';
+  }
+  return 'catalog:$schema';
 }
 
 Future<List<_Record>> _loadMvp(
@@ -160,10 +168,14 @@ Future<Map<String, Object?>?> _read(File file, List<String> issues) async {
   return null;
 }
 
-void _validateSchemas(List<_Record> records, List<String> issues) {
+void _validateSchemas(
+  List<_Record> records,
+  Directory content,
+  List<String> issues,
+) {
   final cache = <String, JsonSchemaValidator>{};
   for (final record in records) {
-    final schemaFile = 'content/schemas/${record.schema}.schema.json';
+    final schemaFile = '${content.path}/schemas/${record.schema}.schema.json';
     try {
       cache
           .putIfAbsent(schemaFile, () {
@@ -341,6 +353,8 @@ void _validateReferences(
             }
           }
         }
+      }
+      if (record.schema == 'quest' || record.schema == 'event') {
         _visit(record.value, (key, value, path) {
           if ((key == 'targetLocation' || key == 'locationId') &&
               value is String &&
@@ -369,6 +383,50 @@ void _validateReferences(
   }
 }
 
+Future<void> _validateMvpLayout(
+  Directory content,
+  List<_Record> selected,
+  List<String> issues,
+) async {
+  final file = File('${content.path}/mvp/layout.json');
+  final layout = await _read(file, issues);
+  if (layout == null) return;
+  final coordinates = layout['coordinates'];
+  if (coordinates is! List || coordinates.isEmpty) {
+    issues.add(
+      '${file.path} [id=<layout>].coordinates: expected a non-empty array',
+    );
+    return;
+  }
+  final hexIds = selected
+      .where((record) => record.schema == 'hex')
+      .map((record) => record.id)
+      .whereType<String>()
+      .toSet();
+  for (var index = 0; index < coordinates.length; index++) {
+    final row = coordinates[index];
+    final recordId = '<coordinate-$index>';
+    if (row is! Map<String, Object?>) {
+      issues.add(
+        '${file.path} [id=$recordId]: coordinate must be an object',
+      );
+      continue;
+    }
+    if (row['q'] is! int || row['r'] is! int) {
+      issues.add(
+        '${file.path} [id=$recordId]: q and r must be integers',
+      );
+    }
+    final hexId = row['hexId'];
+    if (hexId is! String || !hexIds.contains(hexId)) {
+      issues.add(
+        '${file.path} [id=${hexId is String ? hexId : recordId}].hexId: '
+        'unknown mvp hex "$hexId"',
+      );
+    }
+  }
+}
+
 Future<void> _validateCampaign(
   List<_Record> records,
   Directory content,
@@ -381,10 +439,26 @@ Future<void> _validateCampaign(
       if (quest.id != null) quest.id!: quest,
   };
   final starts = <String>{};
-  final root = await _read(File('${content.path}/quests.json'), issues);
+  final questFile = File('${content.path}/quests.json');
+  final root = await _read(questFile, issues);
   final initial = root?['initialQuestIds'];
   if (initial is List) {
-    starts.addAll(initial.whereType<String>().where(byId.containsKey));
+    for (var index = 0; index < initial.length; index++) {
+      final id = initial[index];
+      if (id is! String || !byId.containsKey(id)) {
+        issues.add(
+          '${questFile.path} [id=<campaign>].initialQuestIds[$index]: '
+          'unknown initial quest "$id"',
+        );
+      } else {
+        starts.add(id);
+      }
+    }
+  } else {
+    issues.add(
+      '${questFile.path} [id=<campaign>].initialQuestIds: '
+      'expected an array of quest IDs',
+    );
   }
   final reachable = <String>{...starts};
   final queue = <String>[...starts];
@@ -402,7 +476,7 @@ Future<void> _validateCampaign(
       .toList();
   if (starts.isEmpty || terminals.isEmpty) {
     issues.add(
-      'content/quests.json [id=<campaign>]: initial quest and terminal '
+      '${questFile.path} [id=<campaign>]: initial quest and terminal '
       'endsGame quest are required',
     );
   } else {

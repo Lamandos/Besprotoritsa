@@ -34,6 +34,13 @@ void main() {
       'character_start_item',
       'unavailable_content_set',
       'duplicate_id',
+      'duplicate_card_id',
+      'initial_quest_link',
+      'initial_quest_non_string',
+      'event_location_link',
+      'layout_missing',
+      'layout_malformed',
+      'layout_hex_link',
     ]) {
       test(
         'rejects $fixtureName fixture with record ID and file path',
@@ -54,6 +61,8 @@ void main() {
             );
             await destination.parent.create(recursive: true);
             await source.copy(destination.path);
+          } else if (operation == 'delete') {
+            await File('${copiedContent.path}/${fixture['file']}').delete();
           } else {
             final relativePath = fixture['file']! as String;
             final file = File('${copiedContent.path}/$relativePath');
@@ -78,6 +87,33 @@ void main() {
         },
       );
     }
+
+    test('uses schemas from the requested content tree', () async {
+      final tempRoot = await Directory.systemTemp.createTemp(
+        'besprotoritsa-content-schema-root-',
+      );
+      addTearDown(() => tempRoot.delete(recursive: true));
+      final copiedContent = Directory('${tempRoot.path}/content');
+      await _copyDirectory(Directory(_repoContentPath), copiedContent);
+
+      final schemaFile = File(
+        '${copiedContent.path}/schemas/hex.schema.json',
+      );
+      final schema = jsonDecode(await schemaFile.readAsString()) as Map;
+      (schema['required']! as List).add('auditOnlyRequiredField');
+      await schemaFile.writeAsString(jsonEncode(schema));
+
+      final report = await validator.validateContent(
+        contentDirectory: copiedContent,
+        contentSetId: 'mvp',
+      );
+      final match = report.issues.where(
+        (issue) => issue.contains('auditOnlyRequiredField'),
+      );
+      expect(match, isNotEmpty, reason: report.issues.join('\n'));
+      expect(match.join('\n'), contains('[id='));
+      expect(match.join('\n'), contains(schemaFile.path));
+    });
   });
 }
 
