@@ -342,7 +342,12 @@ final class JsonSchemaValidator {
       return;
     }
     final required = schema['required'];
-    if (required is List) {
+    if (required != null) {
+      if (required is! List || required.any((name) => name is! String)) {
+        throw SchemaValidationException(
+          '$path: schema required must be an array of strings.',
+        );
+      }
       for (final name in required.cast<String>()) {
         if (!value.containsKey(name)) {
           throw SchemaValidationException(
@@ -351,7 +356,13 @@ final class JsonSchemaValidator {
         }
       }
     }
-    final properties = schema['properties'] as Map<String, Object?>?;
+    final rawProperties = schema['properties'];
+    if (rawProperties != null && rawProperties is! Map<String, Object?>) {
+      throw SchemaValidationException(
+        '$path: schema properties must be an object.',
+      );
+    }
+    final properties = rawProperties as Map<String, Object?>?;
     final additional = schema['additionalProperties'];
     for (final entry in value.entries) {
       final propertySchema = properties?[entry.key];

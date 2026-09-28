@@ -12,7 +12,17 @@
     "cost": { "$ref": "#/$defs/nonNegativeInteger" },
     "stats": {
       "type": "object",
-      "additionalProperties": { "type": "number" }
+      "additionalProperties": false,
+      "properties": {
+        "strength": { "type": "integer" },
+        "combatStrength": { "type": "integer" },
+        "science": { "type": "integer" },
+        "repair": { "type": "integer" },
+        "endurance": { "type": "integer" },
+        "agility": { "type": "integer" },
+        "health": { "type": "integer" },
+        "defense": { "type": "integer" }
+      }
     },
     "range": { "$ref": "#/$defs/nonNegativeInteger" },
     "copies": { "type": "integer", "minimum": 1 },

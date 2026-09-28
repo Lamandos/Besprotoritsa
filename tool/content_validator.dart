@@ -60,6 +60,7 @@ Future<ContentValidationReport> validateContent({
   final allRecords = [...catalog, ...selected];
   _validateSchemas(allRecords, contentDirectory, issues);
   _validateMetadata(allRecords, issues);
+  _validateRuntimeCompatibility(allRecords, issues);
   _validateUniqueIds(allRecords, issues);
   _validateEffects(allRecords, issues);
   await _validateLocalization(allRecords, contentDirectory, issues);
@@ -220,11 +221,20 @@ void _validateSchemas(
           })
           .validate(record.value);
     } on SchemaValidationException catch (error) {
-      issues.add('${record.label}: schema $schemaFile: ${error.message}');
+      issues.add(
+        '${record.label} [id=${record.id ?? '<missing>'}]: '
+        'schema $schemaFile: ${error.message}',
+      );
     } on FileSystemException catch (error) {
-      issues.add('${record.label}: cannot read schema $schemaFile: $error');
+      issues.add(
+        '${record.label} [id=${record.id ?? '<missing>'}]: '
+        'cannot read schema $schemaFile: $error',
+      );
     } on FormatException catch (error) {
-      issues.add('${record.label}: invalid schema $schemaFile: $error');
+      issues.add(
+        '${record.label} [id=${record.id ?? '<missing>'}]: '
+        'invalid schema $schemaFile: $error',
+      );
     }
   }
 }
@@ -248,10 +258,90 @@ void _validateMetadata(List<_Record> records, List<String> issues) {
     if (source != null && !allowedSources.contains(source)) {
       issues.add('${record.label}.sourceDeck: unsupported value "$source"');
     }
+    if (record.namespace == 'catalog:item' &&
+        source != null &&
+        source != 'items' &&
+        source != 'supplies') {
+      issues.add(
+        '${record.label}.sourceDeck: catalog item must use "items" or '
+        '"supplies"; "specialItems" records belong in special_items.json',
+      );
+    }
     if (record.schema == 'supply' && source != null && source != 'supplies') {
       issues.add(
         '${record.label}.sourceDeck: supply record must use "supplies"',
       );
+    }
+  }
+}
+
+void _validateRuntimeCompatibility(
+  List<_Record> records,
+  List<String> issues,
+) {
+  const cardStats = {
+    'strength',
+    'combatStrength',
+    'science',
+    'repair',
+    'endurance',
+    'agility',
+    'health',
+    'defense',
+  };
+  for (final record in records) {
+    if (record.namespace == 'catalog:quest') {
+      final conditions = record.value['conditions'];
+      if (conditions is! List) continue;
+      final conditionIds = <String>{};
+      for (var index = 0; index < conditions.length; index++) {
+        final condition = conditions[index];
+        final path = '${record.label}.conditions[$index]';
+        if (condition is! Map<String, Object?>) {
+          issues.add(
+            '$path [id=${record.id ?? '<missing>'}]: catalog quest '
+            'conditions must be objects',
+          );
+          continue;
+        }
+        final conditionId = condition['id'];
+        if (conditionId is String && !conditionIds.add(conditionId)) {
+          issues.add(
+            '$path [id=${record.id ?? '<missing>'}].id: duplicate condition '
+            'id "$conditionId" within quest',
+          );
+        }
+      }
+    }
+    if (record.namespace == 'catalog:task') {
+      final target = record.value['targetValue'];
+      if (target is! int || target < 1) {
+        issues.add(
+          '${record.label} [id=${record.id ?? '<missing>'}].targetValue: '
+          'expected a positive integer for runtime task loading',
+        );
+      }
+    }
+    if (record.namespace == 'catalog:item' ||
+        record.namespace == 'catalog:supply' ||
+        record.namespace == 'catalog:special_item' ||
+        record.namespace.startsWith('mvp:item')) {
+      final stats = record.value['stats'];
+      if (stats is Map) {
+        for (final entry in stats.entries) {
+          if (entry.key is! String || !cardStats.contains(entry.key)) {
+            issues.add(
+              '${record.label} [id=${record.id ?? '<missing>'}].stats.'
+              '${entry.key}: unknown runtime card stat',
+            );
+          } else if (entry.value is! int) {
+            issues.add(
+              '${record.label} [id=${record.id ?? '<missing>'}].stats.'
+              '${entry.key}: expected an integer runtime card stat',
+            );
+          }
+        }
+      }
     }
   }
 }

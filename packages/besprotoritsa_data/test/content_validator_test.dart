@@ -56,6 +56,13 @@ void main() {
       'quest_monster_link',
       'source_deck_required',
       'initial_quest_duplicate',
+      'catalog_special_items_source',
+      'malformed_schema_keyword',
+      'catalog_string_quest_condition',
+      'quest_condition_duplicate_id',
+      'task_target_zero',
+      'item_fractional_stat',
+      'item_unknown_stat',
     ]) {
       test(
         'rejects $fixtureName fixture with record ID and file path',
