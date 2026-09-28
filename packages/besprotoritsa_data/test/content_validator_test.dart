@@ -47,6 +47,10 @@ void main() {
       'schema_root_type',
       'quest_condition_required_field',
       'prerequisite_cycle',
+      'runtime_hex_filename',
+      'runtime_character_health',
+      'layout_runtime_hero_spawn',
+      'layout_runtime_monster_spawn',
     ]) {
       test(
         'rejects $fixtureName fixture with record ID and file path',
@@ -69,6 +73,10 @@ void main() {
             await source.copy(destination.path);
           } else if (operation == 'delete') {
             await File('${copiedContent.path}/${fixture['file']}').delete();
+          } else if (operation == 'rename') {
+            await File(
+              '${copiedContent.path}/${fixture['source']}',
+            ).rename('${copiedContent.path}/${fixture['destination']}');
           } else {
             final relativePath = fixture['file']! as String;
             final file = File('${copiedContent.path}/$relativePath');

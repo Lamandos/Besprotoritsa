@@ -422,13 +422,18 @@ Future<void> _validateMvpLayout(
     );
     return;
   }
-  final hexIds = selected
-      .where((record) => record.schema == 'hex')
-      .map((record) => record.id)
-      .whereType<String>()
-      .toSet();
+  final hexRecords = selected.where((record) => record.schema == 'hex');
+  final hexIds = <String>{};
+  final hexesById = <String, _Record>{};
+  for (final record in hexRecords) {
+    final id = record.id;
+    if (id == null) continue;
+    hexIds.add(id);
+    hexesById.putIfAbsent(id, () => record);
+  }
   final coordinateIndexes = <String, int>{};
   final hexIndexes = <String, int>{};
+  final hexIdsByCoordinate = <String, String>{};
   for (var index = 0; index < coordinates.length; index++) {
     final row = coordinates[index];
     final recordId = '<coordinate-$index>';
@@ -438,6 +443,7 @@ Future<void> _validateMvpLayout(
       );
       continue;
     }
+    final hexId = row['hexId'];
     final q = row['q'];
     final r = row['r'];
     if (q is! int || r is! int) {
@@ -456,14 +462,25 @@ Future<void> _validateMvpLayout(
           'first used by coordinate $firstIndex',
         );
       }
+      if (hexId is String) {
+        hexIdsByCoordinate.putIfAbsent(coordinate, () => hexId);
+      }
     }
-    final hexId = row['hexId'];
     if (hexId is! String || !hexIds.contains(hexId)) {
       issues.add(
         '${file.path} [id=${hexId is String ? hexId : recordId}].hexId: '
         'unknown mvp hex "$hexId"',
       );
     } else {
+      final runtimeHexFile = File(
+        '${content.path}/mvp/hexes/$hexId.json',
+      );
+      if (!runtimeHexFile.existsSync()) {
+        issues.add(
+          '${file.path} [id=$hexId].hexId: runtime hex file is missing at '
+          '${runtimeHexFile.path}',
+        );
+      }
       final firstIndex = hexIndexes.putIfAbsent(hexId, () => index);
       if (firstIndex != index) {
         issues.add(
@@ -472,6 +489,25 @@ Future<void> _validateMvpLayout(
         );
       }
     }
+  }
+  if (hexIdsByCoordinate['0,0'] != 'anabiosis') {
+    issues.add(
+      '${file.path} [id=anabiosis].coordinates: runtime heroes spawn at '
+      '(0,0); anabiosis must occupy that coordinate',
+    );
+  }
+  final startHex = hexesById['anabiosis'];
+  if (startHex != null && startHex.value['type'] != 'start') {
+    issues.add(
+      '${startHex.label}.type: runtime opens the anabiosis tile as the start '
+      'location, so its type must be "start"',
+    );
+  }
+  if (!hexIdsByCoordinate.containsKey('0,1')) {
+    issues.add(
+      '${file.path} [id=ghoul-1].coordinates: the initial monster spawns at '
+      '(0,1), which must contain a layout hex',
+    );
   }
 }
 
