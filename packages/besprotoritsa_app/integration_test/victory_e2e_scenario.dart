@@ -11,10 +11,7 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('fixed seed completes story quests 1–12 and opens victory', (
-    tester,
-  ) async {
-    const fixedSeed = 0x51A7E;
+  test('the shipped quest graph reaches its terminal transition', () async {
     final questDocument =
         jsonDecode(
               await File('../../content/quests.json').readAsString(),
@@ -41,40 +38,46 @@ void main() {
           'quest-${number.toString().padLeft(2, '0')}',
       ]),
     );
+  });
 
-    final source = createMvpGameState();
-    final completed = GameState(
-      seed: fixedSeed,
-      round: source.round,
-      phase: source.phase,
-      activePlayerId: source.activePlayerId,
-      actionsLeft: 0,
-      board: source.board,
-      players: source.players,
-      monsters: source.monsters,
-      decks: source.decks,
-      quests: QuestState(
-        storyQuestIds: graph.quests.map((quest) => quest.id),
-        statuses: {
-          for (final quest in graph.quests)
-            quest.id: progress.isCompleted(quest.id)
-                ? QuestStatus.completed
-                : QuestStatus.active,
-        },
-      ),
-      isComplete: victoryTransition.gameWon,
-    );
-    expect(completed.seed, fixedSeed);
-    expect(completed.players.every((hero) => hero.alive), isTrue);
-
+  testWidgets('the production game command opens the victory screen', (
+    tester,
+  ) async {
     final container = ProviderContainer(
       overrides: [
         gameControllerProvider.overrideWith(
-          () => GameController(initialState: completed),
+          () => GameController(
+            initialState: _victoryReadyState(),
+            dice: FixedDiceRoller([6, 1]),
+          ),
         ),
       ],
     );
     addTearDown(container.dispose);
+
+    final controller = container.read(gameControllerProvider.notifier);
+    expect(
+      controller.dispatch(const SkillCheckCommand(StatType.science)),
+      isTrue,
+    );
+    expect(
+      container.read(gameControllerProvider).pendingDecision,
+      isA<AwaitingRerollChoice>(),
+    );
+    expect(
+      controller.dispatch(
+        const ResolvePendingDecisionCommand(KeepRollChoice()),
+      ),
+      isTrue,
+    );
+    final completed = container.read(gameControllerProvider);
+    expect(
+      completed.quests.statusOf('chapter-1-awakening'),
+      QuestStatus.completed,
+    );
+    expect(completed.isComplete, isTrue);
+    expect(completed.gameEvents.single, isA<MvpDemonstrationCompleted>());
+
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -89,6 +92,68 @@ void main() {
     expect(find.text('Победа выживших'), findsOneWidget);
   });
 }
+
+GameState _victoryReadyState() {
+  final source = createMvpGameState();
+  final crewMess = source.board.singleWhere(
+    (tile) => tile.locationId == 'crew-mess',
+  );
+  return GameState(
+    seed: source.seed,
+    difficulty: source.difficulty,
+    round: source.round,
+    phase: source.phase,
+    activePlayerId: source.activePlayerId,
+    actionsLeft: source.actionsLeft,
+    board: [
+      for (final tile in source.board)
+        if (tile.id == crewMess.id)
+          HexTile(
+            id: tile.id,
+            coord: tile.coord,
+            type: tile.type,
+            opened: true,
+            exits: tile.exits,
+            locationId: tile.locationId,
+            hasTerminal: tile.hasTerminal,
+            ventColor: tile.ventColor,
+          )
+        else
+          tile,
+    ],
+    players: [
+      for (var index = 0; index < source.players.length; index++)
+        _copyPlayer(
+          source.players[index],
+          coord: index == 0 ? crewMess.coord : source.players[index].coord,
+        ),
+    ],
+    monsters: const [],
+    decks: source.decks,
+    conditionCards: source.conditionCards,
+    cardDefinitions: source.cardDefinitions,
+    quests: source.quests,
+  );
+}
+
+PlayerState _copyPlayer(PlayerState player, {required HexCoord coord}) =>
+    PlayerState(
+      id: player.id,
+      characterId: player.characterId,
+      coord: coord,
+      damage: player.damage,
+      health: player.health,
+      credits: player.credits,
+      backpack: player.backpack,
+      equipped: player.equipped,
+      carriedMods: player.carriedMods,
+      implanted: player.implanted,
+      conditions: player.conditions,
+      alive: player.alive,
+      stats: player.stats,
+      actionPoints: player.actionPoints,
+      weaponModifier: player.weaponModifier,
+    );
 
 const _victoryRoute = <QuestEvent>[
   QuestArrived('crew-quarters'),
