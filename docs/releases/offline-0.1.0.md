@@ -1,16 +1,16 @@
 # Релизный манифест: Offline 0.1.0
 
 **Тег:** `v0.1.0-offline`
-**Редакция манифеста:** 20 сентября 2026 года
+**Редакция манифеста:** 28 сентября 2026 года
 **Назначение:** завершённый офлайн-одиночный режим (singleplayer).
 
 ## Матрица готовности целевых платформ первого этапа
 
 | Платформа | Статус | Подтверждение | Артефакт |
 | --- | --- | --- | --- |
-| Web | Готова | Production-сборка `flutter build web --release --pwa-strategy=offline-first --base-href="/" --wasm` успешно создана. Размер каталога дистрибутива — 43 MiB (44 076 KiB). | `packages/besprotoritsa_app/build/web/`; включены `main.dart.wasm`, `main.dart.mjs`, `main.dart.js`, `service_worker.js` и `_headers`. |
-| macOS | Готова | `flutter build macos --release` выполнена; `codesign --verify --deep --strict` пройдена. Приложение запускалось напрямую через `open -n`, корректно завершалось и успешно запускалось повторно. | `packages/besprotoritsa_app/build/macos/Build/Products/Release/Besprotoritsa.app` — 47 MiB (48 116 KiB), universal (`arm64`, `x86_64`), macOS 12+. |
-| Android | Готова | `flutter build apk --release` и `flutter build appbundle --release` выполнены. APK прошёл проверку `apksigner` для схем v1 и v2. | Версия сборки `0.1.0-dev` (code 1); APK: 23 628 KiB, AAB: 50 744 KiB. |
+| Web | Собрана 28 сентября | Production-сборка Flutter 3.47.1 успешна. Каталог — 61.2 MiB (62 644 KiB, около 62 MB); актуальные контрольные суммы приведены ниже. Флаг `--pwa-strategy` устарел. | `packages/besprotoritsa_app/build/web/`; включены `main.dart.wasm`, `main.dart.mjs`, `main.dart.js`, `service_worker.js` и `_headers`. |
+| macOS | Историческая проверка от 20 сентября | В Linux-сборке от 28 сентября не перепроверена; macOS артефакта в текущем каталоге сборки нет. Историческая запись не подтверждает текущую версию исходников. | Ожидаемый путь: `packages/besprotoritsa_app/build/macos/Build/Products/Release/Besprotoritsa.app`; свежий размер и SHA-256 отсутствуют. |
+| Android | Собрана 28 сентября | Release APK и AAB собраны на Flutter 3.47.1. APK: 43 819 905 байт (41.8 MiB); AAB: 72 808 079 байт (69.5 MiB). APK подписи v1/v2 и AAB проверены; артефакты на устройстве не устанавливались. | Версия сборки `0.1.0-dev` (code 1); артефакты находятся в каталогах, указанных в [android.md](android.md). |
 
 Подробные платформенные записи: [Web](web.md), [macOS](macos.md), [Android](android.md).
 
@@ -58,4 +58,4 @@ codesign --verify --deep --strict \
 
 ## Состояние релиза
 
-Целевые платформы первого этапа готовы. Windows, Linux и iOS не являются артефактами этого релиза и планируются в версии 0.2.0 при выполнении перечисленных условий.
+В проверке 28 сентября свежие Web и Android артефакты собраны. Статус macOS относится только к исторической проверке от 20 сентября; полный повторный приём целевых платформ не выполнен. Windows, Linux и iOS не являются артефактами этого релиза и планируются в версии 0.2.0 при выполнении перечисленных условий.

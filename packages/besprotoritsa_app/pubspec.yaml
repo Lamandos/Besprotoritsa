@@ -28,6 +28,8 @@ dev_dependencies:
     path: ../besprotoritsa_server
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
   shelf: ^1.4.2
 
 flutter:

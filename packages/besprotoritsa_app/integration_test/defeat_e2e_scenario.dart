@@ -3,11 +3,12 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('queued replacement delays defeat until the reserve dies', (
+  testWidgets('a queued replacement delays defeat until the reserve dies', (
     tester,
   ) async {
     var state = _initialState();

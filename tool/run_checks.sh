@@ -6,6 +6,7 @@ dart format --output=none --set-exit-if-changed .
 dart analyze --fatal-infos .
 dart run tool/validate_schemas.dart
 dart run tool/validate_content.dart
+dart run tool/content_report.dart
 dart run tool/verify_batch.dart --deck items
 dart run tool/verify_batch.dart --deck supplies
 dart run tool/verify_batch.dart --deck events
@@ -21,4 +22,7 @@ dart test packages/besprotoritsa_server
     test/victory_scenario_test.dart \
     test/defeat_scenario_test.dart \
     test/save_resume_scenario_test.dart
+  if [[ "${CI:-}" == true ]]; then
+    xvfb-run -a flutter test integration_test/ -d linux
+  fi
 )

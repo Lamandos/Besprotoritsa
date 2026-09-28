@@ -59,9 +59,9 @@ GameState resolveHeroDeaths(GameState state) {
         coord: deceased.coord,
       ),
     );
-    if (state.reserveHeroes.isEmpty) {
+    if (state.reserveHeroes.isEmpty && state.queuedReplacements.isEmpty) {
       noReserve = true;
-    } else {
+    } else if (state.reserveHeroes.isNotEmpty) {
       replacementDecision ??= AwaitingHeroReplacement(
         playerId: deceased.id,
         characterIds: state.reserveHeroes.map((hero) => hero.characterId),

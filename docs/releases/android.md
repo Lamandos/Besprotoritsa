@@ -9,9 +9,11 @@
 - Minimum SDK: 21 (Android 5.0)
 - Target SDK: 34
 
-Both artifacts are built with the release signing configuration. The launcher
-uses an Android 8+ adaptive icon with a dedicated foreground asset and navy
-background; density-specific PNGs provide the Android 5–7 fallback.
+Both artifacts are built with the local release signing configuration. The
+certificate used for the 2026-09-28 build is self-signed, so the artifacts are
+for local verification and are not ready for Play Store publication. The
+launcher uses an Android 8+ adaptive icon with a dedicated foreground asset
+and navy background; density-specific PNGs provide the Android 5–7 fallback.
 
 ## Signing setup
 
@@ -35,11 +37,14 @@ plugins.
 
 ## SHA-256 checksums
 
-Recorded on 2026-09-20 after the final release build:
+Recorded on 2026-09-28 after the Linux release build. APK size is 43,819,905
+bytes (41.8 MiB); AAB size is 72,808,079 bytes (69.5 MiB). These local build
+artifacts were signed with the configured local signing setup and were not
+installed on a device during this check.
 
 ```text
-9ad1034a125141454c89d7453310173cee0f011d9317d616fed5bff8b074e1d4  app-release.apk
-87885534c3aae37f7c2db05b248c6c6157a7b28f878a1545ab2a9830d9d116c4  app-release.aab
+ea1ef2d9935b6ee88ab74e629571ba393ba50722107c7f4184ea2ddf24eebe6d  app-release.apk
+e4150c7c38e56d252795d699067d3da570f88a15b00c111482eea688dc1dd5cd  app-release.aab
 ```
 
 Verify an APK after transfer with:
