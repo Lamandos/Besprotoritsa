@@ -4426,114 +4426,324 @@
       ]
     },
     "event.needle-box": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: science.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.bloody-suitcase": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: repair, science.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.broken-drone": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: repair.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.radio-transmitter": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: repair.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.lights-out": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: repair.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.ventilation-failure": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: repair.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.gas-pipe": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: repair.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.vent-monster": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: repair, science.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.security-console": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: repair.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.cigarette-machine": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          4,
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of narrative, every option, skill/difficulty icon, outcomes, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 4,
+      "auditBatch": 15,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skill-check symbols: repair, strength.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.pack-sighting": {
       "status": "human-inventory-verified",

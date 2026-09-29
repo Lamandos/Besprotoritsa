@@ -959,6 +959,161 @@
             "failure": "The welding noise attracts a monster. Draw a Monster card, place it in your sector, and move to an adjacent sector."
           }
         }
+      },
+      "needle-box": {
+        "name": "Box of Needles",
+        "description": "A strange box with needles sticking out lies on the floor.",
+        "option": {
+          "o1": {
+            "action": "Study the strange object.",
+            "success": "It is a portable vaccine injector. Restore 3 health and gain +1 Defense for the next round.",
+            "failure": "The terminology is incomprehensible, so you leave the box."
+          },
+          "o2": {
+            "action": "Ignore this junk.",
+            "success": "You decide not to touch the strange object.",
+            "failure": "You decide not to touch the strange object."
+          }
+        }
+      },
+      "bloody-suitcase": {
+        "name": "Suitcase with a Bloody Message",
+        "description": "There is a suitcase in front of you with a severed arm. Something is written on it in blood.",
+        "option": {
+          "o1": {
+            "action": "Examine the suitcase carefully.",
+            "success": "You decipher a code in the message. Draw a Supply card.",
+            "failure": "The writing turns out to be a waste of time."
+          },
+          "o2": {
+            "action": "Try to open the suitcase.",
+            "success": "You pick the lock and find personal belongings. Draw a Supply card.",
+            "failure": "The lock will not open, so you leave the suitcase."
+          }
+        }
+      },
+      "broken-drone": {
+        "name": "Broken Droid",
+        "description": "You enter a room looking for something useful and see a broken droid.",
+        "option": {
+          "o1": {
+            "action": "Try to repair the droid.",
+            "success": "The droid gets back on its feet. Take a Robot from the Item deck.",
+            "failure": "An electric shock stuns you. Take one fewer action next turn."
+          },
+          "o2": {
+            "action": "Ignore it and move on.",
+            "success": "You walk past, but do not leave empty-handed. Draw a Supply card.",
+            "failure": "You walk past, but do not leave empty-handed. Draw a Supply card."
+          }
+        }
+      },
+      "radio-transmitter": {
+        "name": "Radio Transmitter",
+        "description": "You find a radio transmitter and decide to send a distress signal.",
+        "option": {
+          "o1": {
+            "action": "Repair the transmitter.",
+            "success": "The signal is received. Each crew member draws a Supply card.",
+            "failure": "The transmitter’s static attracts a monster. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Don’t waste time.",
+            "success": "Technology repair is not your strength, so you move on.",
+            "failure": "Technology repair is not your strength, so you move on."
+          }
+        }
+      },
+      "lights-out": {
+        "name": "Lights Out",
+        "description": "You discover that the lights are out in some rooms.",
+        "option": {
+          "o1": {
+            "action": "Repair the lights in the nearest room.",
+            "success": "The lights come on. Reveal the nearest unexplored map tile.",
+            "failure": "You take 3 damage from the wiring."
+          }
+        }
+      },
+      "ventilation-failure": {
+        "name": "Faulty Ventilation",
+        "description": "The ventilation system starts failing in the room.",
+        "option": {
+          "o1": {
+            "action": "Repair the ventilation.",
+            "success": "Behind the grate you find a body and a heavy bag. Draw a Supply card.",
+            "failure": "A monster crawls out of the vent. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Leave the room.",
+            "success": "You get out in time. Take 2 damage.",
+            "failure": "You get out in time. Take 2 damage."
+          }
+        }
+      },
+      "gas-pipe": {
+        "name": "Burst Pipe",
+        "description": "You smell something strange and realize you are surrounded by gas.",
+        "option": {
+          "o1": {
+            "action": "Repair the pipe.",
+            "success": "You repair the pipe. Restore 2 health.",
+            "failure": "You inhale gas. Take 2 damage and take one fewer action next turn."
+          }
+        }
+      },
+      "vent-monster": {
+        "name": "Growling in the Vent",
+        "description": "You hear growling from the air duct.",
+        "option": {
+          "o1": {
+            "action": "Redirect the airflow.",
+            "success": "The airflow pulls the monster back.",
+            "failure": "Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Weld the outlet grate shut.",
+            "success": "You secure the room. Draw an Item card.",
+            "failure": "The monster breaks free. Draw a Monster card and fight it."
+          },
+          "o3": {
+            "action": "Blow up the duct.",
+            "success": "Discard the Gas Canister and draw 2 Supply cards.",
+            "failure": "Discard the Gas Canister and draw 2 Supply cards."
+          }
+        }
+      },
+      "security-console": {
+        "name": "Security Console",
+        "description": "The security control console seems to have no power, but is undamaged.",
+        "option": {
+          "o1": {
+            "action": "Repair the console.",
+            "success": "The security system is on. Kill any non-boss monster aboard the ship.",
+            "failure": "The console cannot be repaired."
+          },
+          "o2": {
+            "action": "Take the console apart for parts.",
+            "success": "The parts will be useful. Ready all your Robots.",
+            "failure": "The junk turns out to be useless."
+          }
+        }
+      },
+      "cigarette-machine": {
+        "name": "Cigarette Vending Machine",
+        "description": "The light is still on in the cigarette machine in front of you.",
+        "option": {
+          "o1": {
+            "action": "Search inside the machine.",
+            "success": "You find the change. Gain 10 credits.",
+            "failure": "The machine is well protected from clever people like you."
+          },
+          "o2": {
+            "action": "Kick the machine.",
+            "success": "The machine pays you off with a pack of cigarettes. Restore 2 health and ready your Robots.",
+            "failure": "You leave the machine alone."
+          }
+        }
       }
     },
     "quest": {
