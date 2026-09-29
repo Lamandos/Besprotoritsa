@@ -163,6 +163,18 @@ void main() {
     );
     expect(searched.cards, ['target']);
     expect(searched.deck.drawPile, unorderedEquals(['one', 'two']));
+
+    final searchedDiscard = DeckRules.drawSpecific(
+      DeckState(
+        drawPile: const ['top'],
+        discardPile: const ['target', 'other'],
+      ),
+      'target',
+      seed: 10,
+    );
+    expect(searchedDiscard.cards, ['target']);
+    expect(searchedDiscard.deck.drawPile, ['top']);
+    expect(searchedDiscard.deck.discardPile, ['other']);
   });
 }
 

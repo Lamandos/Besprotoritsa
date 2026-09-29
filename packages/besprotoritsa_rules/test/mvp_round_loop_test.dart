@@ -32,6 +32,98 @@ void main() {
     expect(context.difficulty, 2);
   });
 
+  test('event skill checks do not advance the full story quest', () {
+    var state = _mvpState(
+      eventId: 'runtime-event',
+      playerCoord: const HexCoord(0, 2),
+      eventDefinitions: {
+        'runtime-event': {
+          'options': [
+            {
+              'skillCheck': {'skill': 'science', 'difficulty': 1},
+            },
+          ],
+        },
+      },
+      storyQuestIds: const ['quest-01'],
+      conditionProgress: const {
+        'quest-01': {'arrive-crew-quarters': 1},
+      },
+      questDefinitions: {
+        'quest-01': {
+          'id': 'quest-01',
+          'number': 1,
+          'chapter': 1,
+          'conditions': [
+            {
+              'id': 'arrive-crew-quarters',
+              'type': 'arrive',
+              'locationId': 'crew-mess',
+            },
+            {
+              'id': 'science-crew-quarters',
+              'type': 'skill_check',
+              'skill': 'science',
+              'locationId': 'crew-mess',
+            },
+          ],
+          'reward': {'credits': 0, 'items': <Object?>[]},
+          'nextQuestIds': [],
+          'nameKey': 'quest-01.name',
+          'descKey': 'quest-01.description',
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([6]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.quests.statusOf('quest-01'), QuestStatus.active);
+    expect(
+      state.quests.conditionProgress['quest-01']?['science-crew-quarters'],
+      isNull,
+    );
+    expect(state.isComplete, isFalse);
+  });
+
+  test('full cabin-noise checks still resolve their event outcome', () {
+    var state = _mvpState(
+      questDefinitions: {
+        'quest-01': {
+          'id': 'quest-01',
+          'number': 1,
+          'chapter': 1,
+          'conditions': <Object?>[],
+          'reward': {'credits': 0, 'items': <Object?>[]},
+          'nextQuestIds': [],
+          'nameKey': 'quest-01.name',
+          'descKey': 'quest-01.description',
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('investigate')),
+      FixedDiceRoller([6]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.backpack, contains('event-supply'));
+  });
+
   test('runs the MVP from the first step through Quest 1 completion', () {
     var state = _mvpState();
 
@@ -114,6 +206,10 @@ void main() {
 GameState _mvpState({
   String eventId = 'cabin-noise',
   Map<String, Map<String, Object?>> eventDefinitions = const {},
+  HexCoord playerCoord = const HexCoord(0, 0),
+  List<String> storyQuestIds = const ['chapter-1-awakening'],
+  Map<String, Map<String, int>> conditionProgress = const {},
+  Map<String, Map<String, Object?>> questDefinitions = const {},
 }) => GameState(
   seed: 17,
   round: 1,
@@ -148,7 +244,7 @@ GameState _mvpState({
     PlayerState(
       id: 'ada',
       characterId: 'engineer',
-      coord: const HexCoord(0, 0),
+      coord: playerCoord,
       damage: 0,
       credits: 0,
       backpack: const [],
@@ -165,7 +261,11 @@ GameState _mvpState({
     'events': DeckState(drawPile: [eventId]),
   },
   eventDefinitions: eventDefinitions,
-  quests: QuestState(storyQuestIds: const ['chapter-1-awakening']),
+  questDefinitions: questDefinitions,
+  quests: QuestState(
+    storyQuestIds: storyQuestIds,
+    conditionProgress: conditionProgress,
+  ),
 );
 
 HexTile _tile({

@@ -169,10 +169,13 @@ GameState _completeRoll(
   }
   if (context is! SkillCheckContext) return _resumeAutomaticPhase(state);
   final succeeded = countHits(pending.dice) >= context.difficulty;
+  if (context.eventId == 'cabin-noise') {
+    return _resolveCabinNoise(state, context, succeeded);
+  }
   if (context.questId != null && succeeded) {
     return _completeMvpQuest(state, context);
   }
-  if (state.questDefinitions.isNotEmpty) {
+  if (context.eventId == null && state.questDefinitions.isNotEmpty) {
     final player = _playerById(state, context.playerId)!;
     final locationId = state.tileAt(player.coord)?.locationId;
     if (locationId != null) {
@@ -188,9 +191,6 @@ GameState _completeRoll(
         ),
       );
     }
-  }
-  if (context.eventId == 'cabin-noise') {
-    return _resolveCabinNoise(state, context, succeeded);
   }
   return _resumeAutomaticPhase(state);
 }
@@ -233,6 +233,7 @@ GameState _applyFullQuestEvent(
     ...transition.activatedQuestIds,
   ];
   var players = state.players;
+  final decks = Map<DeckId, DeckState>.of(state.decks);
   final spawnedMonsters = <MonsterInstance>[];
   for (final grant in transition.rewards) {
     final recipient = players.where((player) => player.id == playerId);
@@ -243,8 +244,23 @@ GameState _applyFullQuestEvent(
       credits: player.credits + grant.reward.credits,
     );
     for (final cardId in grant.reward.items) {
+      final sourceDeck = decks.entries
+          .where(
+            (entry) =>
+                entry.value.drawPile.contains(cardId) ||
+                entry.value.discardPile.contains(cardId),
+          )
+          .firstOrNull;
+      if (sourceDeck == null) continue;
+      final draw = DeckRules.drawSpecific(
+        sourceDeck.value,
+        cardId,
+        seed: _deckSeed(state, sourceDeck.key),
+      );
+      if (draw.cards.isEmpty) continue;
       try {
         player = InventoryRules.receive(player, cardId, state.cardDefinitions);
+        decks[sourceDeck.key] = draw.deck;
       } on BackpackCapacityExceeded {
         // The quest is complete even when its item reward cannot fit.
       } on InventoryRuleViolation {
@@ -290,6 +306,7 @@ GameState _applyFullQuestEvent(
     state,
     players: players,
     monsters: [...state.monsters, ...spawnedMonsters],
+    decks: decks,
     quests: quests,
     isComplete: transition.gameWon,
     logEntry: [
