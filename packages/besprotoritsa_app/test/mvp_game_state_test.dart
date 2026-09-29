@@ -38,4 +38,13 @@ void main() {
       'scientist',
     ]);
   });
+
+  test('equips starter items by their slots in the selected MVP roster', () {
+    final state = createMvpGameState(
+      characterIds: const ['scientist', 'guard'],
+    );
+
+    expect(state.players[1].equipped.weapon, 'pistol');
+    expect(state.players[1].backpack, isNot(contains('pistol')));
+  });
 }

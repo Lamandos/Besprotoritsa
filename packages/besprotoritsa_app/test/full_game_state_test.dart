@@ -18,6 +18,10 @@ void main() {
       'mechanic',
       'worker',
     ]);
+    expect(
+      state.reserveHeroes.map((hero) => hero.characterId),
+      ['hauler', 'healer', 'engineer', 'astronaut'],
+    );
     expect(state.cardDefinitions.keys, containsAll(['pistol', 'lucky-socks']));
     expect(state.cardDefinitions.keys, contains('nanobots'));
     expect(state.cardDefinitions.keys, contains('assault-rifle'));

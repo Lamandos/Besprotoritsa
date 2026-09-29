@@ -33,7 +33,7 @@ GameState createMvpGameState({List<String>? characterIds}) {
       roster[index],
       characters,
       items,
-      equipStartingItem: isDefaultRoster,
+      equipStartingItem: true,
     );
   });
   final hexes = _byId(content['hexes']);

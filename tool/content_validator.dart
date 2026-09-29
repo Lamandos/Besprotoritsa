@@ -127,7 +127,8 @@ void _validatePhysicalHexInventory(List<_Record> catalog, List<String> issues) {
     if (copiesByType[entry.key] != entry.value) {
       issues.add(
         'content/hexes.json [id=<physical-inventory>]: expected '
-        '${entry.value} ${entry.key} tiles, found ${copiesByType[entry.key] ?? 0}',
+        '${entry.value} ${entry.key} tiles, '
+        'found ${copiesByType[entry.key] ?? 0}',
       );
     }
   }

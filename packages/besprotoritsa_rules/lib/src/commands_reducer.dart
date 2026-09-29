@@ -11,6 +11,7 @@ import 'package:besprotoritsa_rules/src/effect_hooks.dart';
 import 'package:besprotoritsa_rules/src/effect_registry.dart';
 import 'package:besprotoritsa_rules/src/game_state.dart';
 import 'package:besprotoritsa_rules/src/inventory_rules.dart';
+import 'package:besprotoritsa_rules/src/quest_engine.dart';
 import 'package:meta/meta.dart';
 
 part 'commands_reducer_part_1.dart';

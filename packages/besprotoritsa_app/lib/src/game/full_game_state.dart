@@ -155,6 +155,11 @@ GameState createFullGameState({
   final specialItemsDeck = _expandedIds(_cards(_content['special_items']))
     ..shuffle(random);
   final restlessReserve = List<String>.filled(7, _string(restless, 'id'));
+  final reserveHeroes = <ReserveHero>[
+    for (final character in fullRuntimeCharacters)
+      if (!characterIds.contains(_string(character, 'id')))
+        _reserveHero(character, definitions),
+  ];
   final translations = _object(_content['contentTranslations']);
   return GameState(
     seed: seed,
@@ -164,6 +169,7 @@ GameState createFullGameState({
     actionsLeft: 2,
     board: board,
     players: playerStates,
+    reserveHeroes: reserveHeroes,
     monsters: const [],
     quests: QuestState(
       storyQuestIds: _strings(
@@ -203,6 +209,41 @@ GameState createFullGameState({
       for (final entry in translations.entries)
         if (entry.value is String) entry.key: entry.value! as String,
     },
+  );
+}
+
+ReserveHero _reserveHero(
+  Map<String, Object?> character,
+  Map<String, CardDefinition> definitions,
+) {
+  String? weapon;
+  String? robot;
+  final backpack = <String>[];
+  for (final id in _strings(character['startItems'])) {
+    final item = definitions[id];
+    if (item == null) throw StateError('Missing starter card "$id".');
+    if (item.slots.contains(ItemSlot.weapon) && weapon == null) {
+      weapon = id;
+    } else if (item.slots.contains(ItemSlot.robot) && robot == null) {
+      robot = id;
+    } else {
+      backpack.add(id);
+    }
+  }
+  return ReserveHero(
+    characterId: _string(character, 'id'),
+    health: _int(character, 'health'),
+    credits: _int(character, 'startCredits'),
+    backpack: backpack,
+    equipped: EquippedGear(weapon: weapon, robot: robot),
+    stats: PlayerStats(
+      strength: _int(character, 'strength'),
+      combatStrength: _int(character, 'combatStrength'),
+      science: _int(character, 'science'),
+      repair: _int(character, 'repair'),
+      endurance: _int(character, 'endurance'),
+      agility: _int(character, 'agility'),
+    ),
   );
 }
 

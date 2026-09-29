@@ -154,7 +154,7 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
   }
 
   void _startGame(BuildContext context, Set<String> selected) {
-    final roster = _heroes
+    final roster = _availableHeroes(AppStrings.of(context), _contentSet)
         .where((hero) => selected.contains(hero.id))
         .map((hero) => hero.id)
         .toList(growable: false);

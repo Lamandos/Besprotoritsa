@@ -16,7 +16,18 @@ GameStepResult _move(GameState state, HexCoord target, int cost) {
     ),
     logEntry: 'move:${state.activePlayerId}:$target',
   );
-  return GameStepResult(state: resolveColocation(moved));
+  final resolved = resolveColocation(moved);
+  final player = _activePlayer(state)!;
+  final locationId = destination.locationId;
+  return GameStepResult(
+    state: locationId == null || state.questDefinitions.isEmpty
+        ? resolved
+        : _applyFullQuestEvent(
+            resolved,
+            QuestArrived(locationId),
+            playerId: player.id,
+          ),
+  );
 }
 
 GameStepResult _closeCorridor(GameState state, HexCoord target) =>
@@ -321,7 +332,7 @@ GameState _resolveAttackRoll(
     awardedPlayer = loot.player;
     unclaimedLoot = loot.unclaimed;
   }
-  return resolveHeroDeaths(
+  final resolved = resolveHeroDeaths(
     _copyState(
       state,
       actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
@@ -343,6 +354,13 @@ GameState _resolveAttackRoll(
       ),
     ),
   );
+  return defeated && state.questDefinitions.isNotEmpty
+      ? _applyFullQuestEvent(
+          resolved,
+          QuestMonsterKilled(monsterId: monster.monsterId),
+          playerId: playerId,
+        )
+      : resolved;
 }
 
 ({PlayerState player, List<CardId> unclaimed}) _awardRestlessTrophies(

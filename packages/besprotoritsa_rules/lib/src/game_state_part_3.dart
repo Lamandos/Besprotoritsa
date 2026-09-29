@@ -12,23 +12,29 @@ final class QuestState {
     Iterable<QuestId> storyQuestIds = const [],
     Map<PlayerId, Iterable<QuestId>> personalTasksByPlayer = const {},
     Map<QuestId, QuestStatus> statuses = const {},
+    Map<QuestId, Map<String, int>> conditionProgress = const {},
   }) : storyQuestIds = List.unmodifiable(storyQuestIds),
        personalTasksByPlayer = UnmodifiableMapView({
          for (final entry in personalTasksByPlayer.entries)
            entry.key: List<QuestId>.unmodifiable(entry.value),
        }),
-       statuses = UnmodifiableMapView(Map.of(statuses));
+       statuses = UnmodifiableMapView(Map.of(statuses)),
+       conditionProgress = UnmodifiableMapView({
+         for (final entry in conditionProgress.entries)
+           entry.key: UnmodifiableMapView(Map.of(entry.value)),
+       });
 
   final List<QuestId> storyQuestIds;
   final Map<PlayerId, List<QuestId>> personalTasksByPlayer;
   final Map<QuestId, QuestStatus> statuses;
+  final Map<QuestId, Map<String, int>> conditionProgress;
 
   /// Story quests start active unless an explicit status was recorded.
   QuestStatus statusOf(QuestId questId) =>
       statuses[questId] ?? QuestStatus.active;
 }
 
-enum QuestStatus { active, completed }
+enum QuestStatus { active, completed, discarded }
 
 /// The three deterministic parts of one round.
 enum GamePhase {
