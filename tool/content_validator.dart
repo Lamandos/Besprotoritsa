@@ -55,19 +55,72 @@ Future<ContentValidationReport> validateContent({
 }) async {
   final issues = <String>[];
   final catalog = await _loadCatalog(contentDirectory, issues);
-  final selected = await _loadMvp(contentDirectory, contentSetId, issues);
+  final selected = switch (contentSetId) {
+    'mvp' => await _loadMvp(contentDirectory, issues),
+    'full' => catalog,
+    _ => _loadUnsupported(contentDirectory, contentSetId, issues),
+  };
   _validateMvpCharacterFiles(contentDirectory, contentSetId, issues);
-  final allRecords = [...catalog, ...selected];
+  final allRecords = contentSetId == 'full'
+      ? catalog
+      : [...catalog, ...selected];
   _validateSchemas(allRecords, contentDirectory, issues);
   _validateMetadata(allRecords, issues);
   _validateRuntimeCompatibility(allRecords, issues);
   _validateUniqueIds(allRecords, issues);
   _validateEffects(allRecords, issues);
   await _validateLocalization(allRecords, contentDirectory, issues);
-  _validateReferences(catalog, selected, issues);
+  _validateReferences(
+    catalog,
+    selected,
+    issues,
+    validateFullCharacterEquipment: contentSetId == 'full',
+  );
   await _validateMvpLayout(contentDirectory, selected, issues);
+  if (contentSetId == 'mvp') {
+    await _validateMvpDecks(contentDirectory, selected, issues);
+  }
   await _validateCampaign(catalog, contentDirectory, issues);
   return ContentValidationReport(allRecords.length, List.unmodifiable(issues));
+}
+
+Future<void> _validateMvpDecks(
+  Directory content,
+  List<_Record> selected,
+  List<String> issues,
+) async {
+  final file = File('${content.path}/mvp/decks.json');
+  final decks = await _read(file, issues);
+  if (decks == null) return;
+  const sources = <String, String>{
+    'conditions': 'condition',
+    'events': 'event',
+    'storyQuests': 'quest',
+  };
+  for (final entry in sources.entries) {
+    final rawIds = decks[entry.key];
+    if (rawIds is! List) {
+      issues.add('${file.path}.${entry.key}: expected an array of ids');
+      continue;
+    }
+    final available = selected
+        .where((record) => record.schema == entry.value)
+        .map((record) => record.id)
+        .whereType<String>()
+        .toSet();
+    final used = <String>{};
+    for (var index = 0; index < rawIds.length; index++) {
+      final id = rawIds[index];
+      if (id is! String || !available.contains(id)) {
+        issues.add(
+          '${file.path}.${entry.key}[$index]: unknown MVP '
+          '${entry.value} id "$id"',
+        );
+      } else if (!used.add(id)) {
+        issues.add('${file.path}.${entry.key}[$index]: duplicate id "$id"');
+      }
+    }
+  }
 }
 
 void _validateMvpCharacterFiles(
@@ -146,15 +199,20 @@ String _catalogNamespace(String schema, Map<String, Object?> value) {
   return 'catalog:$schema';
 }
 
-Future<List<_Record>> _loadMvp(
+List<_Record> _loadUnsupported(
   Directory content,
   String id,
   List<String> issues,
+) {
+  issues.add('${content.path} [id=$id]: unsupported contentSetId');
+  return const [];
+}
+
+Future<List<_Record>> _loadMvp(
+  Directory content,
+  List<String> issues,
 ) async {
-  if (id != 'mvp') {
-    issues.add('${content.path} [id=$id]: unsupported contentSetId');
-    return const [];
-  }
+  const id = 'mvp';
   final root = Directory('${content.path}/mvp');
   if (!root.existsSync()) {
     issues.add('${root.path} [id=$id]: selected content set is missing');
@@ -465,9 +523,13 @@ Future<void> _validateLocalization(
 void _validateReferences(
   List<_Record> catalog,
   List<_Record> selected,
-  List<String> issues,
-) {
-  for (final group in [catalog, selected]) {
+  List<String> issues, {
+  bool validateFullCharacterEquipment = false,
+}) {
+  final groups = validateFullCharacterEquipment
+      ? [selected]
+      : [catalog, selected];
+  for (final group in groups) {
     final prefix = group.isNotEmpty && group.first.namespace.startsWith('mvp:')
         ? 'mvp'
         : 'catalog';
@@ -545,6 +607,20 @@ void _validateReferences(
           }
         }
       }
+      if (validateFullCharacterEquipment && record.schema == 'character') {
+        final starts = record.value['startItems'];
+        if (starts is List) {
+          for (var index = 0; index < starts.length; index++) {
+            final id = starts[index];
+            if (id is String && !itemIds.contains(id)) {
+              issues.add(
+                '${record.label}.startItems[$index]: card "$id" is '
+                'unavailable in full',
+              );
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -554,6 +630,9 @@ Future<void> _validateMvpLayout(
   List<_Record> selected,
   List<String> issues,
 ) async {
+  if (selected.isNotEmpty && !selected.first.namespace.startsWith('mvp:')) {
+    return;
+  }
   final file = File('${content.path}/mvp/layout.json');
   final layout = await _read(file, issues);
   if (layout == null) return;

@@ -1,10 +1,14 @@
+import 'dart:convert';
+
+import 'package:besprotoritsa_app/src/game/mvp_runtime_content.g.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 
 /// Creates the compact, deterministic scenario shown by the MVP game screen.
 ///
-/// The default keeps the original two-character MVP setup. The game shell can
-/// supply a roster of two to four character identifiers for a new expedition.
+/// Runtime entities and card facts come from the checked JSON files under
+/// `content/mvp`; only the fixed scenario arrangement is defined here.
 GameState createMvpGameState({List<String>? characterIds}) {
+  final content = _mvpContent;
   final roster = characterIds ?? const ['engineer', 'guard'];
   if (roster.length < 2 || roster.length > 4) {
     throw ArgumentError.value(
@@ -13,51 +17,68 @@ GameState createMvpGameState({List<String>? characterIds}) {
       'Expected 2..4 heroes.',
     );
   }
-  final isDefaultRoster =
-      roster.length == 2 && roster[0] == 'engineer' && roster[1] == 'guard';
-  final players = isDefaultRoster
-      ? <PlayerState>[
-          _player('ada', 'engineer', const HexCoord(0, 0)),
-          _player('boris', 'guard', const HexCoord(0, 0)),
-        ]
-      : List<PlayerState>.generate(
-          roster.length,
-          (index) => _player(
-            'hero-${index + 1}',
-            roster[index],
-            const HexCoord(0, 0),
-          ),
-        );
+  final characters = <String, Map<String, Object?>>{
+    ..._byId(content['catalogCharacters']),
+    ..._byId(content['characters']),
+  };
+  final items = _byId(content['items']);
+  final players = List<PlayerState>.generate(roster.length, (index) {
+    final isDefaultRoster =
+        roster.length == 2 && roster[0] == 'engineer' && roster[1] == 'guard';
+    final playerId = isDefaultRoster
+        ? (index == 0 ? 'ada' : 'boris')
+        : 'hero-${index + 1}';
+    return _player(
+      playerId,
+      roster[index],
+      characters,
+      items,
+      equipStartingItem: isDefaultRoster,
+    );
+  });
+  final hexes = _byId(content['hexes']);
+  final layout = _map(content['layout']);
+  final coordinates = _list(layout['coordinates']);
+  final board = coordinates.map((raw) {
+    final position = _map(raw);
+    final id = _string(position, 'hexId');
+    final definition = hexes[id];
+    if (definition == null) throw StateError('Unknown runtime hex "$id".');
+    return HexTile(
+      id: id,
+      coord: HexCoord(_int(position, 'q'), _int(position, 'r')),
+      type: HexTileType.values.byName(_string(definition, 'type')),
+      opened: id == 'anabiosis',
+      exits: _list(
+        definition['exits'],
+      ).map((edge) => HexEdge.values[edge! as int]).toSet(),
+      locationId: definition['type'] == 'compartment' ? id : null,
+      hasTerminal: definition['hasTerminal'] == true,
+      ventColor: VentColor.values.byName(_string(definition, 'ventColor')),
+    );
+  });
+  final monsters = _byId(content['monsters']);
+  final ghoul = monsters['ghoul'];
+  if (ghoul == null) throw StateError('MVP content has no ghoul.');
+  final conditionRows = _byId(content['conditions']);
+  final conditionCards = <CardId, ConditionCard>{
+    for (final entry in conditionRows.entries)
+      entry.key: ConditionCard(
+        id: entry.key,
+        statModifiers: {
+          for (final modifier in _map(entry.value['statModifiers']).entries)
+            StatType.values.byName(modifier.key): modifier.value! as int,
+        },
+      ),
+  };
+  final deckOrder = _map(content['decks']);
   return GameState(
     seed: 17,
     round: 1,
     phase: GamePhase.playersTurn,
     activePlayerId: players.first.id,
     actionsLeft: 2,
-    board: [
-      _tile(
-        id: 'anabiosis',
-        coord: const HexCoord(0, 0),
-        type: HexTileType.start,
-        opened: true,
-        exits: const {HexEdge.south, HexEdge.northEast},
-      ),
-      _tile(
-        id: 'corridor',
-        coord: const HexCoord(0, 1),
-        type: HexTileType.corridor,
-        opened: false,
-        exits: const {HexEdge.north, HexEdge.south},
-      ),
-      _tile(
-        id: 'crew-mess',
-        coord: const HexCoord(0, 2),
-        type: HexTileType.compartment,
-        opened: false,
-        exits: const {HexEdge.north},
-        locationId: 'crew-mess',
-      ),
-    ],
+    board: board,
     players: players,
     monsters: [
       MonsterInstance(
@@ -65,180 +86,109 @@ GameState createMvpGameState({List<String>? characterIds}) {
         monsterId: 'ghoul',
         coord: const HexCoord(0, 1),
         damage: 0,
-        health: 2,
-        attack: 2,
+        health: _int(ghoul, 'health'),
+        attack: _int(ghoul, 'attack'),
       ),
     ],
     decks: {
-      'conditions': DeckState(drawPile: const ['malaise', 'concussion']),
-      'events': DeckState(drawPile: const ['cabin-noise']),
-    },
-    conditionCards: {
-      'malaise': ConditionCard(
-        id: 'malaise',
-        statModifiers: const {StatType.strength: -1},
+      'conditions': DeckState(
+        drawPile: _strings(deckOrder['conditions']),
       ),
-      'concussion': ConditionCard(
-        id: 'concussion',
-        statModifiers: const {StatType.repair: -1},
-      ),
+      'events': DeckState(drawPile: _strings(deckOrder['events'])),
     },
-    cardDefinitions: _mvpCards,
-    quests: QuestState(storyQuestIds: const ['chapter-1-awakening']),
+    conditionCards: conditionCards,
+    cardDefinitions: {
+      for (final entry in items.entries)
+        entry.key: CardDefinition.fromJson(entry.value),
+    },
+    quests: QuestState(
+      storyQuestIds: _strings(deckOrder['storyQuests']),
+    ),
   );
 }
 
-PlayerState _player(String id, String characterId, HexCoord coord) {
-  final definition = _mvpCharacters[characterId] ?? _fallbackCharacter;
+PlayerState _player(
+  String id,
+  String characterId,
+  Map<String, Map<String, Object?>> characters,
+  Map<String, Map<String, Object?>> items, {
+  required bool equipStartingItem,
+}) {
+  final character = characters[characterId];
+  if (character == null) {
+    throw ArgumentError.value(characterId, 'characterId', 'Unknown MVP hero.');
+  }
+  final startItems = _strings(character['startItems']);
+  String? weapon;
+  String? robot;
+  final backpack = <CardId>[];
+  for (final itemId in startItems) {
+    final item = items[itemId];
+    if (item == null) {
+      backpack.add(itemId);
+      continue;
+    }
+    final slots = _strings(item['slots']);
+    if (equipStartingItem && slots.contains('weapon')) {
+      weapon = itemId;
+    } else if (equipStartingItem && slots.contains('robot')) {
+      robot = itemId;
+    } else {
+      backpack.add(itemId);
+    }
+  }
   return PlayerState(
     id: id,
     characterId: characterId,
-    coord: coord,
+    coord: const HexCoord(0, 0),
     damage: 0,
-    health: definition.health,
-    credits: definition.credits,
-    backpack: definition.startItems,
-    equipped: definition.equipped,
+    health: _int(character, 'health'),
+    credits: _int(character, 'startCredits'),
+    backpack: backpack,
+    equipped: EquippedGear(weapon: weapon, robot: robot),
     carriedMods: const [],
     implanted: const [],
     conditions: const [],
     alive: true,
-    stats: definition.stats,
+    stats: PlayerStats(
+      strength: _int(character, 'strength'),
+      combatStrength: _int(character, 'combatStrength'),
+      science: _int(character, 'science'),
+      repair: _int(character, 'repair'),
+      endurance: _int(character, 'endurance'),
+      agility: _int(character, 'agility'),
+    ),
   );
 }
 
-const _fallbackCharacter = _MvpCharacter(
-  health: 10,
-  stats: PlayerStats(),
-  credits: 3,
-  startItems: <CardId>[],
-  equipped: EquippedGear(),
+final Map<String, Object?> _mvpContent = Map<String, Object?>.from(
+  jsonDecode(mvpRuntimeContentJson) as Map<String, dynamic>,
 );
 
-const _mvpCharacters = <String, _MvpCharacter>{
-  'engineer': _MvpCharacter(
-    health: 10,
-    stats: PlayerStats(
-      strength: 3,
-      combatStrength: 3,
-      science: 2,
-      repair: 3,
-      endurance: 2,
-      agility: 1,
-    ),
-    credits: 3,
-    startItems: <CardId>[],
-    equipped: EquippedGear(robot: 'gu4-rd'),
-  ),
-  'guard': _MvpCharacter(
-    health: 11,
-    stats: PlayerStats(
-      strength: 3,
-      combatStrength: 3,
-      science: 1,
-      repair: 1,
-      endurance: 3,
-      agility: 3,
-    ),
-    credits: 3,
-    startItems: <CardId>[],
-    equipped: EquippedGear(weapon: 'pistol'),
-  ),
-  'scientist': _MvpCharacter(
-    health: 8,
-    stats: PlayerStats(
-      strength: 2,
-      combatStrength: 2,
-      science: 4,
-      repair: 2,
-      endurance: 1,
-      agility: 2,
-    ),
-    credits: 5,
-    startItems: <CardId>['lucky-socks'],
-    equipped: EquippedGear(),
-  ),
-  'mechanic': _MvpCharacter(
-    health: 9,
-    stats: PlayerStats(
-      strength: 2,
-      combatStrength: 2,
-      science: 2,
-      repair: 3,
-      endurance: 2,
-      agility: 2,
-    ),
-    credits: 4,
-    startItems: <CardId>['hard-hat'],
-    equipped: EquippedGear(),
-  ),
-  'healer': _MvpCharacter(
-    health: 8,
-    stats: PlayerStats(
-      strength: 2,
-      combatStrength: 2,
-      science: 3,
-      repair: 2,
-      endurance: 2,
-      agility: 2,
-    ),
-    credits: 4,
-    startItems: <CardId>['medic-bag'],
-    equipped: EquippedGear(),
-  ),
+Map<String, Map<String, Object?>> _byId(Object? raw) => {
+  for (final row in _list(raw).map(_map)) _string(row, 'id'): row,
 };
 
-final _mvpCards = <CardId, CardDefinition>{
-  'pistol': CardDefinition(
-    id: 'pistol',
-    type: ItemType.weapon,
-    slots: const <ItemSlot>{ItemSlot.weapon},
-    cost: 0,
-    staticEffects: CardStaticEffects(const <CardStat, int>{
-      CardStat.strength: 2,
-    }),
-    behaviorIds: const <String>['pistol_attack_reroll'],
-  ),
-  'gu4-rd': CardDefinition(
-    id: 'gu4-rd',
-    type: ItemType.robot,
-    slots: const <ItemSlot>{ItemSlot.robot},
-    cost: 0,
-    staticEffects: CardStaticEffects(const <CardStat, int>{}),
-    behaviorIds: const <String>['gu4_rd_pre_attack_roll'],
-  ),
-};
-
-final class _MvpCharacter {
-  const _MvpCharacter({
-    required this.health,
-    required this.stats,
-    required this.credits,
-    required this.startItems,
-    required this.equipped,
-  });
-
-  final int health;
-  final PlayerStats stats;
-  final int credits;
-  final List<CardId> startItems;
-  final EquippedGear equipped;
+Map<String, Object?> _map(Object? value) {
+  if (value is Map<String, dynamic>) return Map<String, Object?>.from(value);
+  throw const FormatException('Expected content object.');
 }
 
-HexTile _tile({
-  required String id,
-  required HexCoord coord,
-  required HexTileType type,
-  required bool opened,
-  required Set<HexEdge> exits,
-  String? locationId,
-}) => HexTile(
-  id: id,
-  coord: coord,
-  type: type,
-  opened: opened,
-  exits: exits,
-  locationId: locationId,
-  hasTerminal: false,
-  ventColor: VentColor.none,
-);
+List<Object?> _list(Object? value) {
+  if (value is List<Object?>) return value;
+  throw const FormatException('Expected content array.');
+}
+
+List<String> _strings(Object? value) => _list(value).cast<String>();
+
+String _string(Map<String, Object?> value, String key) {
+  final result = value[key];
+  if (result is String) return result;
+  throw FormatException('$key must be a string.');
+}
+
+int _int(Map<String, Object?> value, String key) {
+  final result = value[key];
+  if (result is int) return result;
+  throw FormatException('$key must be an integer.');
+}

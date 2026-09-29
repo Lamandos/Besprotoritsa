@@ -1,0 +1,5 @@
+{
+  "conditions": ["malaise", "concussion"],
+  "events": ["cabin-noise"],
+  "storyQuests": ["chapter-1-awakening"]
+}
