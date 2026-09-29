@@ -1785,37 +1785,91 @@
       "behaviorIds": []
     },
     "item.makeshift-armor": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "2-3"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "supplies"
+      "sourceDeck": "supplies",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Rough improvised armor; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.welding-mask": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "2-3"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "supplies"
+      "sourceDeck": "supplies",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Welding mask; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.cleaver": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "2-3"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "supplies"
+      "sourceDeck": "supplies",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Large cleaver; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "supply.nanobots": {
       "status": "human-card-verified",
@@ -1975,74 +2029,221 @@
       ]
     },
     "supply.stash": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Coins and a hidden pouch; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "economy.gainCredits",
+        "card.discardCost",
+        "economy.gainCredits"
+      ]
     },
     "supply.dry-rations": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 3
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 3,
+      "sourceDeck": "supplies",
+      "copiesStatus": "3 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Green ration packet; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "health.restore",
+        "card.discardCost",
+        "health.restore"
+      ]
     },
     "supply.tripwire": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 3
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 3,
+      "sourceDeck": "supplies",
+      "copiesStatus": "3 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Tripwire with a grenade trap; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.trapOnEnter",
+        "action.spend",
+        "monster.trapOnEnter"
+      ]
     },
     "supply.gas-cylinder": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 3
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 3,
+      "sourceDeck": "supplies",
+      "copiesStatus": "3 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Red gas cylinder; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.killNonBoss",
+        "action.spend",
+        "card.discardCost",
+        "monster.killNonBoss"
+      ]
     },
     "supply.door-remote": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Remote control; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "map.openCloseCorridor",
+        "action.spend",
+        "economy.spendCredits",
+        "map.openCloseCorridor"
+      ]
     },
     "supply.flashlight": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Handheld flashlight; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "map.freeRevealOnEntry"
+      ]
     },
     "supply.medkit": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 1,
+      "sourceDeck": "supplies",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 6,
+      "auditBatch": 6,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Red first-aid case with a white cross; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "health.restoreAll",
+        "card.discardCost",
+        "health.restoreAll"
+      ]
     },
     "supply.proton-shield": {
       "status": "human-inventory-verified",

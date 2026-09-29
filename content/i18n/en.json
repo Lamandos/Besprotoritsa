@@ -223,6 +223,18 @@
       "helmet": {
         "name": "Helmet",
         "description": "+1 Defense."
+      },
+      "makeshift-armor": {
+        "name": "Makeshift Armor",
+        "description": "+1 Defense. -1 Agility."
+      },
+      "welding-mask": {
+        "name": "Welding Mask",
+        "description": "+2 Defense. -1 Strength. -1 Agility."
+      },
+      "cleaver": {
+        "name": "Cleaver",
+        "description": "+1 combat strength."
       }
     },
     "supply": {
@@ -245,6 +257,34 @@
       "defibrillator": {
         "name": "Defibrillator",
         "description": "During your turn, discard this card to reroll any number of dice."
+      },
+      "stash": {
+        "name": "Stash",
+        "description": "Discard immediately to gain 10 credits."
+      },
+      "dry-rations": {
+        "name": "Dry Rations",
+        "description": "During your turn, you may discard this card to restore 4 health."
+      },
+      "tripwire": {
+        "name": "Tripwire",
+        "description": "Spend an action and place this in your sector to kill one non-boss enemy that appears there or enters it."
+      },
+      "gas-cylinder": {
+        "name": "Gas Cylinder",
+        "description": "Spend an action and discard this card to kill one non-boss enemy in your sector."
+      },
+      "door-remote": {
+        "name": "Door Remote",
+        "description": "Spend 1 action and 2 credits to remotely open or close any corridor passage."
+      },
+      "flashlight": {
+        "name": "Flashlight",
+        "description": "You do not spend a step to reveal a map tile when entering it."
+      },
+      "medkit": {
+        "name": "Medkit",
+        "description": "During your turn, you may discard this card to restore all health."
       }
     }
   }
