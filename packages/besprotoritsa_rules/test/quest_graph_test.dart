@@ -248,6 +248,50 @@ void main() {
       isFalse,
     );
   });
+
+  test('completed quest removes the discarded active branch', () {
+    final graph = QuestGraph.fromJson({
+      'initialQuestIds': ['left', 'right'],
+      'quests': [
+        {
+          'id': 'left',
+          'number': 1,
+          'chapter': 1,
+          'conditions': <Object?>[],
+          'reward': <String, Object?>{},
+          'nextQuestIds': <String>[],
+          'discardQuestIds': ['right'],
+          'nameKey': 'quest.left.name',
+          'descKey': 'quest.left.description',
+        },
+        {
+          'id': 'right',
+          'number': 2,
+          'chapter': 1,
+          'conditions': <Object?>[],
+          'reward': <String, Object?>{},
+          'nextQuestIds': <String>[],
+          'nameKey': 'quest.right.name',
+          'descKey': 'quest.right.description',
+        },
+      ],
+    });
+    final transition = QuestEngine(graph).apply(
+      QuestProgress.initial(graph),
+      const QuestArrived('unused'),
+    );
+
+    expect(transition.completedQuestIds, ['left']);
+    expect(transition.progress.activeQuestIds, isEmpty);
+    expect(transition.progress.isCompleted('right'), isFalse);
+  });
+
+  test('full set parses verified spawn and dynamic reward fields', () {
+    expect(graph.quest('quest-09').spawnMonsterId, 'viy');
+    expect(graph.quest('quest-09').spawnLocationId, 'flight-control');
+    expect(graph.quest('quest-14').reward.creditRollDicePerPlayer, 6);
+    expect(graph.quest('quest-24').discardQuestIds, ['quest-08']);
+  });
 }
 
 QuestProgress _progressAfter(QuestEngine engine, Iterable<QuestEvent> events) {
