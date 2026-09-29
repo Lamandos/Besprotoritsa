@@ -80,13 +80,13 @@
       "ocr": "not-run"
     },
     "inventory.персонажи": {
-      "status": "human-reviewed-open-author-decision",
+      "status": "human-inventory-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/персонажи.pdf",
         "pages": "all"
       },
-      "scope": "all six sheets visually inventoried; card/board counts verified, token count disputed between PDF and rules",
+      "scope": "all six sheets visually inventoried; card/board counts verified; 16 physical character markers confirmed by author",
       "pdfTextExtraction": "text_layer_extracted",
       "ocr": "not-run"
     },
@@ -2941,9 +2941,9 @@
       }
     },
     "decision.character-token-count": {
-      "status": "author-decision-required",
+      "status": "author-confirmed",
       "reviewedAt": "2026-09-29",
-      "question": "Are the 16 portrait faces on sheet 6 (two per character) intended as 16 physical markers, or should only 8 markers be counted and the second portrait per character treated as duplicate art?",
+      "decision": "Count all 16 portrait faces on sheet 6 as physical character markers (two per character).",
       "sources": [
         {
           "pdf": "materials/персонажи.pdf",
@@ -2959,7 +2959,8 @@
           ]
         }
       ],
-      "dataSource": "content/characters.json (8 character records)"
+      "dataSource": "content/characters.json (8 character records)",
+      "confirmedBy": "author"
     },
     "starter-item.lucky-socks": {
       "status": "human-inventory-verified",
