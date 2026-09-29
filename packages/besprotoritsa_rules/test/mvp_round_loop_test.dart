@@ -2,6 +2,36 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('runtime event definitions drive options and skill checks', () {
+    var state = _mvpState(
+      eventId: 'runtime-event',
+      eventDefinitions: {
+        'runtime-event': {
+          'options': [
+            {
+              'skillCheck': {'skill': 'science', 'difficulty': 2},
+            },
+            {'skillCheck': null},
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    final event = state.pendingDecision! as AwaitingEventOption;
+    expect(event.eventId, 'runtime-event');
+    expect(event.options, ['option-1', 'option-2']);
+
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([6]),
+    ).state;
+    final roll = state.pendingDecision! as AwaitingRerollChoice;
+    final context = roll.context! as SkillCheckContext;
+    expect(context.stat, StatType.science);
+    expect(context.difficulty, 2);
+  });
+
   test('runs the MVP from the first step through Quest 1 completion', () {
     var state = _mvpState();
 
@@ -81,7 +111,10 @@ void main() {
   });
 }
 
-GameState _mvpState() => GameState(
+GameState _mvpState({
+  String eventId = 'cabin-noise',
+  Map<String, Map<String, Object?>> eventDefinitions = const {},
+}) => GameState(
   seed: 17,
   round: 1,
   phase: GamePhase.playersTurn,
@@ -129,8 +162,9 @@ GameState _mvpState() => GameState(
   ],
   monsters: const [],
   decks: {
-    'events': DeckState(drawPile: const ['cabin-noise']),
+    'events': DeckState(drawPile: [eventId]),
   },
+  eventDefinitions: eventDefinitions,
   quests: QuestState(storyQuestIds: const ['chapter-1-awakening']),
 );
 

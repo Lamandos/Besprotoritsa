@@ -27,6 +27,11 @@ final class GameState {
     Map<PlayerId, ReserveHero> queuedReplacements = const {},
     Map<CardId, ConditionCard> conditionCards = const {},
     Map<CardId, CardDefinition> cardDefinitions = const {},
+    Map<CardId, Map<String, Object?>> eventDefinitions = const {},
+    Map<CardId, Map<String, Object?>> questDefinitions = const {},
+    Map<CardId, Map<String, Object?>> taskDefinitions = const {},
+    Map<CardId, Map<String, Object?>> monsterDefinitions = const {},
+    Map<String, String> contentTranslations = const {},
     Iterable<IncomingDamage> pendingDamage = const [],
     Iterable<String> log = const [],
     Iterable<GameEvent> gameEvents = const [],
@@ -50,6 +55,14 @@ final class GameState {
        queuedReplacements = UnmodifiableMapView(Map.of(queuedReplacements)),
        conditionCards = UnmodifiableMapView(Map.of(conditionCards)),
        cardDefinitions = UnmodifiableMapView(Map.of(cardDefinitions)),
+       eventDefinitions = UnmodifiableMapView({
+         for (final entry in eventDefinitions.entries)
+           entry.key: Map<String, Object?>.unmodifiable(entry.value),
+       }),
+       questDefinitions = _freezeDefinitions(questDefinitions),
+       taskDefinitions = _freezeDefinitions(taskDefinitions),
+       monsterDefinitions = _freezeDefinitions(monsterDefinitions),
+       contentTranslations = UnmodifiableMapView(Map.of(contentTranslations)),
        chestCards = List.unmodifiable(chestCards),
        pendingDamage = List.unmodifiable(pendingDamage),
        decks = UnmodifiableMapView(Map.of(decks)),
@@ -137,6 +150,15 @@ final class GameState {
   final Map<CardId, ConditionCard> conditionCards;
   final Map<CardId, CardDefinition> cardDefinitions;
 
+  /// Static event card data available to this local content set.
+  final Map<CardId, Map<String, Object?>> eventDefinitions;
+  final Map<CardId, Map<String, Object?>> questDefinitions;
+  final Map<CardId, Map<String, Object?>> taskDefinitions;
+  final Map<CardId, Map<String, Object?>> monsterDefinitions;
+
+  /// Localized full-set content strings indexed by their catalog key.
+  final Map<String, String> contentTranslations;
+
   /// Shared storage in the start/anabiosis sector. Credits are deliberately
   /// not represented here: only cards can be placed in the chest.
   final List<CardId> chestCards;
@@ -168,6 +190,13 @@ final class GameState {
     return null;
   }
 }
+
+Map<String, Map<String, Object?>> _freezeDefinitions(
+  Map<String, Map<String, Object?>> definitions,
+) => UnmodifiableMapView({
+  for (final entry in definitions.entries)
+    entry.key: Map<String, Object?>.unmodifiable(entry.value),
+});
 
 /// A board cell as seen by a particular player. A fogged cell contains no tile
 /// metadata, exits, or location data.

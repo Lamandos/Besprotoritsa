@@ -209,8 +209,12 @@ class _EventCardPanel extends StatelessWidget {
       AwaitingEventOption(:final eventId) => eventId,
       _ => null,
     };
+    final runtimeDescription = eventId == null
+        ? null
+        : _runtimeEventText(state, eventId, 'descKey');
     final cardTitle = eventId != null
-        ? _eventCardTitle(eventId)
+        ? _runtimeEventText(state, eventId, 'nameKey') ??
+              _eventCardTitle(eventId)
         : state.pendingDecision == null
         ? 'ОЖИДАНИЕ СОБЫТИЯ'
         : strings.decisionRequired.toUpperCase();
@@ -269,7 +273,8 @@ class _EventCardPanel extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    if (eventId == 'cabin-noise')
+                    if (eventId == 'cabin-noise' &&
+                        state.eventDefinitions.isEmpty)
                       Image.asset(
                         'assets/images/cabin_noise_scene.png',
                         fit: BoxFit.cover,
@@ -350,7 +355,7 @@ class _EventCardPanel extends StatelessWidget {
               const SizedBox(height: 6),
               Expanded(
                 child: Text(
-                  cardCopy,
+                  runtimeDescription ?? cardCopy,
                   maxLines: 5,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -373,7 +378,7 @@ class _EventCardPanel extends StatelessWidget {
                     child: Text(
                       activeQuests.isEmpty
                           ? 'ЗАДАНИЕ НЕ ПОЛУЧЕНО'
-                          : _questCardLabel(activeQuests.first),
+                          : _questCardLabel(state, activeQuests.first),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -398,6 +403,27 @@ String _eventCardTitle(String eventId) => switch (eventId) {
   'cabin-noise' => 'ШУМ В КАЮТЕ',
   _ => 'СОБЫТИЕ В СЕКТОРЕ',
 };
+
+String? _runtimeEventText(GameState state, String eventId, String field) {
+  final event = state.eventDefinitions[eventId];
+  final key = event?[field];
+  return key is String ? state.contentTranslations[key] : null;
+}
+
+String _eventOptionLabel(GameState state, String? eventId, String option) {
+  if (eventId == null) return option;
+  final index = int.tryParse(option.replaceFirst('option-', ''));
+  if (index == null) return option;
+  final rawOptions = state.eventDefinitions[eventId]?['options'];
+  if (rawOptions is! List<Object?> || index < 1 || index > rawOptions.length) {
+    return option;
+  }
+  final rawOption = rawOptions[index - 1];
+  if (rawOption is! Map<String, Object?>) return option;
+  final key = rawOption['actionKey'];
+  if (key is! String) return option;
+  return state.contentTranslations[key] ?? option;
+}
 
 class _PaperStainPainter extends CustomPainter {
   const _PaperStainPainter();
@@ -469,10 +495,22 @@ class _CardRunePainter extends CustomPainter {
   bool shouldRepaint(_CardRunePainter oldDelegate) => false;
 }
 
-String _questCardLabel(String id) => switch (id) {
-  'chapter-1-awakening' => 'ПРОБУЖДЕНИЕ',
-  _ => id.replaceAll('-', ' ').toUpperCase(),
-};
+String _questCardLabel(GameState state, String id) {
+  final definition = state.questDefinitions[id] ?? state.taskDefinitions[id];
+  final key = definition?['nameKey'];
+  final localized = key is String ? state.contentTranslations[key] : null;
+  return localized ??
+      switch (id) {
+        'chapter-1-awakening' => 'ПРОБУЖДЕНИЕ',
+        _ => id.replaceAll('-', ' ').toUpperCase(),
+      };
+}
+
+String? _questCardDescription(GameState state, String id) {
+  final definition = state.questDefinitions[id] ?? state.taskDefinitions[id];
+  final key = definition?['descKey'];
+  return key is String ? state.contentTranslations[key] : null;
+}
 
 class _WideActionDock extends StatelessWidget {
   const _WideActionDock({

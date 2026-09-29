@@ -209,7 +209,10 @@ class _MvpGameLayout extends ConsumerWidget {
                       onOpenLog: openLog,
                     ),
                   if (state.pendingDecision != null && !queue.isPlaying)
-                    _PendingDecisionModal(decision: state.pendingDecision!),
+                    _PendingDecisionModal(
+                      decision: state.pendingDecision!,
+                      state: state,
+                    ),
                 ],
               );
             },

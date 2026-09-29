@@ -53,6 +53,11 @@ class GameStateJsonCodec {
       for (final entry in state.cardDefinitions.entries)
         entry.key: SaveJsonModels.cardDefinitionToJson(entry.value),
     },
+    'event_definitions': state.eventDefinitions,
+    'quest_definitions': state.questDefinitions,
+    'task_definitions': state.taskDefinitions,
+    'monster_definitions': state.monsterDefinitions,
+    'content_translations': state.contentTranslations,
     'pending_damage': state.pendingDamage
         .map(SaveJsonModels.incomingDamageToJson)
         .toList(),
@@ -117,6 +122,29 @@ class GameStateJsonCodec {
               SaveJsonModels.cardDefinitionFromJson(value),
             ),
           ),
+      eventDefinitions:
+          _objectMapOrDefault(
+            json['event_definitions'],
+            'event_definitions',
+          ).map(
+            (id, value) => MapEntry(id, Map<String, Object?>.from(value)),
+          ),
+      questDefinitions: _objectMapOrDefault(
+        json['quest_definitions'],
+        'quest_definitions',
+      ),
+      taskDefinitions: _objectMapOrDefault(
+        json['task_definitions'],
+        'task_definitions',
+      ),
+      monsterDefinitions: _objectMapOrDefault(
+        json['monster_definitions'],
+        'monster_definitions',
+      ),
+      contentTranslations: _stringMapOrDefault(
+        json['content_translations'],
+        'content_translations',
+      ),
       pendingDamage: _objects(
         json,
         'pending_damage',
@@ -184,6 +212,15 @@ Map<String, Map<String, Object?>> _objectMapOrDefault(
   return {
     for (final entry in value.entries) entry.key: _asObject(entry.value, key),
   };
+}
+
+Map<String, String> _stringMapOrDefault(Object? value, String key) {
+  if (value == null) return const {};
+  if (value is! Map<String, dynamic> ||
+      value.values.any((entry) => entry is! String)) {
+    throw FormatException('$key must map strings to strings.');
+  }
+  return value.cast<String, String>();
 }
 
 List<String> _strings(Map<String, Object?> json, String key) {

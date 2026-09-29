@@ -26,6 +26,16 @@ void main() {
     expect(state.board.where((tile) => tile.opened), hasLength(1));
     expect(state.decks['conditions']!.drawPile, hasLength(50));
     expect(state.decks['events']!.drawPile, hasLength(88));
+    expect(state.eventDefinitions, hasLength(88));
+    expect(state.questDefinitions, hasLength(29));
+    expect(state.taskDefinitions, hasLength(16));
+    expect(state.monsterDefinitions, hasLength(16));
+    expect(
+      state.contentTranslations[state
+              .eventDefinitions['cabin-noise']!['nameKey']!
+          as String],
+      'Шум в каюте',
+    );
     expect(state.decks['items']!.drawPile, hasLength(42));
     expect(state.decks['supplies']!.drawPile, hasLength(64));
     expect(state.decks['specialItems']!.drawPile, hasLength(7));
@@ -37,6 +47,30 @@ void main() {
       everyElement(hasLength(2)),
     );
     expect(state.quests.storyQuestIds, ['quest-01']);
+  });
+
+  test('full runtime event definitions survive a save round trip', () {
+    final state = createFullGameState(
+      characterIds: const ['scientist', 'guard'],
+      seed: 21,
+    );
+    final codec = GameStateJsonCodec();
+    final restored = codec.decode(codec.encode(state));
+
+    expect(restored.eventDefinitions, hasLength(88));
+    expect(restored.questDefinitions, hasLength(29));
+    expect(restored.taskDefinitions, hasLength(16));
+    expect(restored.monsterDefinitions, hasLength(16));
+    expect(
+      restored.eventDefinitions['vending-machine']!['options'],
+      state.eventDefinitions['vending-machine']!['options'],
+    );
+    expect(
+      restored.contentTranslations[restored
+              .eventDefinitions['vending-machine']!['nameKey']!
+          as String],
+      'Торговый автомат',
+    );
   });
 
   test('full runtime deck order is reproducible for the same seed', () {

@@ -149,6 +149,15 @@ GameState _advanceEvents(GameState state) {
     );
     if (draw.cards.isEmpty) continue;
     final eventId = draw.cards.single;
+    final eventDefinition = current.eventDefinitions[eventId];
+    final rawOptions = eventDefinition?['options'];
+    final optionCount = rawOptions is List<Object?> ? rawOptions.length : 0;
+    final options = optionCount > 0
+        ? [
+            for (var index = 0; index < optionCount; index++)
+              'option-${index + 1}',
+          ]
+        : const ['investigate'];
     final decks = Map<DeckId, DeckState>.of(current.decks);
     decks['events'] = DeckState(
       drawPile: draw.deck.drawPile,
@@ -159,7 +168,7 @@ GameState _advanceEvents(GameState state) {
       activePlayerId: player.id,
       decks: decks,
       pendingDecision: AwaitingEventOption(
-        options: const ['investigate'],
+        options: options,
         playerId: player.id,
         eventId: eventId,
       ),

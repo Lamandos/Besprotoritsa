@@ -84,6 +84,54 @@ GameStepResult _resolveEventOption(
   if (pending.eventId == null) {
     return GameStepResult(state: _resumeAutomaticPhase(selected));
   }
+  final definition = selected.eventDefinitions[pending.eventId];
+  if (definition != null) {
+    final optionIndex = int.tryParse(choice.option.replaceFirst('option-', ''));
+    final rawOptions = definition['options'];
+    if (optionIndex == null ||
+        rawOptions is! List<Object?> ||
+        optionIndex < 1 ||
+        optionIndex > rawOptions.length) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
+    final rawOption = rawOptions[optionIndex - 1];
+    if (rawOption is! Map<String, dynamic>) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
+    final check = rawOption['skillCheck'];
+    if (check == null) {
+      return GameStepResult(state: _resumeAutomaticPhase(selected));
+    }
+    if (check is! Map<String, dynamic> ||
+        check['skill'] is! String ||
+        check['difficulty'] is! int) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
+    final skill = StatType.values.byName(check['skill']! as String);
+    final difficulty = check['difficulty']! as int;
+    return _startRoll(
+      selected,
+      dice,
+      'event-skill:$playerId:${pending.eventId}:$optionIndex',
+      diceCount: _statDice(_playerById(selected, playerId)!, selected, skill),
+      context: SkillCheckContext(
+        playerId: playerId,
+        stat: skill,
+        difficulty: difficulty,
+        eventId: pending.eventId,
+      ),
+      consumesAction: false,
+    );
+  }
   return _startRoll(
     selected,
     dice,

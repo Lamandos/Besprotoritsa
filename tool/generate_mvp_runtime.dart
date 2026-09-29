@@ -85,6 +85,10 @@ Future<void> main() async {
             await File('content/i18n/ru.json').readAsString(),
           )
           as Map<String, dynamic>;
+  full['contentTranslations'] = _flattenTranslations(
+    translations['content'],
+    'content',
+  );
   full['characterNames'] =
       (translations['content'] as Map<String, dynamic>)['character'];
   final fullEncoded = jsonEncode(full);
@@ -99,4 +103,18 @@ Future<void> main() async {
     'const fullRuntimeContentJson = '
     '${jsonEncode(fullEncoded.replaceAll(r'$', r'\$'))};\n',
   );
+}
+
+Map<String, String> _flattenTranslations(Object? value, String prefix) {
+  if (value is! Map<String, dynamic>) return const {};
+  final flattened = <String, String>{};
+  for (final entry in value.entries) {
+    final key = '$prefix.${entry.key}';
+    if (entry.value is String) {
+      flattened[key] = entry.value as String;
+    } else {
+      flattened.addAll(_flattenTranslations(entry.value, key));
+    }
+  }
+  return flattened;
 }

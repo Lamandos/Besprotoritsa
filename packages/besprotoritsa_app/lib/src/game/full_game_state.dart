@@ -155,6 +155,7 @@ GameState createFullGameState({
   final specialItemsDeck = _expandedIds(_cards(_content['special_items']))
     ..shuffle(random);
   final restlessReserve = List<String>.filled(7, _string(restless, 'id'));
+  final translations = _object(_content['contentTranslations']);
   return GameState(
     seed: seed,
     round: 1,
@@ -182,6 +183,26 @@ GameState createFullGameState({
     },
     conditionCards: conditions,
     cardDefinitions: definitions,
+    eventDefinitions: {
+      for (final row in eventRows)
+        _string(row, 'id'): Map<String, Object?>.from(row),
+    },
+    questDefinitions: {
+      for (final row in _rows(_content['quests'], 'quests'))
+        _string(row, 'id'): Map<String, Object?>.from(row),
+    },
+    taskDefinitions: {
+      for (final row in _rows(_content['tasks'], 'tasks'))
+        _string(row, 'id'): Map<String, Object?>.from(row),
+    },
+    monsterDefinitions: {
+      for (final row in monsterRows)
+        _string(row, 'id'): Map<String, Object?>.from(row),
+    },
+    contentTranslations: {
+      for (final entry in translations.entries)
+        if (entry.value is String) entry.key: entry.value! as String,
+    },
   );
 }
 

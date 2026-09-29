@@ -41,9 +41,10 @@ List<String> _activeQuests(GameState state) => [
 ];
 
 class _PendingDecisionModal extends ConsumerWidget {
-  const _PendingDecisionModal({required this.decision});
+  const _PendingDecisionModal({required this.decision, required this.state});
 
   final PendingDecision decision;
+  final GameState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,7 +56,7 @@ class _PendingDecisionModal extends ConsumerWidget {
           child: AlertDialog(
             title: Text(strings.decisionRequired),
             content: Text(_decisionPrompt(decision, strings)),
-            actions: _decisionActions(ref, decision, strings),
+            actions: _decisionActions(ref, decision, strings, state),
           ),
         ),
       ),
@@ -67,6 +68,7 @@ List<Widget> _decisionActions(
   WidgetRef ref,
   PendingDecision decision,
   AppStrings strings,
+  GameState state,
 ) => switch (decision) {
   AwaitingRerollChoice(
     :final availableRerolls,
@@ -116,7 +118,7 @@ List<Widget> _decisionActions(
             .dispatch(
               ResolvePendingDecisionCommand(EventOptionChoice(option)),
             ),
-        child: Text(option),
+        child: Text(_eventOptionLabel(state, decision.eventId, option)),
       ),
   ],
   AwaitingTerminalPick(:final offeredCards) => [
