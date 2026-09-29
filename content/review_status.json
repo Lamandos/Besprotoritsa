@@ -7683,115 +7683,540 @@
       }
     },
     "quest.quest-18": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 18,
+        "chapter": 0,
+        "targetLocation": "morgue",
+        "spawnMonsterId": "leshy",
+        "spawnLocationId": "morgue",
+        "conditions": [
+          {
+            "id": "arrive-morgue-source",
+            "type": "arrive",
+            "locationId": "morgue"
+          },
+          {
+            "id": "kill-leshy",
+            "type": "kill_monster",
+            "monsterId": "leshy"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [],
+        "prerequisiteQuestIds": []
+      },
+      "sourceFinding": "Boss placement is represented as spawnMonsterId/spawnLocationId; the full-game host still must execute this spawn."
     },
     "quest.quest-19": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 19,
+        "chapter": 0,
+        "targetLocation": "reactor",
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [
+          {
+            "id": "arrive-reactor-plan-z",
+            "type": "arrive",
+            "locationId": "reactor"
+          },
+          {
+            "id": "strength-reactor",
+            "type": "skill_check",
+            "skill": "strength",
+            "locationId": "reactor"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-20"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-20": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count",
-      "sourceFinding": "Printed ending says “Победа выживших”; endsGame=true."
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 20,
+        "chapter": 0,
+        "targetLocation": null,
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-21": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 21,
+        "chapter": 0,
+        "targetLocation": "storage",
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [
+          {
+            "id": "arrive-storage-equipment",
+            "type": "arrive",
+            "locationId": "storage"
+          },
+          {
+            "id": "agility-storage",
+            "type": "skill_check",
+            "skill": "agility",
+            "locationId": "storage"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": [],
+          "drawItemsPerPlayerAtTargetLocation": 2
+        },
+        "nextQuestIds": [
+          "quest-22"
+        ],
+        "prerequisiteQuestIds": []
+      },
+      "sourceFinding": "The printed “equip for battle” objective is not represented as a typed condition; a generic collect-item placeholder was removed. This remains a runtime rule-mapping gap."
     },
     "quest.quest-22": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 22,
+        "chapter": 0,
+        "targetLocation": "crew-quarters",
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [
+          {
+            "id": "arrive-crew-quarters-cache",
+            "type": "arrive",
+            "locationId": "crew-quarters"
+          },
+          {
+            "id": "strength-crew-quarters",
+            "type": "skill_check",
+            "skill": "strength",
+            "locationId": "crew-quarters"
+          }
+        ],
+        "reward": {
+          "credits": 10,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-23"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-23": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 23,
+        "chapter": 0,
+        "targetLocation": null,
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [
+          {
+            "id": "agility-ventilation",
+            "type": "counter",
+            "metric": "agility_check_in_ventilation",
+            "targetValue": 1
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": [],
+          "drawItems": 2
+        },
+        "nextQuestIds": [],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-24": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 24,
+        "chapter": 7,
+        "targetLocation": "flight-control",
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [
+          {
+            "id": "arrive-flight-control-captain",
+            "type": "arrive",
+            "locationId": "flight-control"
+          },
+          {
+            "id": "agility-flight-control",
+            "type": "skill_check",
+            "skill": "agility",
+            "locationId": "flight-control"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-25"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-25": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 25,
+        "chapter": 8,
+        "targetLocation": "armory",
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [
+          {
+            "id": "arrive-armory-viy",
+            "type": "arrive",
+            "locationId": "armory"
+          },
+          {
+            "id": "kill-viy-again",
+            "type": "kill_monster",
+            "monsterId": "viy"
+          },
+          {
+            "id": "collect-assault-rifle",
+            "type": "collect_item",
+            "itemId": "assault-rifle"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": [
+            "assault-rifle"
+          ]
+        },
+        "nextQuestIds": [
+          "quest-26",
+          "quest-27"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-26": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 26,
+        "chapter": 8,
+        "targetLocation": "main-computer",
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [
+          {
+            "id": "arrive-main-computer-error",
+            "type": "arrive",
+            "locationId": "main-computer"
+          },
+          {
+            "id": "repair-hologram",
+            "type": "skill_check",
+            "skill": "repair",
+            "locationId": "main-computer"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-28"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-27": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 23,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 27,
+        "chapter": 8,
+        "targetLocation": "anabiosis",
+        "spawnMonsterId": "mother",
+        "spawnLocationId": "anabiosis",
+        "conditions": [
+          {
+            "id": "arrive-anabiosis-mother",
+            "type": "arrive",
+            "locationId": "anabiosis"
+          },
+          {
+            "id": "kill-mother-again",
+            "type": "kill_monster",
+            "monsterId": "mother"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-28"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-28": {
       "status": "human-inventory-verified",

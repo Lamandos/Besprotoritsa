@@ -1841,6 +1841,46 @@
       "quest-17": {
         "name": "Plague Doctor",
         "description": "It is time to learn more about the infection that has ravaged the crew’s bodies. Perhaps it can still be stopped…"
+      },
+      "quest-18": {
+        "name": "Source of the Infection",
+        "description": "You have found the source of the infection you were looking for. Or rather, it has found you."
+      },
+      "quest-19": {
+        "name": "Plan Z",
+        "description": "There are too many of these creatures. You cannot just leave things as they are. If there is no other way out, at least you will take them all with you…"
+      },
+      "quest-20": {
+        "name": "Critical Reactor Damage",
+        "description": "“Critical reactor damage.” You close your eyes beneath the emergency siren and exhale. The fear gives way to long-awaited relief. Was it worth it? Of course. This was the price you had to pay to stop these creatures from spreading, scattering their remains into the all-consuming dark."
+      },
+      "quest-21": {
+        "name": "Rally",
+        "description": "It is dangerous to explore the ship alone, and especially dangerous to do so unarmed. You need to regroup and get equipped."
+      },
+      "quest-22": {
+        "name": "Belongings",
+        "description": "“Fifteen men on a dead man’s chest…” You may not be fifteen, but these belongings will not be needed by their owners anymore, right?"
+      },
+      "quest-23": {
+        "name": "Long-Term Investment",
+        "description": "You have been on this ship for a long time and know all the hidden places your colleagues used to stash things they did not want others to know about."
+      },
+      "quest-24": {
+        "name": "Mystery",
+        "description": "Unable to find a single working escape pod, you decide to take one last desperate step: clear the ship of this filth. It is a matter of “us or them.” But where are these monsters coming from? Perhaps the captain has the answer."
+      },
+      "quest-25": {
+        "name": "Heart of the Nightmare",
+        "description": "You cannot find the captain, but you have found his notes. It seems the artifacts found on the planet affected the computer that controls the holographic recreation room for crew not in cryosleep. But holograms cannot come to life, can they?"
+      },
+      "quest-26": {
+        "name": "Software Error",
+        "description": "If the captain’s notes have anything to do with reality, the only place to find answers is the server room. You hope your knowledge is enough to understand the hologram-generation program."
+      },
+      "quest-27": {
+        "name": "Mother Instinct",
+        "description": "After defeating another fiend, you have no time even to catch your breath before a howl reaches you, chilling you to the bone. Fighting your instinct to run from the sound as fast as possible, you realize the only way is through the dark corridors it comes from."
       }
     }
   }

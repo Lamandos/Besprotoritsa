@@ -657,7 +657,9 @@ void _validateReferences(
       }
       if (record.schema == 'quest' || record.schema == 'event') {
         _visit(record.value, (key, value, path) {
-          if ((key == 'targetLocation' || key == 'locationId') &&
+          if ((key == 'targetLocation' ||
+                  key == 'locationId' ||
+                  key == 'spawnLocationId') &&
               value is String &&
               !hexIds.contains(value)) {
             issues.add(
@@ -666,7 +668,7 @@ void _validateReferences(
             );
           }
           if (record.schema == 'quest' &&
-              key == 'monsterId' &&
+              (key == 'monsterId' || key == 'spawnMonsterId') &&
               value is String &&
               !monsterIds.contains(value)) {
             issues.add(
@@ -888,7 +890,10 @@ Future<void> _validateMvpLayout(
       );
     }
     _visit(quest.value, (key, value, path) {
-      if ((key == 'targetLocation' || key == 'locationId') && value is String) {
+      if ((key == 'targetLocation' ||
+              key == 'locationId' ||
+              key == 'spawnLocationId') &&
+          value is String) {
         requiredQuestLocations.putIfAbsent(
           value,
           () => '${quest.label}.$path',

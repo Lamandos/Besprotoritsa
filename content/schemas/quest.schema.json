@@ -10,6 +10,8 @@
     "number": { "type": "integer", "minimum": 1 },
     "chapter": { "type": "integer", "minimum": 0 },
     "targetLocation": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+    "spawnMonsterId": { "$ref": "#/$defs/id" },
+    "spawnLocationId": { "$ref": "#/$defs/id" },
     "conditions": { "type": "array", "uniqueItems": true, "items": { "oneOf": [{ "$ref": "#/$defs/id" }, { "$ref": "#/$defs/condition" }] } },
     "reward": {
       "type": "object",
@@ -17,7 +19,10 @@
       "required": ["credits", "items"],
       "properties": {
         "credits": { "type": "integer", "minimum": 0 },
-        "items": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } }
+        "items": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "drawItems": { "type": "integer", "minimum": 0 },
+        "drawItemsPerPlayerAtTargetLocation": { "type": "integer", "minimum": 0 },
+        "creditRollDicePerPlayer": { "type": "integer", "minimum": 0 }
       }
     },
     "nextQuestIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },

@@ -491,6 +491,11 @@
       "chapter": 0,
       "conditions": [
         {
+          "id": "arrive-morgue-source",
+          "type": "arrive",
+          "locationId": "morgue"
+        },
+        {
           "id": "kill-leshy",
           "type": "kill_monster",
           "monsterId": "leshy"
@@ -502,7 +507,10 @@
       },
       "nextQuestIds": [],
       "nameKey": "content.quest.quest-18.name",
-      "descKey": "content.quest.quest-18.description"
+      "descKey": "content.quest.quest-18.description",
+      "targetLocation": "morgue",
+      "spawnMonsterId": "leshy",
+      "spawnLocationId": "morgue"
     },
     {
       "id": "quest-19",
@@ -562,16 +570,12 @@
           "type": "skill_check",
           "skill": "agility",
           "locationId": "storage"
-        },
-        {
-          "id": "collect-item",
-          "type": "collect_item",
-          "itemId": "item"
         }
       ],
       "reward": {
         "credits": 0,
-        "items": []
+        "items": [],
+        "drawItemsPerPlayerAtTargetLocation": 2
       },
       "nextQuestIds": [
         "quest-22"
@@ -595,12 +599,6 @@
           "type": "skill_check",
           "skill": "strength",
           "locationId": "crew-quarters"
-        },
-        {
-          "id": "credits-cache",
-          "type": "counter",
-          "metric": "credits_collected",
-          "targetValue": 10
         }
       ],
       "reward": {
@@ -627,7 +625,8 @@
       ],
       "reward": {
         "credits": 0,
-        "items": []
+        "items": [],
+        "drawItems": 2
       },
       "nextQuestIds": [],
       "nameKey": "content.quest.quest-23.name",
@@ -749,7 +748,9 @@
         "quest-28"
       ],
       "nameKey": "content.quest.quest-27.name",
-      "descKey": "content.quest.quest-27.description"
+      "descKey": "content.quest.quest-27.description",
+      "spawnMonsterId": "mother",
+      "spawnLocationId": "anabiosis"
     },
     {
       "id": "quest-28",

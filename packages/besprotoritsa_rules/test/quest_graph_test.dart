@@ -56,7 +56,21 @@ void main() {
     );
     expect(
       progress.activeQuestIds,
-      containsAll(<String>['quest-03', 'quest-13', 'quest-21']),
+      containsAll(<String>['quest-03', 'quest-13']),
+    );
+    progress = _apply(engine, progress, const QuestArrived('reactor'));
+    progress = _apply(
+      engine,
+      progress,
+      const QuestSkillChecked(
+        skill: StatType.repair,
+        locationId: 'reactor',
+        success: true,
+      ),
+    );
+    expect(
+      progress.activeQuestIds,
+      containsAll(<String>['quest-04', 'quest-21']),
     );
   });
 
