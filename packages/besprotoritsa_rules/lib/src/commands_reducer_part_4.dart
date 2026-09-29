@@ -47,10 +47,10 @@ GameState resolveColocation(GameState state) {
     }
     for (final player in state.players) {
       if (player.alive && player.coord == monster.coord) {
-        final incoming = (monster.attack - _playerDefense(state, player)).clamp(
-          0,
-          monster.attack,
-        );
+        final defense = _monsterIgnoresDefense(monster)
+            ? 0
+            : _playerDefense(state, player);
+        final incoming = (monster.attack - defense).clamp(0, monster.attack);
         if (incoming == 0) continue;
         damage.add(
           IncomingDamage(
@@ -106,10 +106,19 @@ bool _ignoresBoils(GameState state, PlayerState player) =>
 int _playerDefense(GameState state, PlayerState player) =>
     InventoryRules.activeCardIds(player).fold<int>(
       0,
-      (total, cardId) =>
-          total +
-          (state.cardDefinitions[cardId]?.staticEffects[CardStat.defense] ?? 0),
+      (total, cardId) {
+        final definition = state.cardDefinitions[cardId];
+        if (definition == null ||
+            definition.behaviorIds.contains('robot.exhaust')) {
+          return total;
+        }
+        return total + definition.staticEffects[CardStat.defense];
+      },
     );
+
+bool _monsterIgnoresDefense(MonsterInstance monster) =>
+    // Mother has the `ignores-defense` feature in monsters.json.
+    const {'mother'}.contains(monster.monsterId);
 
 /// Moves a monster one board step and immediately resolves shared-cell attacks.
 GameState moveMonsterOneStep(
@@ -128,6 +137,8 @@ GameState moveMonsterOneStep(
       _monsterUsesVentilation(monster) &&
       source != null &&
       destination != null &&
+      source.opened &&
+      destination.opened &&
       source.ventColor != VentColor.none &&
       source.ventColor == destination.ventColor;
   if (monster.coord.distanceTo(target) != 1 && !ventilationStep) {
