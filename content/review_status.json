@@ -5380,114 +5380,314 @@
       ]
     },
     "event.asteroid-alert": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; asteroid or horde warning icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.successFailure"
+      ]
     },
     "event.horde-carry": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; asteroid or horde warning icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.successFailure"
+      ]
     },
     "event.invasion-open-0": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skull warning and fixed sector.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-open-1": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skull warning and fixed sector.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-escape-pods-1": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skull warning and fixed sector.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-armory-2": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skull warning and fixed sector.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-reactor-3": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skull warning and fixed sector.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-medical-bay-4": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skull warning and fixed sector.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-crew-quarters-5": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skull warning and fixed sector.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-laboratory-6": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          8,
+          9
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of text, invasion/creature placement instruction, warning iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 7,
+      "auditBatch": 18,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red ornamental event-card border; skull warning and fixed sector.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-storage-7": {
       "status": "human-inventory-verified",

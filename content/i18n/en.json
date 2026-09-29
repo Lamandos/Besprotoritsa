@@ -1439,6 +1439,116 @@
             "failure": "Take 2 damage."
           }
         }
+      },
+      "asteroid-alert": {
+        "name": "Asteroid Alert",
+        "description": "The system announces: “Asteroid detected. All ship compartments are being sealed.”",
+        "option": {
+          "o1": {
+            "action": "Get out of the corridor quickly.",
+            "success": "Each player in a corridor rolls a die and takes that much damage. Close all corridors and move creatures in them to adjacent sectors.",
+            "failure": "Each player in a corridor rolls a die and takes that much damage. Close all corridors and move creatures in them to adjacent sectors."
+          }
+        }
+      },
+      "horde-carry": {
+        "name": "Footsteps All Around",
+        "description": "Fast footsteps come from every direction. There is no doubt: a horde of monsters is rushing this way.",
+        "option": {
+          "o1": {
+            "action": "Run, dropping extra cargo.",
+            "success": "Discard all cards from your backpack or take 2 damage for each card you keep.",
+            "failure": "Discard all cards from your backpack or take 2 damage for each card you keep."
+          }
+        }
+      },
+      "invasion-open-0": {
+        "name": "INVASION: Open Sector",
+        "description": "Draw a Monster card and place its monster token in any open sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in any open sector.",
+            "success": "Draw a Monster card and place it in an open sector.",
+            "failure": "Draw a Monster card and place it in an open sector."
+          }
+        }
+      },
+      "invasion-open-1": {
+        "name": "INVASION: Open Sector",
+        "description": "Draw a Monster card and place its monster token in any open sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in any open sector.",
+            "success": "Draw a Monster card and place it in an open sector.",
+            "failure": "Draw a Monster card and place it in an open sector."
+          }
+        }
+      },
+      "invasion-escape-pods-1": {
+        "name": "INVASION: Escape Pods",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-armory-2": {
+        "name": "INVASION: Armory",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-reactor-3": {
+        "name": "INVASION: Reactor",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-medical-bay-4": {
+        "name": "INVASION: Medical Bay",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-crew-quarters-5": {
+        "name": "INVASION: Crew Quarters",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-laboratory-6": {
+        "name": "INVASION: Laboratory",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
       }
     },
     "quest": {
