@@ -2246,104 +2246,315 @@
       ]
     },
     "supply.proton-shield": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Compact shield generator with blue energy; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "damage.preventUntilRoundEnd",
+        "card.discardCost",
+        "damage.preventUntilRoundEnd"
+      ]
     },
     "supply.water": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 3
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 3,
+      "sourceDeck": "supplies",
+      "copiesStatus": "3 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Blue water bottle marked H₂O; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "health.restore",
+        "card.discardCost",
+        "health.restore"
+      ]
     },
     "supply.ration": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Green ration packet; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "health.restore",
+        "card.discardCost",
+        "health.restore"
+      ]
     },
     "supply.adrenaline-x": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          6,
+          7
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Adrenaline injector with X mark; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "action.grant",
+        "card.discardCost",
+        "action.grant"
+      ]
     },
     "supply.power-cell": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          7
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 5
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 5,
+      "sourceDeck": "supplies",
+      "copiesStatus": "5 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Gray power cell marked AC/DC; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "robot.ready",
+        "card.discardCost",
+        "robot.ready"
+      ]
     },
     "supply.science-stimulant": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          7
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Injector; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.reroll.one",
+        "card.discardCost",
+        "dice.reroll.one"
+      ]
     },
     "supply.agility-stimulant": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          8
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Injector; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.reroll.one",
+        "card.discardCost",
+        "dice.reroll.one"
+      ]
     },
     "supply.endurance-stimulant": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          8
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Injector; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.reroll.one",
+        "card.discardCost",
+        "dice.reroll.one"
+      ]
     },
     "supply.repair-stimulant": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          8
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Injector; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.reroll.one",
+        "card.discardCost",
+        "dice.reroll.one"
+      ]
     },
     "supply.strength-stimulant": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода припасов.pdf",
-        "pageRange": "1-9"
+        "pages": [
+          8
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "supplies",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/supplies.json",
+      "importBatch": 7,
+      "auditBatch": 7,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Injector; supply category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.reroll.one",
+        "card.discardCost",
+        "dice.reroll.one"
+      ]
     },
     "monster.volot": {
       "status": "human-inventory-verified",

@@ -285,6 +285,46 @@
       "medkit": {
         "name": "Medkit",
         "description": "During your turn, you may discard this card to restore all health."
+      },
+      "proton-shield": {
+        "name": "Proton Shield",
+        "description": "During your turn, discard this card to prevent all damage until the end of the round."
+      },
+      "water": {
+        "name": "Water",
+        "description": "During your turn, you may discard this card to restore 3 health."
+      },
+      "ration": {
+        "name": "Ration",
+        "description": "During your turn, you may discard this card to restore 5 health."
+      },
+      "adrenaline-x": {
+        "name": "Adrenaline-X",
+        "description": "During your turn, discard this card to gain 2 additional actions."
+      },
+      "power-cell": {
+        "name": "Power Cell",
+        "description": "During your turn, discard this card to ready one of your robots."
+      },
+      "science-stimulant": {
+        "name": "Science Stimulant",
+        "description": "During a Science check, discard this card to reroll 1 die."
+      },
+      "agility-stimulant": {
+        "name": "Agility Stimulant",
+        "description": "During an Agility check, discard this card to reroll 1 die."
+      },
+      "endurance-stimulant": {
+        "name": "Endurance Stimulant",
+        "description": "During an Endurance check, discard this card to reroll 1 die."
+      },
+      "repair-stimulant": {
+        "name": "Repair Stimulant",
+        "description": "During a Repair check, discard this card to reroll 1 die."
+      },
+      "strength-stimulant": {
+        "name": "Strength Stimulant",
+        "description": "During a Strength check, discard this card to reroll 1 die."
       }
     }
   }
