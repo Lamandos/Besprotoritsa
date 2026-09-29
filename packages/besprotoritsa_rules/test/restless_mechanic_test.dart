@@ -36,7 +36,7 @@ void main() {
           coord: sector,
           damage: 0,
           health: 2,
-          attack: 1,
+          attack: 4,
         ),
       );
       state = step(

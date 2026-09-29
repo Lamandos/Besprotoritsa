@@ -72,6 +72,25 @@ void main() {
       expect(result.state.players.single.coord, const HexCoord(0, 0));
     });
 
+    test('closes an adjacent empty corridor and blocks later movement', () {
+      final state = _mvpState(corridorOpened: true);
+      final closed = step(
+        state,
+        const CloseCorridorCommand(HexCoord(0, 1)),
+        FixedDiceRoller([]),
+      );
+      final blockedMove = step(
+        closed.state,
+        const MoveCommand(HexCoord(0, 1)),
+        FixedDiceRoller([]),
+      );
+
+      expect(closed.rejection, isNull);
+      expect(closed.state.actionsLeft, 1);
+      expect(closed.state.tileAt(const HexCoord(0, 1))!.isBlocked, isTrue);
+      expect(blockedMove.rejection, isNotNull);
+    });
+
     test('does not allow two tiles to occupy an opened sector coordinate', () {
       expect(
         () => _mvpState(

@@ -254,7 +254,7 @@
       "rewardItems": [],
       "behaviorId": "boil-explodes-on-colocation",
       "features": ["stationary", "explodes-on-colocation"],
-      "copies": 2,
+      "copies": 1,
       "importBatch": 2,
       "nameKey": "content.monster.boil.name",
       "descKey": "content.monster.boil.description"

@@ -10,3 +10,9 @@ Verification date: 2026-09-19. Flutter 3.47.1 / Dart 3.13.1.
 | Linux | `packages/besprotoritsa_app/linux/` | `flutter build linux --release` (2026-09-25) | Build passed; app not launched | `packages/besprotoritsa_app/build/linux/x64/release/bundle/` |
 
 Additional verification: `flutter test` and `flutter analyze` both pass for `packages/besprotoritsa_app`.
+
+This is a build-verification matrix, not the product support list. The 0.1.0
+distribution targets and minimum OS/browser versions are defined in
+[`docs/releases/release-contract-0.1.0.md`](releases/release-contract-0.1.0.md).
+Linux has a successful release build but remains outside the 0.1.0 distribution
+scope.
