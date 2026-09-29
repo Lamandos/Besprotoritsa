@@ -495,6 +495,22 @@
       "abscessive": {
         "name": "Abscessive",
         "description": "Pop more than 5 Abscesses at once."
+      },
+      "exterminator": {
+        "name": "Exterminator",
+        "description": "Defeat a strong enemy alone in one turn."
+      },
+      "fashionable": {
+        "name": "Fashionable",
+        "description": "Wear clothing and armor."
+      },
+      "merchant": {
+        "name": "Merchant",
+        "description": "Buy a Supply item worth 10 or more credits."
+      },
+      "lively": {
+        "name": "Lively",
+        "description": "Have only 1 health point."
       }
     },
     "event": {
@@ -1761,6 +1777,30 @@
       "quest-01": {
         "name": "Awakening",
         "description": "Find the other crew members and learn what happened."
+      },
+      "quest-02": {
+        "name": "Survival Law",
+        "description": "After making it through the darkness and the horror hidden within, you realize that you will find no one here. At least, no one alive. Blood and disorder surround you, the ship’s systems do not work, and metal grinds without end. To survive, you must not panic. You will not last long if you simply hide and wait for help. The main task now is to bring the ship back to life. But first, you should ensure your own safety."
+      },
+      "quest-03": {
+        "name": "The Ship Awakens",
+        "description": "According to the terminal, most of the electronics and communications systems are not working. That means the autopilot is down, as are the ship’s engines. Horrified at the prospect of being trapped here with these monsters, you decide to wake the ship so you can get home. The terminal has diagnosed multiple failures in the reactor room."
+      },
+      "quest-04": {
+        "name": "Infected",
+        "description": "The ship’s power has been restored. At last, you can start the engines and set a course home. Less than a minute later, you feel a severe bout of arrhythmia. The weakness you felt can no longer be blamed on cryosleep. There is now one more problem on the path to safety, as if the horrors around you were not enough."
+      },
+      "quest-05": {
+        "name": "Antidote",
+        "description": "The blood samples have been collected and the analysis is complete. You are infected, and dangerous. You cannot return to Earth while there is a risk of spreading this disease. The only way out is to go to the laboratory and make a cure. But you must act quickly: it is unclear how soon the illness will fully emerge or how it will progress."
+      },
+      "quest-06": {
+        "name": "Rescue",
+        "description": "Only a few corridors separate you from the ship’s main computer. You only need to get there and turn on power to the engines. Then you can direct the ship home!"
+      },
+      "quest-07": {
+        "name": "Plan B",
+        "description": "Turning on the power was not enough. The sensors show that the engines have been damaged from outside. You cannot handle this on your own. There is only one right decision: leave the ship and all the creatures behind, and escape in the capsules. Home is close; all you need to do is get into a capsule and set off."
       }
     }
   }

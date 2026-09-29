@@ -6649,48 +6649,140 @@
       }
     },
     "task.exterminator": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, full objective and threshold/window, category artwork, credit-bag reward icon and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Target a strong opponent, weapon icon; credit-bag reward.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "strong_enemy_solo",
+        "targetValue": 1,
+        "window": "perTurn",
+        "aggregation": "sum",
+        "rewardCredits": 5
+      }
     },
     "task.fashionable": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, full objective and threshold/window, category artwork, credit-bag reward icon and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Clothing and armor outfit icon; credit-bag reward.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "clothing_and_armor",
+        "targetValue": 1,
+        "window": "simultaneously",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "task.merchant": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, full objective and threshold/window, category artwork, credit-bag reward icon and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Money pouch icon; credit-bag reward.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "supply_purchase_cost",
+        "targetValue": 10,
+        "window": "game",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "task.lively": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, full objective and threshold/window, category artwork, credit-bag reward icon and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Single health point icon; credit-bag reward.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "health_at_most",
+        "targetValue": 1,
+        "window": "game",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "quest.quest-01": {
       "status": "human-card-verified",
@@ -6736,70 +6828,329 @@
       }
     },
     "quest.quest-02": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill conditions, reward and transition links; Russian and English story text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and location/skill objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 2,
+        "chapter": 2,
+        "targetLocation": "engineering-control-post",
+        "conditions": [
+          {
+            "id": "arrive-engineering-post",
+            "type": "arrive",
+            "locationId": "engineering-control-post"
+          },
+          {
+            "id": "repair-engineering-post",
+            "type": "skill_check",
+            "skill": "repair",
+            "locationId": "engineering-control-post"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-03",
+          "quest-13"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-03": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill conditions, reward and transition links; Russian and English story text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and location/skill objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 3,
+        "chapter": 3,
+        "targetLocation": "reactor",
+        "conditions": [
+          {
+            "id": "arrive-reactor",
+            "type": "arrive",
+            "locationId": "reactor"
+          },
+          {
+            "id": "repair-reactor",
+            "type": "skill_check",
+            "skill": "repair",
+            "locationId": "reactor"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-04",
+          "quest-21"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-04": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill conditions, reward and transition links; Russian and English story text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and location/skill objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 4,
+        "chapter": 4,
+        "targetLocation": "medical-bay",
+        "conditions": [
+          {
+            "id": "arrive-medical-bay",
+            "type": "arrive",
+            "locationId": "medical-bay"
+          },
+          {
+            "id": "science-medical-bay",
+            "type": "skill_check",
+            "skill": "science",
+            "locationId": "medical-bay"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-05",
+          "quest-06"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-05": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill conditions, reward and transition links; Russian and English story text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and location/skill objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 5,
+        "chapter": 4,
+        "targetLocation": "laboratory",
+        "conditions": [
+          {
+            "id": "arrive-laboratory",
+            "type": "arrive",
+            "locationId": "laboratory"
+          },
+          {
+            "id": "science-laboratory",
+            "type": "skill_check",
+            "skill": "science",
+            "locationId": "laboratory"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-07"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-06": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill conditions, reward and transition links; Russian and English story text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and location/skill objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 6,
+        "chapter": 5,
+        "targetLocation": "main-computer",
+        "conditions": [
+          {
+            "id": "arrive-main-computer",
+            "type": "arrive",
+            "locationId": "main-computer"
+          },
+          {
+            "id": "repair-main-computer",
+            "type": "skill_check",
+            "skill": "repair",
+            "locationId": "main-computer"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-07"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-07": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill conditions, reward and transition links; Russian and English story text checked against the face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 21,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and location/skill objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 7,
+        "chapter": 6,
+        "targetLocation": "escape-pods",
+        "conditions": [
+          {
+            "id": "arrive-escape-pods",
+            "type": "arrive",
+            "locationId": "escape-pods"
+          },
+          {
+            "id": "science-escape-pods",
+            "type": "skill_check",
+            "skill": "science",
+            "locationId": "escape-pods"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-08",
+          "quest-24"
+        ],
+        "prerequisiteQuestIds": [
+          "quest-05",
+          "quest-06"
+        ]
+      }
     },
     "quest.quest-08": {
       "status": "human-inventory-verified",
