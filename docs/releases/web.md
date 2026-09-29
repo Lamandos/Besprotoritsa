@@ -12,6 +12,16 @@ flutter build web --release --pwa-strategy=offline-first --base-href="/" --wasm
 The distributable directory is `packages/besprotoritsa_app/build/web`. Do not
 publish its parent `build` directory.
 
+### Offline meaning and browser baseline
+
+The recorded minimum Web browser baseline is Chrome 153 or newer; other browser
+engines are not yet certified for this first delivery. “Offline” means opening
+an installed PWA or reopening the site after one successful HTTPS visit, once
+`service_worker.js` has activated and cached the app shell and required assets.
+It does not promise that a first-time visitor can load the site without a
+network connection. The service worker also requires a secure context (HTTPS,
+or localhost for development).
+
 `--wasm` produces an SKWasm/WASM target (`main.dart.wasm` and `main.dart.mjs`)
 with an optimized CanvasKit JavaScript fallback for browsers without WasmGC.
 The supplied `--pwa-strategy=offline-first` flag is accepted by Flutter 3.47
@@ -23,11 +33,12 @@ worker.
 
 The custom bootstrap deliberately does not load `flutter_service_worker.js`.
 It registers `service_worker.js`, which precaches the app shell, local
-CanvasKit/SKWasm, JavaScript, and WASM and uses a cache-first policy for images
-and fonts loaded during play.
-After the first successful launch, the game reopens and renders offline.
-Increase `CACHE_VERSION` in `web/service_worker.js` whenever a release changes
-cached asset behavior, so clients discard an incompatible old cache.
+CanvasKit/SKWasm, JavaScript, WASM, the current game illustrations, and the
+Material Icons font. Thus a first successful online visit followed by service
+worker activation has the crew, board, and event artwork needed for offline
+play. Other assets requested later are cached by the worker's cache-first
+handler. Keep the precache list in `web/service_worker.js` in sync with the app
+artwork and bump `CACHE_VERSION` whenever cached asset behavior changes.
 
 ## Save persistence verification
 

@@ -47,10 +47,15 @@ GameState resolveColocation(GameState state) {
     }
     for (final player in state.players) {
       if (player.alive && player.coord == monster.coord) {
+        final defense = _monsterIgnoresDefense(monster)
+            ? 0
+            : _playerDefense(state, player);
+        final incoming = (monster.attack - defense).clamp(0, monster.attack);
+        if (incoming == 0) continue;
         damage.add(
           IncomingDamage(
             targetPlayerId: player.id,
-            amount: monster.attack,
+            amount: incoming,
             agilityDice: _statDice(player, state, StatType.agility),
             source: DamageSource.monster,
           ),
@@ -67,7 +72,9 @@ GameState resolveColocation(GameState state) {
       .toList();
   for (final boil in exploding) {
     for (final player in state.players) {
-      if (player.alive && player.coord == boil.coord) {
+      if (player.alive &&
+          player.coord == boil.coord &&
+          !_ignoresBoils(state, player)) {
         damage.add(
           IncomingDamage(
             targetPlayerId: player.id,
@@ -87,6 +94,32 @@ GameState resolveColocation(GameState state) {
   return _startNextIncomingDamage(resolved);
 }
 
+bool _ignoresBoils(GameState state, PlayerState player) =>
+    InventoryRules.activeCardIds(player).any(
+      (cardId) =>
+          state.cardDefinitions[cardId]?.behaviorIds.contains(
+            'damage.ignoreBoil',
+          ) ??
+          false,
+    );
+
+int _playerDefense(GameState state, PlayerState player) =>
+    InventoryRules.activeCardIds(player).fold<int>(
+      0,
+      (total, cardId) {
+        final definition = state.cardDefinitions[cardId];
+        if (definition == null ||
+            definition.behaviorIds.contains('robot.exhaust')) {
+          return total;
+        }
+        return total + definition.staticEffects[CardStat.defense];
+      },
+    );
+
+bool _monsterIgnoresDefense(MonsterInstance monster) =>
+    // Mother has the `ignores-defense` feature in monsters.json.
+    const {'mother'}.contains(monster.monsterId);
+
 /// Moves a monster one board step and immediately resolves shared-cell attacks.
 GameState moveMonsterOneStep(
   GameState state,
@@ -94,18 +127,32 @@ GameState moveMonsterOneStep(
   HexCoord target,
 ) {
   final monster = _monsterById(state, instanceId);
-  if (monster == null || monster.coord.distanceTo(target) != 1) {
+  if (monster == null) {
     throw ArgumentError.value(target, 'target', 'Monster must move one step.');
   }
   final source = state.tileAt(monster.coord);
   final destination = state.tileAt(target);
-  final edge = monster.coord.edgeToward(target);
+  final edge = monster.coord.edgeTowardOrNull(target);
+  final ventilationStep =
+      monster.coord != target &&
+      _monsterUsesVentilation(monster) &&
+      source != null &&
+      destination != null &&
+      source.opened &&
+      destination.opened &&
+      source.ventColor != VentColor.none &&
+      source.ventColor == destination.ventColor;
+  if (monster.coord.distanceTo(target) != 1 && !ventilationStep) {
+    throw ArgumentError.value(target, 'target', 'Monster must move one step.');
+  }
   if (source == null ||
       destination == null ||
       source.isBlocked ||
       destination.isBlocked ||
-      !source.hasExit(edge) ||
-      !destination.hasExit(edge.opposite)) {
+      (!ventilationStep &&
+          (edge == null ||
+              !source.hasExit(edge) ||
+              !destination.hasExit(edge.opposite)))) {
     throw ArgumentError.value(target, 'target', 'Monster path is blocked.');
   }
   return resolveColocation(
@@ -121,6 +168,40 @@ GameState moveMonsterOneStep(
       logEntry: 'monster-move:$instanceId:$target',
     ),
   );
+}
+
+bool _monsterUsesVentilation(MonsterInstance monster) =>
+    // These IDs carry the `moves-through-vents` feature in monsters.json.
+    const {'pack', 'ghoul', 'seeker'}.contains(monster.monsterId);
+
+Iterable<HexCoord> _monsterPathNeighbors(
+  GameState state,
+  MonsterInstance monster,
+  HexCoord coord,
+) sync* {
+  final tile = state.tileAt(coord);
+  if (tile == null || tile.isBlocked) return;
+  for (final edge in tile.exits) {
+    final next = coord.neighbor(edge);
+    final nextTile = state.tileAt(next);
+    if (nextTile != null &&
+        nextTile.opened &&
+        !nextTile.isBlocked &&
+        nextTile.hasExit(edge.opposite)) {
+      yield next;
+    }
+  }
+  if (!_monsterUsesVentilation(monster) || tile.ventColor == VentColor.none) {
+    return;
+  }
+  for (final candidate in state.board) {
+    if (candidate.coord != coord &&
+        candidate.opened &&
+        !candidate.isBlocked &&
+        candidate.ventColor == tile.ventColor) {
+      yield candidate.coord;
+    }
+  }
 }
 
 /// Places a Boil and immediately checks whether it detonates under a hero.

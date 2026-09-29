@@ -18,6 +18,21 @@ void main() {
       expect(result.state.log.last, 'attack:ada:ghoul-1:1');
     });
 
+    test('attack remains legal when monster defense equals the dice pool', () {
+      final result = step(
+        _state(
+          monster: _monster(health: 3, defense: 1),
+          player: _player(),
+        ),
+        const AttackCommand('ghoul-1'),
+        FixedDiceRoller([6]),
+      );
+
+      expect(result.rejection, isNull);
+      expect(result.state.actionsLeft, 1);
+      expect(result.state.monsters.single.damage, 0);
+    });
+
     test('pistol reroll accepts exactly one selected die', () {
       final state = _state(
         monster: _monster(health: 2),
@@ -97,6 +112,33 @@ void main() {
       expect(resolved.state.decks['conditions']!.drawPile, isEmpty);
     });
 
+    test('hero defense reduces monster damage before the dodge roll', () {
+      final attacked = resolveColocation(
+        _state(
+          monster: _monster(attack: 2),
+          player: _player(equipped: const EquippedGear(armor: 'armor')),
+          cards: <CardId, CardDefinition>{
+            'armor': _card(
+              'armor',
+              type: ItemType.armor,
+              slot: ItemSlot.armor,
+              stats: const {CardStat.defense: 1},
+            ),
+          },
+        ),
+      );
+
+      final pending = attacked.pendingDecision! as AwaitingDodge;
+      expect(pending.monsterDamage, 1);
+      final resolved = step(
+        attacked,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([6]),
+      );
+      expect(resolved.state.players.single.damage, 0);
+      expect(resolved.state.players.single.conditions, isEmpty);
+    });
+
     test('condition penalties stack and any healing clears all conditions', () {
       final weakened = _state(
         player: _player(strength: 3, conditions: const ['malaise', 'malaise']),
@@ -132,6 +174,29 @@ void main() {
   });
 
   group('resolveColocation', () {
+    test('only monsters with attack strength block the event phase', () {
+      final passive = step(
+        _state(
+          monster: _monster(movement: 0),
+          events: const ['quiet-event'],
+        ),
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      );
+      final active = step(
+        _state(
+          monster: _monster(attack: 1, movement: 0),
+          events: const ['quiet-event'],
+        ),
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      );
+
+      expect(passive.state.pendingDecision, isA<AwaitingEventOption>());
+      expect(active.state.pendingDecision, isNull);
+      expect(active.state.phase, GamePhase.playersTurn);
+    });
+
     test('replacement selection resumes damage queued for another hero', () {
       var state = resolveColocation(
         _state(
@@ -189,6 +254,29 @@ void main() {
       expect(resolved.state.players.single.conditions, isEmpty);
     });
 
+    test('plague doctor mask cancels Boil damage but consumes the Boil', () {
+      final spawned = spawnBoil(
+        _state(
+          player: _player(
+            equipped: const EquippedGear(armor: 'plague-doctor-mask'),
+          ),
+          cards: <CardId, CardDefinition>{
+            'plague-doctor-mask': _card(
+              'plague-doctor-mask',
+              type: ItemType.armor,
+              slot: ItemSlot.armor,
+              behaviorIds: const ['damage.ignoreBoil'],
+            ),
+          },
+        ),
+        const BoilToken(instanceId: 'boil-immune', coord: HexCoord(0, 0)),
+      );
+
+      expect(spawned.pendingDecision, isNull);
+      expect(spawned.players.single.damage, 0);
+      expect(spawned.boils, isEmpty);
+    });
+
     test(
       'a passing monster attacks every hero and continues to destination',
       () {
@@ -223,6 +311,56 @@ void main() {
         expect(afterBoris.state.players.map((player) => player.damage), [1, 1]);
       },
     );
+
+    test('vent capable monsters path and move between matching vents', () {
+      final board = [
+        _tile(const HexCoord(0, 0), ventColor: VentColor.red),
+        _tile(const HexCoord(1, 0)),
+        _tile(const HexCoord(2, 0)),
+        _tile(const HexCoord(0, 2), ventColor: VentColor.red),
+      ];
+      final state = _state(
+        board: board,
+        monster: _monster(),
+        players: [
+          _player(coord: const HexCoord(2, 0)),
+          _player(id: 'vent-target', coord: const HexCoord(0, 2)),
+        ],
+      );
+
+      expect(
+        nearestTargets(state, state.monsters.single).first.id,
+        'vent-target',
+      );
+      final moved = moveMonsterOneStep(
+        state,
+        'ghoul-1',
+        const HexCoord(0, 2),
+      );
+      expect(moved.monsters.single.coord, const HexCoord(0, 2));
+    });
+
+    test('monster target ties prefer lower health then player order', () {
+      final state = _state(
+        board: [
+          const HexCoord(0, 0),
+          const HexCoord(0, 1),
+          const HexCoord(1, 0),
+          const HexCoord(1, -1),
+        ].map(_tile),
+        monster: _monster(),
+        players: [
+          _player(coord: const HexCoord(0, 1), damage: 1),
+          _player(id: 'lower-health', coord: const HexCoord(1, 0), damage: 2),
+          _player(id: 'later', coord: const HexCoord(1, -1), damage: 1),
+        ],
+      );
+
+      expect(
+        nearestTargets(state, state.monsters.single).map((player) => player.id),
+        ['lower-health', 'ada', 'later'],
+      );
+    });
   });
 }
 
@@ -232,23 +370,28 @@ GameState _state({
   MonsterInstance? monster,
   Iterable<ReserveHero> reserveHeroes = const [],
   Iterable<String> conditions = const ['concussion'],
+  Iterable<String> events = const [],
   Map<CardId, CardDefinition> cards = const <CardId, CardDefinition>{},
+  Iterable<HexTile>? board,
 }) => GameState(
   seed: 1,
   round: 1,
   phase: GamePhase.players,
   activePlayerId: 'ada',
   actionsLeft: 2,
-  board: [
-    _tile(const HexCoord(0, -1)),
-    _tile(const HexCoord(0, 0)),
-    _tile(const HexCoord(0, 1)),
-  ],
+  board:
+      board ??
+      [
+        _tile(const HexCoord(0, -1)),
+        _tile(const HexCoord(0, 0)),
+        _tile(const HexCoord(0, 1)),
+      ],
   players: players ?? [player ?? _player()],
   monsters: [if (monster != null) monster],
   reserveHeroes: reserveHeroes,
   decks: {
     'conditions': DeckState(drawPile: conditions),
+    'events': DeckState(drawPile: events),
   },
   conditionCards: {
     'malaise': ConditionCard(
@@ -264,18 +407,20 @@ GameState _state({
   quests: QuestState(),
 );
 
-HexTile _tile(HexCoord coord) => HexTile(
-  id: 'tile-${coord.q}-${coord.r}',
-  coord: coord,
-  type: HexTileType.corridor,
-  opened: true,
-  exits: HexEdge.values.toSet(),
-  hasTerminal: false,
-  ventColor: VentColor.none,
-);
+HexTile _tile(HexCoord coord, {VentColor ventColor = VentColor.none}) =>
+    HexTile(
+      id: 'tile-${coord.q}-${coord.r}',
+      coord: coord,
+      type: HexTileType.corridor,
+      opened: true,
+      exits: HexEdge.values.toSet(),
+      hasTerminal: false,
+      ventColor: ventColor,
+    );
 
 PlayerState _player({
   String id = 'ada',
+  HexCoord coord = const HexCoord(0, 0),
   int strength = 1,
   int agility = 1,
   int weaponModifier = 0,
@@ -286,7 +431,7 @@ PlayerState _player({
 }) => PlayerState(
   id: id,
   characterId: '$id-character',
-  coord: const HexCoord(0, 0),
+  coord: coord,
   damage: damage,
   health: health,
   credits: 0,
@@ -305,6 +450,7 @@ MonsterInstance _monster({
   int health = 1,
   int defense = 0,
   int attack = 0,
+  int movement = 1,
 }) => MonsterInstance(
   instanceId: 'ghoul-1',
   monsterId: 'ghoul',
@@ -313,14 +459,20 @@ MonsterInstance _monster({
   health: health,
   defense: defense,
   attack: attack,
+  movement: movement,
 );
 
-CardDefinition _card(String id, {List<String> behaviorIds = const []}) =>
-    CardDefinition(
-      id: id,
-      type: ItemType.robot,
-      slots: const <ItemSlot>{ItemSlot.robot},
-      cost: 0,
-      staticEffects: CardStaticEffects(const <CardStat, int>{}),
-      behaviorIds: behaviorIds,
-    );
+CardDefinition _card(
+  String id, {
+  List<String> behaviorIds = const [],
+  ItemType type = ItemType.robot,
+  ItemSlot slot = ItemSlot.robot,
+  Map<CardStat, int> stats = const <CardStat, int>{},
+}) => CardDefinition(
+  id: id,
+  type: type,
+  slots: <ItemSlot>{slot},
+  cost: 0,
+  staticEffects: CardStaticEffects(stats),
+  behaviorIds: behaviorIds,
+);

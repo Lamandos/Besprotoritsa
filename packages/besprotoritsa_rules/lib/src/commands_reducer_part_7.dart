@@ -165,15 +165,17 @@ GameState _resolveCabinNoise(
     return _resumeAutomaticPhase(withSupply);
   }
   final player = _playerById(state, context.playerId)!;
-  return spawnMonster(
-    _copyState(state, logEntry: 'event-failure:cabin-noise:${player.id}'),
-    MonsterInstance(
-      instanceId: 'ghoul-event-${state.round}-${player.id}',
-      monsterId: 'ghoul',
-      coord: player.coord,
-      damage: 0,
-      health: 2,
-      attack: 2,
+  return _resumeAutomaticPhase(
+    spawnMonster(
+      _copyState(state, logEntry: 'event-failure:cabin-noise:${player.id}'),
+      MonsterInstance(
+        instanceId: 'ghoul-event-${state.round}-${player.id}',
+        monsterId: 'ghoul',
+        coord: player.coord,
+        damage: 0,
+        health: 2,
+        attack: 2,
+      ),
     ),
   );
 }

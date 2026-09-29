@@ -9,7 +9,7 @@ part of 'commands_reducer.dart';
 /// exits.  Equal distances are then broken by current HP and saved player
 /// order, which is the turn order of the round.
 List<PlayerState> nearestTargets(GameState state, MonsterInstance monster) {
-  final distances = _openPathDistances(state, monster.coord);
+  final distances = _openPathDistances(state, monster, monster.coord);
   final targets =
       state.players
           .where(
@@ -34,23 +34,21 @@ List<PlayerState> nearestTargets(GameState state, MonsterInstance monster) {
 
 int _currentHp(PlayerState player) => player.health - player.damage;
 
-Map<HexCoord, int> _openPathDistances(GameState state, HexCoord start) {
+Map<HexCoord, int> _openPathDistances(
+  GameState state,
+  MonsterInstance monster,
+  HexCoord start,
+) {
   final startTile = state.tileAt(start);
-  if (startTile == null || !startTile.opened) return const {};
+  if (startTile == null || !startTile.opened || startTile.isBlocked) {
+    return const {};
+  }
   final distances = <HexCoord, int>{start: 0};
   final queue = <HexCoord>[start];
   for (var index = 0; index < queue.length; index++) {
     final current = queue[index];
-    final currentTile = state.tileAt(current)!;
-    for (final edge in currentTile.exits) {
-      final next = current.neighbor(edge);
-      final nextTile = state.tileAt(next);
-      if (nextTile == null ||
-          !nextTile.opened ||
-          !nextTile.hasExit(edge.opposite) ||
-          distances.containsKey(next)) {
-        continue;
-      }
+    for (final next in _monsterPathNeighbors(state, monster, current)) {
+      if (distances.containsKey(next)) continue;
       distances[next] = distances[current]! + 1;
       queue.add(next);
     }
@@ -58,19 +56,17 @@ Map<HexCoord, int> _openPathDistances(GameState state, HexCoord start) {
   return distances;
 }
 
-HexCoord? _nextPathStep(GameState state, HexCoord start, HexCoord target) {
-  final distancesToTarget = _openPathDistances(state, target);
+HexCoord? _nextPathStep(
+  GameState state,
+  MonsterInstance monster,
+  HexCoord target,
+) {
+  final start = monster.coord;
+  final distancesToTarget = _openPathDistances(state, monster, target);
   final startDistance = distancesToTarget[start];
   if (startDistance == null || startDistance == 0) return null;
-  final tile = state.tileAt(start)!;
-  for (final edge in HexEdge.values) {
-    if (!tile.hasExit(edge)) continue;
-    final next = start.neighbor(edge);
-    final nextTile = state.tileAt(next);
-    if (nextTile != null &&
-        nextTile.opened &&
-        nextTile.hasExit(edge.opposite) &&
-        distancesToTarget[next] == startDistance - 1) {
+  for (final next in _monsterPathNeighbors(state, monster, start)) {
+    if (distancesToTarget[next] == startDistance - 1) {
       return next;
     }
   }
@@ -100,7 +96,7 @@ GameState _runMonstersTurn(GameState state) {
     final targets = nearestTargets(current, monster);
     final stepTarget = targets.isEmpty
         ? null
-        : _nextPathStep(current, monster.coord, targets.first.coord);
+        : _nextPathStep(current, monster, targets.first.coord);
     if (stepTarget == null) {
       current = _copyState(
         current,

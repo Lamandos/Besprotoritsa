@@ -1,11 +1,12 @@
 # Besprotoritsa offline 0.1.0 — SHA-256
 #
-# Refreshed 2026-09-28 from the Linux build outputs. Paths are relative to the
-# repository root. macOS is omitted because it was not rebuilt in this run.
+# Refreshed 2026-09-29 after rebuilding Web with Flutter 3.47.1. Android
+# checksums still describe the verified 2026-09-28 Linux build. Paths are
+# relative to the repository root; macOS is omitted because it was not rebuilt.
 #
-72d1d1d255ade6d663a8cce216e425d49a07b60e0abdc2926c898a1cddabb176  packages/besprotoritsa_app/build/web/main.dart.js
+68749bcc4205aad2fd788bcd9cd59d2f63e6b1e5dc87be23cccb33830618b736  packages/besprotoritsa_app/build/web/main.dart.js
 fb9ca8c03bbde047c1dc6f8efa590808d80ca43d6f6b75d437161c97d8832dbe  packages/besprotoritsa_app/build/web/main.dart.mjs
-7b38d68a9a912d65a4b2ccaff2c381de789e0e0dbe7edfc263dccf4595ff652f  packages/besprotoritsa_app/build/web/main.dart.wasm
-778ab2bd00bc019b6f0f8e6dd82de38eaa9749d53cb530cbcabf2679465bfe23  packages/besprotoritsa_app/build/web/service_worker.js
+48b9caff528874fd5197aab444e73c1e05cce6e92ffd0ae699e37bd41b153d35  packages/besprotoritsa_app/build/web/main.dart.wasm
+eeb17f3cf169624f1ef64e34de97fe01f4c2251ae86372ce3262779a7361d64b  packages/besprotoritsa_app/build/web/service_worker.js
 ea1ef2d9935b6ee88ab74e629571ba393ba50722107c7f4184ea2ddf24eebe6d  packages/besprotoritsa_app/build/app/outputs/flutter-apk/app-release.apk
 e4150c7c38e56d252795d699067d3da570f88a15b00c111482eea688dc1dd5cd  packages/besprotoritsa_app/build/app/outputs/bundle/release/app-release.aab

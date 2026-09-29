@@ -1,4 +1,3190 @@
 {
   "schemaVersion": 1,
-  "reviews": {}
+  "reviewedAt": "2026-09-29",
+  "reviews": {
+    "inventory.задания_сюжет": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.задачи": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.колода_предметов": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.колода_припасов": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.монстры_жетоны": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры жетоны.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "no_text_layer",
+      "ocr": "not-run"
+    },
+    "inventory.монстры": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.особые_предметы": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/особые предметы.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.персонажи": {
+      "status": "human-reviewed-open-author-decision",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pages": "all"
+      },
+      "scope": "all six sheets visually inventoried; card/board counts verified, token count disputed between PDF and rules",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.поле": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "sparse_text_layer",
+      "ocr": "not-run"
+    },
+    "inventory.правила_игры": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/правила игры.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.события": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.состояния": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/состояния.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "text_layer_extracted",
+      "ocr": "not-run"
+    },
+    "inventory.токены": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/токены.pdf",
+        "pages": "all"
+      },
+      "scope": "physical component types and printed counts; visual inspection",
+      "pdfTextExtraction": "sparse_text_layer",
+      "ocr": "not-run"
+    },
+    "character.scientist": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pageRange": "1-6"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "character.guard": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pageRange": "1-6"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "character.mechanic": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pageRange": "1-6"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "character.worker": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pageRange": "1-6"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "character.hauler": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pageRange": "1-6"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "character.healer": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pageRange": "1-6"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "character.engineer": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pageRange": "1-6"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "character.astronaut": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pageRange": "1-6"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.crew-quarters": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.engineering-control-post": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.reactor": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.medical-bay": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.laboratory": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.main-computer": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.escape-pods": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.storage": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.flight-control": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.armory": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.dining-hall": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.morgue": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "location.anabiosis": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/поле.pdf",
+        "pageRange": "1-14"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "item.circular-saw": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.laser-cutter": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.exo-gloves": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.pneumo-cannon": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.nailgun": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.flamethrower": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.knife": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.ultrasonic-hammer": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.spacesuit": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.frying-pan": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.last-chance": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.load-bearing-vest": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.engineer-coveralls": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.laser-scalpel": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.pipe-wrench": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.guard-suit": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.tank-top": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.camouflage": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.shirt": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.coveralls": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.lab-coat": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.t-shirt": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.shooter-helmet": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.hauler-uniform": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.implant-agility": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.implant-endurance": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.implant-repair": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.armor-vest": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.implant-science": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.implant-strength": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.laboratory-suit": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.ghb-dtn": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.r69-nic3": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.gtu-b1c4": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.c6-car-courier": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.sc0-u7": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.prot2-ct": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.alarm-bot": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.sc13-nc3": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.f1t-b07": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.prot3-ct": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.h3-al": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода предметов.pdf",
+        "pageRange": "1-7"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "items"
+    },
+    "item.pipe": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "2-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "supplies"
+    },
+    "item.brass-knuckles": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "2-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "supplies"
+    },
+    "item.helmet": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "2-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "supplies"
+    },
+    "item.makeshift-armor": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "2-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "supplies"
+    },
+    "item.welding-mask": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "2-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "supplies"
+    },
+    "item.cleaver": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "2-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "sourceDeck": "supplies"
+    },
+    "supply.nanobots": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 4
+    },
+    "supply.air-canister": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 5
+    },
+    "supply.adrenaline-supply": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 3
+    },
+    "supply.credits": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 3
+    },
+    "supply.defibrillator": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 3
+    },
+    "supply.stash": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.dry-rations": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 3
+    },
+    "supply.tripwire": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 3
+    },
+    "supply.gas-cylinder": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 3
+    },
+    "supply.door-remote": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.flashlight": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.medkit": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "supply.proton-shield": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.water": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 3
+    },
+    "supply.ration": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.adrenaline-x": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.power-cell": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 5
+    },
+    "supply.science-stimulant": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.agility-stimulant": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.endurance-stimulant": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.repair-stimulant": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "supply.strength-stimulant": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/колода припасов.pdf",
+        "pageRange": "1-9"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "monster.volot": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "monster.drekovac": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "monster.vurdalak": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 2
+    },
+    "monster.plagued": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 3
+    },
+    "monster.nest": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 4
+    },
+    "monster.likho": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 3
+    },
+    "monster.pack": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 4
+    },
+    "monster.werewolf": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 4
+    },
+    "monster.ghoul": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 4
+    },
+    "monster.seeker": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 4
+    },
+    "monster.restless": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 16,
+      "authorDecision": "All 16 printed Restless cards belong to the 48-card main monster deck; set aside 7 at setup."
+    },
+    "monster.mother": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "monster.viy": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "monster.swarm": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "monster.leshy": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "monster.boil": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/монстры.pdf",
+        "pageRange": "1-10"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1,
+      "authorDecision": "One Boil card; extra image on PDF sheet 8 is a print-layout duplicate. Boil tokens are separate.",
+      "authorDecisionQuote": "карта нарыва одна, но фишек может быть выложено много"
+    },
+    "condition.malaise": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/состояния.pdf",
+        "pageRange": "1-4"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 9
+    },
+    "condition.concussion": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/состояния.pdf",
+        "pageRange": "1-4"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 9
+    },
+    "condition.nausea": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/состояния.pdf",
+        "pageRange": "1-4"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 9
+    },
+    "condition.fracture": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/состояния.pdf",
+        "pageRange": "1-4"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 9
+    },
+    "condition.shortness-of-breath": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/состояния.pdf",
+        "pageRange": "1-4"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 9
+    },
+    "condition.adrenaline": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/состояния.pdf",
+        "pageRange": "1-4"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 5
+    },
+    "special_item.old-cloak": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/особые предметы.pdf",
+        "pageRange": "1-2"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "special_item.assault-rifle": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/особые предметы.pdf",
+        "pageRange": "1-2"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "special_item.shotgun": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/особые предметы.pdf",
+        "pageRange": "1-2"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "special_item.drg-4u": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/особые предметы.pdf",
+        "pageRange": "1-2"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "special_item.swiss-army-knife": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/особые предметы.pdf",
+        "pageRange": "1-2"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "special_item.exoskeleton": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/особые предметы.pdf",
+        "pageRange": "1-2"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "special_item.plague-doctor-mask": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/особые предметы.pdf",
+        "pageRange": "1-2"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": 1
+    },
+    "event.cabin-noise": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.vending-machine": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.pile-of-things": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.monster-nest": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.corpse": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.suitcases": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.hatch-monster": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.security-room": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.exposed-wires": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.monster-pack": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.rope-hatch": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.weapon-monster": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.repair-cleaner": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.countdown-trap": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.scientist-report": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.monster-corpse": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.rubble": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.two-crates": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.huge-crate": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.toolbox": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.exoskeleton-terminal": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.contraband-cache": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.falling-monster": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.collapsed-panel": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.blood-trail": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.ship-map": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.cache-symbols": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.scientist-case": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.inventory-notes": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.nest-room": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.needle-box": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.bloody-suitcase": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.broken-drone": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.radio-transmitter": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.lights-out": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.ventilation-failure": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.gas-pipe": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.vent-monster": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.security-console": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.cigarette-machine": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.pack-sighting": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.gas-cabin": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.hatch-scrape": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.oxygen-alarm": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.survivor-scream": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.child-cry": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.female-whisper": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.alcohol-crate": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.supply-terminal": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.trade-bot": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.lockers": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.body-pile": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.junk-medical": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.junk-credits": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.junk-guitar": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.shelf-equipment": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.falling-beam": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.meteor-stream": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.fire": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.monster-horde": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.asteroid-alert": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.horde-carry": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-open-0": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-open-1": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-escape-pods-1": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-armory-2": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-reactor-3": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-medical-bay-4": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-crew-quarters-5": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-laboratory-6": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-storage-7": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-engineering-control-post-8": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-main-computer-9": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-dining-hall-10": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-flight-control-11": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-morgue-12": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-escape-pods-13": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-armory-14": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-reactor-15": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-medical-bay-16": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-crew-quarters-17": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-laboratory-18": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-storage-19": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-engineering-control-post-20": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-main-computer-21": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-dining-hall-22": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-flight-control-23": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "event.invasion-morgue-24": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/события.pdf",
+        "pageRange": "1-12"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.researcher": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.modernizer": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.quartermaster": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.agile": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.wealthy": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.strongman": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.cripple": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.robot-owner": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.lucky": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.hunter": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.special": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.abscessive": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.exterminator": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.fashionable": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.merchant": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "task.lively": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задачи.pdf",
+        "pageRange": "1-3"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-01": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-02": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-03": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-04": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-05": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-06": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-07": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-08": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-09": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-10": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-11": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-12": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count",
+      "sourceFinding": "Printed ending says “Победа выживших”; endsGame=true."
+    },
+    "quest.quest-13": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-14": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-15": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-16": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-17": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-18": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-19": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-20": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count",
+      "sourceFinding": "Printed ending says “Победа выживших”; endsGame=true."
+    },
+    "quest.quest-21": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-22": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-23": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-24": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-25": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-26": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-27": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-28": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+    },
+    "quest.quest-29": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pageRange": "1-5"
+      },
+      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; JSON record count is not a physical card count",
+      "sourceFinding": "Printed ending says “Победа выживших”; endsGame=true."
+    },
+    "decision.monster.restless-count": {
+      "status": "author-confirmed",
+      "reviewedAt": "2026-09-29",
+      "decision": "Seven Restless cards are set aside from the monster deck; they are included in the 48-card main deck. The print sheet contains 16 Restless cards, total.",
+      "source": {
+        "pdf": "materials/правила игры.pdf",
+        "pages": [
+          6
+        ]
+      },
+      "corroboratingSource": {
+        "pdf": "materials/монстры.pdf",
+        "pages": [
+          1,
+          2
+        ]
+      }
+    },
+    "decision.monster.boil-card": {
+      "status": "author-confirmed",
+      "reviewedAt": "2026-09-29",
+      "decision": "There is one Boil card and many separate Boil tokens. The second card image on monster sheet 8 is an unwanted duplicate. JSON copies corrected to 1.",
+      "source": {
+        "pdf": "materials/правила игры.pdf",
+        "pages": [
+          6
+        ]
+      },
+      "corroboratingSource": {
+        "pdf": "materials/монстры.pdf",
+        "pages": [
+          7,
+          8
+        ]
+      },
+      "authorDecisionQuote": "карта нарыва одна, но фишек может быть выложено много",
+      "decisionSource": "user message, 2026-09-29"
+    },
+    "decision.quest.victory": {
+      "status": "source-verified",
+      "reviewedAt": "2026-09-29",
+      "decision": "Victory occurs at terminal campaign endings. Printed victory endings are quests 12, 20, and 29; all are marked endsGame in catalog JSON.",
+      "source": {
+        "pdf": "materials/правила игры.pdf",
+        "pages": [
+          8
+        ]
+      },
+      "corroboratingSource": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pages": [
+          2,
+          3,
+          5
+        ]
+      }
+    },
+    "decision.character-token-count": {
+      "status": "author-decision-required",
+      "reviewedAt": "2026-09-29",
+      "question": "Are the 16 portrait faces on sheet 6 (two per character) intended as 16 physical markers, or should only 8 markers be counted and the second portrait per character treated as duplicate art?",
+      "sources": [
+        {
+          "pdf": "materials/персонажи.pdf",
+          "pages": [
+            5,
+            6
+          ]
+        },
+        {
+          "pdf": "materials/правила игры.pdf",
+          "pages": [
+            4
+          ]
+        }
+      ],
+      "dataSource": "content/characters.json (8 character records)"
+    },
+    "starter-item.lucky-socks": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pages": [
+          4
+        ]
+      },
+      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
+      "catalogDefinitionPresent": false,
+      "mvpDefinitionPresent": false,
+      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+    },
+    "starter-item.pistol": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pages": [
+          4
+        ]
+      },
+      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
+      "catalogDefinitionPresent": false,
+      "mvpDefinitionPresent": true,
+      "mvpDefinition": "content/mvp/items/pistol.json"
+    },
+    "starter-item.hard-hat": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pages": [
+          4
+        ]
+      },
+      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
+      "catalogDefinitionPresent": false,
+      "mvpDefinitionPresent": false,
+      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+    },
+    "starter-item.backpack": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pages": [
+          4
+        ]
+      },
+      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
+      "catalogDefinitionPresent": false,
+      "mvpDefinitionPresent": false,
+      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+    },
+    "starter-item.smuggler-mark": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pages": [
+          4
+        ]
+      },
+      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
+      "catalogDefinitionPresent": false,
+      "mvpDefinitionPresent": false,
+      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+    },
+    "starter-item.medic-bag": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pages": [
+          4
+        ]
+      },
+      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
+      "catalogDefinitionPresent": false,
+      "mvpDefinitionPresent": false,
+      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+    },
+    "starter-item.gu4-rd": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pages": [
+          4
+        ]
+      },
+      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
+      "catalogDefinitionPresent": false,
+      "mvpDefinitionPresent": true,
+      "mvpDefinition": "content/mvp/items/gu4-rd.json"
+    },
+    "starter-item.spacesuit-mk2": {
+      "status": "human-inventory-verified",
+      "reviewedAt": "2026-09-29",
+      "source": {
+        "pdf": "materials/персонажи.pdf",
+        "pages": [
+          4
+        ]
+      },
+      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
+      "copiesInData": null,
+      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
+      "catalogDefinitionPresent": false,
+      "mvpDefinitionPresent": false,
+      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+    }
+  },
+  "pdfExtraction": {
+    "method": "pdftotext -layout; text extraction used for navigation/search only",
+    "ocr": "not run; image verification performed by a human reviewer",
+    "files": [
+      {
+        "path": "materials/задания сюжет.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 10122,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/задачи.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 686,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/колода предметов.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 2937,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/колода припасов.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 4615,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/монстры жетоны.pdf",
+        "status": "no_text_layer",
+        "nonWhitespaceTextCharacters": 0,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/монстры.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 3392,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/особые предметы.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 542,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/персонажи.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 5074,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/поле.pdf",
+        "status": "sparse_text_layer",
+        "nonWhitespaceTextCharacters": 45,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/правила игры.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 25461,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/события.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 34719,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/состояния.pdf",
+        "status": "text_layer_extracted",
+        "nonWhitespaceTextCharacters": 973,
+        "visualInventory": "complete"
+      },
+      {
+        "path": "materials/токены.pdf",
+        "status": "sparse_text_layer",
+        "nonWhitespaceTextCharacters": 144,
+        "visualInventory": "complete"
+      }
+    ]
+  },
+  "schemaValidation": {
+    "schemaFiles": {
+      "status": "passed",
+      "command": "dart run tool/validate_schemas.dart",
+      "validated": 10
+    },
+    "contentData": {
+      "status": "passed",
+      "command": "dart run tool/validate_content.dart",
+      "recordsValidated": 265,
+      "scope": "catalog and mvp content; schemas, references, translations, effects, campaign reachability"
+    }
+  }
 }

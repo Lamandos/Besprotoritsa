@@ -8,6 +8,8 @@
 - Application ID: `ru.besprotoritsa.game`
 - Minimum SDK: 21 (Android 5.0)
 - Target SDK: 34
+- ABIs in the APK/AAB: `armeabi-v7a` (32-bit), `arm64-v8a` (64-bit),
+  `x86_64` (64-bit)
 
 Both artifacts are built with the local release signing configuration. The
 certificate used for the 2026-09-28 build is self-signed, so the artifacts are
