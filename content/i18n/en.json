@@ -163,6 +163,46 @@
       "implant-strength": {
         "name": "Implant S",
         "description": "+1 Strength. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "laboratory-suit": {
+        "name": "Laboratory Suit",
+        "description": "+1 Defense. +1 Science."
+      },
+      "ghb-dtn": {
+        "name": "GHB-DTN",
+        "description": "During your turn, you may exhaust this robot to move yourself or an ally up to 2 sectors."
+      },
+      "r69-nic3": {
+        "name": "R69-NIC3",
+        "description": "During your turn, you may exhaust this robot to ignore all non-boss enemy abilities until the end of the round."
+      },
+      "gtu-b1c4": {
+        "name": "GTU-B1c4",
+        "description": "In combat, you may exhaust this robot to add 1 hit to an enemy."
+      },
+      "c6-car-courier": {
+        "name": "C6-CAR “Courier”",
+        "description": "During your turn, you may exhaust this robot to trade any number of items with another player anywhere on the map."
+      },
+      "sc0-u7": {
+        "name": "SC0-U7",
+        "description": "During your turn, you may exhaust this robot to reveal any map tile."
+      },
+      "prot2-ct": {
+        "name": "PROT2-CT",
+        "description": "In combat, you may exhaust this robot to gain +1 Defense until the end of the round."
+      },
+      "alarm-bot": {
+        "name": "ALARM BOT",
+        "description": "During your turn, you may exhaust this robot to ignore all non-boss enemy abilities until the end of the round."
+      },
+      "sc13-nc3": {
+        "name": "SC13-NC3",
+        "description": "During a Science or Repair check, you may exhaust this robot to reroll all dice."
+      },
+      "f1t-b07": {
+        "name": "F1T-B07",
+        "description": "During an Endurance or Agility check, you may exhaust this robot to reroll all dice."
       }
     }
   }

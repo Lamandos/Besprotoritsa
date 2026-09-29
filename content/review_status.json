@@ -1318,114 +1318,316 @@
       ]
     },
     "item.laboratory-suit": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Pale lab suit; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.ghb-dtn": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Blue-and-white rounded robot; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.r69-nic3": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Two interlocking gears; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.gtu-b1c4": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Small tracked construction robot with crane; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.c6-car-courier": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Six-wheeled courier vehicle; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.sc0-u7": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Four-legged utility robot; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.prot2-ct": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Blue translucent shield robot; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "robot.exhaust"
+      ]
     },
     "item.alarm-bot": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Yellow alarm robot with red beacon; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.sc13-nc3": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Small orbital robot with red thruster; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.f1t-b07": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          4,
+          5,
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 4,
+      "auditBatch": 4,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Pair of heavy industrial rollers; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.prot3-ct": {
       "status": "human-inventory-verified",
