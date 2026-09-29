@@ -326,6 +326,48 @@
         "name": "Strength Stimulant",
         "description": "During a Strength check, discard this card to reroll 1 die."
       }
+    },
+    "monster": {
+      "volot": {
+        "name": "Volot",
+        "description": "Slow but strong enemy."
+      },
+      "drekovac": {
+        "name": "Drekovac",
+        "description": "Slow but strong enemy. The player’s combat strength is reduced by 1."
+      },
+      "vurdalak": {
+        "name": "Vurdalak",
+        "description": "A resilient enemy: it restores all health if not killed during the turn."
+      },
+      "plagued": {
+        "name": "Plagued",
+        "description": "An enemy afflicted by boils: when it dies, it leaves 1 boil in each adjacent space."
+      },
+      "nest": {
+        "name": "Nest",
+        "description": "A stationary enemy. Instead of attacking, it spreads boils."
+      },
+      "likho": {
+        "name": "Likho",
+        "description": "A stationary enemy that blocks passages."
+      },
+      "pack": {
+        "name": "Pack",
+        "description": "Several small enemies. Can move through vents."
+      },
+      "werewolf": {
+        "name": "Werewolf",
+        "description": "A nimble, fast enemy. The player’s combat strength is reduced by 1."
+      },
+      "ghoul": {
+        "name": "Ghoul",
+        "description": "An advanced form of the Restless. Can move through vents."
+      },
+      "seeker": {
+        "name": "Seeker",
+        "description": "Hunts the player with the lowest health. Can move through vents."
+      }
     }
   }
 }

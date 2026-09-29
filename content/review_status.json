@@ -2557,104 +2557,330 @@
       ]
     },
     "monster.volot": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "monsters",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Brown ape-like monster holding a hammer",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-standard"
+      ],
+      "featuresReviewed": [
+        "slow",
+        "strong"
+      ]
     },
     "monster.drekovac": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "monsters",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Pale squat monster with long claws",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-reduce-combat-strength"
+      ],
+      "featuresReviewed": [
+        "reduces-combat-strength"
+      ]
     },
     "monster.vurdalak": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 2
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 2,
+      "sourceDeck": "monsters",
+      "copiesStatus": "2 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Green fanged monster with dark eyes",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-restore-full-health-if-alive"
+      ],
+      "featuresReviewed": [
+        "restores-health-if-alive"
+      ]
     },
     "monster.plagued": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 3
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 3,
+      "sourceDeck": "monsters",
+      "copiesStatus": "3 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Human-shaped infected creature wrapped in bandages",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-spawn-boils-on-death"
+      ],
+      "featuresReviewed": [
+        "spawns-adjacent-boils-on-death"
+      ]
     },
     "monster.nest": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 4
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 4,
+      "sourceDeck": "monsters",
+      "copiesStatus": "4 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Pink organic nest with green boils",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-spawn-boil-instead-of-attack"
+      ],
+      "featuresReviewed": [
+        "stationary",
+        "spawns-boil-instead-of-attack"
+      ]
     },
     "monster.likho": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 3
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 3,
+      "sourceDeck": "monsters",
+      "copiesStatus": "3 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Pale one-eyed creature in chains",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-stationary-block-exits"
+      ],
+      "featuresReviewed": [
+        "stationary",
+        "blocks-exits"
+      ]
     },
     "monster.pack": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 4
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 4,
+      "sourceDeck": "monsters",
+      "copiesStatus": "4 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Group of small pale wolf-like creatures",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-move-through-vents"
+      ],
+      "featuresReviewed": [
+        "moves-through-vents"
+      ]
     },
     "monster.werewolf": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          5
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 4
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 4,
+      "sourceDeck": "monsters",
+      "copiesStatus": "4 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Dark upright wolf monster",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-reduce-combat-strength"
+      ],
+      "featuresReviewed": [
+        "reduces-combat-strength",
+        "fast"
+      ]
     },
     "monster.ghoul": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 4
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 4,
+      "sourceDeck": "monsters",
+      "copiesStatus": "4 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Green humanoid with glowing red eyes",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-move-through-vents"
+      ],
+      "featuresReviewed": [
+        "moves-through-vents"
+      ]
     },
     "monster.seeker": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          6
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 4
+      "scope": "Card-by-card visual check of title, health, defense, attack, movement, reward, ability text, illustration, printed copy count, RU source and EN translation.",
+      "copiesInData": 4,
+      "sourceDeck": "monsters",
+      "copiesStatus": "4 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 1,
+      "auditBatch": 8,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Thin gray hunched creature with long arms",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-target-lowest-health-through-vents"
+      ],
+      "featuresReviewed": [
+        "targets-lowest-health",
+        "moves-through-vents"
+      ]
     },
     "monster.restless": {
       "status": "human-inventory-verified",
