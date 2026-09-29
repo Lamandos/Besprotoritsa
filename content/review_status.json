@@ -2883,107 +2883,325 @@
       ]
     },
     "monster.restless": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
       "copiesInData": 16,
-      "authorDecision": "All 16 printed Restless cards belong to the 48-card main monster deck; set aside 7 at setup."
+      "sourceDeck": "monsters",
+      "copiesStatus": "16 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 2,
+      "auditBatch": 9,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Dark infected human silhouette with red eyes",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-reduce-combat-strength"
+      ],
+      "featuresReviewed": [
+        "reduces-combat-strength"
+      ]
     },
     "monster.mother": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          7
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "monsters",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 2,
+      "auditBatch": 9,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Hunched witch holding a broom",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-mother-ignores-armor-scales-per-hero"
+      ],
+      "featuresReviewed": [
+        "boss",
+        "ignores-defense",
+        "scales-per-hero"
+      ]
     },
     "monster.viy": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          7
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "monsters",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 2,
+      "auditBatch": 9,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Dark forest-like creature shown from behind",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-scales-per-hero"
+      ],
+      "featuresReviewed": [
+        "boss",
+        "scales-per-hero"
+      ]
     },
     "monster.swarm": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          7
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "monsters",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 2,
+      "auditBatch": 9,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Cluster of small creatures amid red marks",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-scales-per-alive-monster"
+      ],
+      "featuresReviewed": [
+        "boss",
+        "scales-per-alive-monster"
+      ]
     },
     "monster.leshy": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          7
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "monsters",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 2,
+      "auditBatch": 9,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Green forest humanoid",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster-flees-and-spawns-two-boils"
+      ],
+      "featuresReviewed": [
+        "boss",
+        "flees-from-heroes",
+        "spawns-two-boils"
+      ]
     },
     "monster.boil": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/монстры.pdf",
-        "pageRange": "1-10"
+        "pages": [
+          7,
+          8
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
       "copiesInData": 1,
-      "authorDecision": "One Boil card; extra image on PDF sheet 8 is a print-layout duplicate. Boil tokens are separate.",
-      "authorDecisionQuote": "карта нарыва одна, но фишек может быть выложено много"
+      "sourceDeck": "monsters",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/monsters.json",
+      "importBatch": 2,
+      "auditBatch": 9,
+      "category": "monster",
+      "slots": [],
+      "iconography": "Pink gas bubble covered with green boils",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "boil-explodes-on-colocation"
+      ],
+      "featuresReviewed": [
+        "stationary",
+        "explodes-on-colocation"
+      ]
     },
     "condition.malaise": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/состояния.pdf",
-        "pageRange": "1-4"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 9
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
+      "copiesInData": 9,
+      "sourceDeck": "conditions",
+      "copiesStatus": "9 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/conditions.json",
+      "importBatch": null,
+      "auditBatch": 9,
+      "category": "condition",
+      "slots": [],
+      "iconography": "No illustration; centered Strength penalty text and patterned border",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "condition_stat_modifier"
+      ],
+      "featuresReviewed": []
     },
     "condition.concussion": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/состояния.pdf",
-        "pageRange": "1-4"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 9
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
+      "copiesInData": 9,
+      "sourceDeck": "conditions",
+      "copiesStatus": "9 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/conditions.json",
+      "importBatch": null,
+      "auditBatch": 9,
+      "category": "condition",
+      "slots": [],
+      "iconography": "No illustration; centered Repair penalty text and patterned border",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "condition_stat_modifier"
+      ],
+      "featuresReviewed": []
     },
     "condition.nausea": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/состояния.pdf",
-        "pageRange": "1-4"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 9
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
+      "copiesInData": 9,
+      "sourceDeck": "conditions",
+      "copiesStatus": "9 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/conditions.json",
+      "importBatch": null,
+      "auditBatch": 9,
+      "category": "condition",
+      "slots": [],
+      "iconography": "No illustration; centered Science penalty text and patterned border",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "condition_stat_modifier"
+      ],
+      "featuresReviewed": []
     },
     "condition.fracture": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/состояния.pdf",
-        "pageRange": "1-4"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 9
+      "scope": "Card-by-card visual check of title, printed stats or modifier, effect text, illustration and copy count; RU source and EN translation checked.",
+      "copiesInData": 9,
+      "sourceDeck": "conditions",
+      "copiesStatus": "9 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/conditions.json",
+      "importBatch": null,
+      "auditBatch": 9,
+      "category": "condition",
+      "slots": [],
+      "iconography": "No illustration; centered Agility penalty text and patterned border",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "condition_stat_modifier"
+      ],
+      "featuresReviewed": []
     },
     "condition.shortness-of-breath": {
       "status": "human-inventory-verified",

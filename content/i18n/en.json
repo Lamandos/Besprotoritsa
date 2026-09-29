@@ -367,6 +367,48 @@
       "seeker": {
         "name": "Seeker",
         "description": "Hunts the player with the lowest health. Can move through vents."
+      },
+      "restless": {
+        "name": "Restless",
+        "description": "Infected human. The player’s combat strength is reduced by 1."
+      },
+      "mother": {
+        "name": "Mother",
+        "description": "Boss. Attacks ignore defense. Health and attack increase by 1 for each player."
+      },
+      "viy": {
+        "name": "Viy",
+        "description": "Boss. Health and attack increase by 1 for each player."
+      },
+      "swarm": {
+        "name": "Swarm",
+        "description": "Boss. Health and attack increase by 1 for each living monster in play."
+      },
+      "leshy": {
+        "name": "Leshy",
+        "description": "Boss. Flees from players and leaves 2 boils in its space before its turn."
+      },
+      "boil": {
+        "name": "Boil",
+        "description": "A stationary gas bubble. It bursts and dies when it shares a space with a player."
+      }
+    },
+    "condition": {
+      "malaise": {
+        "name": "Malaise",
+        "description": "-1 Strength."
+      },
+      "concussion": {
+        "name": "Concussion",
+        "description": "-1 Repair."
+      },
+      "nausea": {
+        "name": "Nausea",
+        "description": "-1 Science."
+      },
+      "fracture": {
+        "name": "Fracture",
+        "description": "-1 Agility."
       }
     }
   }
