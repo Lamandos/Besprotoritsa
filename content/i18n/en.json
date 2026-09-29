@@ -235,6 +235,34 @@
       "cleaver": {
         "name": "Cleaver",
         "description": "+1 combat strength."
+      },
+      "old-cloak": {
+        "name": "Old Cloak",
+        "description": "+1 Defense. Healing effects restore 1 additional health."
+      },
+      "assault-rifle": {
+        "name": "Assault Rifle",
+        "description": "+2 combat strength. Once per attack, reroll any number of dice."
+      },
+      "shotgun": {
+        "name": "Shotgun",
+        "description": "+3 combat strength. After attacking, if a non-boss enemy survives, push it up to 2 open spaces in any direction."
+      },
+      "drg-4u": {
+        "name": "DRG-4U",
+        "description": "Carry 2 additional items. During a Strength check or attack, you may exhaust this robot to reroll all dice."
+      },
+      "swiss-army-knife": {
+        "name": "Swiss Army Knife",
+        "description": "+1 Strength, Science, Repair, Endurance and Agility. It also has a corkscrew."
+      },
+      "exoskeleton": {
+        "name": "Exoskeleton",
+        "description": "+2 Defense. +1 Agility."
+      },
+      "plague-doctor-mask": {
+        "name": "Plague Doctor Mask",
+        "description": "+1 Defense. Completely prevents damage from boils."
       }
     },
     "supply": {
@@ -409,6 +437,20 @@
       "fracture": {
         "name": "Fracture",
         "description": "-1 Agility."
+      },
+      "shortness-of-breath": {
+        "name": "Shortness of Breath",
+        "description": "-1 Endurance."
+      },
+      "adrenaline": {
+        "name": "Adrenaline",
+        "description": "+1 to all stats."
+      }
+    },
+    "task": {
+      "researcher": {
+        "name": "Researcher",
+        "description": "All map tiles are open simultaneously."
       }
     }
   }

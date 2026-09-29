@@ -3204,94 +3204,277 @@
       "featuresReviewed": []
     },
     "condition.shortness-of-breath": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/состояния.pdf",
-        "pageRange": "1-4"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 9
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 9,
+      "sourceDeck": "condition",
+      "copiesStatus": "9 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/conditions.json",
+      "importBatch": null,
+      "auditBatch": 10,
+      "category": "condition",
+      "slots": [],
+      "iconography": "No illustration; centered Endurance penalty text and patterned border",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "condition_stat_modifier"
+      ]
     },
     "condition.adrenaline": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/состояния.pdf",
-        "pageRange": "1-4"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 5
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 5,
+      "sourceDeck": "condition",
+      "copiesStatus": "5 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/conditions.json",
+      "importBatch": null,
+      "auditBatch": 10,
+      "category": "condition",
+      "slots": [],
+      "iconography": "No illustration; centered positive modifiers for all stats and patterned border",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "condition_stat_modifier"
+      ]
     },
     "special_item.old-cloak": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/особые предметы.pdf",
-        "pageRange": "1-2"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "special_item",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/special_items.json",
+      "importBatch": 1,
+      "auditBatch": 10,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Long gray cloak; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "health.healingBonus"
+      ]
     },
     "special_item.assault-rifle": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/особые предметы.pdf",
-        "pageRange": "1-2"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "special_item",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/special_items.json",
+      "importBatch": 1,
+      "auditBatch": 10,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Black rifle with curved magazine; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.reroll.anyCountPerAttack"
+      ]
     },
     "special_item.shotgun": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/особые предметы.pdf",
-        "pageRange": "1-2"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "special_item",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/special_items.json",
+      "importBatch": 1,
+      "auditBatch": 10,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Long-barreled shotgun; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "combat.pushUnkilledEnemy"
+      ]
     },
     "special_item.drg-4u": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/особые предметы.pdf",
-        "pageRange": "1-2"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "special_item",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/special_items.json",
+      "importBatch": 1,
+      "auditBatch": 10,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Small tracked robot in a wire frame; robot category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "equipment.extraBackpackCapacity",
+        "robot.exhaust",
+        "dice.reroll.all"
+      ]
     },
     "special_item.swiss-army-knife": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/особые предметы.pdf",
-        "pageRange": "1-2"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "special_item",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/special_items.json",
+      "importBatch": 1,
+      "auditBatch": 10,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Red multi-tool with several blades; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "special_item.exoskeleton": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/особые предметы.pdf",
-        "pageRange": "1-2"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "special_item",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/special_items.json",
+      "importBatch": 1,
+      "auditBatch": 10,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Yellow mechanical exoskeleton; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "special_item.plague-doctor-mask": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/особые предметы.pdf",
-        "pageRange": "1-2"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": 1
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "special_item",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/special_items.json",
+      "importBatch": 1,
+      "auditBatch": 10,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Black beaked plague mask; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "damage.ignoreBoil"
+      ]
     },
     "event.cabin-noise": {
       "status": "human-inventory-verified",
@@ -4262,15 +4445,39 @@
       "copiesStatus": "not-declared; JSON record count is not a physical card count"
     },
     "task.researcher": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, category icon or objective symbol, printed modifiers/effect, artwork and physical copy count; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical copies, matching catalog",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 10,
+      "category": "task",
+      "slots": [],
+      "iconography": "Map fragment viewed through a magnifying glass; objective card with credit-bag reward icon",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "map_fragments_open",
+        "targetValue": 1,
+        "window": "simultaneously",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      },
+      "taskRuleMappingNote": "Original card text verified; targetValue is a digital metric threshold and has not been independently confirmed against a runtime map-fragment event producer."
     },
     "task.modernizer": {
       "status": "human-inventory-verified",
