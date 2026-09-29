@@ -134,6 +134,7 @@ GameState moveMonsterOneStep(
   final destination = state.tileAt(target);
   final edge = monster.coord.edgeTowardOrNull(target);
   final ventilationStep =
+      monster.coord != target &&
       _monsterUsesVentilation(monster) &&
       source != null &&
       destination != null &&

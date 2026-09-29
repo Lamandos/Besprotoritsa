@@ -33,11 +33,12 @@ worker.
 
 The custom bootstrap deliberately does not load `flutter_service_worker.js`.
 It registers `service_worker.js`, which precaches the app shell, local
-CanvasKit/SKWasm, JavaScript, and WASM and uses a cache-first policy for images
-and fonts loaded during play.
-After the first successful online launch, the game reopens and renders offline.
-Increase `CACHE_VERSION` in `web/service_worker.js` whenever a release changes
-cached asset behavior, so clients discard an incompatible old cache.
+CanvasKit/SKWasm, JavaScript, WASM, the current game illustrations, and the
+Material Icons font. Thus a first successful online visit followed by service
+worker activation has the crew, board, and event artwork needed for offline
+play. Other assets requested later are cached by the worker's cache-first
+handler. Keep the precache list in `web/service_worker.js` in sync with the app
+artwork and bump `CACHE_VERSION` whenever cached asset behavior changes.
 
 ## Save persistence verification
 
