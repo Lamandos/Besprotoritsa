@@ -175,13 +175,33 @@ GameState _completeRoll(
   if (context.questId != null && succeeded) {
     return _completeMvpQuest(state, context);
   }
-  if (context.eventId == null && state.questDefinitions.isNotEmpty) {
-    final player = _playerById(state, context.playerId)!;
-    final locationId = state.tileAt(player.coord)?.locationId;
+  final stateAfterCounters =
+      context.eventId == null &&
+          succeeded &&
+          context.stat == StatType.agility &&
+          state.questDefinitions.isNotEmpty &&
+          state
+                  .tileAt(_playerById(state, context.playerId)!.coord)
+                  ?.ventColor !=
+              null &&
+          state
+                  .tileAt(_playerById(state, context.playerId)!.coord)!
+                  .ventColor !=
+              VentColor.none
+      ? _applyFullQuestEvent(
+          state,
+          const QuestCounterIncremented(metric: 'agility_check_in_ventilation'),
+          playerId: context.playerId,
+        )
+      : state;
+  if (context.eventId == null &&
+      stateAfterCounters.questDefinitions.isNotEmpty) {
+    final player = _playerById(stateAfterCounters, context.playerId)!;
+    final locationId = stateAfterCounters.tileAt(player.coord)?.locationId;
     if (locationId != null) {
       return _resumeAutomaticPhase(
         _applyFullQuestEvent(
-          state,
+          stateAfterCounters,
           QuestSkillChecked(
             skill: context.stat,
             locationId: locationId,
@@ -192,7 +212,7 @@ GameState _completeRoll(
       );
     }
   }
-  return _resumeAutomaticPhase(state);
+  return _resumeAutomaticPhase(stateAfterCounters);
 }
 
 GameState _applyFullQuestEvent(
@@ -236,41 +256,116 @@ GameState _applyFullQuestEvent(
   final decks = Map<DeckId, DeckState>.of(state.decks);
   final spawnedMonsters = <MonsterInstance>[];
   for (final grant in transition.rewards) {
-    final recipient = players.where((player) => player.id == playerId);
-    if (recipient.isEmpty) continue;
-    var player = recipient.first;
-    player = _copyPlayer(
-      player,
-      credits: player.credits + grant.reward.credits,
-    );
-    for (final cardId in grant.reward.items) {
-      final sourceDeck = decks.entries
-          .where(
-            (entry) =>
-                entry.value.drawPile.contains(cardId) ||
-                entry.value.discardPile.contains(cardId),
-          )
-          .firstOrNull;
-      if (sourceDeck == null) continue;
-      final draw = DeckRules.drawSpecific(
-        sourceDeck.value,
-        cardId,
-        seed: _deckSeed(state, sourceDeck.key),
-      );
-      if (draw.cards.isEmpty) continue;
-      try {
-        player = InventoryRules.receive(player, cardId, state.cardDefinitions);
-        decks[sourceDeck.key] = draw.deck;
-      } on BackpackCapacityExceeded {
-        // The quest is complete even when its item reward cannot fit.
-      } on InventoryRuleViolation {
-        // Invalid reward references are ignored safely at runtime.
-      }
-    }
-    players = [
-      for (final current in players)
-        if (current.id == playerId) player else current,
+    final reward = grant.reward;
+    final targetLocation = graph.quest(grant.questId).targetLocation;
+    final recipients = <({PlayerId id, int itemDraws})>[
+      if (reward.drawItems > 0) (id: playerId, itemDraws: reward.drawItems),
+      if (reward.drawItemsPerPlayerAtTargetLocation > 0)
+        for (final player in players)
+          if (player.alive &&
+              targetLocation != null &&
+              state.tileAt(player.coord)?.locationId == targetLocation)
+            (
+              id: player.id,
+              itemDraws: reward.drawItemsPerPlayerAtTargetLocation,
+            ),
     ];
+    final creditRecipients = reward.creditRollDicePerPlayer > 0
+        ? players.where((player) => player.alive).map((player) => player.id)
+        : const <PlayerId>[];
+    final affectedPlayers = <PlayerId>{
+      playerId,
+      ...recipients.map((recipient) => recipient.id),
+      ...creditRecipients,
+    };
+    for (final recipientId in affectedPlayers) {
+      var player = players.firstWhere(
+        (candidate) => candidate.id == recipientId,
+      );
+      if (recipientId == playerId) {
+        player = _copyPlayer(player, credits: player.credits + reward.credits);
+      }
+      if (creditRecipients.contains(recipientId)) {
+        final random = Random(
+          _deckSeed(state, 'quest-credit:${grant.questId}:$recipientId'),
+        );
+        final creditRoll = List<int>.generate(
+          reward.creditRollDicePerPlayer,
+          (_) => random.nextInt(6) + 1,
+        ).fold<int>(0, (sum, face) => sum + face);
+        player = _copyPlayer(player, credits: player.credits + creditRoll);
+      }
+      if (recipientId == playerId) {
+        for (final cardId in reward.items) {
+          final sourceDeck = decks.entries
+              .where(
+                (entry) =>
+                    entry.value.drawPile.contains(cardId) ||
+                    entry.value.discardPile.contains(cardId),
+              )
+              .firstOrNull;
+          if (sourceDeck == null) continue;
+          final draw = DeckRules.drawSpecific(
+            sourceDeck.value,
+            cardId,
+            seed: _deckSeed(state, sourceDeck.key),
+          );
+          if (draw.cards.isEmpty) continue;
+          try {
+            player = InventoryRules.receive(
+              player,
+              cardId,
+              state.cardDefinitions,
+            );
+            decks[sourceDeck.key] = draw.deck;
+          } on BackpackCapacityExceeded {
+            // The quest is complete even when its item reward cannot fit.
+          } on InventoryRuleViolation {
+            // Invalid reward references are ignored safely at runtime.
+          }
+        }
+      }
+      final drawCount = recipients
+          .where((recipient) => recipient.id == recipientId)
+          .fold<int>(0, (sum, recipient) => sum + recipient.itemDraws);
+      final itemDeck = decks['items'];
+      if (drawCount > 0 && itemDeck != null) {
+        final draw = DeckRules.draw(
+          itemDeck,
+          count: drawCount,
+          seed: _deckSeed(state, 'quest-items:${grant.questId}:$recipientId'),
+        );
+        decks['items'] = draw.deck;
+        final unclaimed = <CardId>[];
+        for (final cardId in draw.cards) {
+          try {
+            player = InventoryRules.receive(
+              player,
+              cardId,
+              state.cardDefinitions,
+            );
+          } on BackpackCapacityExceeded {
+            unclaimed.add(cardId);
+          } on InventoryRuleViolation {
+            unclaimed.add(cardId);
+          }
+        }
+        if (unclaimed.isNotEmpty) {
+          decks['items'] = DeckRules.returnAndShuffle(
+            decks['items']!,
+            unclaimed,
+            seed: _deckSeed(
+              state,
+              'quest-items-return:${grant.questId}:$recipientId',
+            ),
+          );
+        }
+      }
+      players = [
+        for (final current in players)
+          if (current.id == recipientId) player else current,
+      ];
+    }
   }
   for (final questId in transition.activatedQuestIds) {
     final definition = state.questDefinitions[questId];
@@ -314,6 +409,24 @@ GameState _applyFullQuestEvent(
       ...transition.activatedQuestIds.map((id) => 'quest-activated:$id'),
     ].join(','),
   );
+}
+
+Map<CardId, int> _ownedCardCounts(PlayerState player) {
+  final counts = <CardId, int>{};
+  for (final cardId in [
+    ...player.backpack,
+    ...player.equipped.weapons,
+    player.equipped.armor,
+    player.equipped.clothing,
+    player.equipped.robot,
+    ...player.carriedMods,
+    ...player.implanted,
+  ]) {
+    if (cardId != null) {
+      counts.update(cardId, (count) => count + 1, ifAbsent: () => 1);
+    }
+  }
+  return counts;
 }
 
 GameState _resolveCabinNoise(

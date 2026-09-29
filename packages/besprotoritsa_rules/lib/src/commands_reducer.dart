@@ -2,6 +2,8 @@
 // identical transition can run on a client, server, or replay verifier.
 // ignore_for_file: public_member_api_docs
 
+import 'dart:math';
+
 import 'package:besprotoritsa_rules/src/board_generator.dart';
 import 'package:besprotoritsa_rules/src/card_definition.dart';
 import 'package:besprotoritsa_rules/src/combat_models.dart';

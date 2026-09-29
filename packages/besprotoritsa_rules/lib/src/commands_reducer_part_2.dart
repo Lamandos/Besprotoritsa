@@ -258,12 +258,41 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
     ExchangeCommand() => GameStepResult(state: _exchange(state, command)),
   };
   final didTakeAction = _isActionCommand(command) && result.rejection == null;
-  final resultState = didTakeAction
+  var resultState = didTakeAction
       ? _copyState(
           result.state,
           actionsTakenThisTurn: state.actionsTakenThisTurn + 1,
         )
       : result.state;
+  if (result.rejection == null && resultState.questDefinitions.isNotEmpty) {
+    for (final player in resultState.players) {
+      final previous = _playerById(state, player.id);
+      if (previous == null) continue;
+      final beforeCards = _ownedCardCounts(previous);
+      final afterCards = _ownedCardCounts(player);
+      for (final cardId in afterCards.keys) {
+        final count = afterCards[cardId]! - (beforeCards[cardId] ?? 0);
+        if (count > 0) {
+          resultState = _applyFullQuestEvent(
+            resultState,
+            QuestItemCollected(itemId: cardId, count: count),
+            playerId: player.id,
+          );
+        }
+      }
+      final creditsGained = player.credits - previous.credits;
+      if (creditsGained > 0) {
+        resultState = _applyFullQuestEvent(
+          resultState,
+          QuestCounterIncremented(
+            metric: 'credits_collected',
+            amount: creditsGained,
+          ),
+          playerId: player.id,
+        );
+      }
+    }
+  }
   return GameStepResult(
     state: resultState,
     rejection: result.rejection,
