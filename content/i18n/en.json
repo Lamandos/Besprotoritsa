@@ -123,6 +123,46 @@
       "coveralls": {
         "name": "Coveralls",
         "description": "+1 defense. +1 Repair."
+      },
+      "lab-coat": {
+        "name": "Lab Coat",
+        "description": "+1 Science."
+      },
+      "t-shirt": {
+        "name": "T-Shirt",
+        "description": "+1 Strength."
+      },
+      "shooter-helmet": {
+        "name": "Marksman’s Helmet",
+        "description": "In combat, a die result of 3 counts as a hit."
+      },
+      "hauler-uniform": {
+        "name": "Hauler Uniform",
+        "description": "+1 Defense. +1 Endurance."
+      },
+      "implant-agility": {
+        "name": "Implant A",
+        "description": "+1 Agility. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "implant-endurance": {
+        "name": "Implant B",
+        "description": "+1 Endurance. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "implant-repair": {
+        "name": "Implant R",
+        "description": "+1 Repair. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "armor-vest": {
+        "name": "Bulletproof Vest",
+        "description": "+1 Defense. +1 Agility."
+      },
+      "implant-science": {
+        "name": "Implant N",
+        "description": "+1 Science. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "implant-strength": {
+        "name": "Implant S",
+        "description": "+1 Strength. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
       }
     }
   }

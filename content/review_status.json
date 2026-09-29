@@ -1006,114 +1006,316 @@
       "behaviorIds": []
     },
     "item.lab-coat": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "clothing",
+      "slots": [
+        "clothing"
+      ],
+      "iconography": "White laboratory coat; clothing category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.t-shirt": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "clothing",
+      "slots": [
+        "clothing"
+      ],
+      "iconography": "Plain T-shirt; clothing category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.shooter-helmet": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Helmet and visor; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.successFace.3"
+      ]
     },
     "item.hauler-uniform": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Green one-piece work uniform; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.implant-agility": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "modification",
+      "slots": [
+        "modification"
+      ],
+      "iconography": "Green implant chip with agility symbol; modification category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "equipment.implantRules"
+      ]
     },
     "item.implant-endurance": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "modification",
+      "slots": [
+        "modification"
+      ],
+      "iconography": "Green implant chip with endurance symbol; modification category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "equipment.implantRules"
+      ]
     },
     "item.implant-repair": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "modification",
+      "slots": [
+        "modification"
+      ],
+      "iconography": "Green implant chip with repair symbol; modification category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "equipment.implantRules"
+      ]
     },
     "item.armor-vest": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Protective vest; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.implant-science": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "modification",
+      "slots": [
+        "modification"
+      ],
+      "iconography": "Green implant chip with science symbol; modification category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "equipment.implantRules"
+      ]
     },
     "item.implant-strength": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          3,
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card; 1 catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 3,
+      "auditBatch": 3,
+      "category": "modification",
+      "slots": [
+        "modification"
+      ],
+      "iconography": "Green implant chip with strength symbol; modification category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "equipment.implantRules"
+      ]
     },
     "item.laboratory-suit": {
       "status": "human-inventory-verified",
