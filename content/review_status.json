@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-09-29",
+  "reviewedAt": "2026-09-30",
   "reviews": {
     "inventory.задания_сюжет": {
       "status": "human-inventory-verified",
@@ -4680,103 +4680,310 @@
       "taskRuleMappingNote": "Original card text verified; targetValue is a digital metric threshold and has not been independently confirmed against a runtime map-fragment event producer."
     },
     "task.modernizer": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold and time window, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Circuit-board skull; credit-bag reward icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "implants",
+        "targetValue": 2,
+        "window": "game",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "task.quartermaster": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold and time window, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Open chest; credit-bag reward icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "chest_cards",
+        "targetValue": 5,
+        "window": "simultaneously",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "task.agile": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold and time window, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Agility emblem; credit-bag reward icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "dodges_without_damage",
+        "targetValue": 3,
+        "window": "perTurn",
+        "aggregation": "sum",
+        "rewardCredits": 5
+      }
     },
     "task.wealthy": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold and time window, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Credit-token stack; credit-bag reward icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "credits",
+        "targetValue": 15,
+        "window": "game",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "task.strongman": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold and time window, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Strongman portrait; credit-bag reward icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "combat_strength",
+        "targetValue": 7,
+        "window": "game",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "task.cripple": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold and time window, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Broken bones; credit-bag reward icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "conditions",
+        "targetValue": 3,
+        "window": "simultaneously",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "task.robot-owner": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold and time window, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Crossed wrench and screwdriver; credit-bag reward icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "robot_reloaded",
+        "targetValue": 2,
+        "window": "game",
+        "aggregation": "sum",
+        "rewardCredits": 5
+      }
     },
     "task.lucky": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold and time window, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Broken-bone dice emblem; credit-bag reward icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "roll_successes",
+        "targetValue": 4,
+        "window": "simultaneously",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "task.hunter": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold and time window, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Monster under crosshair; credit-bag reward icon.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "enemies_killed",
+        "targetValue": 2,
+        "window": "perTurn",
+        "aggregation": "sum",
+        "rewardCredits": 5
+      }
     },
     "task.special": {
       "status": "human-inventory-verified",
@@ -4845,15 +5052,47 @@
       "copiesStatus": "not-declared; JSON record count is not a physical card count"
     },
     "quest.quest-01": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of number, chapter title, story text, objective bullets, location and skill icons, reward/transition and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 12,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue ornamental story-card header; location and science-check symbols; transition to quest 2.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 1,
+        "chapter": 1,
+        "targetLocation": "crew-quarters",
+        "conditions": [
+          "arrive",
+          "science skill check"
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-02"
+        ]
+      }
     },
     "quest.quest-02": {
       "status": "human-inventory-verified",

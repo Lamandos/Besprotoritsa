@@ -451,6 +451,42 @@
       "researcher": {
         "name": "Researcher",
         "description": "All map tiles are open simultaneously."
+      },
+      "modernizer": {
+        "name": "Modernizer",
+        "description": "Implant two implants."
+      },
+      "quartermaster": {
+        "name": "Quartermaster",
+        "description": "There are 5 cards in the chest."
+      },
+      "agile": {
+        "name": "Daredevil",
+        "description": "Dodge 3 attacks in one turn without taking damage."
+      },
+      "wealthy": {
+        "name": "Wealthy",
+        "description": "Have 15 or more credits."
+      },
+      "strongman": {
+        "name": "Strongman",
+        "description": "Have 7 or more combat strength."
+      },
+      "cripple": {
+        "name": "Cripple",
+        "description": "Have 3 or more Condition cards at once."
+      },
+      "robot-owner": {
+        "name": "Robot Owner",
+        "description": "Use and recharge a robot twice during the game."
+      },
+      "lucky": {
+        "name": "Lucky",
+        "description": "Roll 4 successes in a single roll."
+      },
+      "hunter": {
+        "name": "Hunter",
+        "description": "Kill two enemies in one turn."
       }
     },
     "event": {
@@ -618,6 +654,12 @@
             "failure": "You run into another enemy. Move to an adjacent sector, draw a Monster card, and fight it."
           }
         }
+      }
+    },
+    "quest": {
+      "quest-01": {
+        "name": "Awakening",
+        "description": "Find the other crew members and learn what happened."
       }
     }
   }
