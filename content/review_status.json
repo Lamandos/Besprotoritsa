@@ -86,7 +86,7 @@
         "pdf": "materials/персонажи.pdf",
         "pages": "all"
       },
-      "scope": "all six sheets visually inventoried; card/board counts verified; 16 physical character markers confirmed by author",
+      "scope": "all six sheets visually inventoried; card/board counts verified; 8 physical character markers confirmed by author; sheet 6 has two portrait faces per marker",
       "pdfTextExtraction": "text_layer_extracted",
       "ocr": "not-run"
     },
@@ -2943,7 +2943,7 @@
     "decision.character-token-count": {
       "status": "author-confirmed",
       "reviewedAt": "2026-09-29",
-      "decision": "Count all 16 portrait faces on sheet 6 as physical character markers (two per character).",
+      "decision": "Count 8 physical character markers. The 16 portrait faces on sheet 6 are two faces per marker (two per character).",
       "sources": [
         {
           "pdf": "materials/персонажи.pdf",
