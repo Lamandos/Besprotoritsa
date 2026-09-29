@@ -3477,114 +3477,314 @@
       ]
     },
     "event.cabin-noise": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.vending-machine": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.pile-of-things": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.monster-nest": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.corpse": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.suitcases": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.hatch-monster": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.security-room": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          1
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility, repair",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.exposed-wires": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility, science",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.monster-pack": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, setup text, each choice, check skill/difficulty, success and failure outcome, behaviorIds and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "one physical card, one catalog card",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 1,
+      "auditBatch": 11,
+      "category": "event",
+      "slots": [],
+      "iconography": "Narrative card with red ornamental border; skill-check marks: agility, endurance",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "event.choice",
+        "event.skillCheck",
+        "event.successFailure"
+      ]
     },
     "event.rope-hatch": {
       "status": "human-inventory-verified",

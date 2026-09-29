@@ -452,6 +452,173 @@
         "name": "Researcher",
         "description": "All map tiles are open simultaneously."
       }
+    },
+    "event": {
+      "cabin-noise": {
+        "name": "Cabin Noise",
+        "description": "As you pass a cabin, you hear a commotion inside.",
+        "option": {
+          "o1": {
+            "action": "Check what is happening.",
+            "success": "You open an empty cabin and find a bag hanging from a squeaky hook. Draw a Supply card.",
+            "failure": "The door flies open and an angry monster lunges at you. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Ignore it and keep walking.",
+            "success": "You decide not to get involved in trouble.",
+            "failure": "You walk past, but danger is waiting ahead."
+          }
+        }
+      },
+      "vending-machine": {
+        "name": "Vending Machine",
+        "description": "As you wander through the ship, you find a vending machine with someone’s food still inside.",
+        "option": {
+          "o1": {
+            "action": "Try to get the food.",
+            "success": "You wrench your hand free with the food. Restore 2 health.",
+            "failure": "Your hand gets stuck in the machine. When you finally get free, you see a monster approaching. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "pile-of-things": {
+        "name": "Pile of Things",
+        "description": "You enter a room and see a pile of objects that might contain something useful.",
+        "option": {
+          "o1": {
+            "action": "Search through the pile.",
+            "success": "You find a suitable weapon. Draw an Item card.",
+            "failure": "Something moves among the objects. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Leave the pile alone and leave the room.",
+            "success": "You get away from the strange pile in time.",
+            "failure": "A monster notices you before you can leave. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "monster-nest": {
+        "name": "Monster Lair",
+        "description": "You have found a creature’s lair. There must be something interesting inside.",
+        "option": {
+          "o1": {
+            "action": "Storm the lair.",
+            "success": "After defeating the monster, draw 1 Supply card.",
+            "failure": "Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Sneak inside quietly.",
+            "success": "You enter the lair and leave with supplies without being noticed. Draw a Supply card.",
+            "failure": "The noise wakes a sleeping monster. Draw a Monster card and fight it."
+          },
+          "o3": {
+            "action": "Throw a gas cylinder.",
+            "success": "Discard a Gas Cylinder. The blast destroys the lair; draw a Supply card.",
+            "failure": "Discard a Gas Cylinder, but the blast attracts a monster. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "corpse": {
+        "name": "Crew Member’s Corpse",
+        "description": "Searching the ship, you spot a person. As you get closer, you realize it is a corpse.",
+        "option": {
+          "o1": {
+            "action": "Search the corpse.",
+            "success": "You put the family photo back and take an Old Cloak from the Special Items deck.",
+            "failure": "You cannot get away in time: the corpse reanimates. Draw a Restless card and fight it."
+          },
+          "o2": {
+            "action": "Leave the corpse alone and search the room.",
+            "success": "You leave the body alone and find supplies. Draw a Supply card.",
+            "failure": "The corpse reanimates behind you. Draw a Restless card and fight it."
+          }
+        }
+      },
+      "suitcases": {
+        "name": "Suitcases of the Dead",
+        "description": "You find a pile of suitcases that belonged to deceased crew members.",
+        "option": {
+          "o1": {
+            "action": "Search the suitcases.",
+            "success": "You find a few credits in the suitcases. Gain 5 credits.",
+            "failure": "A monster has made its home inside. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Leave the suitcases alone.",
+            "success": "You walk past, and it was the right choice: a monster runs by.",
+            "failure": "You disturb the monster after all. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "hatch-monster": {
+        "name": "Monster in the Hatch",
+        "description": "While searching for supplies, you slide open a hatch and see a monster hiding inside.",
+        "option": {
+          "o1": {
+            "action": "Slip past it to the supplies.",
+            "success": "The monster is distracted by the noise. Draw 2 Supply cards.",
+            "failure": "The monster spots you. Take 3 damage and perform 1 fewer action next turn."
+          },
+          "o2": {
+            "action": "Close the hatch and search elsewhere.",
+            "success": "You close the hatch and find a package nearby. Draw a Supply card.",
+            "failure": "As you leave, the noise attracts a monster. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "security-room": {
+        "name": "Security Room",
+        "description": "You enter a security room. The alarm is still active.",
+        "option": {
+          "o1": {
+            "action": "Sneak in and steal something.",
+            "success": "You grab the first thing you see. Draw an Item card.",
+            "failure": "The alarm attracts a monster. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Try to disable the alarm.",
+            "success": "You search the room undisturbed. Draw the top 3 Item cards, choose 1, and shuffle the rest back into the deck.",
+            "failure": "The alarm attracts a monster. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "exposed-wires": {
+        "name": "Exposed Wires",
+        "description": "The wiring in the corridor ahead is damaged. Bare wires touch the floor.",
+        "option": {
+          "o1": {
+            "action": "Cross using the pipes.",
+            "success": "You cross to the other end of the room.",
+            "failure": "You touch a wire and take 2 damage."
+          },
+          "o2": {
+            "action": "Find the power source and shut it off.",
+            "success": "The power is off, and you pass safely.",
+            "failure": "You touch a wire and take 2 damage."
+          },
+          "o3": {
+            "action": "Find another way.",
+            "success": "You avoid the wires, but meet a monster on your way back. Draw a Monster card and fight it.",
+            "failure": "Draw a Monster card and fight it."
+          }
+        }
+      },
+      "monster-pack": {
+        "name": "Pack Around the Corner",
+        "description": "You hear growling and the footsteps of a group of monsters coming toward you from around the corner.",
+        "option": {
+          "o1": {
+            "action": "Try to hide.",
+            "success": "You hide and the pack passes by.",
+            "failure": "One of the monsters spots you. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Run away.",
+            "success": "Move to an adjacent sector.",
+            "failure": "You run into another enemy. Move to an adjacent sector, draw a Monster card, and fight it."
+          }
+        }
+      }
     }
   }
 }
