@@ -1114,6 +1114,176 @@
             "failure": "You leave the machine alone."
           }
         }
+      },
+      "pack-sighting": {
+        "name": "Pack",
+        "description": "You run into a pack. You should flee, but you notice something valuable.",
+        "option": {
+          "o1": {
+            "action": "Run away quickly.",
+            "success": "You decide not to take the risk and run.",
+            "failure": "The pack spots you. Draw a Pack card and fight it."
+          },
+          "o2": {
+            "action": "Walk past the pack.",
+            "success": "You remain unnoticed and draw a Supply card.",
+            "failure": "The pack chases you. Draw a Pack card and fight it."
+          }
+        }
+      },
+      "gas-cabin": {
+        "name": "Green Gas",
+        "description": "You pass a cabin filled with a strange green gas.",
+        "option": {
+          "o1": {
+            "action": "Enter the cabin.",
+            "success": "You grab an item and get out. Draw an Item card.",
+            "failure": "You run into an Abscess. Take one fewer action next turn."
+          },
+          "o2": {
+            "action": "Don’t bother.",
+            "success": "You decide not to enter the cabin.",
+            "failure": "You decide not to enter the cabin."
+          }
+        }
+      },
+      "hatch-scrape": {
+        "name": "Scraping Under the Hatch",
+        "description": "It sounds like something is scraping inside the maintenance hatch beneath your feet.",
+        "option": {
+          "o1": {
+            "action": "Block the hatch.",
+            "success": "You pile crates over the hatch.",
+            "failure": "The hatch opens. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Fight it.",
+            "success": "Draw a Monster card and fight it. After winning, draw an additional Item card.",
+            "failure": "Draw a Monster card and fight it."
+          }
+        }
+      },
+      "oxygen-alarm": {
+        "name": "Oxygen Depletion",
+        "description": "The system reports a power overload and that oxygen is being pumped out.",
+        "option": {
+          "o1": {
+            "action": "Hold your breath.",
+            "success": "You wait until oxygen supply resumes.",
+            "failure": "You lose consciousness and take 2 damage; take one fewer action next turn."
+          },
+          "o2": {
+            "action": "Run out before the doors seal.",
+            "success": "You rush into an adjacent sector.",
+            "failure": "You do not make it in time. Take 2 damage and take one fewer action next turn."
+          }
+        }
+      },
+      "survivor-scream": {
+        "name": "Cry for Help",
+        "description": "You hear a scream. It sounds like another survivor.",
+        "option": {
+          "o1": {
+            "action": "Hurry to help.",
+            "success": "There is a monster standing over a guard’s body. Draw a Monster card and fight it.",
+            "failure": "There are useful supplies by the body. Draw a Supply card."
+          },
+          "o2": {
+            "action": "Ignore the scream.",
+            "success": "Survival leaves no room for morality.",
+            "failure": "Survival leaves no room for morality."
+          }
+        }
+      },
+      "child-cry": {
+        "name": "Child’s Cry",
+        "description": "You hear a child crying. How could there be a child here?",
+        "option": {
+          "o1": {
+            "action": "Find the source as quickly as possible.",
+            "success": "It is a monster growling. Draw a Monster card and fight it.",
+            "failure": "You cannot find the source. Place a monster in any adjacent sector."
+          },
+          "o2": {
+            "action": "Ignore it.",
+            "success": "You refuse to let your imagination take over and continue on.",
+            "failure": "You refuse to let your imagination take over and continue on."
+          }
+        }
+      },
+      "female-whisper": {
+        "name": "Whisper",
+        "description": "You hear a woman whispering, but cannot make out any words.",
+        "option": {
+          "o1": {
+            "action": "Resist; it is only your imagination.",
+            "success": "You calm down: it is only the hum of the lights.",
+            "failure": "Other voices join the whisper. Place a monster in every adjacent sector."
+          },
+          "o2": {
+            "action": "Follow the call.",
+            "success": "It is a plea for help. Draw a Supply card.",
+            "failure": "It is a plea for help. Draw a Supply card."
+          }
+        }
+      },
+      "alcohol-crate": {
+        "name": "Crate of Alcohol",
+        "description": "You find the last thing you expected: a crate of alcohol.",
+        "option": {
+          "o1": {
+            "action": "Walk past.",
+            "success": "You keep a clear head.",
+            "failure": "You keep a clear head."
+          },
+          "o2": {
+            "action": "Have a little.",
+            "success": "Restore 3 health and take one extra action next turn.",
+            "failure": "Take one fewer action next turn."
+          },
+          "o3": {
+            "action": "Go all out!",
+            "success": "Restore all health, gain an extra action, and take no damage from monsters until the end of next round.",
+            "failure": "You lose control and take one fewer action next turn."
+          }
+        }
+      },
+      "supply-terminal": {
+        "name": "Supply Terminal",
+        "description": "The supply terminal is flashing brightly. It seems to have malfunctioned.",
+        "option": {
+          "o1": {
+            "action": "Buy supplies.",
+            "success": "Draw 5 Supply cards; you may buy 2 Items at a 2-credit discount, and shuffle the rest back.",
+            "failure": "The terminal is broken, but you can still inspect it."
+          },
+          "o2": {
+            "action": "Sell supplies.",
+            "success": "Sell any number of your Items at full value.",
+            "failure": "Sell any number of your Items at full value."
+          },
+          "o3": {
+            "action": "Walk past.",
+            "success": "You do not stop and keep moving.",
+            "failure": "You do not stop and keep moving."
+          }
+        }
+      },
+      "trade-bot": {
+        "name": "Trade Bot",
+        "description": "A trade bot has fallen on its side. It looks battered but still operational.",
+        "option": {
+          "o1": {
+            "action": "Repair the bot.",
+            "success": "Draw 5 Supply cards; you may buy them and sell Items at full value.",
+            "failure": "The damage is too severe. The bot does not work."
+          },
+          "o2": {
+            "action": "Break into the bot’s cargo bay.",
+            "success": "The corporation protects its bots well, and you get nothing.",
+            "failure": "The corporation protects its bots well, and you get nothing."
+          }
+        }
       }
     },
     "quest": {
