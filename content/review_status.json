@@ -377,224 +377,633 @@
       "copiesStatus": "not-declared; JSON record count is not a physical card count"
     },
     "item.circular-saw": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Blue-handled circular saw; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.reroll.twoPerAttack"
+      ]
     },
     "item.laser-cutter": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Handheld laser cutting tool; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "combat.damageAllEnemiesInSectorOnKill"
+      ]
     },
     "item.exo-gloves": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Powered gloves; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.equalPair.addHit"
+      ]
     },
     "item.pneumo-cannon": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Pneumatic hand cannon; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.successFace.3",
+        "dice.face6.damageBoth"
+      ]
     },
     "item.nailgun": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Powered nail gun; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "combat.ignoreEnemyDefense"
+      ]
     },
     "item.flamethrower": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Flamethrower with fuel cylinder; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "card.preventMonsterLoot"
+      ]
     },
     "item.knife": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Combat knife; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "combat.noHit.takeDamage"
+      ]
     },
     "item.ultrasonic-hammer": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Ultrasonic hammer; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "combat.rechargeForCredits"
+      ]
     },
     "item.spacesuit": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Deep-sea style pressure suit; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "map.moveHullBetweenAirlocks"
+      ]
     },
     "item.frying-pan": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          1,
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, and printed copy; RU text and EN translation checked.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "one physical card; one catalog copy",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 1,
+      "auditBatch": 1,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Frying pan; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.last-chance": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Revolver; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "combat.noHit.damageTarget"
+      ]
     },
     "item.load-bearing-vest": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Load-bearing vest with two weapon holsters; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "equipment.extraWeaponSlot"
+      ]
     },
     "item.engineer-coveralls": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Blue engineer coveralls; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "equipment.extraRobotSlot"
+      ]
     },
     "item.laser-scalpel": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Laser scalpel; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "combat.useScienceInsteadOfStrength"
+      ]
     },
     "item.pipe-wrench": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Red pipe wrench; weapon category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "dice.reroll.allForSkill"
+      ]
     },
     "item.guard-suit": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Guard uniform; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.tank-top": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "clothing",
+      "slots": [
+        "clothing"
+      ],
+      "iconography": "Sleeveless shirt; clothing category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.camouflage": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "clothing",
+      "slots": [
+        "clothing"
+      ],
+      "iconography": "Camouflage T-shirt; clothing category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.shirt": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "clothing",
+      "slots": [
+        "clothing"
+      ],
+      "iconography": "Button-up work shirt; clothing category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.coveralls": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/колода предметов.pdf",
-        "pageRange": "1-7"
+        "pages": [
+          2,
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
+      "scope": "Card-by-card visual check of title, category icon, numeric modifiers, effect text, illustration, printed copy, RU source and EN translation.",
       "copiesInData": 1,
-      "sourceDeck": "items"
+      "sourceDeck": "items",
+      "copiesStatus": "1 physical card(s); 1 catalog copy/copies",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/items.json",
+      "importBatch": 2,
+      "auditBatch": 2,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "One-piece coveralls; armor category",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": []
     },
     "item.lab-coat": {
       "status": "human-inventory-verified",

@@ -22,7 +22,20 @@ void main() {
     expect(state.cardDefinitions.keys, contains('nanobots'));
     expect(state.cardDefinitions.keys, contains('assault-rifle'));
     expect(state.conditionCards.keys, contains('malaise'));
-    expect(state.decks['events']!.drawPile, isNotEmpty);
+    expect(state.board, hasLength(35));
+    expect(state.board.where((tile) => tile.opened), hasLength(1));
+    expect(state.decks['conditions']!.drawPile, hasLength(50));
+    expect(state.decks['events']!.drawPile, hasLength(88));
+    expect(state.decks['items']!.drawPile, hasLength(42));
+    expect(state.decks['supplies']!.drawPile, hasLength(64));
+    expect(state.decks['specialItems']!.drawPile, hasLength(7));
+    expect(state.decks['monsters']!.drawPile, hasLength(41));
+    expect(state.decks['restlessReserve']!.drawPile, hasLength(7));
+    expect(state.decks['tasks']!.drawPile, hasLength(8));
+    expect(
+      state.quests.personalTasksByPlayer.values,
+      everyElement(hasLength(2)),
+    );
     expect(state.quests.storyQuestIds, ['quest-01']);
   });
 

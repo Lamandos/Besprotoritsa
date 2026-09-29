@@ -64,6 +64,9 @@ Future<ContentValidationReport> validateContent({
   final allRecords = contentSetId == 'full'
       ? catalog
       : [...catalog, ...selected];
+  if (contentSetId == 'full') {
+    _validatePhysicalHexInventory(catalog, issues);
+  }
   _validateSchemas(allRecords, contentDirectory, issues);
   _validateMetadata(allRecords, issues);
   _validateRuntimeCompatibility(allRecords, issues);
@@ -82,6 +85,60 @@ Future<ContentValidationReport> validateContent({
   }
   await _validateCampaign(catalog, contentDirectory, issues);
   return ContentValidationReport(allRecords.length, List.unmodifiable(issues));
+}
+
+void _validatePhysicalHexInventory(List<_Record> catalog, List<String> issues) {
+  final hexes = catalog.where((record) => record.schema == 'hex').toList();
+  final copiesByType = <String, int>{};
+  final corridorCopiesByVent = <String, int>{};
+  for (final record in hexes) {
+    final copies = record.value['copies'];
+    if (copies is! int || copies < 1) {
+      issues.add(
+        '${record.label}.copies: full field tile must declare copies.',
+      );
+      continue;
+    }
+    final type = record.value['type'];
+    if (type is! String) continue;
+    copiesByType.update(
+      type,
+      (count) => count + copies,
+      ifAbsent: () => copies,
+    );
+    if (type == 'corridor') {
+      final ventColor = record.value['ventColor'];
+      if (ventColor is String) {
+        corridorCopiesByVent.update(
+          ventColor,
+          (count) => count + copies,
+          ifAbsent: () => copies,
+        );
+      }
+    }
+  }
+  const expected = <String, int>{
+    'start': 1,
+    'compartment': 12,
+    'airlock': 4,
+    'corridor': 18,
+  };
+  for (final entry in expected.entries) {
+    if (copiesByType[entry.key] != entry.value) {
+      issues.add(
+        'content/hexes.json [id=<physical-inventory>]: expected '
+        '${entry.value} ${entry.key} tiles, found ${copiesByType[entry.key] ?? 0}',
+      );
+    }
+  }
+  for (final color in const ['none', 'green', 'red']) {
+    if (corridorCopiesByVent[color] != 6) {
+      issues.add(
+        'content/hexes.json [id=<physical-inventory>]: expected six '
+        '$color corridors, found ${corridorCopiesByVent[color] ?? 0}',
+      );
+    }
+  }
 }
 
 Future<void> _validateMvpDecks(
@@ -501,12 +558,17 @@ Future<void> _validateLocalization(
     File('${content.path}/i18n/ru.json'),
     issues,
   );
+  final englishLocale = await _read(
+    File('${content.path}/i18n/en.json'),
+    issues,
+  );
   final mvpLocale = await _read(
     File('${content.path}/mvp/i18n_ru.json'),
     issues,
   );
   final translations = <String, Set<String>>{
     'catalog': _flattenTranslations(catalogLocale ?? {}),
+    'english': _flattenTranslations(englishLocale ?? {}),
     'mvp': _flattenTranslations(mvpLocale ?? {}),
   };
   for (final record in records) {
@@ -516,6 +578,35 @@ Future<void> _validateLocalization(
       if (!(translations[localeId]?.contains(value) ?? false)) {
         issues.add(
           '${record.label}.$path: missing $localeId i18n key "$value"',
+        );
+      }
+    });
+  }
+  final auditFile = File('${content.path}/review_status.json');
+  final audit = await _read(auditFile, issues);
+  final reviews = audit?['reviews'];
+  if (reviews is! Map<String, Object?>) return;
+  for (final record in records.where(
+    (record) => record.namespace.startsWith('catalog:') && record.id != null,
+  )) {
+    final sourceDeck = record.value['sourceDeck'];
+    final reviewPrefix = switch (record.schema) {
+      'item' when sourceDeck == 'starterItems' => 'starter-item',
+      'item' => 'item',
+      'special_item' => 'special_item',
+      final schema => schema,
+    };
+    final review = reviews['$reviewPrefix.${record.id}'];
+    if (review is! Map<String, Object?> ||
+        review['status'] != 'human-card-verified') {
+      continue;
+    }
+    _visit(record.value, (key, value, path) {
+      if (!key.endsWith('Key') || value is! String) return;
+      if (!(translations['english']?.contains(value) ?? false)) {
+        issues.add(
+          '${record.label}.$path: missing en i18n key "$value" for '
+          'human-card-verified record',
         );
       }
     });

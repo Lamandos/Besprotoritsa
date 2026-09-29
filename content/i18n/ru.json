@@ -17,7 +17,11 @@
       "armory": "Оружейная",
       "dining-hall": "Столовая",
       "morgue": "Морг",
-      "anabiosis": "Анабиозный отсек"
+      "anabiosis": "Анабиозный отсек",
+      "airlock": "Шлюз",
+      "corridor": "Коридор",
+      "corridor-green": "Коридор с зелёной вентиляцией",
+      "corridor-red": "Коридор с красной вентиляцией"
     },
     "monster": {
       "volot": {

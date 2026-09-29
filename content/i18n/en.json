@@ -5,7 +5,11 @@
       "description": ""
     },
     "location": {
-      "unknown": ""
+      "unknown": "",
+      "airlock": "Airlock",
+      "corridor": "Corridor",
+      "corridor-green": "Corridor with green ventilation",
+      "corridor-red": "Corridor with red ventilation"
     },
     "item": {
       "lucky-socks": {
@@ -39,6 +43,86 @@
       "smuggler-mark": {
         "name": "Smuggler's Mark",
         "description": "Get a 2-credit discount on any purchase. You may trade one item with any player anywhere on the map as an action."
+      },
+      "circular-saw": {
+        "name": "Circular Saw",
+        "description": "Up to 2 rerolls of one die per attack."
+      },
+      "laser-cutter": {
+        "name": "Laser Cutter",
+        "description": "After you kill an enemy, deal 1 damage to all enemies in the same sector."
+      },
+      "exo-gloves": {
+        "name": "Exo Gloves",
+        "description": "In combat, any pair of matching die results adds 1 hit."
+      },
+      "pneumo-cannon": {
+        "name": "Pneumatic Cannon",
+        "description": "+1 combat strength. A roll of 3 counts as a hit; a 6 deals damage to both the enemy and the character."
+      },
+      "nailgun": {
+        "name": "Nail Gun",
+        "description": "Ignore the enemy’s defense."
+      },
+      "flamethrower": {
+        "name": "Flamethrower",
+        "description": "+3 combat strength. Enemies leave no loot."
+      },
+      "knife": {
+        "name": "Knife",
+        "description": "+1 combat strength. If you score no hits during an attack, take 1 damage."
+      },
+      "ultrasonic-hammer": {
+        "name": "Ultrasonic Hammer",
+        "description": "+4 combat strength. After defeating an enemy, spend 5 credits to recharge."
+      },
+      "spacesuit": {
+        "name": "Spacesuit",
+        "description": "+1 defense. Allows movement along the ship’s outer hull between airlocks."
+      },
+      "frying-pan": {
+        "name": "Frying Pan",
+        "description": "+1 combat strength. +1 defense."
+      },
+      "last-chance": {
+        "name": "Last Chance",
+        "description": "+1 combat strength. If you score no hits during an attack, deal 1 damage to that enemy."
+      },
+      "load-bearing-vest": {
+        "name": "Load-Bearing Vest",
+        "description": "+1 defense. You can carry 2 weapons."
+      },
+      "engineer-coveralls": {
+        "name": "Engineer’s Coveralls",
+        "description": "Allows you to use 2 robots."
+      },
+      "laser-scalpel": {
+        "name": "Laser Scalpel",
+        "description": "+1 Science. In combat, use your Science instead of Strength."
+      },
+      "pipe-wrench": {
+        "name": "Pipe Wrench",
+        "description": "+1 combat strength. +1 Repair. You may reroll any number of dice during a Repair check."
+      },
+      "guard-suit": {
+        "name": "Guard Suit",
+        "description": "+1 defense. +1 Strength."
+      },
+      "tank-top": {
+        "name": "Tank Top",
+        "description": "+1 Agility."
+      },
+      "camouflage": {
+        "name": "Camouflage",
+        "description": "+1 Endurance."
+      },
+      "shirt": {
+        "name": "Shirt",
+        "description": "+1 Repair."
+      },
+      "coveralls": {
+        "name": "Coveralls",
+        "description": "+1 defense. +1 Repair."
       }
     }
   }

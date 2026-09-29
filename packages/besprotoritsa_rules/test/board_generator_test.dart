@@ -12,6 +12,48 @@ void main() {
       }
     });
 
+    test('generates the full set of 35 placed tile copies', () {
+      const generator = ShipBoardGenerator();
+      final compartments = storyLocationIds.difference({'anabiosis'});
+      final airlocks = List<String>.generate(
+        4,
+        (index) => 'airlock-${index + 1}',
+      );
+      final ventColors = [
+        ...List<VentColor>.filled(6, VentColor.none),
+        ...List<VentColor>.filled(6, VentColor.green),
+        ...List<VentColor>.filled(6, VentColor.red),
+      ];
+
+      for (var seed = 0; seed < 100; seed++) {
+        final board = generator.generateFullSet(
+          seed,
+          compartmentIds: compartments,
+          airlockIds: airlocks,
+          corridorVentColors: ventColors,
+        );
+        _expectPhysicallyValid(board, seed);
+        expect(board.tiles, hasLength(35));
+        expect(
+          board.tiles.where((tile) => tile.type == HexTileType.corridor),
+          hasLength(18),
+        );
+        expect(
+          board.tiles.where((tile) => tile.type == HexTileType.airlock),
+          hasLength(4),
+        );
+        for (final color in VentColor.values) {
+          expect(
+            board.tiles.where(
+              (tile) =>
+                  tile.type == HexTileType.corridor && tile.ventColor == color,
+            ),
+            hasLength(6),
+          );
+        }
+      }
+    });
+
     test('includes every story location and both vent colours', () {
       final board = const ShipBoardGenerator().generate(17);
       final locations = board.tiles

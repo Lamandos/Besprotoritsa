@@ -1,17 +1,184 @@
 {
   "hexes": [
-    {"id":"crew-quarters","type":"compartment","locationNameKey":"content.location.crew-quarters","hasTerminal":false,"ventColor":"none","exits":[]},
-    {"id":"engineering-control-post","type":"compartment","locationNameKey":"content.location.engineering-control-post","hasTerminal":true,"ventColor":"none","exits":[]},
-    {"id":"reactor","type":"compartment","locationNameKey":"content.location.reactor","hasTerminal":true,"ventColor":"none","exits":[]},
-    {"id":"medical-bay","type":"compartment","locationNameKey":"content.location.medical-bay","hasTerminal":false,"ventColor":"none","exits":[]},
-    {"id":"laboratory","type":"compartment","locationNameKey":"content.location.laboratory","hasTerminal":true,"ventColor":"none","exits":[]},
-    {"id":"main-computer","type":"compartment","locationNameKey":"content.location.main-computer","hasTerminal":true,"ventColor":"none","exits":[]},
-    {"id":"escape-pods","type":"compartment","locationNameKey":"content.location.escape-pods","hasTerminal":false,"ventColor":"none","exits":[]},
-    {"id":"storage","type":"compartment","locationNameKey":"content.location.storage","hasTerminal":false,"ventColor":"none","exits":[]},
-    {"id":"flight-control","type":"compartment","locationNameKey":"content.location.flight-control","hasTerminal":true,"ventColor":"none","exits":[]},
-    {"id":"armory","type":"compartment","locationNameKey":"content.location.armory","hasTerminal":false,"ventColor":"none","exits":[]},
-    {"id":"dining-hall","type":"compartment","locationNameKey":"content.location.dining-hall","hasTerminal":false,"ventColor":"none","exits":[]},
-    {"id":"morgue","type":"compartment","locationNameKey":"content.location.morgue","hasTerminal":false,"ventColor":"none","exits":[]},
-    {"id":"anabiosis","type":"start","locationNameKey":"content.location.anabiosis","hasTerminal":false,"ventColor":"none","exits":[]}
+    {
+      "id": "crew-quarters",
+      "type": "compartment",
+      "locationNameKey": "content.location.crew-quarters",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "engineering-control-post",
+      "type": "compartment",
+      "locationNameKey": "content.location.engineering-control-post",
+      "hasTerminal": true,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "reactor",
+      "type": "compartment",
+      "locationNameKey": "content.location.reactor",
+      "hasTerminal": true,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "medical-bay",
+      "type": "compartment",
+      "locationNameKey": "content.location.medical-bay",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "laboratory",
+      "type": "compartment",
+      "locationNameKey": "content.location.laboratory",
+      "hasTerminal": true,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "main-computer",
+      "type": "compartment",
+      "locationNameKey": "content.location.main-computer",
+      "hasTerminal": true,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "escape-pods",
+      "type": "compartment",
+      "locationNameKey": "content.location.escape-pods",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "storage",
+      "type": "compartment",
+      "locationNameKey": "content.location.storage",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "flight-control",
+      "type": "compartment",
+      "locationNameKey": "content.location.flight-control",
+      "hasTerminal": true,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "armory",
+      "type": "compartment",
+      "locationNameKey": "content.location.armory",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "dining-hall",
+      "type": "compartment",
+      "locationNameKey": "content.location.dining-hall",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "morgue",
+      "type": "compartment",
+      "locationNameKey": "content.location.morgue",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "anabiosis",
+      "type": "start",
+      "locationNameKey": "content.location.anabiosis",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "airlock-1",
+      "type": "airlock",
+      "locationNameKey": "content.location.airlock",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "airlock-2",
+      "type": "airlock",
+      "locationNameKey": "content.location.airlock",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "airlock-3",
+      "type": "airlock",
+      "locationNameKey": "content.location.airlock",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "airlock-4",
+      "type": "airlock",
+      "locationNameKey": "content.location.airlock",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 1
+    },
+    {
+      "id": "corridor",
+      "type": "corridor",
+      "locationNameKey": "content.location.corridor",
+      "hasTerminal": false,
+      "ventColor": "none",
+      "exits": [],
+      "copies": 6
+    },
+    {
+      "id": "corridor-green",
+      "type": "corridor",
+      "locationNameKey": "content.location.corridor-green",
+      "hasTerminal": false,
+      "ventColor": "green",
+      "exits": [],
+      "copies": 6
+    },
+    {
+      "id": "corridor-red",
+      "type": "corridor",
+      "locationNameKey": "content.location.corridor-red",
+      "hasTerminal": false,
+      "ventColor": "red",
+      "exits": [],
+      "copies": 6
+    }
   ]
 }

@@ -85,9 +85,29 @@ GameState createFullGameState({
       ),
     );
   });
-  final board = const ShipBoardGenerator().generate(seed).tiles;
+  final hexRows = _rows(_content['hexes'], 'hexes');
+  final board = const ShipBoardGenerator()
+      .generateFullSet(
+        seed,
+        compartmentIds: [
+          for (final row in hexRows)
+            if (row['type'] == 'compartment') _string(row, 'id'),
+        ],
+        airlockIds: [
+          for (final row in hexRows)
+            if (row['type'] == 'airlock') _string(row, 'id'),
+        ],
+        corridorVentColors: [
+          for (final row in hexRows)
+            if (row['type'] == 'corridor')
+              for (var copy = 0; copy < _copies(row); copy++)
+                VentColor.values.byName(_string(row, 'ventColor')),
+        ],
+      )
+      .tiles
+      .map(_concealNonStartTile)
+      .toList(growable: false);
   final monsterRows = _cards(_content['monsters']);
-  final firstMonster = monsterRows.first;
   final conditionRows = _cards(_content['conditions']);
   final conditions = <String, ConditionCard>{
     for (final row in conditionRows)
@@ -99,8 +119,42 @@ GameState createFullGameState({
         },
       ),
   };
-  final decks = _object(_content['decks']);
   final random = Random(seed);
+  final restless = monsterRows.singleWhere(
+    (row) => row['id'] == 'restless',
+  );
+  final monsterDeck = _expandedIds(
+    monsterRows.where((row) {
+      final features = _list(row['features']).cast<String>();
+      return row['id'] != 'boil' && !features.contains('boss');
+    }),
+    copyOverrides: {'restless': _copies(restless) - 7},
+  )..shuffle(random);
+  final taskIds = _expandedIds(_rows(_content['tasks'], 'tasks'))
+    ..shuffle(random);
+  var nextTask = 0;
+  final personalTasks = <String, List<String>>{
+    for (final player in playerStates)
+      player.id: [
+        taskIds[nextTask++],
+        taskIds[nextTask++],
+      ],
+  };
+  final conditionsDeck = _expandedIds(conditionRows)..shuffle(random);
+  final eventRows = _cards(_content['events']);
+  final eventsDeck = _expandedIds(eventRows)..shuffle(random);
+  final itemRows = _cards(_content['items']);
+  final supplyRows = [
+    ..._cards(_content['supplies']),
+    ...itemRows.where((row) => row['sourceDeck'] == 'supplies'),
+  ];
+  final itemsDeck = _expandedIds(
+    itemRows.where((row) => row['sourceDeck'] == 'items'),
+  )..shuffle(random);
+  final suppliesDeck = _expandedIds(supplyRows)..shuffle(random);
+  final specialItemsDeck = _expandedIds(_cards(_content['special_items']))
+    ..shuffle(random);
+  final restlessReserve = List<String>.filled(7, _string(restless, 'id'));
   return GameState(
     seed: seed,
     round: 1,
@@ -109,23 +163,25 @@ GameState createFullGameState({
     actionsLeft: 2,
     board: board,
     players: playerStates,
-    monsters: [
-      MonsterInstance(
-        instanceId: '${_string(firstMonster, 'id')}-1',
-        monsterId: _string(firstMonster, 'id'),
-        coord: const HexCoord(0, 1),
-        damage: 0,
-        health: _int(firstMonster, 'health'),
-        attack: _int(firstMonster, 'attack'),
+    monsters: const [],
+    quests: QuestState(
+      storyQuestIds: _strings(
+        _object(_content['quests'])['initialQuestIds'],
       ),
-    ],
+      personalTasksByPlayer: personalTasks,
+    ),
     decks: {
-      'conditions': DeckState(drawPile: _shuffled(decks['conditions'], random)),
-      'events': DeckState(drawPile: _shuffled(decks['events'], random)),
+      'conditions': DeckState(drawPile: conditionsDeck),
+      'events': DeckState(drawPile: eventsDeck),
+      'items': DeckState(drawPile: itemsDeck),
+      'supplies': DeckState(drawPile: suppliesDeck),
+      'specialItems': DeckState(drawPile: specialItemsDeck),
+      'monsters': DeckState(drawPile: monsterDeck),
+      'tasks': DeckState(drawPile: taskIds.skip(nextTask)),
+      'restlessReserve': DeckState(drawPile: restlessReserve),
     },
     conditionCards: conditions,
     cardDefinitions: definitions,
-    quests: QuestState(storyQuestIds: _strings(decks['storyQuests'])),
   );
 }
 
@@ -161,9 +217,43 @@ Map<String, CardDefinition> _allCards() {
 List<Map<String, Object?>> _cards(Object? raw) =>
     _list(_object(raw)['cards']).map(_object).toList(growable: false);
 
-List<String> _shuffled(Object? raw, Random random) {
-  final cards = _strings(raw).toList()..shuffle(random);
-  return cards;
+List<String> _expandedIds(
+  Iterable<Map<String, Object?>> rows, {
+  Map<String, int> copyOverrides = const {},
+}) => [
+  for (final row in rows)
+    for (
+      var copy = 0;
+      copy < (copyOverrides[_string(row, 'id')] ?? _copies(row));
+      copy++
+    )
+      _string(row, 'id'),
+];
+
+int _copies(Map<String, Object?> row) {
+  final copies = row['copies'] ?? 1;
+  if (copies is int && copies > 0) return copies;
+  throw FormatException('Invalid copies on ${row['id']}.');
+}
+
+HexTile _concealNonStartTile(HexTile tile) => HexTile(
+  id: tile.id,
+  coord: tile.coord,
+  type: tile.type,
+  opened: tile.type == HexTileType.start,
+  exits: tile.exits,
+  locationId: tile.locationId,
+  hasTerminal: tile.hasTerminal,
+  ventColor: tile.ventColor,
+  isBlocked: tile.isBlocked,
+);
+
+List<String> _strings(Object? raw) => _list(raw).cast<String>();
+
+int _int(Map<String, Object?> row, String key) {
+  final value = row[key];
+  if (value is int) return value;
+  throw FormatException('$key must be an integer.');
 }
 
 List<Map<String, Object?>> _rows(Object? raw, String key) =>
@@ -179,16 +269,8 @@ List<Object?> _list(Object? raw) {
   throw const FormatException('Expected content array.');
 }
 
-List<String> _strings(Object? raw) => _list(raw).cast<String>();
-
 String _string(Map<String, Object?> row, String key) {
   final value = row[key];
   if (value is String) return value;
   throw FormatException('$key must be a string.');
-}
-
-int _int(Map<String, Object?> row, String key) {
-  final value = row[key];
-  if (value is int) return value;
-  throw FormatException('$key must be an integer.');
 }
