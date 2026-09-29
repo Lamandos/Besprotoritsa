@@ -487,6 +487,14 @@
       "hunter": {
         "name": "Hunter",
         "description": "Kill two enemies in one turn."
+      },
+      "special": {
+        "name": "Special",
+        "description": "Obtain a card from the Special Items deck without trading for it."
+      },
+      "abscessive": {
+        "name": "Abscessive",
+        "description": "Pop more than 5 Abscesses at once."
       }
     },
     "event": {
@@ -1651,6 +1659,94 @@
       },
       "invasion-medical-bay-16": {
         "name": "INVASION: Medical Bay",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-crew-quarters-17": {
+        "name": "INVASION: Crew Quarters",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-laboratory-18": {
+        "name": "INVASION: Laboratory",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-storage-19": {
+        "name": "INVASION: Storage Bay",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-engineering-control-post-20": {
+        "name": "INVASION: Engineering Control Post",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-main-computer-21": {
+        "name": "INVASION: Main Computer",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-dining-hall-22": {
+        "name": "INVASION: Dining Hall",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-flight-control-23": {
+        "name": "INVASION: Flight Control",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-morgue-24": {
+        "name": "INVASION: Morgue",
         "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
         "option": {
           "o1": {

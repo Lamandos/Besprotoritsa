@@ -6000,92 +6000,244 @@
       ]
     },
     "event.invasion-crew-quarters-17": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          11
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 9,
+      "auditBatch": 20,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Crew Quarters.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-laboratory-18": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          11
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 9,
+      "auditBatch": 20,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Laboratory.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-storage-19": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          11
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 9,
+      "auditBatch": 20,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Storage Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-engineering-control-post-20": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          11
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 9,
+      "auditBatch": 20,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Engineering Control Post.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-main-computer-21": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          11
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 9,
+      "auditBatch": 20,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Main Computer.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-dining-hall-22": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          11
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 9,
+      "auditBatch": 20,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Dining Hall.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-flight-control-23": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          11
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 9,
+      "auditBatch": 20,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Flight Control.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-morgue-24": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          11
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 9,
+      "auditBatch": 20,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Morgue.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "task.researcher": {
       "status": "human-card-verified",
@@ -6429,26 +6581,72 @@
       }
     },
     "task.special": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 20,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Special-item emblem with a card-reward bag.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "special_items_received",
+        "targetValue": 1,
+        "window": "game",
+        "aggregation": "sum",
+        "rewardCredits": 5
+      }
     },
     "task.abscessive": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задачи.pdf",
-        "pageRange": "1-3"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of title, objective, numeric threshold, reward icon, artwork and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "task",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/tasks.json",
+      "importBatch": null,
+      "auditBatch": 20,
+      "category": "personal-task",
+      "slots": [],
+      "iconography": "Cluster of Abscess markers with a card-reward bag.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "taskFieldsReviewed": {
+        "metric": "boils_popped",
+        "targetValue": 6,
+        "window": "simultaneously",
+        "aggregation": "maximum",
+        "rewardCredits": 5
+      }
     },
     "task.exterminator": {
       "status": "human-inventory-verified",
