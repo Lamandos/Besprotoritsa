@@ -814,6 +814,151 @@
             "failure": "You fail to make anything."
           }
         }
+      },
+      "exoskeleton-terminal": {
+        "name": "Cargo Terminal",
+        "description": "You see a terminal for cargo loaders’ special equipment on the wall. Its door is damaged.",
+        "option": {
+          "o1": {
+            "action": "Force open the terminal door.",
+            "success": "Behind it is a heavy-load suit. Take the Exoskeleton from the Special Items deck.",
+            "failure": "The door is jammed shut."
+          }
+        }
+      },
+      "contraband-cache": {
+        "name": "Smugglers’ Stash",
+        "description": "Behind the electrical panel door is a note with the location of a stash beneath the navigation terminal.",
+        "option": {
+          "o1": {
+            "action": "Move the terminal.",
+            "success": "There is a sealed box beneath it. Draw an Item card.",
+            "failure": "You hit the terminal. Take 1 damage."
+          },
+          "o2": {
+            "action": "Leave the stash alone.",
+            "success": "You decide the stash must be a trap and leave.",
+            "failure": "You decide the stash must be a trap and leave."
+          }
+        }
+      },
+      "falling-monster": {
+        "name": "Falling Monster",
+        "description": "A mangled body drops from the ceiling and reaches for your throat with its teeth.",
+        "option": {
+          "o1": {
+            "action": "Push the monster away.",
+            "success": "You smash the monster’s head with the first thing at hand. Discard a Weapon card.",
+            "failure": "You fall onto a spike. Take 3 damage."
+          }
+        }
+      },
+      "collapsed-panel": {
+        "name": "Beeping Under the Panel",
+        "description": "You hear a muffled beep beneath a collapsed ceiling panel.",
+        "option": {
+          "o1": {
+            "action": "Find the source of the sound.",
+            "success": "There is a robot under the debris. Take a Robot from the Item deck.",
+            "failure": "You are injured while clearing the rubble. Take 1 damage."
+          },
+          "o2": {
+            "action": "Don’t risk it; get away.",
+            "success": "You leave and move to an adjacent sector.",
+            "failure": "You leave and move to an adjacent sector."
+          }
+        }
+      },
+      "blood-trail": {
+        "name": "Bloody Tracks",
+        "description": "You notice bloody tracks, but they clearly do not belong to a human.",
+        "option": {
+          "o1": {
+            "action": "Follow the tracks.",
+            "success": "The tracks lead to a dead human and monster. Draw a Weapon card.",
+            "failure": "You get lost and run into a monster. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Do not follow the tracks.",
+            "success": "A monster attacks from behind. Take 3 damage.",
+            "failure": "A monster attacks from behind. Take 3 damage."
+          }
+        }
+      },
+      "ship-map": {
+        "name": "Unknown Map",
+        "description": "You found a ship map showing an unfamiliar passage.",
+        "option": {
+          "o1": {
+            "action": "Study the map.",
+            "success": "You find the passage and a droid. Take a Robot from the Item deck.",
+            "failure": "You cannot find your way out of the passage. Take one fewer action next turn."
+          },
+          "o2": {
+            "action": "Don’t waste time.",
+            "success": "Leave the map and reveal any unexplored map tile.",
+            "failure": "Leave the map and reveal any unexplored map tile."
+          }
+        }
+      },
+      "cache-symbols": {
+        "name": "Stash Symbols",
+        "description": "You find markings on the wall pointing to a supply stash.",
+        "option": {
+          "o1": {
+            "action": "Study the symbols.",
+            "success": "You find the stash. Draw the top 3 Supply cards, choose 1, and shuffle the others back.",
+            "failure": "You cannot decipher the symbols and waste time."
+          }
+        }
+      },
+      "scientist-case": {
+        "name": "Scientist’s Briefcase",
+        "description": "You find a dead scientist clutching a metal briefcase to their chest.",
+        "option": {
+          "o1": {
+            "action": "Open the briefcase.",
+            "success": "Inside is a healing serum. Restore all health.",
+            "failure": "There are only incomprehensible notes from the scientist."
+          },
+          "o2": {
+            "action": "Leave the body undisturbed and search elsewhere.",
+            "success": "There is a useful item on the nearby shelves. Draw a Supply card.",
+            "failure": "There is a useful item on the nearby shelves. Draw a Supply card."
+          }
+        }
+      },
+      "inventory-notes": {
+        "name": "Inventory Notes",
+        "description": "You stumble over a box of charred papers: records of the latest deliveries.",
+        "option": {
+          "o1": {
+            "action": "Try to make sense of the notes.",
+            "success": "A route map leads to an equipment storeroom. Draw 2 Item cards.",
+            "failure": "The notes are too damaged to be useful."
+          }
+        }
+      },
+      "nest-room": {
+        "name": "Monster Nest",
+        "description": "You enter a room and see that monsters have made a nest there.",
+        "option": {
+          "o1": {
+            "action": "Burn the nest.",
+            "success": "If you have a flamethrower, the nest is destroyed.",
+            "failure": "You have no flamethrower, or you decide not to spend it."
+          },
+          "o2": {
+            "action": "Make an explosive mixture.",
+            "success": "You find ingredients for explosives.",
+            "failure": "Your search attracts the monster guarding the nest. Draw a Monster card and fight it."
+          },
+          "o3": {
+            "action": "Seal off the room.",
+            "success": "You weld the door shut, keeping the monsters from reaching you.",
+            "failure": "The welding noise attracts a monster. Draw a Monster card, place it in your sector, and move to an adjacent sector."
+          }
+        }
       }
     },
     "quest": {
