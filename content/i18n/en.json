@@ -203,6 +203,48 @@
       "f1t-b07": {
         "name": "F1T-B07",
         "description": "During an Endurance or Agility check, you may exhaust this robot to reroll all dice."
+      },
+      "prot3-ct": {
+        "name": "PROT3-CT",
+        "description": "You may exhaust this robot to ignore any damage until the end of the round."
+      },
+      "h3-al": {
+        "name": "H3-AL",
+        "description": "During your turn, you may exhaust this robot to restore 3 health to yourself or an ally."
+      },
+      "pipe": {
+        "name": "Pipe",
+        "description": "Reroll one die in combat."
+      },
+      "brass-knuckles": {
+        "name": "Makeshift Knuckles",
+        "description": "During an attack, you may take 2 damage to add 1 hit."
+      },
+      "helmet": {
+        "name": "Helmet",
+        "description": "+1 Defense."
+      }
+    },
+    "supply": {
+      "nanobots": {
+        "name": "Nanobots",
+        "description": "Discard to restore 1 health and gain +1 Defense until the end of the round."
+      },
+      "air-canister": {
+        "name": "Air Canister",
+        "description": "Discard this card and spend an action to move once between airlocks."
+      },
+      "adrenaline-supply": {
+        "name": "Adrenaline",
+        "description": "During your turn, discard this card to gain 1 additional action."
+      },
+      "credits": {
+        "name": "Credits",
+        "description": "Discard immediately to gain 5 credits."
+      },
+      "defibrillator": {
+        "name": "Defibrillator",
+        "description": "During your turn, discard this card to reroll any number of dice."
       }
     }
   }
