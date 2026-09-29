@@ -1284,6 +1284,161 @@
             "failure": "The corporation protects its bots well, and you get nothing."
           }
         }
+      },
+      "lockers": {
+        "name": "Personal Lockers",
+        "description": "A blood trail leads to the personal lockers of the local workers.",
+        "option": {
+          "o1": {
+            "action": "Check the lockers.",
+            "success": "There are bloodstained clothes in one locker. Draw a Clothing card.",
+            "failure": "There are bloodstained clothes in one locker. Draw a Clothing card."
+          },
+          "o2": {
+            "action": "Get away.",
+            "success": "You decide not to tempt fate and leave.",
+            "failure": "You decide not to tempt fate and leave."
+          }
+        }
+      },
+      "body-pile": {
+        "name": "Seven Bags",
+        "description": "Seven bags containing the bodies of dead crew members are piled in the corner.",
+        "option": {
+          "o1": {
+            "action": "Search the pile of bodies.",
+            "success": "There are personal belongings under the bags. Draw a Clothing card and a Restless card, and fight it.",
+            "failure": "Draw a Restless card and fight it."
+          },
+          "o2": {
+            "action": "Leave the dead undisturbed.",
+            "success": "You are content that the dead are not following you.",
+            "failure": "You are content that the dead are not following you."
+          }
+        }
+      },
+      "junk-medical": {
+        "name": "Medical Junk",
+        "description": "A heap of rubble and junk catches your attention.",
+        "option": {
+          "o1": {
+            "action": "Quickly search the pile.",
+            "success": "There is an implant left in a medical case. Take an Implant from the Item deck.",
+            "failure": "There is an implant left in a medical case. Take an Implant from the Item deck."
+          },
+          "o2": {
+            "action": "Search the junk for something useful.",
+            "success": "You find an Item card.",
+            "failure": "You cut yourself on a rusty beam. Take 1 damage."
+          },
+          "o3": {
+            "action": "Make your way to the far crates.",
+            "success": "There is nothing useful in the crates. Gain 1 credit.",
+            "failure": "You give up after an unsuccessful attempt."
+          }
+        }
+      },
+      "junk-credits": {
+        "name": "Waist Pouch",
+        "description": "Among the rubble, junk, and crates, you notice someone’s belt.",
+        "option": {
+          "o1": {
+            "action": "Quickly search the pile.",
+            "success": "There are 5 credits in the pouch.",
+            "failure": "There are 5 credits in the pouch."
+          },
+          "o2": {
+            "action": "Search the junk for something useful.",
+            "success": "There is an Item card in the far crate.",
+            "failure": "The junk starts to slide, so you retreat."
+          }
+        }
+      },
+      "junk-guitar": {
+        "name": "Heap of Junk",
+        "description": "The stench from the pile of rubble drives even the monsters away.",
+        "option": {
+          "o1": {
+            "action": "Quickly search the pile.",
+            "success": "You find an almost intact guitar and leave.",
+            "failure": "You find an almost intact guitar and leave."
+          },
+          "o2": {
+            "action": "Make your way to the far crates.",
+            "success": "A stash is tied to the pile. Gain 10 credits.",
+            "failure": "The junk is too slippery, and you decide not to climb over it."
+          }
+        }
+      },
+      "shelf-equipment": {
+        "name": "Top Shelf",
+        "description": "You see some equipment on the top shelf of a rack in the corner.",
+        "option": {
+          "o1": {
+            "action": "Take the equipment.",
+            "success": "You take the loot. Draw an Item card.",
+            "failure": "The shelves give way. Take 2 damage."
+          },
+          "o2": {
+            "action": "Search the lower shelves.",
+            "success": "You find something useful. Draw a Supply card.",
+            "failure": "You find nothing useful."
+          }
+        }
+      },
+      "falling-beam": {
+        "name": "Falling Beam",
+        "description": "A massive metal beam falls on you and pins you to the floor.",
+        "option": {
+          "o1": {
+            "action": "Get out from under the rubble.",
+            "success": "You take 1 damage.",
+            "failure": "Take 3 damage and discard an Armor card."
+          }
+        }
+      },
+      "meteor-stream": {
+        "name": "Meteor Stream",
+        "description": "You feel a series of jolts: the ship has entered a meteor stream.",
+        "option": {
+          "o1": {
+            "action": "Find shelter quickly.",
+            "success": "Each player rolls a die and takes damage equal to the result.",
+            "failure": "Each player rolls a die and takes damage equal to the result."
+          }
+        }
+      },
+      "fire": {
+        "name": "Fire",
+        "description": "Metal groans and pops as fire spreads through the ventilation system.",
+        "option": {
+          "o1": {
+            "action": "Escape the fire.",
+            "success": "Roll a die and take damage equal to the result.",
+            "failure": "Roll a die and take damage equal to the result."
+          },
+          "o2": {
+            "action": "Try to put out the fire.",
+            "success": "Take 3 damage.",
+            "failure": "Take 3 damage."
+          }
+        }
+      },
+      "monster-horde": {
+        "name": "Horde",
+        "description": "A loud explosion has scattered a monster nest. Fast footsteps are getting louder.",
+        "option": {
+          "o1": {
+            "action": "Prepare for battle.",
+            "success": "Draw a Monster card and fight it.",
+            "failure": "Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Hide as quickly as possible.",
+            "success": "Take 2 damage.",
+            "failure": "Take 2 damage."
+          }
+        }
       }
     },
     "quest": {
