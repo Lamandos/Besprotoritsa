@@ -2963,7 +2963,7 @@
       "confirmedBy": "author"
     },
     "starter-item.lucky-socks": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/персонажи.pdf",
@@ -2971,15 +2971,26 @@
           4
         ]
       },
-      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
-      "catalogDefinitionPresent": false,
+      "scope": "PDF sheet 4 visually checked: title, category icon, stats/effect text, and artwork transcribed into catalog and RU/EN translations",
+      "copiesInData": 1,
+      "copiesStatus": "one unique physical starter card, printed once on the character sheets",
+      "catalogDefinitionPresent": true,
       "mvpDefinitionPresent": false,
-      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+      "catalogDefinition": "content/items.json",
+      "importBatch": 8,
+      "category": "clothing",
+      "slots": [
+        "clothing"
+      ],
+      "iconography": "Lucky socks with a four-leaf clover",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true
     },
     "starter-item.pistol": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/персонажи.pdf",
@@ -2987,15 +2998,27 @@
           4
         ]
       },
-      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
-      "catalogDefinitionPresent": false,
+      "scope": "PDF sheet 4 visually checked: title, category icon, stats/effect text, and artwork transcribed into catalog and RU/EN translations",
+      "copiesInData": 1,
+      "copiesStatus": "one unique physical starter card, printed once on the character sheets",
+      "catalogDefinitionPresent": true,
       "mvpDefinitionPresent": true,
-      "mvpDefinition": "content/mvp/items/pistol.json"
+      "mvpDefinition": "content/mvp/items/pistol.json",
+      "catalogDefinition": "content/items.json",
+      "importBatch": 8,
+      "category": "weapon",
+      "slots": [
+        "weapon"
+      ],
+      "iconography": "Pistol illustration",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true
     },
     "starter-item.hard-hat": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/персонажи.pdf",
@@ -3003,15 +3026,26 @@
           4
         ]
       },
-      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
-      "catalogDefinitionPresent": false,
+      "scope": "PDF sheet 4 visually checked: title, category icon, stats/effect text, and artwork transcribed into catalog and RU/EN translations",
+      "copiesInData": 1,
+      "copiesStatus": "one unique physical starter card, printed once on the character sheets",
+      "catalogDefinitionPresent": true,
       "mvpDefinitionPresent": false,
-      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+      "catalogDefinition": "content/items.json",
+      "importBatch": 8,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Orange hard hat illustration",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true
     },
     "starter-item.backpack": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/персонажи.pdf",
@@ -3019,15 +3053,26 @@
           4
         ]
       },
-      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
-      "catalogDefinitionPresent": false,
+      "scope": "PDF sheet 4 visually checked: title, category icon, stats/effect text, and artwork transcribed into catalog and RU/EN translations",
+      "copiesInData": 1,
+      "copiesStatus": "one unique physical starter card, printed once on the character sheets",
+      "catalogDefinitionPresent": true,
       "mvpDefinitionPresent": false,
-      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+      "catalogDefinition": "content/items.json",
+      "importBatch": 8,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "Backpack illustration",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true
     },
     "starter-item.smuggler-mark": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/персонажи.pdf",
@@ -3035,15 +3080,24 @@
           4
         ]
       },
-      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
-      "catalogDefinitionPresent": false,
+      "scope": "PDF sheet 4 visually checked: title, category icon, stats/effect text, and artwork transcribed into catalog and RU/EN translations",
+      "copiesInData": 1,
+      "copiesStatus": "one unique physical starter card, printed once on the character sheets",
+      "catalogDefinitionPresent": true,
       "mvpDefinitionPresent": false,
-      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+      "catalogDefinition": "content/items.json",
+      "importBatch": 8,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Skull and crossbones mark",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true
     },
     "starter-item.medic-bag": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/персонажи.pdf",
@@ -3051,15 +3105,24 @@
           4
         ]
       },
-      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
-      "catalogDefinitionPresent": false,
+      "scope": "PDF sheet 4 visually checked: title, category icon, stats/effect text, and artwork transcribed into catalog and RU/EN translations",
+      "copiesInData": 1,
+      "copiesStatus": "one unique physical starter card, printed once on the character sheets",
+      "catalogDefinitionPresent": true,
       "mvpDefinitionPresent": false,
-      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+      "catalogDefinition": "content/items.json",
+      "importBatch": 8,
+      "category": "supply",
+      "slots": [],
+      "iconography": "Medic bag with red cross",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true
     },
     "starter-item.gu4-rd": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/персонажи.pdf",
@@ -3067,15 +3130,27 @@
           4
         ]
       },
-      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
-      "catalogDefinitionPresent": false,
+      "scope": "PDF sheet 4 visually checked: title, category icon, stats/effect text, and artwork transcribed into catalog and RU/EN translations",
+      "copiesInData": 1,
+      "copiesStatus": "one unique physical starter card, printed once on the character sheets",
+      "catalogDefinitionPresent": true,
       "mvpDefinitionPresent": true,
-      "mvpDefinition": "content/mvp/items/gu4-rd.json"
+      "mvpDefinition": "content/mvp/items/gu4-rd.json",
+      "catalogDefinition": "content/items.json",
+      "importBatch": 8,
+      "category": "robot",
+      "slots": [
+        "robot"
+      ],
+      "iconography": "Tracked GU4-RD robot illustration",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true
     },
     "starter-item.spacesuit-mk2": {
-      "status": "human-inventory-verified",
+      "status": "human-card-verified",
       "reviewedAt": "2026-09-29",
       "source": {
         "pdf": "materials/персонажи.pdf",
@@ -3083,12 +3158,23 @@
           4
         ]
       },
-      "scope": "printed starter card is present and referenced by a character; this status does not assert that all card fields have a catalog definition",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; one starter-card reference occurs on a character board",
-      "catalogDefinitionPresent": false,
+      "scope": "PDF sheet 4 visually checked: title, category icon, stats/effect text, and artwork transcribed into catalog and RU/EN translations",
+      "copiesInData": 1,
+      "copiesStatus": "one unique physical starter card, printed once on the character sheets",
+      "catalogDefinitionPresent": true,
       "mvpDefinitionPresent": false,
-      "dataGap": "No item definition in content/items.json or content/mvp/items/"
+      "catalogDefinition": "content/items.json",
+      "importBatch": 8,
+      "category": "armor",
+      "slots": [
+        "armor"
+      ],
+      "iconography": "MK2 diving suit illustration",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true
     }
   },
   "pdfExtraction": {

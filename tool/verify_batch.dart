@@ -13,7 +13,16 @@ Future<void> main(List<String> arguments) async {
   if (decoded is! Map<String, dynamic> || decoded['cards'] is! List<dynamic>) {
     throw FormatException('$path must contain a cards array.');
   }
-  final cards = decoded['cards']! as List<dynamic>;
+  final allCards = decoded['cards']! as List<dynamic>;
+  final cards = target.sourceDeckFilter == null
+      ? allCards
+      : allCards
+            .where(
+              (raw) =>
+                  raw is Map<String, dynamic> &&
+                  raw['sourceDeck'] == target.sourceDeckFilter,
+            )
+            .toList();
   final schema = await readJsonObject(File(schemaPath));
   final validator = JsonSchemaValidator(schema);
   final translations =
@@ -80,7 +89,8 @@ final class _BatchRequest {
     }
     throw const FormatException(
       'Usage: dart run tool/verify_batch.dart --deck '
-      '<items|supplies|events|special-items> [--batch <number>]',
+      '<items|starter-items|supplies|events|special-items> '
+      '[--batch <number>]',
     );
   }
 
@@ -92,6 +102,7 @@ final class _BatchTarget {
   const _BatchTarget({
     required this.path,
     required this.schemaName,
+    this.sourceDeckFilter,
     this.requiresEventFields = false,
     this.hasIndependentBatches = false,
   });
@@ -100,6 +111,11 @@ final class _BatchTarget {
     'items' => const _BatchTarget(
       path: 'content/items.json',
       schemaName: 'item',
+    ),
+    'starter-items' => const _BatchTarget(
+      path: 'content/items.json',
+      schemaName: 'item',
+      sourceDeckFilter: 'starterItems',
     ),
     'supplies' => const _BatchTarget(
       path: 'content/supplies.json',
@@ -121,6 +137,7 @@ final class _BatchTarget {
 
   final String path;
   final String schemaName;
+  final String? sourceDeckFilter;
   final bool requiresEventFields;
   final bool hasIndependentBatches;
 }

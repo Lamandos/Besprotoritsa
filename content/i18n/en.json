@@ -6,6 +6,40 @@
     },
     "location": {
       "unknown": ""
+    },
+    "item": {
+      "lucky-socks": {
+        "name": "Lucky Socks",
+        "description": "+1 Endurance. +1 Agility."
+      },
+      "spacesuit-mk2": {
+        "name": "Spacesuit MK2",
+        "description": "+1 Defense. +1 Endurance. Allows movement along the ship's outer hull between airlocks."
+      },
+      "gu4-rd": {
+        "name": "GU4-RD",
+        "description": "Before attacking, roll 1 die. On a success, deal 1 damage to the enemy."
+      },
+      "medic-bag": {
+        "name": "Field Medic's Bag",
+        "description": "Spend an action and credits to heal yourself or another player in your space or an adjacent space (1 credit = 1 health)."
+      },
+      "hard-hat": {
+        "name": "Hard Hat",
+        "description": "+1 Defense. +1 Repair."
+      },
+      "backpack": {
+        "name": "Backpack",
+        "description": "Allows you to carry 2 additional items."
+      },
+      "pistol": {
+        "name": "Pistol",
+        "description": "+2 combat strength. Reroll one die once per attack."
+      },
+      "smuggler-mark": {
+        "name": "Smuggler's Mark",
+        "description": "Get a 2-credit discount on any purchase. You may trade one item with any player anywhere on the map as an action."
+      }
     }
   }
 }

@@ -8,6 +8,7 @@ dart run tool/validate_schemas.dart
 dart run tool/validate_content.dart --content-set mvp
 dart run tool/content_report.dart
 dart run tool/verify_batch.dart --deck items
+dart run tool/verify_batch.dart --deck starter-items --batch 8
 dart run tool/verify_batch.dart --deck supplies
 dart run tool/verify_batch.dart --deck events
 dart run tool/verify_batch.dart --deck special-items

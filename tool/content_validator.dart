@@ -298,7 +298,7 @@ void _validateSchemas(
 }
 
 void _validateMetadata(List<_Record> records, List<String> issues) {
-  const allowedSources = {'items', 'supplies', 'specialItems'};
+  const allowedSources = {'items', 'supplies', 'starterItems', 'specialItems'};
   for (final record in records) {
     for (final field in const ['importBatch', 'copies']) {
       final value = record.value[field];
@@ -319,10 +319,12 @@ void _validateMetadata(List<_Record> records, List<String> issues) {
     if (record.namespace == 'catalog:item' &&
         source != null &&
         source != 'items' &&
-        source != 'supplies') {
+        source != 'supplies' &&
+        source != 'starterItems') {
       issues.add(
-        '${record.label}.sourceDeck: catalog item must use "items" or '
-        '"supplies"; "specialItems" records belong in special_items.json',
+        '${record.label}.sourceDeck: catalog item must use "items", '
+        '"supplies" or "starterItems"; "specialItems" records belong in '
+        'special_items.json',
       );
     }
     if (record.schema == 'supply' && source != null && source != 'supplies') {

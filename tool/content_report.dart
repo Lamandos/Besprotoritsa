@@ -6,6 +6,7 @@ import 'validate_schemas.dart';
 const _decks = <String, ({String path, String schema})>{
   'monsters': (path: 'content/monsters.json', schema: 'monster'),
   'items': (path: 'content/items.json', schema: 'item'),
+  'starter-items': (path: 'content/items.json', schema: 'item'),
   'supplies': (path: 'content/supplies.json', schema: 'supply'),
   'events': (path: 'content/events.json', schema: 'event'),
   'special-items': (
@@ -17,6 +18,7 @@ const _decks = <String, ({String path, String schema})>{
 const _sources = <String, List<String>>{
   'monsters': ['materials/монстры.pdf', 'materials/монстры жетоны.pdf'],
   'events': ['materials/события.pdf'],
+  'starter-items': ['materials/персонажи.pdf'],
 };
 
 Future<void> main(List<String> arguments) async {
@@ -32,7 +34,7 @@ String? _parseDeck(List<String> arguments) {
   if (arguments.length != 2 || arguments.first != '--deck') {
     throw const FormatException(
       'Usage: dart run tool/content_report.dart [--deck '
-      'monsters|items|supplies|events|special-items]',
+      'monsters|items|starter-items|supplies|events|special-items]',
     );
   }
   final deck = arguments[1];
@@ -53,6 +55,7 @@ Future<void> _report(
   }
   var cards = rawCards.whereType<Map<String, dynamic>>().where((card) {
     if (name == 'items') return card['sourceDeck'] == 'items';
+    if (name == 'starter-items') return card['sourceDeck'] == 'starterItems';
     if (name == 'monsters') {
       final features = card['features'];
       return card['id'] != 'boil' &&

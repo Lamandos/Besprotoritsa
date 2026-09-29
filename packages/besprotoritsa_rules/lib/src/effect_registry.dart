@@ -154,6 +154,8 @@ final class EffectRegistry {
     CardBehaviorHook('dice.reroll.all'),
     CardBehaviorHook('combat.pushUnkilledEnemy'),
     CardBehaviorHook('health.healingBonus'),
+    CardBehaviorHook('health.restorePerCredit'),
+    CardBehaviorHook('economy.purchaseDiscount.2'),
     CardBehaviorHook('damage.ignoreBoil'),
     // Data marker for condition cards whose numeric modifiers are interpreted
     // by the inventory/stat calculation layer.

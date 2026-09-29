@@ -1,1 +1,1 @@
-{"file":"items.json","path":["cards",0,"sourceDeck"],"value":"specialItems","expected":"catalog item must use \"items\" or \"supplies\""}
+{"file":"items.json","path":["cards",0,"sourceDeck"],"value":"specialItems","expected":"catalog item must use \"items\", \"supplies\" or \"starterItems\""}
