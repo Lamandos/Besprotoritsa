@@ -26,6 +26,7 @@
       }
     },
     "nextQuestIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "discardQuestIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
     "prerequisiteQuestIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
     "endsGame": { "type": "boolean" },
     "nameKey": { "$ref": "#/$defs/localizationKey" },

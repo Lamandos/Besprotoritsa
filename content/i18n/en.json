@@ -1776,7 +1776,7 @@
     "quest": {
       "quest-01": {
         "name": "Awakening",
-        "description": "Find the other crew members and learn what happened."
+        "description": "Your awakening is accompanied by a message on the monitor in front of you: “sleep cycle complete.” The nearby chambers are empty, which is strange: they should not have woken before you, and those that are occupied do not respond to manual control. Your relief crew is missing too, which is far from normal procedure. The lack of communication and the frightening grinding behind the wall worry you even more. You must find out what is happening."
       },
       "quest-02": {
         "name": "Survival Law",
@@ -1881,6 +1881,14 @@
       "quest-27": {
         "name": "Mother Instinct",
         "description": "After defeating another fiend, you have no time even to catch your breath before a howl reaches you, chilling you to the bone. Fighting your instinct to run from the sound as fast as possible, you realize the only way is through the dark corridors it comes from."
+      },
+      "quest-28": {
+        "name": "Sweet Dreams",
+        "description": "The system diagnostic found many faults, including a failure in the dream-suppression system in the cryosleep pods in the anabiosis bay. After fixing all the errors, you decide to return and check the place where it all began: your cryosleep pod."
+      },
+      "quest-29": {
+        "name": "Epilogue",
+        "description": "As soon as you lie down, you immediately black out. Your awakening is accompanied by a message on the monitor in front of you: “sleep cycle complete.” The nearby chambers are empty, which is strange: they should not have woken before you, and those that are occupied do not respond to manual control. Your relief crew is missing too, which is far from normal procedure. The lack of communication and the frightening grinding behind the wall worry you even more. You must find out what is happening…"
       }
     }
   }

@@ -234,7 +234,10 @@
         "quest-10"
       ],
       "nameKey": "content.quest.quest-08.name",
-      "descKey": "content.quest.quest-08.description"
+      "descKey": "content.quest.quest-08.description",
+      "discardQuestIds": [
+        "quest-24"
+      ]
     },
     {
       "id": "quest-09",
@@ -263,7 +266,9 @@
         "quest-11"
       ],
       "nameKey": "content.quest.quest-09.name",
-      "descKey": "content.quest.quest-09.description"
+      "descKey": "content.quest.quest-09.description",
+      "spawnMonsterId": "viy",
+      "spawnLocationId": "flight-control"
     },
     {
       "id": "quest-10",
@@ -322,7 +327,9 @@
         "quest-10"
       ],
       "nameKey": "content.quest.quest-11.name",
-      "descKey": "content.quest.quest-11.description"
+      "descKey": "content.quest.quest-11.description",
+      "spawnMonsterId": "mother",
+      "spawnLocationId": "escape-pods"
     },
     {
       "id": "quest-12",
@@ -388,7 +395,8 @@
       ],
       "reward": {
         "credits": 0,
-        "items": []
+        "items": [],
+        "creditRollDicePerPlayer": 6
       },
       "nextQuestIds": [
         "quest-16"
@@ -448,7 +456,9 @@
         "quest-19"
       ],
       "nameKey": "content.quest.quest-16.name",
-      "descKey": "content.quest.quest-16.description"
+      "descKey": "content.quest.quest-16.description",
+      "spawnMonsterId": "swarm",
+      "spawnLocationId": "armory"
     },
     {
       "id": "quest-17",
@@ -658,7 +668,10 @@
         "quest-25"
       ],
       "nameKey": "content.quest.quest-24.name",
-      "descKey": "content.quest.quest-24.description"
+      "descKey": "content.quest.quest-24.description",
+      "discardQuestIds": [
+        "quest-08"
+      ]
     },
     {
       "id": "quest-25",
@@ -693,7 +706,9 @@
         "quest-27"
       ],
       "nameKey": "content.quest.quest-25.name",
-      "descKey": "content.quest.quest-25.description"
+      "descKey": "content.quest.quest-25.description",
+      "spawnMonsterId": "viy",
+      "spawnLocationId": "armory"
     },
     {
       "id": "quest-26",

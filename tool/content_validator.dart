@@ -641,7 +641,11 @@ void _validateReferences(
     };
     for (final record in group) {
       if (record.schema == 'quest') {
-        for (final field in const ['nextQuestIds', 'prerequisiteQuestIds']) {
+        for (final field in const [
+          'nextQuestIds',
+          'discardQuestIds',
+          'prerequisiteQuestIds',
+        ]) {
           final values = record.value[field];
           if (values is List) {
             for (final target in values.whereType<String>()) {

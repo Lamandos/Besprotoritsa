@@ -82,6 +82,7 @@ final class QuestEngine {
       if (ready == null) break;
       pendingForcedQuestId = null;
       active.remove(ready.id);
+      active.removeWhere(ready.discardQuestIds.contains);
       completed.add(ready.id);
       completedNow.add(ready.id);
       rewards.add(QuestRewardGrant(questId: ready.id, reward: ready.reward));

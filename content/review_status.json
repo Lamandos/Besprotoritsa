@@ -6793,17 +6793,17 @@
           1
         ]
       },
-      "scope": "Card-by-card visual check of number, chapter title, story text, objective bullets, location and skill icons, reward/transition and physical copy; RU source and EN translation checked.",
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
       "copiesInData": 1,
       "sourceDeck": "story-quest",
-      "copiesStatus": "1 physical card, 1 catalog record",
+      "copiesStatus": "one printed card and one runtime record",
       "catalogDefinitionPresent": true,
       "catalogDefinition": "content/quests.json",
       "importBatch": null,
-      "auditBatch": 12,
+      "auditBatch": 24,
       "category": "story-quest",
       "slots": [],
-      "iconography": "Blue ornamental story-card header; location and science-check symbols; transition to quest 2.",
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
       "translations": [
         "ru",
         "en"
@@ -6814,9 +6814,20 @@
         "number": 1,
         "chapter": 1,
         "targetLocation": "crew-quarters",
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
         "conditions": [
-          "arrive",
-          "science skill check"
+          {
+            "id": "arrive-crew-quarters",
+            "type": "arrive",
+            "locationId": "crew-quarters"
+          },
+          {
+            "id": "science-crew-quarters",
+            "type": "skill_check",
+            "skill": "science",
+            "locationId": "crew-quarters"
+          }
         ],
         "reward": {
           "credits": 0,
@@ -6824,7 +6835,9 @@
         },
         "nextQuestIds": [
           "quest-02"
-        ]
+        ],
+        "discardQuestIds": [],
+        "prerequisiteQuestIds": []
       }
     },
     "quest.quest-02": {
@@ -7161,17 +7174,17 @@
           2
         ]
       },
-      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
       "copiesInData": 1,
       "sourceDeck": "story-quest",
-      "copiesStatus": "1 physical card, 1 catalog record",
+      "copiesStatus": "one printed card and one runtime record",
       "catalogDefinitionPresent": true,
       "catalogDefinition": "content/quests.json",
       "importBatch": null,
-      "auditBatch": 22,
+      "auditBatch": 24,
       "category": "story-quest",
       "slots": [],
-      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
       "translations": [
         "ru",
         "en"
@@ -7182,6 +7195,8 @@
         "number": 8,
         "chapter": 7,
         "targetLocation": "storage",
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
         "conditions": [
           {
             "id": "arrive-storage",
@@ -7203,8 +7218,12 @@
           "quest-09",
           "quest-10"
         ],
+        "discardQuestIds": [
+          "quest-24"
+        ],
         "prerequisiteQuestIds": []
-      }
+      },
+      "sourceFinding": "Printed branch discard is now represented by discardQuestIds; quest completion removes the other active branch."
     },
     "quest.quest-09": {
       "status": "human-card-verified",
@@ -7215,17 +7234,17 @@
           2
         ]
       },
-      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
       "copiesInData": 1,
       "sourceDeck": "story-quest",
-      "copiesStatus": "1 physical card, 1 catalog record",
+      "copiesStatus": "one printed card and one runtime record",
       "catalogDefinitionPresent": true,
       "catalogDefinition": "content/quests.json",
       "importBatch": null,
-      "auditBatch": 22,
+      "auditBatch": 24,
       "category": "story-quest",
       "slots": [],
-      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
       "translations": [
         "ru",
         "en"
@@ -7236,6 +7255,8 @@
         "number": 9,
         "chapter": 7,
         "targetLocation": "flight-control",
+        "spawnMonsterId": "viy",
+        "spawnLocationId": "flight-control",
         "conditions": [
           {
             "id": "arrive-flight-control",
@@ -7257,8 +7278,10 @@
         "nextQuestIds": [
           "quest-11"
         ],
+        "discardQuestIds": [],
         "prerequisiteQuestIds": []
-      }
+      },
+      "sourceFinding": "Printed boss placement is now a typed spawnMonsterId/spawnLocationId pair and is reference-validated."
     },
     "quest.quest-10": {
       "status": "human-card-verified",
@@ -7322,17 +7345,17 @@
           2
         ]
       },
-      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
       "copiesInData": 1,
       "sourceDeck": "story-quest",
-      "copiesStatus": "1 physical card, 1 catalog record",
+      "copiesStatus": "one printed card and one runtime record",
       "catalogDefinitionPresent": true,
       "catalogDefinition": "content/quests.json",
       "importBatch": null,
-      "auditBatch": 22,
+      "auditBatch": 24,
       "category": "story-quest",
       "slots": [],
-      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
       "translations": [
         "ru",
         "en"
@@ -7343,6 +7366,8 @@
         "number": 11,
         "chapter": 9,
         "targetLocation": "escape-pods",
+        "spawnMonsterId": "mother",
+        "spawnLocationId": "escape-pods",
         "conditions": [
           {
             "id": "arrive-escape-pods-final",
@@ -7362,11 +7387,13 @@
         "nextQuestIds": [
           "quest-12"
         ],
+        "discardQuestIds": [],
         "prerequisiteQuestIds": [
           "quest-09",
           "quest-10"
         ]
-      }
+      },
+      "sourceFinding": "Printed boss placement is now a typed spawnMonsterId/spawnLocationId pair and is reference-validated."
     },
     "quest.quest-12": {
       "status": "human-card-verified",
@@ -7477,17 +7504,17 @@
           2
         ]
       },
-      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
       "copiesInData": 1,
       "sourceDeck": "story-quest",
-      "copiesStatus": "1 physical card, 1 catalog record",
+      "copiesStatus": "one printed card and one runtime record",
       "catalogDefinitionPresent": true,
       "catalogDefinition": "content/quests.json",
       "importBatch": null,
-      "auditBatch": 22,
+      "auditBatch": 24,
       "category": "story-quest",
       "slots": [],
-      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
       "translations": [
         "ru",
         "en"
@@ -7498,6 +7525,8 @@
         "number": 14,
         "chapter": 0,
         "targetLocation": null,
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
         "conditions": [
           {
             "id": "damage-tokens",
@@ -7508,14 +7537,16 @@
         ],
         "reward": {
           "credits": 0,
-          "items": []
+          "items": [],
+          "creditRollDicePerPlayer": 6
         },
         "nextQuestIds": [
           "quest-16"
         ],
+        "discardQuestIds": [],
         "prerequisiteQuestIds": []
       },
-      "sourceFinding": "Printed card grants each player credits equal to a 6-die roll after the 10 damage-token objective. The current QuestReward schema models fixed credits/items only; this dynamic reward is not represented."
+      "sourceFinding": "The six-dice credit reward per player is now represented by creditRollDicePerPlayer."
     },
     "quest.quest-15": {
       "status": "human-card-verified",
@@ -7584,17 +7615,17 @@
           3
         ]
       },
-      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
       "copiesInData": 1,
       "sourceDeck": "story-quest",
-      "copiesStatus": "1 physical card, 1 catalog record",
+      "copiesStatus": "one printed card and one runtime record",
       "catalogDefinitionPresent": true,
       "catalogDefinition": "content/quests.json",
       "importBatch": null,
-      "auditBatch": 22,
+      "auditBatch": 24,
       "category": "story-quest",
       "slots": [],
-      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
       "translations": [
         "ru",
         "en"
@@ -7605,6 +7636,8 @@
         "number": 16,
         "chapter": 0,
         "targetLocation": null,
+        "spawnMonsterId": "swarm",
+        "spawnLocationId": "armory",
         "conditions": [
           {
             "id": "kill-swarm",
@@ -7619,8 +7652,10 @@
         "nextQuestIds": [
           "quest-19"
         ],
+        "discardQuestIds": [],
         "prerequisiteQuestIds": []
-      }
+      },
+      "sourceFinding": "Printed boss placement is now a typed spawnMonsterId/spawnLocationId pair and is reference-validated."
     },
     "quest.quest-17": {
       "status": "human-card-verified",
@@ -8001,17 +8036,17 @@
           4
         ]
       },
-      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
       "copiesInData": 1,
       "sourceDeck": "story-quest",
-      "copiesStatus": "1 physical card, 1 catalog record",
+      "copiesStatus": "one printed card and one runtime record",
       "catalogDefinitionPresent": true,
       "catalogDefinition": "content/quests.json",
       "importBatch": null,
-      "auditBatch": 23,
+      "auditBatch": 24,
       "category": "story-quest",
       "slots": [],
-      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
       "translations": [
         "ru",
         "en"
@@ -8044,8 +8079,12 @@
         "nextQuestIds": [
           "quest-25"
         ],
+        "discardQuestIds": [
+          "quest-08"
+        ],
         "prerequisiteQuestIds": []
-      }
+      },
+      "sourceFinding": "Printed branch discard is now represented by discardQuestIds; quest completion removes the other active branch."
     },
     "quest.quest-25": {
       "status": "human-card-verified",
@@ -8056,17 +8095,17 @@
           4
         ]
       },
-      "scope": "Card-by-card visual check of printed number/chapter, full story, boss/location/skill/item objectives, reward and transition links; Russian and English text checked against the face.",
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
       "copiesInData": 1,
       "sourceDeck": "story-quest",
-      "copiesStatus": "1 physical card, 1 catalog record",
+      "copiesStatus": "one printed card and one runtime record",
       "catalogDefinitionPresent": true,
       "catalogDefinition": "content/quests.json",
       "importBatch": null,
-      "auditBatch": 23,
+      "auditBatch": 24,
       "category": "story-quest",
       "slots": [],
-      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
       "translations": [
         "ru",
         "en"
@@ -8077,8 +8116,8 @@
         "number": 25,
         "chapter": 8,
         "targetLocation": "armory",
-        "spawnMonsterId": null,
-        "spawnLocationId": null,
+        "spawnMonsterId": "viy",
+        "spawnLocationId": "armory",
         "conditions": [
           {
             "id": "arrive-armory-viy",
@@ -8106,8 +8145,10 @@
           "quest-26",
           "quest-27"
         ],
+        "discardQuestIds": [],
         "prerequisiteQuestIds": []
-      }
+      },
+      "sourceFinding": "Printed boss placement is now a typed spawnMonsterId/spawnLocationId pair and is reference-validated."
     },
     "quest.quest-26": {
       "status": "human-card-verified",
@@ -8219,27 +8260,99 @@
       }
     },
     "quest.quest-28": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "one printed card and one runtime record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 24,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 28,
+        "chapter": 9,
+        "targetLocation": "anabiosis",
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [
+          {
+            "id": "return-anabiosis",
+            "type": "arrive",
+            "locationId": "anabiosis"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-29"
+        ],
+        "discardQuestIds": [],
+        "prerequisiteQuestIds": [
+          "quest-26",
+          "quest-27"
+        ]
+      }
     },
     "quest.quest-29": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          4
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count",
-      "sourceFinding": "Printed ending says “Победа выживших”; endsGame=true."
+      "scope": "Final batch: visual check of printed number/chapter, full story, objective artwork, named monster/location, branch discard/activation, reward and physical copy; Russian and English reviewed against the PDF face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "one printed card and one runtime record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 24,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame, chapter number and original location/boss objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 29,
+        "chapter": 9,
+        "targetLocation": null,
+        "spawnMonsterId": null,
+        "spawnLocationId": null,
+        "conditions": [],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [],
+        "discardQuestIds": [],
+        "prerequisiteQuestIds": []
+      }
     },
     "decision.monster.restless-count": {
       "status": "author-confirmed",

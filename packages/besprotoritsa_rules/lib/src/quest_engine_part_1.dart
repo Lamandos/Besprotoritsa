@@ -132,6 +132,7 @@ final class QuestDefinition {
     required this.chapter,
     required Iterable<QuestCondition> conditions,
     required Iterable<QuestId> nextQuestIds,
+    Iterable<QuestId> discardQuestIds = const [],
     required this.reward,
     required this.nameKey,
     required this.descKey,
@@ -142,6 +143,7 @@ final class QuestDefinition {
     this.endsGame = false,
   }) : conditions = List.unmodifiable(conditions),
        nextQuestIds = List.unmodifiable(nextQuestIds),
+       discardQuestIds = List.unmodifiable(discardQuestIds),
        prerequisites = List.unmodifiable(prerequisites) {
     if (id.isEmpty) throw ArgumentError.value(id, 'id', 'Must not be empty.');
     if (number < 1 || chapter < 0) {
@@ -193,6 +195,11 @@ final class QuestDefinition {
         Map<String, Object?>.from(rawReward),
       ),
       nextQuestIds: _stringList(json['nextQuestIds'], 'nextQuestIds'),
+      discardQuestIds: _stringList(
+        json['discardQuestIds'],
+        'discardQuestIds',
+        allowNull: true,
+      ),
       prerequisites: _stringList(
         json['prerequisiteQuestIds'] ?? json['prerequisites'],
         'prerequisiteQuestIds',
@@ -212,6 +219,7 @@ final class QuestDefinition {
   final String? spawnLocationId;
   final List<QuestCondition> conditions;
   final List<QuestId> nextQuestIds;
+  final List<QuestId> discardQuestIds;
   final List<QuestId> prerequisites;
   final QuestReward reward;
   final String nameKey;
