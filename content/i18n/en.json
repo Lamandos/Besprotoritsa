@@ -1549,6 +1549,116 @@
             "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
           }
         }
+      },
+      "invasion-storage-7": {
+        "name": "INVASION: Storage Bay",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-engineering-control-post-8": {
+        "name": "INVASION: Engineering Control Post",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-main-computer-9": {
+        "name": "INVASION: Main Computer",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-dining-hall-10": {
+        "name": "INVASION: Dining Hall",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-flight-control-11": {
+        "name": "INVASION: Flight Control",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-morgue-12": {
+        "name": "INVASION: Morgue",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-escape-pods-13": {
+        "name": "INVASION: Escape Pods",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-armory-14": {
+        "name": "INVASION: Armory",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-reactor-15": {
+        "name": "INVASION: Reactor",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-medical-bay-16": {
+        "name": "INVASION: Medical Bay",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
       }
     },
     "quest": {

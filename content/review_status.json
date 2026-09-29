@@ -5690,114 +5690,314 @@
       ]
     },
     "event.invasion-storage-7": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-engineering-control-post-8": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-main-computer-9": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-dining-hall-10": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-flight-control-11": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-morgue-12": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-escape-pods-13": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-armory-14": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-reactor-15": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-medical-bay-16": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/события.pdf",
-        "pageRange": "1-12"
+        "pages": [
+          9,
+          10
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of invasion label, named target sector, monster placement/closed-sector instruction, skull iconography, behavior IDs and physical copy; RU source and EN translation checked.",
+      "copiesInData": 1,
+      "sourceDeck": "events",
+      "copiesStatus": "1 physical card, 1 catalog event",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/events.json",
+      "importBatch": 8,
+      "auditBatch": 19,
+      "category": "event",
+      "slots": [],
+      "iconography": "Red event frame and red skull-and-bones invasion marker; named target sector: Medical Bay.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [
+        "monster.spawn",
+        "monster.spawnClosedFallback"
+      ]
     },
     "event.invasion-crew-quarters-17": {
       "status": "human-inventory-verified",
