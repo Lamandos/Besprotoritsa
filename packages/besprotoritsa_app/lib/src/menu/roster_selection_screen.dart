@@ -1,6 +1,7 @@
 // The route has a single, self-describing construction dependency.
 // ignore_for_file: public_member_api_docs
 
+import 'package:besprotoritsa_app/src/game/full_game_state.dart';
 import 'package:besprotoritsa_app/src/game/mvp_game_state.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/game_session_screen.dart';
@@ -19,6 +20,7 @@ class RosterSelectionScreen extends StatefulWidget {
 }
 
 class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
+  String _contentSet = 'mvp';
   final ValueNotifier<Set<String>> _selected = ValueNotifier(<String>{
     'scientist',
     'guard',
@@ -90,12 +92,40 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  strings.contentSetTitle,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              const SizedBox(height: 6),
+              SegmentedButton<String>(
+                key: const ValueKey<String>('content-set-selector'),
+                segments: [
+                  ButtonSegment<String>(
+                    value: 'mvp',
+                    label: Text(strings.mvpContentSet),
+                  ),
+                  ButtonSegment<String>(
+                    value: 'full',
+                    label: Text(strings.fullContentSet),
+                  ),
+                ],
+                selected: {_contentSet},
+                onSelectionChanged: (selection) => setState(() {
+                  _contentSet = selection.single;
+                  _selected.value = <String>{'scientist', 'guard'};
+                }),
+              ),
+              const SizedBox(height: 12),
               Expanded(
                 child: ValueListenableBuilder<Set<String>>(
                   valueListenable: _selected,
                   builder: (context, selected, _) => _RosterList(
                     selected: selected,
                     onChanged: _toggleHero,
+                    heroes: _availableHeroes(strings, _contentSet),
                   ),
                 ),
               ),
@@ -131,7 +161,9 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
     Navigator.of(context).pushReplacement<void, void>(
       MaterialPageRoute<void>(
         builder: (_) => GameSessionScreen(
-          initialState: createMvpGameState(characterIds: roster),
+          initialState: _contentSet == 'full'
+              ? createFullGameState(characterIds: roster)
+              : createMvpGameState(characterIds: roster),
           storage: widget.storage,
         ),
       ),
@@ -139,20 +171,40 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
   }
 }
 
+List<_HeroOption> _availableHeroes(AppStrings strings, String contentSet) {
+  if (contentSet == 'mvp') return _heroes;
+  return [
+    for (final character in fullRuntimeCharacters)
+      _HeroOption(
+        id: character['id']! as String,
+        name: (_) => fullRuntimeCharacterName(character['id']! as String),
+        stats: (strings) =>
+            '${strings.science}: ${character['science']} · '
+            '${strings.strength}: ${character['strength']} · '
+            '${strings.repair}: ${character['repair']}',
+      ),
+  ];
+}
+
 class _RosterList extends StatelessWidget {
-  const _RosterList({required this.selected, required this.onChanged});
+  const _RosterList({
+    required this.selected,
+    required this.onChanged,
+    required this.heroes,
+  });
 
   final Set<String> selected;
   final ValueChanged<String> onChanged;
+  final List<_HeroOption> heroes;
 
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     return ListView.separated(
-      itemCount: _heroes.length,
+      itemCount: heroes.length,
       separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
-        final hero = _heroes[index];
+        final hero = heroes[index];
         final isSelected = selected.contains(hero.id);
         return Card(
           child: CheckboxListTile(
