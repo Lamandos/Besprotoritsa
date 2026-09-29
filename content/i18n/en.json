@@ -1801,6 +1801,46 @@
       "quest-07": {
         "name": "Plan B",
         "description": "Turning on the power was not enough. The sensors show that the engines have been damaged from outside. You cannot handle this on your own. There is only one right decision: leave the ship and all the creatures behind, and escape in the capsules. Home is close; all you need to do is get into a capsule and set off."
+      },
+      "quest-08": {
+        "name": "Search",
+        "description": "“Does anything on this ship still work?” you shout, kicking the broken escape pod. Exhausted by the troubles piling up, you set out to find the missing part. In the storage bay, you find the place buried under useful and useless things in total chaos. It will be very difficult to find what you need."
+      },
+      "quest-09": {
+        "name": "Captain",
+        "description": "You have one more problem to solve if you do not want to drift in a capsule through open space: entering the coordinates of the nearest border base. It seems you will have to visit the ship’s captain in Flight Control…"
+      },
+      "quest-10": {
+        "name": "Final Preparations",
+        "description": "After finding the missing parts, you return to the escape pods. There is almost nothing left to do: install the part and head home."
+      },
+      "quest-11": {
+        "name": "Home",
+        "description": "At last everything is in order. You are eager to leave this cursed place and never return. As you head for the launch panel, you hear a roar that shakes the walls. What in the world is that creature!?"
+      },
+      "quest-12": {
+        "name": "Epilogue",
+        "description": "Leaning back in your chair, you slowly exhale. Thoughts of the friends and colleagues you lost fill your mind, but you have no desire to look back. One last task remains: warn Earth about what happened."
+      },
+      "quest-13": {
+        "name": "Time for a Boomstick",
+        "description": "Walking around the ship unarmed is suicide. You urgently need something for protection, preferably a firearm. Right! The ship has an armory with all the security equipment. Perhaps something remains that can blow these monsters apart."
+      },
+      "quest-14": {
+        "name": "Annihilation",
+        "description": "So many deaths… Many of them were your friends. Rage fills you. It is time to take revenge on these creatures."
+      },
+      "quest-15": {
+        "name": "Survival Guide",
+        "description": "Now that you have a weapon, it is time to find supplies. Perhaps there is something useful in the dining hall. It is worth checking."
+      },
+      "quest-16": {
+        "name": "Heart of the Swarm",
+        "description": "It seems you have stirred up a hornet’s nest. The monsters appear to be changing strategy. You see several creatures run past, ignoring you."
+      },
+      "quest-17": {
+        "name": "Plague Doctor",
+        "description": "It is time to learn more about the infection that has ravaged the crew’s bodies. Perhaps it can still be stopped…"
       }
     }
   }

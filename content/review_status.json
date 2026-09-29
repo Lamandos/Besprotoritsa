@@ -7153,115 +7153,534 @@
       }
     },
     "quest.quest-08": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 8,
+        "chapter": 7,
+        "targetLocation": "storage",
+        "conditions": [
+          {
+            "id": "arrive-storage",
+            "type": "arrive",
+            "locationId": "storage"
+          },
+          {
+            "id": "repair-storage",
+            "type": "skill_check",
+            "skill": "repair",
+            "locationId": "storage"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-09",
+          "quest-10"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-09": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 9,
+        "chapter": 7,
+        "targetLocation": "flight-control",
+        "conditions": [
+          {
+            "id": "arrive-flight-control",
+            "type": "arrive",
+            "locationId": "flight-control"
+          },
+          {
+            "id": "kill-viy",
+            "type": "kill_monster",
+            "monsterId": "viy"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": [
+            "assault-rifle"
+          ]
+        },
+        "nextQuestIds": [
+          "quest-11"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-10": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 10,
+        "chapter": 8,
+        "targetLocation": "escape-pods",
+        "conditions": [
+          {
+            "id": "arrive-escape-pods-again",
+            "type": "arrive",
+            "locationId": "escape-pods"
+          },
+          {
+            "id": "repair-escape-pods",
+            "type": "skill_check",
+            "skill": "repair",
+            "locationId": "escape-pods"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-11"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-11": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 11,
+        "chapter": 9,
+        "targetLocation": "escape-pods",
+        "conditions": [
+          {
+            "id": "arrive-escape-pods-final",
+            "type": "arrive",
+            "locationId": "escape-pods"
+          },
+          {
+            "id": "kill-mother",
+            "type": "kill_monster",
+            "monsterId": "mother"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-12"
+        ],
+        "prerequisiteQuestIds": [
+          "quest-09",
+          "quest-10"
+        ]
+      }
     },
     "quest.quest-12": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count",
-      "sourceFinding": "Printed ending says “Победа выживших”; endsGame=true."
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 12,
+        "chapter": 9,
+        "targetLocation": null,
+        "conditions": [],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-13": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 13,
+        "chapter": 0,
+        "targetLocation": "armory",
+        "conditions": [
+          {
+            "id": "arrive-armory",
+            "type": "arrive",
+            "locationId": "armory"
+          },
+          {
+            "id": "strength-armory",
+            "type": "skill_check",
+            "skill": "strength",
+            "locationId": "armory"
+          },
+          {
+            "id": "collect-shotgun",
+            "type": "collect_item",
+            "itemId": "shotgun"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": [
+            "shotgun"
+          ]
+        },
+        "nextQuestIds": [
+          "quest-14",
+          "quest-15"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-14": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 14,
+        "chapter": 0,
+        "targetLocation": null,
+        "conditions": [
+          {
+            "id": "damage-tokens",
+            "type": "counter",
+            "metric": "damage_tokens_collected",
+            "targetValue": 10
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-16"
+        ],
+        "prerequisiteQuestIds": []
+      },
+      "sourceFinding": "Printed card grants each player credits equal to a 6-die roll after the 10 damage-token objective. The current QuestReward schema models fixed credits/items only; this dynamic reward is not represented."
     },
     "quest.quest-15": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          2
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 15,
+        "chapter": 0,
+        "targetLocation": "dining-hall",
+        "conditions": [
+          {
+            "id": "arrive-dining-hall",
+            "type": "arrive",
+            "locationId": "dining-hall"
+          },
+          {
+            "id": "agility-dining-hall",
+            "type": "skill_check",
+            "skill": "agility",
+            "locationId": "dining-hall"
+          },
+          {
+            "id": "collect-supply",
+            "type": "collect_item",
+            "itemId": "supply"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-17"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-16": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 16,
+        "chapter": 0,
+        "targetLocation": null,
+        "conditions": [
+          {
+            "id": "kill-swarm",
+            "type": "kill_monster",
+            "monsterId": "swarm"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": []
+        },
+        "nextQuestIds": [
+          "quest-19"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-17": {
-      "status": "human-inventory-verified",
-      "reviewedAt": "2026-09-29",
+      "status": "human-card-verified",
+      "reviewedAt": "2026-09-30",
       "source": {
         "pdf": "materials/задания сюжет.pdf",
-        "pageRange": "1-5"
+        "pages": [
+          3
+        ]
       },
-      "scope": "visual inventory and deck/category assignment; not a full transcription of card text or stats",
-      "copiesInData": null,
-      "copiesStatus": "not-declared; JSON record count is not a physical card count"
+      "scope": "Card-by-card visual check of printed number/chapter, complete story text, objective icons, location/skill/monster/item conditions, reward, transitions/prerequisites and physical copy; RU and EN story text checked against face.",
+      "copiesInData": 1,
+      "sourceDeck": "story-quest",
+      "copiesStatus": "1 physical card, 1 catalog record",
+      "catalogDefinitionPresent": true,
+      "catalogDefinition": "content/quests.json",
+      "importBatch": null,
+      "auditBatch": 22,
+      "category": "story-quest",
+      "slots": [],
+      "iconography": "Blue story-card frame with chapter number and printed objective symbols.",
+      "translations": [
+        "ru",
+        "en"
+      ],
+      "behaviorIdsReviewed": true,
+      "behaviorIds": [],
+      "questFieldsReviewed": {
+        "number": 17,
+        "chapter": 0,
+        "targetLocation": "morgue",
+        "conditions": [
+          {
+            "id": "arrive-morgue",
+            "type": "arrive",
+            "locationId": "morgue"
+          },
+          {
+            "id": "science-morgue",
+            "type": "skill_check",
+            "skill": "science",
+            "locationId": "morgue"
+          },
+          {
+            "id": "collect-plague-mask",
+            "type": "collect_item",
+            "itemId": "plague-doctor-mask"
+          }
+        ],
+        "reward": {
+          "credits": 0,
+          "items": [
+            "plague-doctor-mask"
+          ]
+        },
+        "nextQuestIds": [
+          "quest-18"
+        ],
+        "prerequisiteQuestIds": []
+      }
     },
     "quest.quest-18": {
       "status": "human-inventory-verified",
