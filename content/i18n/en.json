@@ -654,6 +654,166 @@
             "failure": "You run into another enemy. Move to an adjacent sector, draw a Monster card, and fight it."
           }
         }
+      },
+      "rope-hatch": {
+        "name": "Rope in the Hatch",
+        "description": "You notice a deep hatch at your feet. A rope tied to a post has been lowered into it.",
+        "option": {
+          "o1": {
+            "action": "Pull up the rope.",
+            "success": "You pull up a bloodstained belt with a pouch. Draw a Supply card.",
+            "failure": "You decide it is not worth throwing out your back."
+          },
+          "o2": {
+            "action": "Untie the rope.",
+            "success": "A loud noise from the bottom of the hatch attracts a monster. Place a Monster card in any adjacent sector.",
+            "failure": "A loud noise from the bottom of the hatch attracts a monster. Place a Monster card in any adjacent sector."
+          },
+          "o3": {
+            "action": "Walk past.",
+            "success": "You walk past and leave the hatch alone.",
+            "failure": "You walk past and leave the hatch alone."
+          }
+        }
+      },
+      "weapon-monster": {
+        "name": "Weapon in Its Mouth",
+        "description": "At the far end of the room, you see a monster with something like a weapon sticking out of its mouth.",
+        "option": {
+          "o1": {
+            "action": "Attack the monster.",
+            "success": "You wrench out the weapon and smash the monster’s head. Draw a Weapon card.",
+            "failure": "The monster attacks. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Hide.",
+            "success": "You decide not to risk it and stay unnoticed.",
+            "failure": "You attract the monster’s attention. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "repair-cleaner": {
+        "name": "Broken Cleaning Robot",
+        "description": "A cleaning robot lies on its side in the corner, sparking and crackling.",
+        "option": {
+          "o1": {
+            "action": "Repair the robot.",
+            "success": "There is a useful find in its waste tank. Draw a Supply card.",
+            "failure": "You decide not to waste parts on this pile of scrap."
+          },
+          "o2": {
+            "action": "Leave the robot.",
+            "success": "This mess is the least of your problems.",
+            "failure": "This mess is the least of your problems."
+          }
+        }
+      },
+      "countdown-trap": {
+        "name": "Countdown",
+        "description": "A mechanical voice reaches you: “10,” “9,” “8.” It looks like you triggered a trap.",
+        "option": {
+          "o1": {
+            "action": "Try to disarm the trap.",
+            "success": "You pull out a wire. Kill one monster in your sector or an adjacent sector, ignoring loot.",
+            "failure": "You take 4 damage."
+          },
+          "o2": {
+            "action": "Run.",
+            "success": "You leap out of the room. Move 1 sector.",
+            "failure": "The blast knocks you down. Take 4 damage and take one fewer action on your next turn."
+          }
+        }
+      },
+      "scientist-report": {
+        "name": "Scientific Report",
+        "description": "You see a disfigured body in a white coat, holding a folder of papers.",
+        "option": {
+          "o1": {
+            "action": "Study the notes.",
+            "success": "This is Dr. Neumyvakin’s report. Keep this card; get +1 Science.",
+            "failure": "The numbers and charts mean nothing to you. Leave the papers."
+          }
+        }
+      },
+      "monster-corpse": {
+        "name": "Monster’s Body",
+        "description": "A horrible stench hangs in the air around the dismembered monster.",
+        "option": {
+          "o1": {
+            "action": "Examine the monster’s body.",
+            "success": "You find a clue to its weak points. Keep this card; get +1 Combat Strength.",
+            "failure": "The disgusting sight makes you leave."
+          }
+        }
+      },
+      "rubble": {
+        "name": "Rubble",
+        "description": "You walk calmly through the ship and come across rubble blocking the way.",
+        "option": {
+          "o1": {
+            "action": "Clear the rubble.",
+            "success": "The way is clear, and a heavy bag lies beneath the debris. Draw an Item card.",
+            "failure": "The debris collapses on you. Take 3 damage."
+          },
+          "o2": {
+            "action": "Go around.",
+            "success": "You go around the rubble but run into a Restless. Draw a Restless card and fight it.",
+            "failure": "The route leads straight to a monster. Draw a Restless card and fight it."
+          }
+        }
+      },
+      "two-crates": {
+        "name": "Two Crates",
+        "description": "You enter a cabin and see two crates: one very large and the other small.",
+        "option": {
+          "o1": {
+            "action": "Carry the large crate.",
+            "success": "There is a droid inside. Take a Robot from the Item deck.",
+            "failure": "The crate falls on you. Take 2 damage."
+          },
+          "o2": {
+            "action": "Don’t overestimate yourself; take the small crate.",
+            "success": "You carry the crate somewhere safe. Draw a Supply card.",
+            "failure": "You drop the crate but find 2 credits nearby."
+          }
+        }
+      },
+      "huge-crate": {
+        "name": "Huge Crate",
+        "description": "You enter a cabin and see a very large crate.",
+        "option": {
+          "o1": {
+            "action": "Carry the crate.",
+            "success": "You drag the crate and find a weapon. Draw a Weapon card.",
+            "failure": "The crate falls on you. Take 2 damage."
+          },
+          "o2": {
+            "action": "Send the droid for the crate.",
+            "success": "Discard a Robot card. Take a Weapon and draw 1 Supply card.",
+            "failure": "The droid breaks, and you leave the crate."
+          }
+        }
+      },
+      "toolbox": {
+        "name": "Tools and Parts",
+        "description": "You found a box of tools and parts. What can you do with it?",
+        "option": {
+          "o1": {
+            "action": "Make a weapon.",
+            "success": "You make a strange but effective weapon. Take a Swiss Army Knife from the Special Items deck.",
+            "failure": "You fail to make anything."
+          },
+          "o2": {
+            "action": "Build a robot.",
+            "success": "The pile of metal gives a cheerful beep. Take the DRG-4U robot from the Special Items deck.",
+            "failure": "You fail to make anything."
+          },
+          "o3": {
+            "action": "Make armor.",
+            "success": "The armor is not fashionable, but it works. Draw an Item card.",
+            "failure": "You fail to make anything."
+          }
+        }
       }
     },
     "quest": {
