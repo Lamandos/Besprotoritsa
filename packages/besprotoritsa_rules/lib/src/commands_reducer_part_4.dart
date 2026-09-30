@@ -132,6 +132,15 @@ bool _monsterIgnoresDefense(GameState state, MonsterInstance monster) {
   return features is List<Object?> && features.contains('ignores-defense');
 }
 
+bool _monsterSpawnsBoilInsteadOfAttack(
+  GameState state,
+  MonsterInstance monster,
+) {
+  final features = state.monsterDefinitions[monster.monsterId]?['features'];
+  return features is List<Object?> &&
+      features.contains('spawns-boil-instead-of-attack');
+}
+
 /// Moves a monster one board step and immediately resolves shared-cell attacks.
 GameState moveMonsterOneStep(
   GameState state,

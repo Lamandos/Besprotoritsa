@@ -278,13 +278,24 @@ GameStepResult _resolveDodge(
       ? _drawCondition(withDamage, targetId)
       : withDamage;
   final counterAttackId = pending.counterAttackMonsterInstanceId;
-  if (counterAttackId != null && targetStillLives) {
-    final monster = _monsterById(withCondition, counterAttackId);
+  final counterAttackPlayerId = pending.counterAttackPlayerId ?? targetId;
+  final counterAttackerLives =
+      _playerById(withCondition, counterAttackPlayerId)?.alive ?? false;
+  if (counterAttackId != null && counterAttackerLives) {
+    final queued = _startNextIncomingDamage(
+      withCondition,
+      counterAttackMonsterInstanceId: counterAttackId,
+      counterAttackPlayerId: counterAttackPlayerId,
+    );
+    if (queued.pendingDecision != null) {
+      return GameStepResult(state: queued);
+    }
+    final monster = _monsterById(queued, counterAttackId);
     if (monster != null) {
       return GameStepResult(
         state: _startImmediateCounterAttack(
-          withCondition,
-          targetId,
+          queued,
+          counterAttackPlayerId,
           monster,
           dice,
         ),

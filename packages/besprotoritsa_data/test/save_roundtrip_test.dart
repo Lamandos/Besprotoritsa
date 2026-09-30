@@ -50,6 +50,7 @@ void main() {
       requiredAgilitySuccesses: 2,
       targetPlayerId: 'ada',
       counterAttackMonsterInstanceId: 'event-ghoul',
+      counterAttackPlayerId: 'ada',
     );
     final restoredDodge =
         codec
@@ -73,6 +74,7 @@ void main() {
             as AwaitingRerollChoice;
 
     expect(restoredDodge.counterAttackMonsterInstanceId, 'event-ghoul');
+    expect(restoredDodge.counterAttackPlayerId, 'ada');
     expect(
       (restoredAttack.context! as AttackRollContext).resumeAutomaticPhase,
       isTrue,

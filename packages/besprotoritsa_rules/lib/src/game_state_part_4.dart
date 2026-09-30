@@ -97,6 +97,7 @@ final class AwaitingDodge extends PendingDecision {
     this.targetPlayerId,
     this.source = DamageSource.monster,
     this.counterAttackMonsterInstanceId,
+    this.counterAttackPlayerId,
   }) : assert(monsterDamage >= 0, 'monsterDamage must not be negative.'),
        assert(
          requiredAgilitySuccesses >= 0,
@@ -108,6 +109,7 @@ final class AwaitingDodge extends PendingDecision {
   final PlayerId? targetPlayerId;
   final DamageSource source;
   final String? counterAttackMonsterInstanceId;
+  final PlayerId? counterAttackPlayerId;
 
   /// Short name convenient for generic decision views.
   int get requiredSuccesses => requiredAgilitySuccesses;

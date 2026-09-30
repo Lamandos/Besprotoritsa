@@ -30,7 +30,11 @@ GameState _drawCondition(GameState state, PlayerId targetId) {
   );
 }
 
-GameState _startNextIncomingDamage(GameState state) {
+GameState _startNextIncomingDamage(
+  GameState state, {
+  String? counterAttackMonsterInstanceId,
+  PlayerId? counterAttackPlayerId,
+}) {
   if (state.pendingDecision != null || state.pendingDamage.isEmpty) {
     return state;
   }
@@ -50,6 +54,8 @@ GameState _startNextIncomingDamage(GameState state) {
       requiredAgilitySuccesses: next.agilityDice,
       targetPlayerId: next.targetPlayerId,
       source: next.source,
+      counterAttackMonsterInstanceId: counterAttackMonsterInstanceId,
+      counterAttackPlayerId: counterAttackPlayerId,
     ),
     pendingDamage: pending.skip(1),
   );
@@ -259,6 +265,36 @@ GameState _startImmediateMonsterAttack(
   MonsterInstance monster,
   DiceRoller dice,
 ) {
+  if (_monsterSpawnsBoilInsteadOfAttack(state, monster)) {
+    final withBoil = spawnBoil(
+      state,
+      BoilToken(
+        instanceId: 'event-nest-boil-${monster.instanceId}',
+        coord: monster.coord,
+      ),
+    );
+    if (withBoil.pendingDecision case final AwaitingDodge pending) {
+      return _copyState(
+        withBoil,
+        pendingDecision: AwaitingDodge(
+          monsterDamage: pending.monsterDamage,
+          requiredAgilitySuccesses: pending.requiredAgilitySuccesses,
+          targetPlayerId: pending.targetPlayerId,
+          source: pending.source,
+          counterAttackMonsterInstanceId: monster.instanceId,
+          counterAttackPlayerId: playerId,
+        ),
+      );
+    }
+    if (withBoil.pendingDamage.isNotEmpty) {
+      return _startNextIncomingDamage(
+        withBoil,
+        counterAttackMonsterInstanceId: monster.instanceId,
+        counterAttackPlayerId: playerId,
+      );
+    }
+    return _startImmediateCounterAttack(withBoil, playerId, monster, dice);
+  }
   final player = _playerById(state, playerId)!;
   final incoming =
       (monster.attack -

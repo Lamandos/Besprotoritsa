@@ -295,6 +295,7 @@ abstract final class SaveJsonModels {
           'source': decision.source.name,
           'counter_attack_monster_instance_id':
               decision.counterAttackMonsterInstanceId,
+          'counter_attack_player_id': decision.counterAttackPlayerId,
         },
         AwaitingEventOption() => {
           'type': 'event_option',
@@ -343,6 +344,10 @@ abstract final class SaveJsonModels {
         counterAttackMonsterInstanceId: _nullableString(
           json['counter_attack_monster_instance_id'],
           'counter_attack_monster_instance_id',
+        ),
+        counterAttackPlayerId: _nullableString(
+          json['counter_attack_player_id'],
+          'counter_attack_player_id',
         ),
       ),
       'event_option' => AwaitingEventOption(

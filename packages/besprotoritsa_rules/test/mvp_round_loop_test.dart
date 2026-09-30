@@ -209,6 +209,87 @@ void main() {
     },
   );
 
+  test(
+    'immediate Nest spawn resolves Boil before counterattack',
+    () {
+      var state = _mvpState(
+        eventId: 'invasion-card',
+        playerCoord: const HexCoord(0, 2),
+        heroCount: 2,
+        eventDefinitions: {
+          'invasion-card': {
+            'id': 'invasion-card',
+            'locationId': 'crew-mess',
+            'immediateCombat': true,
+            'spawn': {
+              'behaviorId': 'monster.spawn',
+              'target': 'location',
+              'fallback': 'closedSector',
+            },
+            'options': [
+              {
+                'skillCheck': null,
+                'behaviorId': 'monster.spawn',
+                'resolution': 'immediate',
+              },
+            ],
+          },
+        },
+        monsterDefinitions: {
+          'nest': {
+            'health': 2,
+            'defense': 0,
+            'attack': 0,
+            'movement': 0,
+            'features': ['stationary', 'spawns-boil-instead-of-attack'],
+          },
+        },
+        additionalDecks: {
+          'monsters': DeckState(drawPile: const ['nest']),
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([]),
+      ).state;
+
+      var dodge = state.pendingDecision! as AwaitingDodge;
+      expect(dodge.source, DamageSource.boil);
+      expect(dodge.targetPlayerId, 'ada');
+      expect(dodge.counterAttackMonsterInstanceId, contains('-nest'));
+      expect(dodge.counterAttackPlayerId, 'ada');
+      expect(state.boils, isEmpty);
+      expect(state.monsters.single.damage, 0);
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([6]),
+      ).state;
+
+      dodge = state.pendingDecision! as AwaitingDodge;
+      expect(dodge.source, DamageSource.boil);
+      expect(dodge.targetPlayerId, 'hero-2');
+      expect(dodge.counterAttackMonsterInstanceId, contains('-nest'));
+      expect(dodge.counterAttackPlayerId, 'ada');
+      expect(state.monsters.single.damage, 0);
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([1, 6]),
+      ).state;
+
+      expect(state.players.first.damage, 0);
+      expect(state.players.last.damage, 1);
+      expect(state.monsters.single.damage, 1);
+      expect(state.phase, GamePhase.eventsPhase);
+    },
+  );
+
   test('full inventory changes complete collect-item quests', () {
     final item = CardDefinition.fromJson({
       'id': 'quest-item',
