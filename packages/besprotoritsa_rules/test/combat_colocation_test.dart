@@ -197,6 +197,35 @@ void main() {
       expect(active.state.phase, GamePhase.playersTurn);
     });
 
+    test('event blocking follows monster activity data', () {
+      final passiveByRule = step(
+        _state(
+          monster: _monster(attack: 3, movement: 0),
+          events: const ['quiet-event'],
+          monsterDefinitions: {
+            'ghoul': {'activity': 'passive'},
+          },
+        ),
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      );
+      final activeByRule = step(
+        _state(
+          monster: _monster(movement: 0),
+          events: const ['quiet-event'],
+          monsterDefinitions: {
+            'ghoul': {'activity': 'active'},
+          },
+        ),
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      );
+
+      expect(passiveByRule.state.pendingDecision, isA<AwaitingEventOption>());
+      expect(activeByRule.state.pendingDecision, isNull);
+      expect(activeByRule.state.phase, GamePhase.playersTurn);
+    });
+
     test('replacement selection resumes damage queued for another hero', () {
       var state = resolveColocation(
         _state(
@@ -252,6 +281,25 @@ void main() {
       expect(spawned.pendingDecision, isA<AwaitingDodge>());
       expect(resolved.state.players.single.damage, 1);
       expect(resolved.state.players.single.conditions, isEmpty);
+    });
+
+    test('a spawned Boil does not re-trigger monsters in other cells', () {
+      final spawned = spawnBoil(
+        _state(
+          players: [
+            _player(),
+            _player(id: 'boris', coord: const HexCoord(0, 1)),
+          ],
+          monster: _monster(coord: const HexCoord(0, 1), attack: 2),
+        ),
+        const BoilToken(instanceId: 'boil-1', coord: HexCoord(0, 0)),
+      );
+
+      final dodge = spawned.pendingDecision! as AwaitingDodge;
+      expect(dodge.source, DamageSource.boil);
+      expect(dodge.targetPlayerId, 'ada');
+      expect(spawned.pendingDamage, isEmpty);
+      expect(spawned.players.last.damage, 0);
     });
 
     test('plague doctor mask cancels Boil damage but consumes the Boil', () {
@@ -326,6 +374,11 @@ void main() {
           _player(coord: const HexCoord(2, 0)),
           _player(id: 'vent-target', coord: const HexCoord(0, 2)),
         ],
+        monsterDefinitions: {
+          'ghoul': {
+            'features': ['moves-through-vents'],
+          },
+        },
       );
 
       expect(
@@ -339,6 +392,88 @@ void main() {
       );
       expect(moved.monsters.single.coord, const HexCoord(0, 2));
     });
+
+    test('monster without vent capability cannot use a vent edge', () {
+      final state = _state(
+        board: [
+          _tile(const HexCoord(0, 0), ventColor: VentColor.red),
+          _tile(const HexCoord(0, 2), ventColor: VentColor.red),
+        ],
+        monster: _monster(),
+        players: [_player(coord: const HexCoord(0, 2))],
+        monsterDefinitions: {
+          'ghoul': {'features': <String>[]},
+        },
+      );
+
+      expect(nearestTargets(state, state.monsters.single), isEmpty);
+      expect(
+        () => moveMonsterOneStep(
+          state,
+          'ghoul-1',
+          const HexCoord(0, 2),
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test(
+      'monster path and movement both reject mismatched exits and closed tiles',
+      () {
+        final start = _tile(const HexCoord(0, 0));
+        final end = HexTile(
+          id: 'closed',
+          coord: const HexCoord(0, 1),
+          type: HexTileType.corridor,
+          opened: true,
+          exits: const {HexEdge.south},
+          hasTerminal: false,
+          ventColor: VentColor.none,
+        );
+        final state = _state(
+          board: [start, end],
+          monster: _monster(),
+          players: [_player(coord: const HexCoord(0, 1))],
+        );
+
+        expect(nearestTargets(state, state.monsters.single), isEmpty);
+        expect(
+          () => moveMonsterOneStep(
+            state,
+            'ghoul-1',
+            const HexCoord(0, 1),
+          ),
+          throwsArgumentError,
+        );
+
+        final closed = HexTile(
+          id: 'closed-target',
+          coord: const HexCoord(0, 1),
+          type: HexTileType.corridor,
+          opened: false,
+          exits: const {HexEdge.north, HexEdge.south},
+          hasTerminal: false,
+          ventColor: VentColor.none,
+        );
+        final closedState = _state(
+          board: [start, closed],
+          monster: _monster(),
+          players: [_player(coord: const HexCoord(0, 1))],
+        );
+        expect(
+          nearestTargets(closedState, closedState.monsters.single),
+          isEmpty,
+        );
+        expect(
+          () => moveMonsterOneStep(
+            closedState,
+            'ghoul-1',
+            const HexCoord(0, 1),
+          ),
+          throwsArgumentError,
+        );
+      },
+    );
 
     test('monster target ties prefer lower health then player order', () {
       final state = _state(
@@ -372,6 +507,7 @@ GameState _state({
   Iterable<String> conditions = const ['concussion'],
   Iterable<String> events = const [],
   Map<CardId, CardDefinition> cards = const <CardId, CardDefinition>{},
+  Map<CardId, Map<String, Object?>> monsterDefinitions = const {},
   Iterable<HexTile>? board,
 }) => GameState(
   seed: 1,
@@ -404,6 +540,7 @@ GameState _state({
     ),
   },
   cardDefinitions: cards,
+  monsterDefinitions: monsterDefinitions,
   quests: QuestState(),
 );
 

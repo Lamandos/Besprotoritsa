@@ -118,6 +118,7 @@ MonsterInstance _copyMonster(
   attack: monster.attack,
   movement: monster.movement,
   carriedGear: monster.carriedGear,
+  returnsToMonsterDeck: monster.returnsToMonsterDeck,
 );
 
 GameState _copyState(

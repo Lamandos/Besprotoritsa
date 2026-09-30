@@ -105,6 +105,8 @@ Map<String, Object?>? _contextToJson(RollContext? context) => switch (context) {
     'stat': context.stat.name,
     'difficulty': context.difficulty,
     'event_id': context.eventId,
+    'event_behavior_id': context.eventBehaviorId,
+    'event_option_index': context.eventOptionIndex,
     'quest_id': context.questId,
   },
   AttackRollContext() => {
@@ -112,6 +114,7 @@ Map<String, Object?>? _contextToJson(RollContext? context) => switch (context) {
     'player_id': context.playerId,
     'target_instance_id': context.targetInstanceId,
     'pre_attack_damage': context.preAttackDamage,
+    'resume_automatic_phase': context.resumeAutomaticPhase,
   },
 };
 
@@ -123,12 +126,18 @@ RollContext? _contextFromJson(Object? value) {
       playerId: _string(json, 'player_id'),
       targetInstanceId: _string(json, 'target_instance_id'),
       preAttackDamage: _optionalInt(json, 'pre_attack_damage') ?? 0,
+      resumeAutomaticPhase: json['resume_automatic_phase'] == true,
     ),
     'skill' || null => SkillCheckContext(
       playerId: _string(json, 'player_id'),
       stat: _enum(StatType.values, _string(json, 'stat'), 'stat'),
       difficulty: _int(json, 'difficulty'),
       eventId: _nullableString(json['event_id'], 'event_id'),
+      eventBehaviorId: _nullableString(
+        json['event_behavior_id'],
+        'event_behavior_id',
+      ),
+      eventOptionIndex: _optionalInt(json, 'event_option_index'),
       questId: _nullableString(json['quest_id'], 'quest_id'),
     ),
     final type => throw FormatException('Unknown reroll context type: $type.'),

@@ -79,6 +79,9 @@ class GameStateJsonCodec {
   /// Migrates [document] to the current version and reconstructs its state.
   GameState fromJson(Map<String, Object?> document) {
     final json = _migrator.migrate(document);
+    final pendingDecision = _migrateLegacyPendingDecision(
+      SaveJsonModels.decisionFromJson(json['pending_decision']),
+    );
     return GameState(
       schemaVersion: _int(json, 'schema_version'),
       seed: _int(json, 'seed'),
@@ -163,11 +166,46 @@ class GameStateJsonCodec {
       monsterTurnIndex: _int(json, 'monster_turn_index'),
       monsterStepsRemaining: _int(json, 'monster_steps_remaining'),
       eventTurnIndex: _int(json, 'event_turn_index'),
-      pendingDecision: SaveJsonModels.decisionFromJson(
-        json['pending_decision'],
+      pendingDecision: pendingDecision,
+    );
+  }
+}
+
+PendingDecision? _migrateLegacyPendingDecision(PendingDecision? decision) {
+  if (decision case AwaitingRerollChoice(
+    :final dice,
+    :final availableRerolls,
+    :final window,
+    context: SkillCheckContext(
+      :final playerId,
+      :final stat,
+      :final difficulty,
+      eventId: 'cabin-noise',
+      eventBehaviorId: null,
+      :final eventOptionIndex,
+      :final questId,
+    ),
+    :final maxDicePerReroll,
+  )) {
+    // Version 1 saves written before event behavior IDs were persisted can
+    // resume this released event without its data-driven behavior identifier.
+    return AwaitingRerollChoice(
+      dice: dice,
+      availableRerolls: availableRerolls,
+      window: window,
+      maxDicePerReroll: maxDicePerReroll,
+      context: SkillCheckContext(
+        playerId: playerId,
+        stat: stat,
+        difficulty: difficulty,
+        eventId: 'cabin-noise',
+        eventBehaviorId: 'event_cabin_noise',
+        eventOptionIndex: eventOptionIndex,
+        questId: questId,
       ),
     );
   }
+  return decision;
 }
 
 Map<String, Object?> _object(Map<String, Object?> json, String key) {

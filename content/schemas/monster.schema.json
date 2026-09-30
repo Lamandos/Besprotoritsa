@@ -10,6 +10,7 @@
     "health": { "$ref": "#/$defs/nonNegativeInteger" },
     "defense": { "$ref": "#/$defs/nonNegativeInteger" },
     "attack": { "$ref": "#/$defs/nonNegativeInteger" },
+    "activity": { "enum": ["active", "passive"] },
     "movement": { "$ref": "#/$defs/nonNegativeInteger" },
     "rewardCredits": { "$ref": "#/$defs/nonNegativeInteger" },
     "rewardItems": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },

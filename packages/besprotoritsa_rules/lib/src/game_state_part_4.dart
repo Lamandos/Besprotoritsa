@@ -57,6 +57,8 @@ final class SkillCheckContext extends RollContext {
     required this.stat,
     this.difficulty = 1,
     this.eventId,
+    this.eventBehaviorId,
+    this.eventOptionIndex,
     this.questId,
   }) : assert(difficulty >= 1, 'difficulty must be positive.'),
        super();
@@ -65,6 +67,8 @@ final class SkillCheckContext extends RollContext {
   final StatType stat;
   final int difficulty;
   final CardId? eventId;
+  final String? eventBehaviorId;
+  final int? eventOptionIndex;
   final QuestId? questId;
 }
 
@@ -75,11 +79,13 @@ final class AttackRollContext extends RollContext {
     required this.playerId,
     required this.targetInstanceId,
     this.preAttackDamage = 0,
+    this.resumeAutomaticPhase = false,
   }) : super();
 
   final PlayerId playerId;
   final String targetInstanceId;
   final int preAttackDamage;
+  final bool resumeAutomaticPhase;
 }
 
 /// A pending attempt to prevent incoming monster damage with agility hits.
@@ -90,6 +96,8 @@ final class AwaitingDodge extends PendingDecision {
     required this.requiredAgilitySuccesses,
     this.targetPlayerId,
     this.source = DamageSource.monster,
+    this.counterAttackMonsterInstanceId,
+    this.counterAttackPlayerId,
   }) : assert(monsterDamage >= 0, 'monsterDamage must not be negative.'),
        assert(
          requiredAgilitySuccesses >= 0,
@@ -100,6 +108,8 @@ final class AwaitingDodge extends PendingDecision {
   final int requiredAgilitySuccesses;
   final PlayerId? targetPlayerId;
   final DamageSource source;
+  final String? counterAttackMonsterInstanceId;
+  final PlayerId? counterAttackPlayerId;
 
   /// Short name convenient for generic decision views.
   int get requiredSuccesses => requiredAgilitySuccesses;
@@ -159,6 +169,8 @@ final class AwaitingHeroReplacement extends PendingDecision {
   AwaitingHeroReplacement({
     required this.playerId,
     required Iterable<CharacterId> characterIds,
+    this.counterAttackMonsterInstanceId,
+    this.counterAttackPlayerId,
   }) : characterIds = List.unmodifiable(characterIds) {
     _requireId(playerId, 'playerId');
     if (this.characterIds.isEmpty) {
@@ -172,6 +184,8 @@ final class AwaitingHeroReplacement extends PendingDecision {
 
   final PlayerId playerId;
   final List<CharacterId> characterIds;
+  final String? counterAttackMonsterInstanceId;
+  final PlayerId? counterAttackPlayerId;
 }
 
 /// A privacy-preserving projection that another hero must make a decision.

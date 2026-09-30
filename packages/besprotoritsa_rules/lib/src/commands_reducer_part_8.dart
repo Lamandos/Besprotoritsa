@@ -178,9 +178,18 @@ GameState _advanceEvents(GameState state) {
   return current;
 }
 
-bool _hasAggressiveMonster(GameState state, PlayerState player) => state
-    .monsters
-    .any((monster) => monster.attack > 0 && monster.coord == player.coord);
+bool _hasAggressiveMonster(GameState state, PlayerState player) =>
+    state.monsters.any(
+      (monster) =>
+          monster.coord == player.coord && _monsterIsActive(state, monster),
+    );
+
+bool _monsterIsActive(GameState state, MonsterInstance monster) {
+  final activity = state.monsterDefinitions[monster.monsterId]?['activity'];
+  if (activity is String) return activity == 'active';
+  // Compatibility for legacy saves and isolated callers without content.
+  return monster.attack > 0;
+}
 
 GameState _startNextPlayersTurn(GameState state) {
   final withReplacements = _activateQueuedReplacements(state);

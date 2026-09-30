@@ -1179,6 +1179,15 @@
         "Все повествовательные события"
       ],
       "lifecycleHooks": []
+    },
+    {
+      "behaviorId": "event_cabin_noise",
+      "category": "event",
+      "cardText": "успех даёт припас; провал вызывает немедленный бой с монстром",
+      "sources": [
+        "Шум в каюте"
+      ],
+      "lifecycleHooks": []
     }
   ],
   "cards": [
@@ -2019,6 +2028,7 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure",
+        "event_cabin_noise",
         "card.draw",
         "card.drawFiltered",
         "card.drawSpecific",

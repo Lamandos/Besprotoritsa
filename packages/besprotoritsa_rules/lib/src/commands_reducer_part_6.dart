@@ -39,6 +39,7 @@ GameStepResult _resolveDecision(
       state,
       pending,
       choice,
+      dice,
     ),
     AwaitingOtherPlayerDecision() => GameStepResult(
       state: state,
@@ -51,6 +52,7 @@ GameStepResult _resolveHeroReplacement(
   GameState state,
   AwaitingHeroReplacement pending,
   DecisionChoice choice,
+  DiceRoller dice,
 ) {
   if (choice is! SelectReplacementHeroChoice ||
       !pending.characterIds.contains(choice.characterId)) {
@@ -73,14 +75,15 @@ GameStepResult _resolveHeroReplacement(
     );
   }
   final selectedReserve = reserve;
-  final queued = Map<PlayerId, ReserveHero>.of(state.queuedReplacements)
-    ..[pending.playerId] = selectedReserve;
+  final queuedReplacements = Map<PlayerId, ReserveHero>.of(
+    state.queuedReplacements,
+  )..[pending.playerId] = selectedReserve;
   final selected = _copyState(
     state,
     reserveHeroes: state.reserveHeroes.where(
       (hero) => hero.characterId != selectedReserve.characterId,
     ),
-    queuedReplacements: queued,
+    queuedReplacements: queuedReplacements,
     clearPendingDecision: true,
     logEntry:
         'replacement-selected:'
@@ -88,9 +91,29 @@ GameStepResult _resolveHeroReplacement(
   );
   // A death can interrupt a queue of monster/boil damage.  Choosing a reserve
   // must return to that queue before any new player command becomes legal.
-  return GameStepResult(
-    state: _resumeAutomaticPhase(_startNextIncomingDamage(selected)),
+  final queued = _startNextIncomingDamage(
+    selected,
+    counterAttackMonsterInstanceId: pending.counterAttackMonsterInstanceId,
+    counterAttackPlayerId: pending.counterAttackPlayerId,
   );
+  if (queued.pendingDecision != null) return GameStepResult(state: queued);
+  final counterAttackId = pending.counterAttackMonsterInstanceId;
+  final counterAttackPlayerId = pending.counterAttackPlayerId;
+  final monster = counterAttackId == null
+      ? null
+      : _monsterById(queued, counterAttackId);
+  final counterAttacker = counterAttackPlayerId == null
+      ? null
+      : _playerById(queued, counterAttackPlayerId);
+  final continued = monster != null && (counterAttacker?.alive ?? false)
+      ? _startImmediateCounterAttack(
+          queued,
+          counterAttackPlayerId!,
+          monster,
+          dice,
+        )
+      : queued;
+  return GameStepResult(state: _resumeAutomaticPhase(continued));
 }
 
 GameStepResult _resolveTerminalPick(
@@ -198,7 +221,7 @@ GameStepResult _resolveReroll(
 ) {
   if (choice is KeepRollChoice) {
     final resolved = _copyState(state, clearPendingDecision: true);
-    return GameStepResult(state: _completeRoll(resolved, pending));
+    return GameStepResult(state: _completeRoll(resolved, pending, dice));
   }
   if (choice is! RerollChoice || pending.availableRerolls == 0) {
     return GameStepResult(
@@ -277,11 +300,49 @@ GameStepResult _resolveDodge(
       damaged && targetStillLives && pending.source == DamageSource.monster
       ? _drawCondition(withDamage, targetId)
       : withDamage;
+  final counterAttackId = pending.counterAttackMonsterInstanceId;
+  final counterAttackPlayerId = pending.counterAttackPlayerId ?? targetId;
+  final awaitingReplacement = withCondition.pendingDecision;
+  final withContinuation =
+      counterAttackId != null && awaitingReplacement is AwaitingHeroReplacement
+      ? _copyState(
+          withCondition,
+          pendingDecision: AwaitingHeroReplacement(
+            playerId: awaitingReplacement.playerId,
+            characterIds: awaitingReplacement.characterIds,
+            counterAttackMonsterInstanceId: counterAttackId,
+            counterAttackPlayerId: counterAttackPlayerId,
+          ),
+        )
+      : withCondition;
+  final counterAttackerLives =
+      _playerById(withContinuation, counterAttackPlayerId)?.alive ?? false;
+  if (counterAttackId != null && counterAttackerLives) {
+    final queued = _startNextIncomingDamage(
+      withContinuation,
+      counterAttackMonsterInstanceId: counterAttackId,
+      counterAttackPlayerId: counterAttackPlayerId,
+    );
+    if (queued.pendingDecision != null) {
+      return GameStepResult(state: queued);
+    }
+    final monster = _monsterById(queued, counterAttackId);
+    if (monster != null) {
+      return GameStepResult(
+        state: _startImmediateCounterAttack(
+          queued,
+          counterAttackPlayerId,
+          monster,
+          dice,
+        ),
+      );
+    }
+  }
   return GameStepResult(
     state: _resumeAutomaticPhase(
       _startNextIncomingDamage(
         _copyState(
-          withCondition,
+          withContinuation,
           logEntry: 'dodge:$targetId:$remainingDamage',
         ),
       ),

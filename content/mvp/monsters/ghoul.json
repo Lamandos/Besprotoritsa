@@ -3,6 +3,7 @@
   "health": 2,
   "defense": 0,
   "attack": 2,
+  "activity": "active",
   "movement": 1,
   "rewardCredits": 0,
   "rewardItems": [],

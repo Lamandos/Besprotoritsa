@@ -411,6 +411,10 @@ String? _runtimeEventText(GameState state, String eventId, String field) {
 }
 
 String _eventOptionLabel(GameState state, String? eventId, String option) {
+  final sector = option.split(':');
+  if (sector.length == 3 && sector.first == 'sector') {
+    return 'Сектор ${sector[1]}, ${sector[2]}';
+  }
   if (eventId == null) return option;
   final index = int.tryParse(option.replaceFirst('option-', ''));
   if (index == null) return option;

@@ -23,6 +23,11 @@ void main() {
       expect(restored, isNotNull);
       expect(codec.encode(restored!), savedJson);
       expect(restored.pendingDecision, isA<AwaitingRerollChoice>());
+      final context =
+          (restored.pendingDecision! as AwaitingRerollChoice).context!
+              as SkillCheckContext;
+      expect(context.eventBehaviorId, 'event_cabin_noise');
+      expect(context.eventOptionIndex, 1);
     },
   );
 
@@ -35,6 +40,81 @@ void main() {
     final restored = codec.fromJson(legacy);
 
     expect(codec.toJson(restored)['schema_version'], 1);
+  });
+
+  test('restores legacy cabin-noise behavior for a pending skill roll', () {
+    final codec = GameStateJsonCodec();
+    final legacy = codec.toJson(_interruptedState());
+    final decision = Map<String, Object?>.from(
+      legacy['pending_decision']! as Map<Object?, Object?>,
+    );
+    final context = Map<String, Object?>.from(
+      decision['context']! as Map<Object?, Object?>,
+    )..remove('event_behavior_id');
+    legacy['pending_decision'] = {...decision, 'context': context};
+
+    final restored = codec.fromJson(legacy);
+    final roll = restored.pendingDecision! as AwaitingRerollChoice;
+
+    expect(
+      (roll.context! as SkillCheckContext).eventBehaviorId,
+      'event_cabin_noise',
+    );
+  });
+
+  test('preserves immediate combat continuations in pending decisions', () {
+    final base = _interruptedState();
+    final codec = GameStateJsonCodec();
+    const pendingDodge = AwaitingDodge(
+      monsterDamage: 1,
+      requiredAgilitySuccesses: 2,
+      targetPlayerId: 'ada',
+      counterAttackMonsterInstanceId: 'event-ghoul',
+      counterAttackPlayerId: 'ada',
+    );
+    final restoredDodge =
+        codec
+                .decode(codec.encode(_withPending(base, pendingDodge)))
+                .pendingDecision!
+            as AwaitingDodge;
+    final pendingAttack = AwaitingRerollChoice(
+      dice: const [1, 2],
+      availableRerolls: 1,
+      window: const DecisionWindow(remainingTicks: 1),
+      context: const AttackRollContext(
+        playerId: 'ada',
+        targetInstanceId: 'event-ghoul',
+        resumeAutomaticPhase: true,
+      ),
+    );
+    final restoredAttack =
+        codec
+                .decode(codec.encode(_withPending(base, pendingAttack)))
+                .pendingDecision!
+            as AwaitingRerollChoice;
+    final pendingReplacement = AwaitingHeroReplacement(
+      playerId: 'hero-2',
+      characterIds: const ['scientist'],
+      counterAttackMonsterInstanceId: 'event-ghoul',
+      counterAttackPlayerId: 'ada',
+    );
+    final restoredReplacement =
+        codec
+                .decode(codec.encode(_withPending(base, pendingReplacement)))
+                .pendingDecision!
+            as AwaitingHeroReplacement;
+
+    expect(restoredDodge.counterAttackMonsterInstanceId, 'event-ghoul');
+    expect(restoredDodge.counterAttackPlayerId, 'ada');
+    expect(
+      restoredReplacement.counterAttackMonsterInstanceId,
+      'event-ghoul',
+    );
+    expect(restoredReplacement.counterAttackPlayerId, 'ada');
+    expect(
+      (restoredAttack.context! as AttackRollContext).resumeAutomaticPhase,
+      isTrue,
+    );
   });
 
   test('reports invalid card definitions as format errors', () {
@@ -54,6 +134,22 @@ void main() {
     expect(() => codec.fromJson(invalid), throwsFormatException);
   });
 }
+
+GameState _withPending(GameState source, PendingDecision pendingDecision) =>
+    GameState(
+      seed: source.seed,
+      difficulty: source.difficulty,
+      round: source.round,
+      phase: source.phase,
+      activePlayerId: source.activePlayerId,
+      actionsLeft: source.actionsLeft,
+      board: source.board,
+      players: source.players,
+      monsters: source.monsters,
+      decks: source.decks,
+      quests: source.quests,
+      pendingDecision: pendingDecision,
+    );
 
 GameState _interruptedState() => GameState(
   seed: 0xDEADBEEF,
@@ -108,6 +204,7 @@ GameState _interruptedState() => GameState(
       attack: 2,
       movement: 2,
       carriedGear: const ['pistol'],
+      returnsToMonsterDeck: true,
     ),
   ],
   boils: const [BoilToken(instanceId: 'boil-1', coord: HexCoord(0, 0))],
@@ -177,6 +274,8 @@ GameState _interruptedState() => GameState(
       stat: StatType.science,
       difficulty: 2,
       eventId: 'cabin-noise',
+      eventBehaviorId: 'event_cabin_noise',
+      eventOptionIndex: 1,
       questId: 'chapter-1',
     ),
   ),
