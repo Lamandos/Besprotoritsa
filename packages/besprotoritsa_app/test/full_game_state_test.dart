@@ -31,6 +31,12 @@ void main() {
     expect(state.decks['conditions']!.drawPile, hasLength(50));
     expect(state.decks['events']!.drawPile, hasLength(88));
     expect(state.eventDefinitions, hasLength(88));
+    final cabinNoiseOptions =
+        state.eventDefinitions['cabin-noise']!['options']! as List;
+    expect(
+      (cabinNoiseOptions.first as Map<String, Object?>)['behaviorId'],
+      'event_cabin_noise',
+    );
     expect(state.questDefinitions, hasLength(29));
     expect(state.taskDefinitions, hasLength(16));
     expect(state.monsterDefinitions, hasLength(16));

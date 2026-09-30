@@ -15,7 +15,7 @@
           },
           "successKey": "content.event.cabin-noise.option.o1.success",
           "failureKey": "content.event.cabin-noise.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event_cabin_noise"
         },
         {
           "actionKey": "content.event.cabin-noise.option.o2.action",
@@ -28,7 +28,8 @@
       "behaviorIds": [
         "event.choice",
         "event.skillCheck",
-        "event.successFailure"
+        "event.successFailure",
+        "event_cabin_noise"
       ]
     },
     {
