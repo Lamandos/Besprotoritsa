@@ -46,22 +46,7 @@ GameState createFullGameState({
         'Unknown full-set character.',
       );
     }
-    final backpack = <String>[];
-    String? weapon;
-    String? robot;
-    for (final id in _strings(character['startItems'])) {
-      final definition = definitions[id];
-      if (definition == null) {
-        throw StateError('Missing starter card "$id" in full runtime set.');
-      }
-      if (definition.slots.contains(ItemSlot.weapon) && weapon == null) {
-        weapon = id;
-      } else if (definition.slots.contains(ItemSlot.robot) && robot == null) {
-        robot = id;
-      } else {
-        backpack.add(id);
-      }
-    }
+    final loadout = _startingLoadout(character, definitions);
     return PlayerState(
       id: 'hero-${index + 1}',
       characterId: characterIds[index],
@@ -69,8 +54,8 @@ GameState createFullGameState({
       damage: 0,
       health: _int(character, 'health'),
       credits: _int(character, 'startCredits'),
-      backpack: backpack,
-      equipped: EquippedGear(weapon: weapon, robot: robot),
+      backpack: loadout.backpack,
+      equipped: loadout.equipped,
       carriedMods: const [],
       implanted: const [],
       conditions: const [],
@@ -216,26 +201,13 @@ ReserveHero _reserveHero(
   Map<String, Object?> character,
   Map<String, CardDefinition> definitions,
 ) {
-  String? weapon;
-  String? robot;
-  final backpack = <String>[];
-  for (final id in _strings(character['startItems'])) {
-    final item = definitions[id];
-    if (item == null) throw StateError('Missing starter card "$id".');
-    if (item.slots.contains(ItemSlot.weapon) && weapon == null) {
-      weapon = id;
-    } else if (item.slots.contains(ItemSlot.robot) && robot == null) {
-      robot = id;
-    } else {
-      backpack.add(id);
-    }
-  }
+  final loadout = _startingLoadout(character, definitions);
   return ReserveHero(
     characterId: _string(character, 'id'),
     health: _int(character, 'health'),
     credits: _int(character, 'startCredits'),
-    backpack: backpack,
-    equipped: EquippedGear(weapon: weapon, robot: robot),
+    backpack: loadout.backpack,
+    equipped: loadout.equipped,
     stats: PlayerStats(
       strength: _int(character, 'strength'),
       combatStrength: _int(character, 'combatStrength'),
@@ -243,6 +215,43 @@ ReserveHero _reserveHero(
       repair: _int(character, 'repair'),
       endurance: _int(character, 'endurance'),
       agility: _int(character, 'agility'),
+    ),
+  );
+}
+
+({List<String> backpack, EquippedGear equipped}) _startingLoadout(
+  Map<String, Object?> character,
+  Map<String, CardDefinition> definitions,
+) {
+  final backpack = <String>[];
+  String? weapon;
+  String? armor;
+  String? clothing;
+  String? robot;
+  for (final id in _strings(character['startItems'])) {
+    final item = definitions[id];
+    if (item == null) {
+      throw StateError('Missing starter card "$id" in full runtime set.');
+    }
+    if (item.slots.contains(ItemSlot.weapon) && weapon == null) {
+      weapon = id;
+    } else if (item.slots.contains(ItemSlot.armor) && armor == null) {
+      armor = id;
+    } else if (item.slots.contains(ItemSlot.clothing) && clothing == null) {
+      clothing = id;
+    } else if (item.slots.contains(ItemSlot.robot) && robot == null) {
+      robot = id;
+    } else {
+      backpack.add(id);
+    }
+  }
+  return (
+    backpack: backpack,
+    equipped: EquippedGear(
+      weapon: weapon,
+      armor: armor,
+      clothing: clothing,
+      robot: robot,
     ),
   );
 }

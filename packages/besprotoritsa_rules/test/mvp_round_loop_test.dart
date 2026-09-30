@@ -164,6 +164,40 @@ void main() {
     expect(state.players.single.backpack, ['quest-item']);
   });
 
+  test('assigned personal tasks record progress and grant their reward', () {
+    final state = step(
+      _mvpState(
+        initialCredits: 15,
+        personalTasksByPlayer: const {
+          'ada': ['wealthy-test'],
+        },
+        taskDefinitions: {
+          'wealthy-test': {
+            'id': 'wealthy-test',
+            'targetType': 'metric',
+            'metric': 'credits',
+            'targetValue': 15,
+            'window': 'game',
+            'aggregation': 'maximum',
+            'rewardCredits': 5,
+            'nameKey': 'task.wealthy.name',
+            'descKey': 'task.wealthy.description',
+          },
+        },
+      ),
+      const HealCommand(1),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.quests.statusOf('wealthy-test'), QuestStatus.completed);
+    expect(
+      state.quests.conditionProgress['wealthy-test']?['personal-task-value'],
+      15,
+    );
+    expect(state.players.single.credits, 20);
+    expect(state.log.join(' '), isNot(contains('wealthy-test')));
+  });
+
   test('full quest rewards draw items for players at the target location', () {
     final items = {
       for (final id in ['item-a', 'item-b', 'item-c'])
@@ -580,13 +614,16 @@ GameState _mvpState({
   Map<String, Map<String, Object?>> eventDefinitions = const {},
   HexCoord playerCoord = const HexCoord(0, 0),
   List<String> storyQuestIds = const ['chapter-1-awakening'],
+  Map<PlayerId, Iterable<String>> personalTasksByPlayer = const {},
   Map<String, Map<String, int>> conditionProgress = const {},
   Map<String, Map<String, Object?>> questDefinitions = const {},
+  Map<String, Map<String, Object?>> taskDefinitions = const {},
   Map<CardId, CardDefinition> cardDefinitions = const {},
   Map<DeckId, DeckState> additionalDecks = const {},
   Iterable<MonsterInstance> monsters = const [],
   Map<String, Map<String, Object?>> monsterDefinitions = const {},
   int heroCount = 1,
+  int initialCredits = 0,
   VentColor corridorVentColor = VentColor.none,
 }) => GameState(
   seed: 17,
@@ -626,7 +663,7 @@ GameState _mvpState({
         characterId: index == 0 ? 'engineer' : 'guard',
         coord: playerCoord,
         damage: 0,
-        credits: 0,
+        credits: initialCredits,
         backpack: const [],
         equipped: const EquippedGear(),
         carriedMods: const [],
@@ -644,9 +681,11 @@ GameState _mvpState({
   cardDefinitions: cardDefinitions,
   eventDefinitions: eventDefinitions,
   questDefinitions: questDefinitions,
+  taskDefinitions: taskDefinitions,
   monsterDefinitions: monsterDefinitions,
   quests: QuestState(
     storyQuestIds: storyQuestIds,
+    personalTasksByPlayer: personalTasksByPlayer,
     conditionProgress: conditionProgress,
   ),
 );

@@ -32,12 +32,10 @@ class _GameBottomSheet extends StatelessWidget {
   );
 }
 
+// This journal is shared at the table, so it only lists public story quests.
 List<String> _activeQuests(GameState state) => [
   for (final questId in state.quests.storyQuestIds)
     if (state.quests.statusOf(questId) == QuestStatus.active) questId,
-  for (final entry in state.quests.personalTasksByPlayer.entries)
-    for (final questId in entry.value)
-      if (state.quests.statusOf(questId) == QuestStatus.active) questId,
 ];
 
 class _PendingDecisionModal extends ConsumerWidget {

@@ -293,6 +293,9 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
       }
     }
   }
+  if (result.rejection == null && resultState.taskDefinitions.isNotEmpty) {
+    resultState = _recordPersonalTaskProgress(state, resultState, command);
+  }
   return GameStepResult(
     state: resultState,
     rejection: result.rejection,

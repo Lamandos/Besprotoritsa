@@ -51,6 +51,11 @@ void main() {
       everyElement(hasLength(2)),
     );
     expect(state.quests.storyQuestIds, ['quest-01']);
+    expect(state.players[0].equipped.clothing, 'lucky-socks');
+    expect(state.players[0].backpack, isEmpty);
+    expect(state.players[2].equipped.armor, 'hard-hat');
+    expect(state.players[2].backpack, isEmpty);
+    expect(state.reserveHeroes.last.equipped.armor, 'spacesuit-mk2');
   });
 
   test('full runtime event definitions survive a save round trip', () {
