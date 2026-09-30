@@ -101,6 +101,7 @@ GameState createMvpGameState({List<String>? characterIds}) {
       for (final entry in items.entries)
         entry.key: CardDefinition.fromJson(entry.value),
     },
+    eventDefinitions: _byId(content['events']),
     quests: QuestState(
       storyQuestIds: _strings(deckOrder['storyQuests']),
     ),

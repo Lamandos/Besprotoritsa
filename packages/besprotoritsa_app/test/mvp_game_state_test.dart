@@ -47,4 +47,16 @@ void main() {
     expect(state.players[1].equipped.weapon, 'pistol');
     expect(state.players[1].backpack, isNot(contains('pistol')));
   });
+
+  test('loads MVP event behavior definitions into the runtime state', () {
+    final state = createMvpGameState();
+    final event = state.eventDefinitions['cabin-noise']!;
+    final options = event['options']! as List<Object?>;
+
+    expect(options, hasLength(1));
+    expect(
+      (options.first! as Map<String, Object?>)['behaviorId'],
+      'event_cabin_noise',
+    );
+  });
 }
