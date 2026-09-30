@@ -37,9 +37,34 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('isolated autosaves do not hide manual saves from normal slots', (
+    tester,
+  ) async {
+    final storage = InMemoryGameStorage();
+    final autosaveStorage = InMemoryGameStorage();
+    await _openGame(tester, storage, autosaveStorage: autosaveStorage);
+
+    expect(await storage.loadGame('autosave'), isNull);
+    expect(await autosaveStorage.loadGame('autosave'), isNotNull);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('manual-save-button')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Сохранить'));
+    await tester.pumpAndSettle();
+
+    expect(await storage.loadGame('slot-1'), isNotNull);
+    expect(await autosaveStorage.loadGame('slot-1'), isNull);
+  });
 }
 
-Future<void> _openGame(WidgetTester tester, GameStorage storage) async {
+Future<void> _openGame(
+  WidgetTester tester,
+  GameStorage storage, {
+  GameStorage? autosaveStorage,
+}) async {
   await tester.pumpWidget(
     MaterialApp(
       home: Builder(
@@ -51,6 +76,7 @@ Future<void> _openGame(WidgetTester tester, GameStorage storage) async {
                 builder: (_) => GameSessionScreen(
                   initialState: createMvpGameState(),
                   storage: storage,
+                  autosaveStorage: autosaveStorage,
                 ),
               ),
             ),

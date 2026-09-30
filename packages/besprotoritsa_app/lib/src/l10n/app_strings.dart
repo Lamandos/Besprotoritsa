@@ -20,6 +20,8 @@ class AppStrings {
 
   String get appTitle => _value('appTitle');
   String get newGame => _value('newGame');
+  String get newFullGame => _value('newFullGame');
+  String get mvpDemo => _value('mvpDemo');
   String get continueGame => _value('continueGame');
   String get loadGame => _value('loadGame');
   String get tutorial => _value('tutorial');
@@ -31,6 +33,11 @@ class AppStrings {
   String get fullContentSet => _value('fullContentSet');
   String get contentSetTitle => _value('contentSetTitle');
   String get startGame => _value('startGame');
+  String get partyReviewTitle => _value('partyReviewTitle');
+  String get partyReviewSubtitle => _value('partyReviewSubtitle');
+  String get confirmStart => _value('confirmStart');
+  String get confirmStartTitle => _value('confirmStartTitle');
+  String get confirmStartBody => _value('confirmStartBody');
   String get scientist => _value('scientist');
   String get guard => _value('guard');
   String get mechanic => _value('mechanic');
@@ -134,6 +141,8 @@ class AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
 const Map<String, String> _ruValues = <String, String>{
   'appTitle': 'Беспроторица',
   'newGame': 'Новая игра',
+  'newFullGame': 'Новая полная партия',
+  'mvpDemo': 'Короткая демонстрация',
   'continueGame': 'Продолжить',
   'loadGame': 'Загрузить партию',
   'tutorial': 'Обучение',
@@ -144,7 +153,12 @@ const Map<String, String> _ruValues = <String, String>{
   'contentSetTitle': 'Набор контента',
   'mvpContentSet': 'MVP · сценарий',
   'fullContentSet': 'Полный набор',
-  'startGame': 'Начать игру',
+  'startGame': 'Обзор партии',
+  'partyReviewTitle': 'Обзор партии',
+  'partyReviewSubtitle': 'Полный набор контента · локальная партия',
+  'confirmStart': 'Подтвердить и начать',
+  'confirmStartTitle': 'Начать полную партию?',
+  'confirmStartBody': 'Состав отряда зафиксирован. Начать экспедицию?',
   'scientist': 'Учёная',
   'guard': 'Охранник',
   'mechanic': 'Механик',

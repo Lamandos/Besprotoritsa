@@ -206,7 +206,7 @@ void main() {
     );
   });
 
-  testWidgets('roster screen exposes characters from the selected full set', (
+  testWidgets('roster screen exposes the full set and opens party review', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -214,18 +214,26 @@ void main() {
         home: RosterSelectionScreen(storage: InMemoryGameStorage()),
       ),
     );
-    await tester.tap(find.text('Полный набор'));
-    await tester.pumpAndSettle();
-
     expect(
       find.byKey(const ValueKey<String>('content-set-selector')),
-      findsOneWidget,
+      findsNothing,
     );
+    expect(find.text('Ученый'), findsOneWidget);
     expect(find.text('Рабочий'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Таскала'), 300);
     expect(find.text('Таскала'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Астронавт'), 300);
     expect(find.text('Астронавт'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey<String>('start-game-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Обзор партии'), findsOneWidget);
+    expect(find.textContaining('35 отсеков'), findsOneWidget);
+    await tester.tap(
+      find.byKey(const ValueKey<String>('confirm-start-game-button')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Начать полную партию?'), findsOneWidget);
   });
 }
 

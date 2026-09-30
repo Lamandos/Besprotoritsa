@@ -16,10 +16,16 @@ class GameSessionScreen extends StatelessWidget {
   const GameSessionScreen({
     required this.initialState,
     required this.storage,
+    this.autosaveStorage,
     super.key,
   });
 
   final GameState initialState;
+
+  /// Storage used only for rolling recovery autosaves.
+  final GameStorage? autosaveStorage;
+
+  /// Storage used for manual save slots.
   final GameStorage storage;
 
   @override
@@ -29,14 +35,23 @@ class GameSessionScreen extends StatelessWidget {
         () => GameController(initialState: initialState),
       ),
     ],
-    child: _AutosavingGame(storage: storage, initialState: initialState),
+    child: _AutosavingGame(
+      storage: storage,
+      autosaveStorage: autosaveStorage ?? storage,
+      initialState: initialState,
+    ),
   );
 }
 
 class _AutosavingGame extends ConsumerStatefulWidget {
-  const _AutosavingGame({required this.storage, required this.initialState});
+  const _AutosavingGame({
+    required this.storage,
+    required this.autosaveStorage,
+    required this.initialState,
+  });
 
   final GameStorage storage;
+  final GameStorage autosaveStorage;
   final GameState initialState;
 
   @override
@@ -46,6 +61,7 @@ class _AutosavingGame extends ConsumerStatefulWidget {
 class _AutosavingGameState extends ConsumerState<_AutosavingGame>
     with WidgetsBindingObserver {
   late final SaveSystem _saves;
+  late final SaveSystem _autosaves;
   late GameState _latestState;
   Future<void> _saveChain = Future<void>.value();
 
@@ -53,6 +69,7 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
   void initState() {
     super.initState();
     _saves = SaveSystem(storage: widget.storage);
+    _autosaves = SaveSystem(storage: widget.autosaveStorage);
     _latestState = widget.initialState;
     WidgetsBinding.instance.addObserver(this);
     _queueAutosave(widget.initialState);
@@ -89,7 +106,7 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
   void _queueAutosave(GameState state) {
     _saveChain = _saveChain.catchError((Object _) {}).then((_) async {
       try {
-        await _saves.autosave(state);
+        await _autosaves.autosave(state);
       } on Object {
         // Saving must not prevent an otherwise playable local game session.
       }

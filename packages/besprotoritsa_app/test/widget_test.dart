@@ -11,7 +11,8 @@ void main() {
     );
 
     expect(find.text('БЕСПРОТОРИЦА'), findsOneWidget);
-    expect(find.text('Новая игра'), findsOneWidget);
+    expect(find.text('Новая полная партия'), findsOneWidget);
+    expect(find.text('Короткая демонстрация'), findsOneWidget);
     expect(find.text('Продолжить'), findsOneWidget);
     expect(find.text('Загрузить партию'), findsOneWidget);
     expect(find.text('Обучение'), findsOneWidget);

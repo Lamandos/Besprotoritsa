@@ -2,11 +2,11 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:besprotoritsa_app/src/game/full_game_state.dart';
-import 'package:besprotoritsa_app/src/game/mvp_game_state.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/game_session_screen.dart';
 import 'package:besprotoritsa_app/src/theme/besprotoritsa_theme.dart';
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
+import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:flutter/material.dart';
 
 /// Lets the player prepare an expedition of two to four distinct heroes.
@@ -20,7 +20,6 @@ class RosterSelectionScreen extends StatefulWidget {
 }
 
 class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
-  String _contentSet = 'mvp';
   final ValueNotifier<Set<String>> _selected = ValueNotifier(<String>{
     'scientist',
     'guard',
@@ -95,28 +94,9 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  strings.contentSetTitle,
+                  strings.fullContentSet,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
-              ),
-              const SizedBox(height: 6),
-              SegmentedButton<String>(
-                key: const ValueKey<String>('content-set-selector'),
-                segments: [
-                  ButtonSegment<String>(
-                    value: 'mvp',
-                    label: Text(strings.mvpContentSet),
-                  ),
-                  ButtonSegment<String>(
-                    value: 'full',
-                    label: Text(strings.fullContentSet),
-                  ),
-                ],
-                selected: {_contentSet},
-                onSelectionChanged: (selection) => setState(() {
-                  _contentSet = selection.single;
-                  _selected.value = <String>{'scientist', 'guard'};
-                }),
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -125,7 +105,7 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
                   builder: (context, selected, _) => _RosterList(
                     selected: selected,
                     onChanged: _toggleHero,
-                    heroes: _availableHeroes(strings, _contentSet),
+                    heroes: _availableHeroes(),
                   ),
                 ),
               ),
@@ -135,7 +115,7 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
                 builder: (context, selected, _) => FilledButton(
                   key: const ValueKey<String>('start-game-button'),
                   onPressed: selected.length >= 2 && selected.length <= 4
-                      ? () => _startGame(context, selected)
+                      ? () => _reviewParty(context, selected)
                       : null,
                   child: Text(strings.startGame),
                 ),
@@ -153,17 +133,17 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
     _selected.value = selected;
   }
 
-  void _startGame(BuildContext context, Set<String> selected) {
-    final roster = _availableHeroes(AppStrings.of(context), _contentSet)
+  void _reviewParty(BuildContext context, Set<String> selected) {
+    final roster = _availableHeroes()
         .where((hero) => selected.contains(hero.id))
         .map((hero) => hero.id)
         .toList(growable: false);
-    Navigator.of(context).pushReplacement<void, void>(
+    final initialState = createFullGameState(characterIds: roster);
+    Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
-        builder: (_) => GameSessionScreen(
-          initialState: _contentSet == 'full'
-              ? createFullGameState(characterIds: roster)
-              : createMvpGameState(characterIds: roster),
+        builder: (_) => FullPartyReviewScreen(
+          characterIds: roster,
+          initialState: initialState,
           storage: widget.storage,
         ),
       ),
@@ -171,20 +151,120 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
   }
 }
 
-List<_HeroOption> _availableHeroes(AppStrings strings, String contentSet) {
-  if (contentSet == 'mvp') return _heroes;
-  return [
-    for (final character in fullRuntimeCharacters)
-      _HeroOption(
-        id: character['id']! as String,
-        name: (_) => fullRuntimeCharacterName(character['id']! as String),
-        stats: (strings) =>
-            '${strings.science}: ${character['science']} · '
-            '${strings.strength}: ${character['strength']} · '
-            '${strings.repair}: ${character['repair']}',
+List<_HeroOption> _availableHeroes() => [
+  for (final character in fullRuntimeCharacters)
+    _HeroOption(
+      id: character['id']! as String,
+      name: (_) => fullRuntimeCharacterName(character['id']! as String),
+      stats: (strings) =>
+          '${strings.science}: ${character['science']} · '
+          '${strings.strength}: ${character['strength']} · '
+          '${strings.repair}: ${character['repair']} · '
+          'Выносливость: ${character['endurance']} · '
+          'Ловкость: ${character['agility']}',
+    ),
+];
+
+/// Shows the generated full party and asks for an explicit start confirmation.
+class FullPartyReviewScreen extends StatelessWidget {
+  const FullPartyReviewScreen({
+    required this.characterIds,
+    required this.initialState,
+    required this.storage,
+    super.key,
+  });
+
+  final List<String> characterIds;
+  final GameState initialState;
+  final GameStorage storage;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = AppStrings.of(context);
+    return Scaffold(
+      appBar: AppBar(title: Text(strings.partyReviewTitle)),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Text(strings.partyReviewSubtitle),
+            const SizedBox(height: 16),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.map_outlined),
+                title: Text(
+                  'Игровое поле: ${initialState.board.length} отсеков',
+                ),
+                subtitle: Text(
+                  'Раунд ${initialState.round} · '
+                  '${initialState.players.length} героя · '
+                  '${initialState.decks.length} колод · '
+                  '${initialState.questDefinitions.length} сюжетных заданий',
+                ),
+              ),
+            ),
+            for (var index = 0; index < characterIds.length; index++)
+              Card(
+                child: ListTile(
+                  leading: CircleAvatar(child: Text('${index + 1}')),
+                  title: Text(fullRuntimeCharacterName(characterIds[index])),
+                  subtitle: Text(
+                    'Здоровье ${initialState.players[index].health} · '
+                    'Кредиты ${initialState.players[index].credits} · '
+                    '${_starterItemCount(initialState.players[index])} '
+                    'стартовых предмета',
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              key: const ValueKey<String>('confirm-start-game-button'),
+              icon: const Icon(Icons.rocket_launch_outlined),
+              label: Text(strings.confirmStart),
+              onPressed: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: Text(strings.confirmStartTitle),
+                    content: Text(strings.confirmStartBody),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: const Text('Вернуться'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        child: const Text('Начать'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed != true || !context.mounted) return;
+                Navigator.of(context).pushReplacement<void, void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => GameSessionScreen(
+                      initialState: initialState,
+                      storage: storage,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
-  ];
+    );
+  }
 }
+
+int _starterItemCount(PlayerState player) =>
+    player.backpack.length +
+    [
+      player.equipped.weapon,
+      player.equipped.armor,
+      player.equipped.clothing,
+      player.equipped.robot,
+    ].where((item) => item != null).length;
 
 class _RosterList extends StatelessWidget {
   const _RosterList({
@@ -236,26 +316,3 @@ class _HeroOption {
   final String Function(AppStrings strings) name;
   final String Function(AppStrings strings) stats;
 }
-
-final List<_HeroOption> _heroes = <_HeroOption>[
-  _HeroOption(
-    id: 'scientist',
-    name: (strings) => strings.scientist,
-    stats: (strings) => '${strings.science}: 4 · ${strings.strength}: 2',
-  ),
-  _HeroOption(
-    id: 'guard',
-    name: (strings) => strings.guard,
-    stats: (strings) => '${strings.strength}: 3 · ${strings.repair}: 1',
-  ),
-  _HeroOption(
-    id: 'mechanic',
-    name: (strings) => strings.mechanic,
-    stats: (strings) => '${strings.repair}: 3 · ${strings.strength}: 2',
-  ),
-  _HeroOption(
-    id: 'healer',
-    name: (strings) => strings.healer,
-    stats: (strings) => '${strings.medicine}: 3 · ${strings.science}: 3',
-  ),
-];
