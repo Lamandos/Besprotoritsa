@@ -38,11 +38,18 @@ GameState _startNextIncomingDamage(
   if (state.pendingDecision != null || state.pendingDamage.isEmpty) {
     return state;
   }
-  final pending = state.pendingDamage
-      .where(
-        (damage) => _playerById(state, damage.targetPlayerId)?.alive ?? false,
-      )
-      .toList();
+  final pending = state.pendingDamage.where(
+    (damage) {
+      final target = _playerById(state, damage.targetPlayerId);
+      if (target == null || !target.alive) return false;
+      if (damage.source == DamageSource.monster &&
+          target.monsterDamageImmuneThroughRound != null &&
+          state.round <= target.monsterDamageImmuneThroughRound!) {
+        return false;
+      }
+      return true;
+    },
+  ).toList();
   if (pending.isEmpty) {
     return _copyState(state, pendingDamage: const []);
   }
@@ -122,6 +129,56 @@ GameStepResult _resolveEventOption(
       logEntry: 'event-discard:$playerId:$cardId',
     );
     return GameStepResult(state: _resumeAutomaticPhase(discarded));
+  }
+  if (choice.option.startsWith('horde|')) {
+    final hero = _playerById(selected, playerId);
+    if (hero == null ||
+        (choice.option != 'horde|discard' && choice.option != 'horde|keep')) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
+    final decks = Map<DeckId, DeckState>.of(selected.decks);
+    final players = choice.option == 'horde|discard'
+        ? _replacePlayer(
+            selected,
+            playerId,
+            (current) => _copyPlayer(current, backpack: const []),
+          )
+        : _replacePlayer(
+            selected,
+            playerId,
+            (current) => _copyPlayer(
+              current,
+              damage: current.damage + hero.backpack.length * 2,
+            ),
+          );
+    if (choice.option == 'horde|discard') {
+      for (final cardId in hero.backpack) {
+        final definition = selected.cardDefinitions[cardId];
+        if (definition == null) continue;
+        final deckId = _cardSourceDeck(selected, definition);
+        final deck = decks[deckId];
+        if (deck != null) {
+          decks[deckId] = DeckState(
+            drawPile: deck.drawPile,
+            discardPile: [...deck.discardPile, cardId],
+          );
+        }
+      }
+    }
+    final resolved = _copyState(
+      selected,
+      players: players,
+      decks: decks,
+      logEntry: choice.option == 'horde|discard'
+          ? 'event-horde-discard:$playerId:${hero.backpack.length}'
+          : 'event-horde-damage:$playerId:${hero.backpack.length * 2}',
+    );
+    return GameStepResult(
+      state: _resumeAutomaticPhase(resolveHeroDeaths(resolved)),
+    );
   }
   if (choice.option.startsWith('reveal:')) {
     final coord = _parseEventCoordChoice(choice.option, 'reveal');
@@ -208,11 +265,10 @@ GameStepResult _resolveEventOption(
       hero,
       selected.cardDefinitions,
     );
-    final returnedCards = [
-      for (final offeredCard in offered)
-        if (offeredCard != cardId) offeredCard,
-      if (hero.backpack.length >= backpackCapacity) cardId,
-    ];
+    final returnedCards = List<String>.of(offered);
+    final selectedIndex = returnedCards.indexOf(cardId);
+    if (selectedIndex >= 0) returnedCards.removeAt(selectedIndex);
+    if (hero.backpack.length >= backpackCapacity) returnedCards.add(cardId);
     final decks = Map<DeckId, DeckState>.of(selected.decks);
     if (returnedCards.isNotEmpty) {
       decks[deckId] = DeckRules.returnAndShuffle(
@@ -678,6 +734,12 @@ GameState _startImmediateMonsterAttack(
   MonsterInstance monster,
   DiceRoller dice,
 ) {
+  final target = _playerById(state, playerId);
+  if (target != null &&
+      target.monsterDamageImmuneThroughRound != null &&
+      state.round <= target.monsterDamageImmuneThroughRound!) {
+    return _startImmediateCounterAttack(state, playerId, monster, dice);
+  }
   if (_monsterSpawnsBoilInsteadOfAttack(state, monster)) {
     final withBoil = spawnBoil(
       state,
@@ -1018,6 +1080,29 @@ GameState _resolveEventOutcome(
             ),
           );
         }
+      case 'horde_backpack_choice':
+        if (player.backpack.isEmpty) continue;
+        return _copyState(
+          current,
+          pendingDecision: AwaitingEventOption(
+            options: const ['horde|discard', 'horde|keep'],
+            playerId: playerId,
+            eventId: eventId,
+          ),
+        );
+      case 'monster_damage_immunity':
+        current = _copyState(
+          current,
+          players: _replacePlayer(
+            current,
+            playerId,
+            (hero) => _copyPlayer(
+              hero,
+              monsterDamageImmuneThroughRound: current.round + 1,
+            ),
+          ),
+          logEntry: 'event-monster-immunity:$playerId:${current.round + 1}',
+        );
       case 'discard_equipped':
         final slot = rawEffect['slot'];
         final cardId = switch (slot) {
@@ -1569,6 +1654,62 @@ GameState _resolveEventOutcome(
             playerId: playerId,
             eventId: definition['id'] as String?,
           ),
+        );
+      case 'spawn_monsters_adjacent':
+        final placementTargets =
+            current.board
+                .where(
+                  (tile) =>
+                      tile.opened &&
+                      !tile.isBlocked &&
+                      player.coord.distanceTo(tile.coord) == 1,
+                )
+                .toList()
+              ..sort((left, right) {
+                final q = left.coord.q.compareTo(right.coord.q);
+                return q == 0 ? left.coord.r.compareTo(right.coord.r) : q;
+              });
+        final monsterDeck = current.decks['monsters'];
+        if (placementTargets.isEmpty || monsterDeck == null) continue;
+        final draw = DeckRules.draw(
+          monsterDeck,
+          count: placementTargets.length,
+          seed: _deckSeed(
+            current,
+            'event-monsters-adjacent:${definition['id']}:$optionIndex:'
+            '$playerId',
+          ),
+        );
+        if (draw.cards.isEmpty) continue;
+        final monsters = <MonsterInstance>[];
+        for (var index = 0; index < draw.cards.length; index++) {
+          final monsterId = draw.cards[index];
+          final monsterDefinition = current.monsterDefinitions[monsterId];
+          if (monsterDefinition == null) continue;
+          final coord = placementTargets[index].coord;
+          monsters.add(
+            MonsterInstance(
+              instanceId:
+                  'event-${current.round}-${current.eventTurnIndex}-'
+                  '$eventId-$optionIndex-$index-$monsterId',
+              monsterId: monsterId,
+              coord: coord,
+              damage: 0,
+              health: _scaledMonsterStat(current, monsterDefinition, 'health'),
+              defense: monsterDefinition['defense']! as int,
+              attack: _scaledMonsterStat(current, monsterDefinition, 'attack'),
+              movement: monsterDefinition['movement']! as int,
+              returnsToMonsterDeck: true,
+            ),
+          );
+        }
+        current = _copyState(
+          current,
+          monsters: [...current.monsters, ...monsters],
+          decks: Map<DeckId, DeckState>.of(current.decks)
+            ..['monsters'] = draw.deck,
+          logEntry:
+              'event-monsters-adjacent:${definition['id']}:${monsters.length}',
         );
       case 'move_to_neighbor':
         final targets = _eventMoveTargets(current, playerId);

@@ -4899,7 +4899,10 @@
       "runtimeOutcomeCoverage": {
         "status": "complete",
         "outcomeBranchesEncoded": 6,
-        "outcomeBranchesMissing": []
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "The Gas Canister option requires the hero to own the card and discards it from the supplies deck on either result before drawing two supplies."
+        ]
       }
     },
     "event.security-console": {
@@ -5198,7 +5201,10 @@
       "runtimeOutcomeCoverage": {
         "status": "complete",
         "outcomeBranchesEncoded": 4,
-        "outcomeBranchesMissing": []
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "A failed check places its monster in a player-selected adjacent open sector; the successful branch draws and immediately fights it."
+        ]
       }
     },
     "event.female-whisper": {
@@ -5235,7 +5241,10 @@
       "runtimeOutcomeCoverage": {
         "status": "complete",
         "outcomeBranchesEncoded": 4,
-        "outcomeBranchesMissing": []
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "The failed check places one monster in each adjacent open, unblocked sector; drawn cards are assigned by sorted coordinates for deterministic resolution."
+        ]
       }
     },
     "event.alcohol-crate": {
@@ -5272,7 +5281,10 @@
       "runtimeOutcomeCoverage": {
         "status": "complete",
         "outcomeBranchesEncoded": 6,
-        "outcomeBranchesMissing": []
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "The successful third option grants monster-damage immunity through the end of the next round; the round marker is persisted in saves."
+        ]
       }
     },
     "event.supply-terminal": {
@@ -5608,7 +5620,10 @@
       "runtimeOutcomeCoverage": {
         "status": "complete",
         "outcomeBranchesEncoded": 2,
-        "outcomeBranchesMissing": []
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "On failure, if the hero owns Armor cards, the player chooses one to discard after taking damage."
+        ]
       }
     },
     "event.meteor-stream": {
@@ -5791,7 +5806,10 @@
       "runtimeOutcomeCoverage": {
         "status": "complete",
         "outcomeBranchesEncoded": 2,
-        "outcomeBranchesMissing": []
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "The player chooses to discard the entire backpack or keep it and take two damage per card; an empty backpack causes no damage."
+        ]
       }
     },
     "event.invasion-open-0": {

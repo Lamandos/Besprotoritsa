@@ -23,6 +23,7 @@ void main() {
       expect(restored, isNotNull);
       expect(codec.encode(restored!), savedJson);
       expect(restored.cardDefinitions['pistol']!.sourceDeck, 'items');
+      expect(restored.players.first.monsterDamageImmuneThroughRound, 3);
       expect(restored.pendingDecision, isA<AwaitingRerollChoice>());
       final context =
           (restored.pendingDecision! as AwaitingRerollChoice).context!
@@ -186,6 +187,7 @@ GameState _interruptedState() => GameState(
       characterId: 'engineer',
       coord: const HexCoord(0, 0),
       conditions: const ['malaise'],
+      monsterDamageImmuneThroughRound: 3,
     ),
     _player(
       id: 'boris',
@@ -289,6 +291,7 @@ PlayerState _player({
   required HexCoord coord,
   Iterable<String> conditions = const [],
   bool alive = true,
+  int? monsterDamageImmuneThroughRound,
 }) => PlayerState(
   id: id,
   characterId: characterId,
@@ -316,4 +319,5 @@ PlayerState _player({
     agility: 1,
   ),
   weaponModifier: 2,
+  monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
 );

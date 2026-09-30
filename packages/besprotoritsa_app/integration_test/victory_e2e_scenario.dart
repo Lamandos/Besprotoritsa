@@ -73,7 +73,7 @@ void main() {
   test('fixed-seed campaign reaches Quest 29 through gameplay commands', () {
     var state = createFullGameState(
       characterIds: const ['guard', 'astronaut'],
-      seed: 226,
+      seed: 229,
     );
     final dice = FixedDiceRoller(List<int>.filled(100000, 6));
     var commands = 0;
@@ -149,18 +149,17 @@ void main() {
         final active = state.players
             .where((hero) => hero.id == state.activePlayerId)
             .firstOrNull;
-        final gearToEquip = active == null
-            ? null
-            : _campaignGearToEquip(state, active);
+        if (active == null) throw StateError('No active campaign hero.');
+        final gearToEquip = _campaignGearToEquip(state, active);
         if (gearToEquip != null) {
           command(EquipCommand(gearToEquip));
           continue;
         }
-        if (active?.id == 'hero-2' && state.actionsLeft > 0) {
-          if (active!.damage >= 3) {
-            command(const HealCommand(4));
-            continue;
-          }
+        if (state.actionsLeft > 0 && active.damage >= 1) {
+          command(const HealCommand(4));
+          continue;
+        }
+        if (active.id == 'hero-2' && state.actionsLeft > 0) {
           final nearbyMonster =
               state.monsters
                   .where(
@@ -267,7 +266,7 @@ void main() {
         final currentHero = state.players.singleWhere(
           (entry) => entry.id == 'hero-1',
         );
-        if (currentHero.damage >= 3 && state.actionsLeft > 0) {
+        if (currentHero.damage >= 1 && state.actionsLeft > 0) {
           command(const HealCommand(4));
           continue;
         }
@@ -839,6 +838,19 @@ String _chooseCampaignEventOption(
   GameState state,
   AwaitingEventOption pending,
 ) {
+  if (pending.options.contains('horde|keep') &&
+      pending.options.contains('horde|discard')) {
+    final player = pending.playerId == null
+        ? null
+        : state.players
+              .where((hero) => hero.id == pending.playerId)
+              .firstOrNull;
+    if (player != null &&
+        player.damage + player.backpack.length * 2 < player.health) {
+      return 'horde|keep';
+    }
+    return 'horde|discard';
+  }
   final marketDone = pending.options.where(
     (option) =>
         option.startsWith('market|') &&

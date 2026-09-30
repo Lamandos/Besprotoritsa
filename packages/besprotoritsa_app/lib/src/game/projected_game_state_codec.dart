@@ -96,6 +96,10 @@ final class ProjectedGameStateCodec {
       alive: json['alive'] == true,
       actionPoints: _int(json, 'actionPoints', fallback: 2),
       nextTurnActionDelta: _int(json, 'nextTurnActionDelta', fallback: 0),
+      monsterDamageImmuneThroughRound:
+          json['monsterDamageImmuneThroughRound'] is int
+          ? json['monsterDamageImmuneThroughRound']! as int
+          : null,
     );
   }
 

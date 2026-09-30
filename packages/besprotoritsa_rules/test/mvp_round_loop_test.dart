@@ -410,6 +410,248 @@ void main() {
     expect(event.options, ['option-2']);
   });
 
+  test('horde carry lets the hero discard the whole backpack', () {
+    final definitions = {
+      'ration': CardDefinition(
+        id: 'ration',
+        type: ItemType.supply,
+        slots: const [],
+        cost: 1,
+        staticEffects: CardStaticEffects(const {}),
+      ),
+      'flare': CardDefinition(
+        id: 'flare',
+        type: ItemType.supply,
+        slots: const [],
+        cost: 1,
+        staticEffects: CardStaticEffects(const {}),
+      ),
+    };
+    var state = _mvpState(
+      eventId: 'horde-carry',
+      playerBackpack: const ['ration', 'flare'],
+      cardDefinitions: definitions,
+      eventDefinitions: {
+        'horde-carry': {
+          'id': 'horde-carry',
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+              'failureEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+            },
+          ],
+        },
+      },
+      additionalDecks: {
+        'supplies': DeckState(drawPile: const []),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    final decision = state.pendingDecision! as AwaitingEventOption;
+    expect(decision.options, ['horde|discard', 'horde|keep']);
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('horde|discard')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.backpack, isEmpty);
+    expect(state.players.single.damage, 0);
+    expect(state.decks['supplies']!.discardPile.toSet(), {'ration', 'flare'});
+  });
+
+  test('horde carry damage scales with the cards kept', () {
+    var state = _mvpState(
+      eventId: 'horde-carry',
+      playerBackpack: const ['ration', 'flare'],
+      playerHealth: 10,
+      eventDefinitions: {
+        'horde-carry': {
+          'id': 'horde-carry',
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+              'failureEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('horde|keep')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.damage, 4);
+    expect(state.players.single.backpack, ['ration', 'flare']);
+  });
+
+  test('choosing one duplicate card returns the other physical copy', () {
+    final definitions = {
+      for (final id in ['flare', 'water'])
+        id: CardDefinition(
+          id: id,
+          type: ItemType.supply,
+          slots: const [],
+          cost: 1,
+          staticEffects: CardStaticEffects(const {}),
+        ),
+    };
+    var state = _mvpState(
+      eventId: 'duplicate-selection',
+      cardDefinitions: definitions,
+      additionalDecks: {
+        'supplies': DeckState(drawPile: const ['flare', 'flare', 'water']),
+      },
+      eventDefinitions: {
+        'duplicate-selection': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'choose_from_top', 'deckId': 'supplies', 'amount': 3},
+              ],
+              'failureEffects': [
+                {'type': 'choose_from_top', 'deckId': 'supplies', 'amount': 3},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        EventOptionChoice('pick:supplies:flare'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.backpack, ['flare']);
+    expect(state.decks['supplies']!.drawPile, hasLength(2));
+    expect(state.decks['supplies']!.drawPile.toSet(), {'flare', 'water'});
+  });
+
+  test('failed Whisper places a monster in each adjacent open sector', () {
+    var state = _mvpState(
+      eventId: 'female-whisper',
+      corridorOpened: true,
+      eventDefinitions: {
+        'female-whisper': {
+          'id': 'female-whisper',
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'failure',
+              'failureEffects': [
+                {'type': 'spawn_monsters_adjacent'},
+              ],
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 1,
+          'movement': 1,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters.single.coord, const HexCoord(0, 1));
+    expect(state.pendingDecision, isNull);
+    expect(state.players.single.damage, 0);
+  });
+
+  test(
+    'monster immunity blocks immediate monster damage through next round',
+    () {
+      var state = _mvpState(
+        eventId: 'immunity-event',
+        eventDefinitions: {
+          'immunity-event': {
+            'id': 'immunity-event',
+            'options': [
+              {
+                'skillCheck': null,
+                'autoOutcome': 'success',
+                'successEffects': [
+                  {'type': 'monster_damage_immunity'},
+                  {'type': 'spawn_monster'},
+                ],
+              },
+            ],
+          },
+        },
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 10,
+            'defense': 10,
+            'attack': 2,
+            'movement': 1,
+            'features': <String>[],
+          },
+        },
+        additionalDecks: {
+          'monsters': DeckState(drawPile: const ['ghoul']),
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([1, 1, 1, 1, 1, 1]),
+      ).state;
+
+      expect(state.players.single.damage, 0);
+      expect(state.players.single.monsterDamageImmuneThroughRound, 2);
+      expect(state.pendingDecision, isNull);
+    },
+  );
+
   test('event markets allow discounted buys and return untouched offers', () {
     final definitions = <String, CardDefinition>{
       for (final entry in const [
@@ -1959,6 +2201,7 @@ GameState _mvpState({
   int secondHeroDamage = 0,
   Iterable<ReserveHero> reserveHeroes = const [],
   int initialCredits = 0,
+  int playerHealth = 3,
   VentColor corridorVentColor = VentColor.none,
   bool corridorOpened = false,
 }) => GameState(
@@ -2000,6 +2243,7 @@ GameState _mvpState({
         coord: playerCoord,
         damage: index == 1 ? secondHeroDamage : 0,
         credits: initialCredits,
+        health: playerHealth,
         backpack: playerBackpack,
         equipped: const EquippedGear(),
         carriedMods: const [],

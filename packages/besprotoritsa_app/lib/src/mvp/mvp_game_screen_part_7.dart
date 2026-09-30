@@ -411,6 +411,8 @@ String? _runtimeEventText(GameState state, String eventId, String field) {
 }
 
 String _eventOptionLabel(GameState state, String? eventId, String option) {
+  if (option == 'horde|discard') return 'Сбросить весь рюкзак';
+  if (option == 'horde|keep') return 'Оставить карты и получить урон';
   if (option.startsWith('market|')) {
     final parts = option.split('|');
     if (parts.length == 9) {

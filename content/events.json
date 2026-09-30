@@ -2064,6 +2064,11 @@
           "behaviorId": "event.successFailure",
           "successEffects": [
             {
+              "type": "discard_card_id",
+              "cardId": "gas-cylinder",
+              "deckId": "supplies"
+            },
+            {
               "type": "draw",
               "deckId": "supplies",
               "amount": 2
@@ -2071,11 +2076,17 @@
           ],
           "failureEffects": [
             {
+              "type": "discard_card_id",
+              "cardId": "gas-cylinder",
+              "deckId": "supplies"
+            },
+            {
               "type": "draw",
               "deckId": "supplies",
               "amount": 2
             }
-          ]
+          ],
+          "requiresCard": "gas-cylinder"
         }
       ],
       "behaviorIds": [
@@ -2493,7 +2504,7 @@
           ],
           "failureEffects": [
             {
-              "type": "spawn_monster"
+              "type": "spawn_monster_adjacent"
             }
           ]
         },
@@ -2544,7 +2555,7 @@
           ],
           "failureEffects": [
             {
-              "type": "no_effect"
+              "type": "spawn_monsters_adjacent"
             }
           ]
         },
@@ -2642,6 +2653,9 @@
             {
               "type": "next_turn_action_delta",
               "delta": 1
+            },
+            {
+              "type": "monster_damage_immunity"
             }
           ],
           "failureEffects": [
@@ -3161,6 +3175,10 @@
             {
               "type": "damage",
               "amount": 3
+            },
+            {
+              "type": "discard_card_type",
+              "itemType": "armor"
             }
           ],
           "successEffects": [
@@ -3350,14 +3368,12 @@
           "behaviorId": "event.successFailure",
           "successEffects": [
             {
-              "type": "damage",
-              "amount": 2
+              "type": "horde_backpack_choice"
             }
           ],
           "failureEffects": [
             {
-              "type": "damage",
-              "amount": 2
+              "type": "horde_backpack_choice"
             }
           ]
         }

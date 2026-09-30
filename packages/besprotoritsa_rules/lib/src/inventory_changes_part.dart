@@ -253,5 +253,6 @@ abstract final class _InventoryChanges {
     weaponModifier: player.weaponModifier,
     actionPoints: player.actionPoints,
     nextTurnActionDelta: player.nextTurnActionDelta,
+    monsterDamageImmuneThroughRound: player.monsterDamageImmuneThroughRound,
   );
 }

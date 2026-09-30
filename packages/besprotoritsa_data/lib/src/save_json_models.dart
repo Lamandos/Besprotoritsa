@@ -63,6 +63,8 @@ abstract final class SaveJsonModels {
     'weapon_modifier': player.weaponModifier,
     'action_points': player.actionPoints,
     'next_turn_action_delta': player.nextTurnActionDelta,
+    'monster_damage_immune_through_round':
+        player.monsterDamageImmuneThroughRound,
   };
   static PlayerState playerFromJson(Map<String, Object?> json) {
     final equipped = _object(json, 'equipped');
@@ -92,6 +94,10 @@ abstract final class SaveJsonModels {
       weaponModifier: _int(json, 'weapon_modifier'),
       actionPoints: _optionalInt(json, 'action_points') ?? 2,
       nextTurnActionDelta: _optionalInt(json, 'next_turn_action_delta') ?? 0,
+      monsterDamageImmuneThroughRound: _optionalInt(
+        json,
+        'monster_damage_immune_through_round',
+      ),
     );
   }
 

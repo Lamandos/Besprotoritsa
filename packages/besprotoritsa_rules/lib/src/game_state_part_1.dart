@@ -216,6 +216,7 @@ final class PlayerState {
     this.weaponModifier = 0,
     this.actionPoints = 2,
     this.nextTurnActionDelta = 0,
+    this.monsterDamageImmuneThroughRound,
   }) : backpack = List.unmodifiable(backpack),
        carriedMods = List.unmodifiable(carriedMods),
        implanted = List.unmodifiable(implanted),
@@ -273,6 +274,10 @@ final class PlayerState {
   /// One-shot action-point adjustment applied at this hero's next turn.
   final int nextTurnActionDelta;
 
+  /// Last round in which monster damage is ignored, if a temporary effect
+  /// is active.
+  final int? monsterDamageImmuneThroughRound;
+
   /// Returns this character with the supplied per-round action point count.
   PlayerState withActionPoints(int value) => PlayerState(
     id: id,
@@ -291,6 +296,7 @@ final class PlayerState {
     weaponModifier: weaponModifier,
     actionPoints: value,
     nextTurnActionDelta: nextTurnActionDelta,
+    monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
   );
 
   PlayerState withNextTurnActionDelta(int value) => PlayerState(
@@ -310,6 +316,7 @@ final class PlayerState {
     weaponModifier: weaponModifier,
     actionPoints: actionPoints,
     nextTurnActionDelta: value,
+    monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
   );
 }
 
