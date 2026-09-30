@@ -384,9 +384,9 @@ GameState _applyFullQuestEvent(
         monsterId: monsterId,
         coord: tile.coord,
         damage: 0,
-        health: monsterDefinition['health']! as int,
+        health: _scaledMonsterStat(state, monsterDefinition, 'health'),
         defense: monsterDefinition['defense']! as int,
-        attack: monsterDefinition['attack']! as int,
+        attack: _scaledMonsterStat(state, monsterDefinition, 'attack'),
         movement: monsterDefinition['movement']! as int,
       ),
     );
@@ -403,12 +403,31 @@ GameState _applyFullQuestEvent(
     monsters: [...state.monsters, ...spawnedMonsters],
     decks: decks,
     quests: quests,
-    isComplete: transition.gameWon,
+    isComplete: state.isComplete || transition.gameWon,
     logEntry: [
       ...transition.completedQuestIds.map((id) => 'quest-completed:$id'),
       ...transition.activatedQuestIds.map((id) => 'quest-activated:$id'),
     ].join(','),
   );
+}
+
+int _scaledMonsterStat(
+  GameState state,
+  Map<String, Object?> definition,
+  String stat,
+) {
+  final base = definition[stat]! as int;
+  final scaling = definition['scaling'];
+  if (scaling is! Map<String, Object?>) return base;
+  final perHero = scaling['${stat}PerHero'];
+  final perAliveMonster = scaling['${stat}PerAliveMonster'];
+  final heroCount = state.players.length;
+  final livingMonsters = state.monsters
+      .where((monster) => monster.damage < monster.health)
+      .length;
+  return base +
+      (perHero is int ? perHero * heroCount : 0) +
+      (perAliveMonster is int ? perAliveMonster * livingMonsters : 0);
 }
 
 Map<CardId, int> _ownedCardCounts(PlayerState player) {

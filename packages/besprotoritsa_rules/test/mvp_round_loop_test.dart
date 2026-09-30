@@ -268,6 +268,194 @@ void main() {
   });
 
   test(
+    'quest victory stays complete when a chained event advances another quest',
+    () {
+      final state = step(
+        _mvpState(
+          storyQuestIds: const ['quest-11'],
+          questDefinitions: {
+            'quest-11': {
+              'id': 'quest-11',
+              'number': 11,
+              'chapter': 3,
+              'conditions': [
+                {
+                  'id': 'kill-mother',
+                  'type': 'kill_monster',
+                  'monsterId': 'mother',
+                },
+              ],
+              'reward': {'credits': 0, 'items': <Object?>[]},
+              'nextQuestIds': ['quest-12', 'quest-13'],
+              'nameKey': 'quest-11.name',
+              'descKey': 'quest-11.description',
+            },
+            'quest-12': {
+              'id': 'quest-12',
+              'number': 12,
+              'chapter': 3,
+              'prerequisiteQuestIds': ['quest-11'],
+              'conditions': <Object?>[],
+              'reward': {'credits': 0, 'items': <Object?>[]},
+              'nextQuestIds': <Object?>[],
+              'endsGame': true,
+              'nameKey': 'quest-12.name',
+              'descKey': 'quest-12.description',
+            },
+            'quest-13': {
+              'id': 'quest-13',
+              'number': 13,
+              'chapter': 3,
+              'prerequisiteQuestIds': ['quest-11'],
+              'conditions': [
+                {
+                  'id': 'later-counter',
+                  'type': 'counter',
+                  'metric': 'damage_tokens_collected',
+                  'targetValue': 3,
+                },
+              ],
+              'reward': {'credits': 0, 'items': <Object?>[]},
+              'nextQuestIds': <Object?>[],
+              'nameKey': 'quest-13.name',
+              'descKey': 'quest-13.description',
+            },
+          },
+          monsters: [
+            MonsterInstance(
+              instanceId: 'mother-1',
+              monsterId: 'mother',
+              coord: const HexCoord(0, 0),
+              damage: 0,
+            ),
+          ],
+        ),
+        const AttackCommand('mother-1'),
+        FixedDiceRoller([6]),
+      ).state;
+
+      expect(state.quests.statusOf('quest-12'), QuestStatus.completed);
+      expect(state.quests.statusOf('quest-13'), QuestStatus.active);
+      expect(state.isComplete, isTrue);
+    },
+  );
+
+  test('spawned bosses apply runtime hero and living-monster scaling', () {
+    for (final scenario in [
+      (
+        id: 'viy',
+        heroCount: 3,
+        existingMonsters: <MonsterInstance>[],
+        scaling: {
+          'healthPerHero': 1,
+          'attackPerHero': 1,
+          'healthPerAliveMonster': 0,
+          'attackPerAliveMonster': 0,
+        },
+        baseHealth: 4,
+        baseAttack: 3,
+        expectedHealth: 7,
+        expectedAttack: 6,
+      ),
+      (
+        id: 'swarm',
+        heroCount: 1,
+        existingMonsters: [
+          MonsterInstance(
+            instanceId: 'ghoul-1',
+            monsterId: 'ghoul',
+            coord: const HexCoord(0, 0),
+            damage: 0,
+            health: 2,
+          ),
+        ],
+        scaling: {
+          'healthPerHero': 0,
+          'attackPerHero': 0,
+          'healthPerAliveMonster': 1,
+          'attackPerAliveMonster': 1,
+        },
+        baseHealth: 3,
+        baseAttack: 3,
+        expectedHealth: 4,
+        expectedAttack: 4,
+      ),
+    ]) {
+      var state = _mvpState(
+        playerCoord: const HexCoord(0, 2),
+        heroCount: scenario.heroCount,
+        storyQuestIds: const ['quest-01'],
+        questDefinitions: {
+          'quest-01': {
+            'id': 'quest-01',
+            'number': 1,
+            'chapter': 1,
+            'conditions': [
+              {
+                'id': 'complete-check',
+                'type': 'skill_check',
+                'skill': 'science',
+                'locationId': 'crew-mess',
+              },
+            ],
+            'reward': {'credits': 0, 'items': <Object?>[]},
+            'nextQuestIds': ['quest-02'],
+            'nameKey': 'quest-01.name',
+            'descKey': 'quest-01.description',
+          },
+          'quest-02': {
+            'id': 'quest-02',
+            'number': 2,
+            'chapter': 1,
+            'prerequisiteQuestIds': ['quest-01'],
+            'conditions': [
+              {
+                'id': 'wait',
+                'type': 'counter',
+                'metric': 'damage_tokens_collected',
+                'targetValue': 99,
+              },
+            ],
+            'reward': {'credits': 0, 'items': <Object?>[]},
+            'nextQuestIds': <Object?>[],
+            'spawnMonsterId': scenario.id,
+            'spawnLocationId': 'crew-mess',
+            'nameKey': 'quest-02.name',
+            'descKey': 'quest-02.description',
+          },
+        },
+        monsters: scenario.existingMonsters,
+        monsterDefinitions: {
+          scenario.id: {
+            'id': scenario.id,
+            'health': scenario.baseHealth,
+            'attack': scenario.baseAttack,
+            'defense': 2,
+            'movement': 2,
+            'scaling': scenario.scaling,
+          },
+        },
+      );
+      state = step(
+        state,
+        const SkillCheckCommand(StatType.science),
+        FixedDiceRoller([6]),
+      ).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(KeepRollChoice()),
+        FixedDiceRoller([]),
+      ).state;
+
+      final spawned = state.monsters.singleWhere(
+        (monster) => monster.monsterId == scenario.id,
+      );
+      expect(spawned.health, scenario.expectedHealth, reason: scenario.id);
+      expect(spawned.attack, scenario.expectedAttack, reason: scenario.id);
+    }
+  });
+
+  test(
     'successful agility checks in ventilation advance full quest counters',
     () {
       var state = _mvpState(
@@ -397,6 +585,8 @@ GameState _mvpState({
   Map<CardId, CardDefinition> cardDefinitions = const {},
   Map<DeckId, DeckState> additionalDecks = const {},
   Iterable<MonsterInstance> monsters = const [],
+  Map<String, Map<String, Object?>> monsterDefinitions = const {},
+  int heroCount = 1,
   VentColor corridorVentColor = VentColor.none,
 }) => GameState(
   seed: 17,
@@ -430,20 +620,21 @@ GameState _mvpState({
     ),
   ],
   players: [
-    PlayerState(
-      id: 'ada',
-      characterId: 'engineer',
-      coord: playerCoord,
-      damage: 0,
-      credits: 0,
-      backpack: const [],
-      equipped: const EquippedGear(),
-      carriedMods: const [],
-      implanted: const [],
-      conditions: const [],
-      alive: true,
-      stats: const PlayerStats(science: 1, agility: 1),
-    ),
+    for (var index = 0; index < heroCount; index++)
+      PlayerState(
+        id: index == 0 ? 'ada' : 'hero-${index + 1}',
+        characterId: index == 0 ? 'engineer' : 'guard',
+        coord: playerCoord,
+        damage: 0,
+        credits: 0,
+        backpack: const [],
+        equipped: const EquippedGear(),
+        carriedMods: const [],
+        implanted: const [],
+        conditions: const [],
+        alive: true,
+        stats: const PlayerStats(science: 1, agility: 1),
+      ),
   ],
   monsters: monsters,
   decks: {
@@ -453,6 +644,7 @@ GameState _mvpState({
   cardDefinitions: cardDefinitions,
   eventDefinitions: eventDefinitions,
   questDefinitions: questDefinitions,
+  monsterDefinitions: monsterDefinitions,
   quests: QuestState(
     storyQuestIds: storyQuestIds,
     conditionProgress: conditionProgress,
