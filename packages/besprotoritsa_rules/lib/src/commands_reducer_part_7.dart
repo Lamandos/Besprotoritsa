@@ -97,8 +97,10 @@ GameStepResult _resolveEventOption(
       final spawn = definition['spawn'];
       if (coord == null ||
           spawn is! Map<String, Object?> ||
-          spawn['target'] != 'openSector' ||
-          !_eventOpenSectors(selected).contains(coord)) {
+          !(_eventSpawnChoiceSectors(selected, definition, spawn)?.contains(
+                coord,
+              ) ??
+              false)) {
         return GameStepResult(
           state: state,
           rejection: const ActionBlockedByPendingDecision(),
@@ -136,10 +138,9 @@ GameStepResult _resolveEventOption(
       final spawn = definition['spawn'];
       if (rawOption['behaviorId'] == 'monster.spawn' &&
           rawOption['resolution'] == 'immediate' &&
-          spawn is Map<String, Object?> &&
-          spawn['target'] == 'openSector') {
-        final sectors = _eventOpenSectors(selected);
-        if (sectors.length > 1) {
+          spawn is Map<String, Object?>) {
+        final sectors = _eventSpawnChoiceSectors(selected, definition, spawn);
+        if (sectors != null && sectors.length > 1) {
           return GameStepResult(
             state: _copyState(
               selected,
@@ -151,15 +152,17 @@ GameStepResult _resolveEventOption(
             ),
           );
         }
-        if (sectors.isEmpty) return GameStepResult(state: selected);
-        final resolved = _resolveEventMonsterSpawn(
-          selected,
-          definition,
-          playerId,
-          dice,
-          spawnCoord: sectors.single,
-        );
-        return GameStepResult(state: _resumeAutomaticPhase(resolved));
+        if (sectors != null) {
+          if (sectors.isEmpty) return GameStepResult(state: selected);
+          final resolved = _resolveEventMonsterSpawn(
+            selected,
+            definition,
+            playerId,
+            dice,
+            spawnCoord: sectors.single,
+          );
+          return GameStepResult(state: _resumeAutomaticPhase(resolved));
+        }
       }
       final resolved =
           rawOption['behaviorId'] == 'monster.spawn' &&
@@ -308,6 +311,38 @@ List<HexCoord> _eventOpenSectors(GameState state) => [
   for (final tile in state.board)
     if (tile.opened && !tile.isBlocked) tile.coord,
 ];
+
+List<HexCoord> _eventClosedSectors(GameState state) => [
+  for (final tile in state.board)
+    if (!tile.opened && !tile.isBlocked) tile.coord,
+];
+
+List<HexCoord>? _eventSpawnChoiceSectors(
+  GameState state,
+  Map<String, Object?> event,
+  Map<String, Object?> spawn,
+) {
+  if (spawn['target'] == 'openSector') {
+    final open = _eventOpenSectors(state);
+    if (open.isNotEmpty) return open;
+    return spawn['fallback'] == 'closedSector'
+        ? _eventClosedSectors(state)
+        : open;
+  }
+  if (spawn['target'] != 'location') return null;
+  final locationId = event['locationId'];
+  if (locationId is String &&
+      state.board.any(
+        (tile) =>
+            tile.locationId == locationId && tile.opened && !tile.isBlocked,
+      )) {
+    return null;
+  }
+  if (spawn['fallback'] == 'closedSector') {
+    return _eventClosedSectors(state);
+  }
+  return null;
+}
 
 String _eventSectorOption(HexCoord coord) => 'sector:${coord.q}:${coord.r}';
 

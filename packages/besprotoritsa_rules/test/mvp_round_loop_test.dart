@@ -81,6 +81,59 @@ void main() {
     expect(state.monsters.single.coord, const HexCoord(0, 1));
   });
 
+  test('invasion lets the player choose any closed fallback sector', () {
+    var state = _mvpState(
+      eventId: 'location-invasion',
+      eventDefinitions: {
+        'location-invasion': {
+          'locationId': 'crew-mess',
+          'immediateCombat': true,
+          'spawn': {
+            'behaviorId': 'monster.spawn',
+            'target': 'location',
+            'fallback': 'closedSector',
+          },
+          'options': [
+            {
+              'skillCheck': null,
+              'behaviorId': 'monster.spawn',
+              'resolution': 'immediate',
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 0,
+          'movement': 0,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    final placement = state.pendingDecision! as AwaitingEventOption;
+    expect(placement.options, ['sector:0:1', 'sector:0:2']);
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('sector:0:1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters.single.coord, const HexCoord(0, 1));
+  });
+
   test('event skill checks do not advance the full story quest', () {
     var state = _mvpState(
       eventId: 'runtime-event',
@@ -231,6 +284,11 @@ void main() {
         const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
         FixedDiceRoller([1, 6]),
       ).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('sector:0:2')),
+        FixedDiceRoller([]),
+      ).state;
 
       expect(state.pendingDecision, isA<AwaitingDodge>());
       expect(state.monsters.single.monsterId, 'ghoul');
@@ -302,6 +360,11 @@ void main() {
       state = step(
         state,
         const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([]),
+      ).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('sector:0:2')),
         FixedDiceRoller([]),
       ).state;
 
@@ -389,6 +452,11 @@ void main() {
     state = step(
       state,
       const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('sector:0:2')),
       FixedDiceRoller([]),
     ).state;
     state = step(
@@ -619,6 +687,11 @@ void main() {
     state = step(
       state,
       const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('sector:0:2')),
       FixedDiceRoller([]),
     ).state;
     expect(state.pendingDecision, isA<AwaitingDodge>());

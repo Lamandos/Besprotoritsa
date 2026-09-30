@@ -42,6 +42,26 @@ void main() {
     expect(codec.toJson(restored)['schema_version'], 1);
   });
 
+  test('restores legacy cabin-noise behavior for a pending skill roll', () {
+    final codec = GameStateJsonCodec();
+    final legacy = codec.toJson(_interruptedState());
+    final decision = Map<String, Object?>.from(
+      legacy['pending_decision']! as Map<Object?, Object?>,
+    );
+    final context = Map<String, Object?>.from(
+      decision['context']! as Map<Object?, Object?>,
+    )..remove('event_behavior_id');
+    legacy['pending_decision'] = {...decision, 'context': context};
+
+    final restored = codec.fromJson(legacy);
+    final roll = restored.pendingDecision! as AwaitingRerollChoice;
+
+    expect(
+      (roll.context! as SkillCheckContext).eventBehaviorId,
+      'event_cabin_noise',
+    );
+  });
+
   test('preserves immediate combat continuations in pending decisions', () {
     final base = _interruptedState();
     final codec = GameStateJsonCodec();
