@@ -246,7 +246,7 @@
           "successEffects": [
             {
               "type": "draw_specific",
-              "deckId": "special_items",
+              "deckId": "specialItems",
               "cardId": "old-cloak"
             }
           ],
@@ -1097,7 +1097,7 @@
           "successEffects": [
             {
               "type": "draw_specific",
-              "deckId": "special_items",
+              "deckId": "specialItems",
               "cardId": "swiss-army-knife"
             }
           ],
@@ -1119,7 +1119,7 @@
           "successEffects": [
             {
               "type": "draw_specific",
-              "deckId": "special_items",
+              "deckId": "specialItems",
               "cardId": "drg-4u"
             }
           ],
@@ -1177,7 +1177,7 @@
           "successEffects": [
             {
               "type": "draw_specific",
-              "deckId": "special_items",
+              "deckId": "specialItems",
               "cardId": "exoskeleton"
             }
           ],

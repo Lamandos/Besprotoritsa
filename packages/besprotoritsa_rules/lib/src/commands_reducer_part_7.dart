@@ -204,10 +204,14 @@ GameStepResult _resolveEventOption(
       );
     }
     final hero = _playerById(selected, playerId)!;
+    final backpackCapacity = InventoryRules.backpackCapacity(
+      hero,
+      selected.cardDefinitions,
+    );
     final returnedCards = [
       for (final offeredCard in offered)
         if (offeredCard != cardId) offeredCard,
-      if (hero.backpack.length >= 5) cardId,
+      if (hero.backpack.length >= backpackCapacity) cardId,
     ];
     final decks = Map<DeckId, DeckState>.of(selected.decks);
     if (returnedCards.isNotEmpty) {
@@ -221,7 +225,7 @@ GameStepResult _resolveEventOption(
       );
     }
     final backpack = List<CardId>.of(hero.backpack);
-    if (hero.backpack.length < 5) backpack.add(cardId);
+    if (hero.backpack.length < backpackCapacity) backpack.add(cardId);
     final picked = _copyState(
       selected,
       decks: decks,
@@ -259,7 +263,7 @@ GameStepResult _resolveEventOption(
         (candidate) => candidate.instanceId != monster.instanceId,
       ),
       decks: decks,
-      logEntry: 'event-kill:${playerId}:${monster.monsterId}:ignored-loot',
+      logEntry: 'event-kill:$playerId:${monster.monsterId}:ignored-loot',
     );
     if (killed.questDefinitions.isNotEmpty) {
       killed = _applyFullQuestEvent(
@@ -867,6 +871,8 @@ GameState _resolveEventOutcome(
   required bool succeeded,
   required DiceRoller dice,
 }) {
+  final rawEventId = definition['id'];
+  final eventId = rawEventId is String ? rawEventId : 'unknown-event';
   final rawOptions = definition['options'];
   if (rawOptions is! List<Object?> ||
       optionIndex < 1 ||
@@ -1094,7 +1100,7 @@ GameState _resolveEventOutcome(
         final marketOptions = _eventMarketOptions(
           current,
           playerId,
-          eventId: definition['id'] as String,
+          eventId: eventId,
           optionIndex: optionIndex,
           offers: draw?.cards ?? const <String>[],
           remainingPurchases: rawEffect['maxPurchases'] is int
@@ -1111,7 +1117,7 @@ GameState _resolveEventOutcome(
             pendingDecision: AwaitingEventOption(
               options: marketOptions,
               playerId: playerId,
-              eventId: definition['id'] as String,
+              eventId: eventId,
             ),
           );
         }
@@ -1248,12 +1254,13 @@ GameState _resolveEventOutcome(
         final deck = deckId is String ? current.decks[deckId] : null;
         if (deck == null || amount < 1) continue;
         final targetDeckId = deckId! as DeckId;
+        final outcome = succeeded ? 'success' : 'failure';
         final draw = DeckRules.draw(
           deck,
           count: amount,
           seed: _deckSeed(
             current,
-            'event-outcome:${definition['id']}:$optionIndex:${succeeded ? 'success' : 'failure'}',
+            'event-outcome:$eventId:$optionIndex:$outcome',
           ),
         );
         if (draw.cards.isEmpty) continue;
@@ -1261,8 +1268,12 @@ GameState _resolveEventOutcome(
           ..[targetDeckId] = draw.deck;
         final backpack = List<CardId>.of(player.backpack);
         final returned = <CardId>[];
+        final backpackCapacity = InventoryRules.backpackCapacity(
+          player,
+          current.cardDefinitions,
+        );
         for (final cardId in draw.cards) {
-          if (backpack.length < 5) {
+          if (backpack.length < backpackCapacity) {
             backpack.add(cardId);
           } else {
             returned.add(cardId);
@@ -1275,6 +1286,7 @@ GameState _resolveEventOutcome(
             seed: _deckSeed(current, 'event-overflow:${definition['id']}'),
           );
         }
+        final cardsKept = draw.cards.length - returned.length;
         current = _copyState(
           current,
           decks: updatedDecks,
@@ -1283,8 +1295,7 @@ GameState _resolveEventOutcome(
             playerId,
             (hero) => _copyPlayer(hero, backpack: backpack),
           ),
-          logEntry:
-              'event-draw:$playerId:$targetDeckId:${draw.cards.length - returned.length}',
+          logEntry: 'event-draw:$playerId:$targetDeckId:$cardsKept',
         );
       case 'draw_supplies_all_players':
         for (final recipientId
@@ -1295,18 +1306,22 @@ GameState _resolveEventOutcome(
           final supplyDeck = current.decks['supplies'];
           if (supplyDeck == null || amount < 1) break;
           final recipient = _playerById(current, recipientId)!;
+          final backpackCapacity = InventoryRules.backpackCapacity(
+            recipient,
+            current.cardDefinitions,
+          );
           final draw = DeckRules.draw(
             supplyDeck,
             count: amount,
             seed: _deckSeed(
               current,
-              'event-team-supplies:${definition['id']}:$optionIndex:$recipientId',
+              'event-team-supplies:$eventId:$optionIndex:$recipientId',
             ),
           );
           final backpack = List<CardId>.of(recipient.backpack);
           final returned = <CardId>[];
           for (final cardId in draw.cards) {
-            if (backpack.length < 5) {
+            if (backpack.length < backpackCapacity) {
               backpack.add(cardId);
             } else {
               returned.add(cardId);
@@ -1322,6 +1337,7 @@ GameState _resolveEventOutcome(
                     'event-team-overflow:${definition['id']}:$recipientId',
                   ),
                 );
+          final cardsKept = draw.cards.length - returned.length;
           current = _copyState(
             current,
             decks: Map<DeckId, DeckState>.of(current.decks)
@@ -1331,8 +1347,7 @@ GameState _resolveEventOutcome(
               recipientId,
               (hero) => _copyPlayer(hero, backpack: backpack),
             ),
-            logEntry:
-                'event-team-supplies:$recipientId:${draw.cards.length - returned.length}',
+            logEntry: 'event-team-supplies:$recipientId:$cardsKept',
           );
         }
       case 'choose_from_top':
@@ -1379,7 +1394,8 @@ GameState _resolveEventOutcome(
         if (filtered == null) continue;
         final backpack = List<CardId>.of(player.backpack);
         var updatedDeck = filtered.deck;
-        if (backpack.length < 5) {
+        if (backpack.length <
+            InventoryRules.backpackCapacity(player, current.cardDefinitions)) {
           backpack.add(filtered.cardId);
         } else {
           updatedDeck = DeckRules.returnAndShuffle(
@@ -1420,7 +1436,8 @@ GameState _resolveEventOutcome(
         final updatedDecks = Map<DeckId, DeckState>.of(current.decks)
           ..[targetDeckId] = draw.deck;
         final backpack = List<CardId>.of(player.backpack);
-        if (backpack.length < 5) {
+        if (backpack.length <
+            InventoryRules.backpackCapacity(player, current.cardDefinitions)) {
           backpack.add(cardId);
         } else {
           updatedDecks[targetDeckId] = DeckRules.returnAndShuffle(
@@ -1467,9 +1484,11 @@ GameState _resolveEventOutcome(
         final monsterDefinition = current.monsterDefinitions[drawnMonsterId];
         if (monsterDefinition == null) continue;
         final coord = player.coord;
+        final instanceId =
+            'event-${current.round}-${current.eventTurnIndex}-'
+            '$eventId-$optionIndex-$drawnMonsterId';
         final monster = MonsterInstance(
-          instanceId:
-              'event-${current.round}-${current.eventTurnIndex}-${definition['id']}-${optionIndex}-$drawnMonsterId',
+          instanceId: instanceId,
           monsterId: drawnMonsterId,
           coord: coord,
           damage: 0,
@@ -1519,9 +1538,11 @@ GameState _resolveEventOutcome(
         final monsterId = draw.cards.single;
         final monsterDefinition = current.monsterDefinitions[monsterId];
         if (monsterDefinition == null) continue;
+        final instanceId =
+            'event-${current.round}-${current.eventTurnIndex}-'
+            '$eventId-$optionIndex-$monsterId';
         final monster = MonsterInstance(
-          instanceId:
-              'event-${current.round}-${current.eventTurnIndex}-${definition['id']}-${optionIndex}-$monsterId',
+          instanceId: instanceId,
           monsterId: monsterId,
           coord: player.coord,
           damage: 0,

@@ -278,7 +278,7 @@ void main() {
       var state = _mvpState(
         eventId: 'unfamiliar-card-id',
         additionalDecks: {
-          'supplies': DeckState(drawPile: ['ration']),
+          'supplies': DeckState(drawPile: const ['ration']),
         },
         storyQuestIds: const ['quest-01'],
         questDefinitions: {
@@ -638,7 +638,7 @@ void main() {
     var state = _mvpState(
       eventId: 'selection-event',
       additionalDecks: {
-        'items': DeckState(drawPile: ['item-a', 'item-b', 'item-c']),
+        'items': DeckState(drawPile: const ['item-a', 'item-b', 'item-c']),
       },
       eventDefinitions: {
         'selection-event': {
@@ -677,6 +677,40 @@ void main() {
       state.decks['items']!.drawPile.toSet(),
       containsAll({'item-a', 'item-c'}),
     );
+  });
+
+  test('event draws return overflow at the effective backpack capacity', () {
+    var state = _mvpState(
+      eventId: 'capacity-event',
+      playerBackpack: const ['item-a', 'item-b', 'item-c'],
+      additionalDecks: {
+        'items': DeckState(drawPile: const ['item-d']),
+      },
+      eventDefinitions: {
+        'capacity-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'draw', 'deckId': 'items', 'amount': 1},
+              ],
+              'failureEffects': [
+                {'type': 'draw', 'deckId': 'items', 'amount': 1},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.backpack, ['item-a', 'item-b', 'item-c']);
+    expect(state.decks['items']!.drawPile, contains('item-d'));
   });
 
   test(
@@ -754,7 +788,7 @@ void main() {
       eventId: 'placement-event',
       corridorOpened: true,
       additionalDecks: {
-        'monsters': DeckState(drawPile: ['ghoul']),
+        'monsters': DeckState(drawPile: const ['ghoul']),
       },
       monsterDefinitions: {
         'ghoul': {
@@ -1725,7 +1759,7 @@ void main() {
   test('runs the MVP from the first step through Quest 1 completion', () {
     var state = _mvpState(
       additionalDecks: {
-        'supplies': DeckState(drawPile: ['ration']),
+        'supplies': DeckState(drawPile: const ['ration']),
       },
       eventDefinitions: {
         'cabin-noise': {
@@ -1822,6 +1856,7 @@ GameState _mvpState({
   String eventId = 'cabin-noise',
   Map<String, Map<String, Object?>> eventDefinitions = const {},
   HexCoord playerCoord = const HexCoord(0, 0),
+  Iterable<CardId> playerBackpack = const [],
   List<String> storyQuestIds = const ['chapter-1-awakening'],
   Map<PlayerId, Iterable<String>> personalTasksByPlayer = const {},
   Map<String, Map<String, int>> conditionProgress = const {},
@@ -1876,7 +1911,7 @@ GameState _mvpState({
         coord: playerCoord,
         damage: index == 1 ? secondHeroDamage : 0,
         credits: initialCredits,
-        backpack: const [],
+        backpack: playerBackpack,
         equipped: const EquippedGear(),
         carriedMods: const [],
         implanted: const [],

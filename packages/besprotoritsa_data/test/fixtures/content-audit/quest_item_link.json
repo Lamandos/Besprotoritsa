@@ -1,1 +1,1 @@
-{"file":"quests.json","path":["quests",12,"conditions",2,"itemId"],"value":"shotgun-typo","expected":"unknown catalog card \"shotgun-typo\""}
+{"file":"quests.json","path":["quests",8,"conditions",1],"value":{"id":"quest-item-link-test","type":"collect_item","itemId":"shotgun-typo"},"expected":"unknown catalog card \"shotgun-typo\""}

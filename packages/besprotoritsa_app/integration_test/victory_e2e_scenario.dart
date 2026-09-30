@@ -122,10 +122,13 @@ void main() {
     void command(GameCommand value) {
       if (++commands > 12000) throw StateError('Campaign command limit.');
       if (state.isComplete) {
+        final livingHeroIds = state.players
+            .where((hero) => hero.alive)
+            .map((hero) => hero.id);
         throw StateError(
           'Campaign ended before $value in round ${state.round}; '
           'statuses=${state.quests.statuses}; '
-          'living=${state.players.where((hero) => hero.alive).map((hero) => hero.id)}; '
+          'living=$livingHeroIds; '
           'recent=${state.log.reversed.take(20)}',
         );
       }
@@ -155,7 +158,7 @@ void main() {
         }
         if (active?.id == 'hero-2' && state.actionsLeft > 0) {
           if (active!.damage >= 3) {
-            command(HealCommand(4));
+            command(const HealCommand(4));
             continue;
           }
           final nearbyMonster =
@@ -254,8 +257,9 @@ void main() {
               )
               .length;
           throw StateError(
-            'No route to $locationId at round ${state.round} from ${hero.coord}; '
-            '$blocked corridors blocked. Current tile: ${state.tileAt(hero.coord)}. '
+            'No route to $locationId at round ${state.round} '
+            'from ${hero.coord}; $blocked corridors blocked. '
+            'Current tile: ${state.tileAt(hero.coord)}. '
             'Recent log: ${state.log.reversed.take(16)}',
           );
         }
@@ -264,7 +268,7 @@ void main() {
           (entry) => entry.id == 'hero-1',
         );
         if (currentHero.damage >= 3 && state.actionsLeft > 0) {
-          command(HealCommand(4));
+          command(const HealCommand(4));
           continue;
         }
         final refreshedPath = _campaignPath(
@@ -314,13 +318,14 @@ void main() {
           combatTargetInstanceId = null;
           return;
         }
-        if (++safety > 40)
+        final hero = state.players.singleWhere((entry) => entry.id == 'hero-1');
+        if (++safety > 40) {
           throw StateError(
             'Could not defeat ${monster.monsterId}; round=${state.round}, '
-            'hero=${state.players.singleWhere((entry) => entry.id == 'hero-1')}, '
+            'hero=$hero, '
             'monster=$monster, recent=${state.log.reversed.take(12)}',
           );
-        final hero = state.players.singleWhere((entry) => entry.id == 'hero-1');
+        }
         if (hero.coord != monster.coord) {
           final path = _campaignPath(
             state,
@@ -396,7 +401,7 @@ void main() {
       command(const EquipCommand('pistol'));
     }
 
-    final maxTurns = 600;
+    const maxTurns = 600;
     while (!state.isComplete && state.round < maxTurns) {
       final activeQuests =
           state.quests.storyQuestIds.where((id) {
@@ -460,7 +465,7 @@ void main() {
             );
             final room = state.tileAt(hero.coord)!;
             final exit = room.exits
-                .map((edge) => hero.coord.neighbor(edge))
+                .map(hero.coord.neighbor)
                 .map(state.tileAt)
                 .whereType<HexTile>()
                 .where((tile) => !tile.isBlocked)
@@ -524,22 +529,30 @@ void main() {
 
     if (!state.isComplete) {
       final hero = state.players.singleWhere((entry) => entry.id == 'hero-1');
+      final anabiosis = state.board.where(
+        (tile) => tile.locationId == 'anabiosis',
+      );
+      final mothers = state.monsters.where(
+        (monster) => monster.monsterId == 'mother',
+      );
       throw StateError(
         'Campaign stalled at round ${state.round}: '
         'statuses=${state.quests.statuses}, '
         'quest27=${state.quests.conditionProgress['quest-27']}, '
         'hero=$hero, tile=${state.tileAt(hero.coord)}, '
-        'anabiosis=${state.board.where((tile) => tile.locationId == 'anabiosis')}, '
-        'monsters=${state.monsters.where((monster) => monster.monsterId == 'mother')}',
+        'anabiosis=$anabiosis, monsters=$mothers',
       );
     }
+    final livingHeroes = state.players
+        .where((hero) => hero.alive)
+        .map((hero) => '${hero.id}:${hero.damage}/${hero.health}');
     expect(
       state.quests.statusOf('quest-29'),
       QuestStatus.completed,
       reason:
           'Premature terminal at round ${state.round}: '
           'statuses=${state.quests.statuses}; '
-          'living=${state.players.where((hero) => hero.alive).map((hero) => '${hero.id}:${hero.damage}/${hero.health}')}',
+          'living=$livingHeroes',
     );
     expect(state.round, lessThan(maxTurns));
     expect(state.isComplete, isTrue);
