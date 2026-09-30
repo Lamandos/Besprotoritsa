@@ -10,11 +10,13 @@ part of 'mvp_game_screen.dart';
 class _StaticBoardLayer extends StatelessWidget {
   const _StaticBoardLayer({
     required this.board,
+    required this.contentTranslations,
     required this.selectedDestination,
     required this.onSelectDestination,
   });
 
   final List<HexTile> board;
+  final Map<String, String> contentTranslations;
   final HexCoord? selectedDestination;
   final ValueChanged<HexCoord>? onSelectDestination;
 
@@ -26,6 +28,7 @@ class _StaticBoardLayer extends StatelessWidget {
       for (final tile in board)
         _HexTileView(
           tile: tile,
+          contentTranslations: contentTranslations,
           position: _layoutPosition(tile.coord, board),
           selected:
               selectedDestination?.q == tile.coord.q &&
@@ -81,12 +84,14 @@ class _TokenLayer extends StatelessWidget {
 class _HexTileView extends StatelessWidget {
   const _HexTileView({
     required this.tile,
+    required this.contentTranslations,
     required this.position,
     required this.selected,
     required this.onTap,
   });
 
   final HexTile tile;
+  final Map<String, String> contentTranslations;
   final Offset position;
   final bool selected;
   final VoidCallback? onTap;
@@ -94,7 +99,7 @@ class _HexTileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isKnown = tile.opened;
-    final title = !isKnown
+    final genericTitle = !isKnown
         ? 'НЕИЗВЕДАНО'
         : switch (tile.type) {
             HexTileType.start => 'АНАБИОЗ',
@@ -102,6 +107,10 @@ class _HexTileView extends StatelessWidget {
             HexTileType.compartment => 'КАЮТ-КОМПАНИЯ',
             HexTileType.airlock => 'ШЛЮЗ',
           };
+    final locationId = tile.locationId;
+    final title = !isKnown || locationId == null
+        ? genericTitle
+        : contentTranslations['content.location.$locationId'] ?? genericTitle;
     return Positioned(
       left: position.dx,
       top: position.dy,

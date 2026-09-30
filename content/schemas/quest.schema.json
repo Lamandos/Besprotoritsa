@@ -22,12 +22,26 @@
         "items": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
         "drawItems": { "type": "integer", "minimum": 0 },
         "drawItemsPerPlayerAtTargetLocation": { "type": "integer", "minimum": 0 },
+        "drawSuppliesPerPlayer": { "type": "integer", "minimum": 0 },
         "creditRollDicePerPlayer": { "type": "integer", "minimum": 0 }
       }
     },
     "nextQuestIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
     "discardQuestIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
     "prerequisiteQuestIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "completionEffects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "questId", "amount"],
+        "properties": {
+          "type": { "enum": ["damage_all_players_if_quest_active"] },
+          "questId": { "$ref": "#/$defs/id" },
+          "amount": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
     "endsGame": { "type": "boolean" },
     "nameKey": { "$ref": "#/$defs/localizationKey" },
     "descKey": { "$ref": "#/$defs/localizationKey" }
@@ -79,6 +93,16 @@
             "id": { "$ref": "#/$defs/id" },
             "type": { "enum": ["collect_item"] },
             "itemId": { "$ref": "#/$defs/id" },
+            "targetValue": { "type": "integer", "minimum": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "type"],
+          "properties": {
+            "id": { "$ref": "#/$defs/id" },
+            "type": { "enum": ["equipped_for_battle"] },
             "targetValue": { "type": "integer", "minimum": 1 }
           }
         },

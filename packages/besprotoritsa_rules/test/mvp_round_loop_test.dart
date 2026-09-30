@@ -2,6 +2,82 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test(
+    'arrival objective counts heroes already at its location on activation',
+    () {
+      final questDefinitions = {
+        'quest-01': {
+          'id': 'quest-01',
+          'number': 1,
+          'chapter': 1,
+          'conditions': [
+            {
+              'id': 'arrive-crew-mess',
+              'type': 'arrive',
+              'locationId': 'crew-mess',
+            },
+            {
+              'id': 'science-crew-mess',
+              'type': 'skill_check',
+              'skill': 'science',
+              'locationId': 'crew-mess',
+            },
+          ],
+          'reward': {'credits': 0, 'items': <Object?>[]},
+          'nextQuestIds': ['quest-02'],
+          'nameKey': 'quest-01.name',
+          'descKey': 'quest-01.description',
+        },
+        'quest-02': {
+          'id': 'quest-02',
+          'number': 2,
+          'chapter': 1,
+          'conditions': [
+            {
+              'id': 'return-crew-mess',
+              'type': 'arrive',
+              'locationId': 'crew-mess',
+            },
+          ],
+          'reward': {'credits': 0, 'items': <Object?>[]},
+          'nextQuestIds': <Object?>[],
+          'endsGame': true,
+          'nameKey': 'quest-02.name',
+          'descKey': 'quest-02.description',
+        },
+      };
+      var state = _mvpState(
+        playerCoord: const HexCoord(0, 2),
+        storyQuestIds: const ['quest-01'],
+        conditionProgress: const {
+          'quest-01': {'arrive-crew-mess': 1},
+        },
+        questDefinitions: questDefinitions,
+      );
+
+      state = step(
+        state,
+        const SkillCheckCommand(StatType.science),
+        FixedDiceRoller([6]),
+      ).state;
+      if (state.pendingDecision != null) {
+        state = step(
+          state,
+          const ResolvePendingDecisionCommand(KeepRollChoice()),
+          FixedDiceRoller([]),
+        ).state;
+      }
+
+      expect(state.quests.statusOf('quest-01'), QuestStatus.completed);
+      expect(state.quests.statusOf('quest-02'), QuestStatus.completed);
+      expect(
+        state.quests.conditionProgress['quest-02']?['return-crew-mess'],
+        1,
+      );
+      expect(state.isComplete, isTrue);
+    },
+  );
+
   test('runtime event definitions drive options and skill checks', () {
     var state = _mvpState(
       eventId: 'runtime-event',
@@ -201,6 +277,9 @@ void main() {
     () {
       var state = _mvpState(
         eventId: 'unfamiliar-card-id',
+        additionalDecks: {
+          'supplies': DeckState(drawPile: ['ration']),
+        },
         storyQuestIds: const ['quest-01'],
         questDefinitions: {
           'quest-01': {
@@ -220,6 +299,9 @@ void main() {
               {
                 'skillCheck': {'skill': 'agility', 'difficulty': 1},
                 'behaviorId': 'event_cabin_noise',
+                'successEffects': [
+                  {'type': 'draw', 'deckId': 'supplies', 'amount': 1},
+                ],
               },
             ],
           },
@@ -237,9 +319,486 @@ void main() {
         FixedDiceRoller([]),
       ).state;
 
-      expect(state.players.single.backpack, contains('event-supply'));
+      expect(state.players.single.backpack, contains('ration'));
     },
   );
+
+  test('event outcome plans apply failed skill consequences', () {
+    var state = _mvpState(
+      eventId: 'verified-event',
+      eventDefinitions: {
+        'verified-event': {
+          'options': [
+            {
+              'skillCheck': {'skill': 'agility', 'difficulty': 1},
+              'successEffects': [
+                {'type': 'credits', 'amount': 5},
+              ],
+              'failureEffects': [
+                {'type': 'damage', 'amount': 2},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([1]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.damage, 2);
+    expect(state.players.single.credits, 0);
+  });
+
+  test(
+    'events without a printed check use their declared automatic outcome',
+    () {
+      var state = _mvpState(
+        eventId: 'automatic-event',
+        eventDefinitions: {
+          'automatic-event': {
+            'id': 'automatic-event',
+            'options': [
+              {
+                'skillCheck': null,
+                'autoOutcome': 'success',
+                'successEffects': [
+                  {'type': 'credits', 'amount': 2},
+                ],
+                'failureEffects': [
+                  {'type': 'damage', 'amount': 1},
+                ],
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([]),
+      ).state;
+      expect(state.players.single.credits, 2);
+      expect(state.players.single.damage, 0);
+    },
+  );
+
+  test('event options requiring a card are hidden when it is not owned', () {
+    var state = _mvpState(
+      eventId: 'required-card-event',
+      eventDefinitions: {
+        'required-card-event': {
+          'id': 'required-card-event',
+          'options': [
+            {'skillCheck': null, 'requiresCard': 'gas-cylinder'},
+            {'skillCheck': null},
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    final event = state.pendingDecision! as AwaitingEventOption;
+    expect(event.options, ['option-2']);
+  });
+
+  test('event markets allow discounted buys and return untouched offers', () {
+    final definitions = <String, CardDefinition>{
+      for (final entry in const [
+        ('ration', 3),
+        ('flare', 2),
+        ('medkit', 4),
+      ])
+        entry.$1: CardDefinition(
+          id: entry.$1,
+          type: ItemType.supply,
+          slots: const [],
+          cost: entry.$2,
+          staticEffects: CardStaticEffects(const {}),
+        ),
+    };
+    var state = _mvpState(
+      eventId: 'market-event',
+      initialCredits: 5,
+      cardDefinitions: definitions,
+      eventDefinitions: {
+        'market-event': {
+          'id': 'market-event',
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'successEffects': [
+                {
+                  'type': 'market',
+                  'offers': 3,
+                  'maxPurchases': 2,
+                  'discount': 2,
+                  'allowSell': true,
+                },
+              ],
+              'failureEffects': [
+                {'type': 'no_effect'},
+              ],
+            },
+          ],
+        },
+      },
+      additionalDecks: {
+        'supplies': DeckState(drawPile: const ['ration', 'flare', 'medkit']),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    final market = state.pendingDecision! as AwaitingEventOption;
+    expect(
+      market.options,
+      contains('market|market-event|1|2|2|ration,flare,medkit|1|buy|0:ration'),
+    );
+    expect(
+      market.options,
+      contains('market|market-event|1|2|2|ration,flare,medkit|1|buy|1:flare'),
+    );
+    state = step(
+      state,
+      ResolvePendingDecisionCommand(
+        EventOptionChoice(
+          market.options.firstWhere((value) => value.endsWith('|buy|0:ration')),
+        ),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    final afterBuy = state.pendingDecision! as AwaitingEventOption;
+    expect(state.players.single.credits, 4);
+    expect(state.players.single.backpack, ['ration']);
+    expect(
+      afterBuy.options.any((value) => value.endsWith('|sell|ration')),
+      isTrue,
+    );
+    state = step(
+      state,
+      ResolvePendingDecisionCommand(
+        EventOptionChoice(
+          afterBuy.options.firstWhere(
+            (value) => value.endsWith('|sell|ration'),
+          ),
+        ),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.players.single.credits, 7);
+    expect(state.players.single.backpack, isEmpty);
+    state = step(
+      state,
+      ResolvePendingDecisionCommand(
+        EventOptionChoice(
+          (state.pendingDecision! as AwaitingEventOption).options.last,
+        ),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.pendingDecision, isNull);
+    expect(
+      state.decks['supplies']!.drawPile,
+      containsAll(['flare', 'medkit']),
+    );
+    expect(state.decks['supplies']!.discardPile, contains('ration'));
+  });
+
+  test('asteroid event damages and displaces corridor occupants', () {
+    var state = _mvpState(
+      eventId: 'asteroid-alert',
+      heroCount: 2,
+      playerCoord: const HexCoord(0, 1),
+      corridorOpened: true,
+      eventDefinitions: {
+        'asteroid-alert': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'asteroid_alert'},
+              ],
+              'failureEffects': [
+                {'type': 'asteroid_alert'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([1, 2]),
+    ).state;
+
+    expect(
+      state.board
+          .singleWhere((tile) => tile.type == HexTileType.corridor)
+          .isBlocked,
+      isTrue,
+    );
+    expect(state.players.map((hero) => hero.damage), [1, 2]);
+    expect(
+      state.players.every((hero) => hero.coord != const HexCoord(0, 1)),
+      isTrue,
+    );
+  });
+
+  test(
+    'welded event door blocks monster access but leaves hero passage open',
+    () {
+      var state = _mvpState(
+        eventId: 'door-event',
+        eventDefinitions: {
+          'door-event': {
+            'options': [
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'seal_monster_access'},
+                ],
+                'failureEffects': [
+                  {'type': 'seal_monster_access'},
+                ],
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([]),
+      ).state;
+      expect(state.board.first.monsterAccessBlocked, isTrue);
+      expect(state.board.first.isBlocked, isFalse);
+    },
+  );
+
+  test('event movement exposes legal neighboring sectors as a decision', () {
+    var state = _mvpState(
+      eventId: 'movement-event',
+      corridorOpened: true,
+      eventDefinitions: {
+        'movement-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'move_to_neighbor'},
+              ],
+              'failureEffects': [
+                {'type': 'move_to_neighbor'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.pendingDecision, isA<AwaitingEventOption>());
+    expect(
+      (state.pendingDecision! as AwaitingEventOption).options,
+      contains('move:0:1'),
+    );
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('move:0:1')),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.players.single.coord, const HexCoord(0, 1));
+    expect(state.pendingDecision, isNull);
+  });
+
+  test('event selection returns unchosen cards to its source deck', () {
+    var state = _mvpState(
+      eventId: 'selection-event',
+      additionalDecks: {
+        'items': DeckState(drawPile: ['item-a', 'item-b', 'item-c']),
+      },
+      eventDefinitions: {
+        'selection-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'choose_from_top', 'deckId': 'items', 'amount': 3},
+              ],
+              'failureEffects': [
+                {'type': 'choose_from_top', 'deckId': 'items', 'amount': 3},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.pendingDecision, isA<AwaitingEventOption>());
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        EventOptionChoice('pick:items:item-b'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.backpack, contains('item-b'));
+    expect(state.decks['items']!.drawPile, hasLength(2));
+    expect(
+      state.decks['items']!.drawPile.toSet(),
+      containsAll({'item-a', 'item-c'}),
+    );
+  });
+
+  test(
+    'event reveal opens a selected map fragment without moving the hero',
+    () {
+      var state = _mvpState(
+        eventId: 'reveal-event',
+        eventDefinitions: {
+          'reveal-event': {
+            'options': [
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'reveal_fragment', 'scope': 'any'},
+                ],
+                'failureEffects': [
+                  {'type': 'reveal_fragment', 'scope': 'any'},
+                ],
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([]),
+      ).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('reveal:0:1')),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(state.tileAt(const HexCoord(0, 1))!.opened, isTrue);
+      expect(state.players.single.coord, const HexCoord(0, 0));
+      expect(state.pendingDecision, isNull);
+    },
+  );
+
+  test('event next-turn action bonus applies at the next round boundary', () {
+    var state = _mvpState(
+      eventId: 'action-bonus-event',
+      eventDefinitions: {
+        'action-bonus-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'next_turn_action_delta', 'delta': 1},
+              ],
+              'failureEffects': [
+                {'type': 'next_turn_action_delta', 'delta': 1},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.round, 2);
+    expect(state.players.single.actionPoints, 3);
+    expect(state.players.single.nextTurnActionDelta, 0);
+  });
+
+  test('event monster placement resolves after choosing a neighbor sector', () {
+    var state = _mvpState(
+      eventId: 'placement-event',
+      corridorOpened: true,
+      additionalDecks: {
+        'monsters': DeckState(drawPile: ['ghoul']),
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 0,
+          'movement': 0,
+        },
+      },
+      eventDefinitions: {
+        'placement-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'spawn_monster_adjacent'},
+              ],
+              'failureEffects': [
+                {'type': 'spawn_monster_adjacent'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    final placement = state.pendingDecision! as AwaitingEventOption;
+    state = step(
+      state,
+      ResolvePendingDecisionCommand(
+        EventOptionChoice(placement.options.single),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters.single.coord, const HexCoord(0, 1));
+    expect(state.players.single.coord, const HexCoord(0, 0));
+    expect(state.pendingDecision, isNull);
+  });
 
   test(
     'immediate event spawn starts an out-of-turn dodge and counterattack',
@@ -766,6 +1325,129 @@ void main() {
     expect(state.decks['items']!.drawPile, ['item-c']);
   });
 
+  test('quest supply rewards are drawn for every living hero', () {
+    final supplies = {
+      for (final id in ['ration-a', 'ration-b'])
+        id: CardDefinition.fromJson({
+          'id': id,
+          'category': 'supply',
+          'slots': <Object?>[],
+          'cost': 0,
+          'stats': <String, int>{},
+        }),
+    };
+    var state = _mvpState(
+      playerCoord: const HexCoord(0, 2),
+      storyQuestIds: const ['supply-quest'],
+      heroCount: 2,
+      questDefinitions: {
+        'supply-quest': {
+          'id': 'supply-quest',
+          'number': 1,
+          'chapter': 1,
+          'conditions': [
+            {
+              'id': 'science-check',
+              'type': 'skill_check',
+              'skill': 'science',
+              'locationId': 'crew-mess',
+            },
+          ],
+          'reward': {
+            'credits': 0,
+            'items': <Object?>[],
+            'drawSuppliesPerPlayer': 1,
+          },
+          'nextQuestIds': <Object?>[],
+          'nameKey': 'supply-quest.name',
+          'descKey': 'supply-quest.description',
+        },
+      },
+      cardDefinitions: supplies,
+      additionalDecks: {
+        'supplies': DeckState(drawPile: const ['ration-a', 'ration-b']),
+      },
+    );
+    state = step(
+      state,
+      const SkillCheckCommand(StatType.science),
+      FixedDiceRoller([6]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.map((player) => player.backpack.length), [1, 1]);
+    expect(state.decks['supplies']!.drawPile, isEmpty);
+  });
+
+  test('quest 6 damages every hero only while quest 5 remains active', () {
+    final sharedQuests = <String, Map<String, Object?>>{
+      'quest-05': {
+        'id': 'quest-05',
+        'number': 5,
+        'chapter': 4,
+        'conditions': [
+          {
+            'id': 'medicine',
+            'type': 'collect_item',
+            'itemId': 'medicine',
+          },
+        ],
+        'reward': {'credits': 0, 'items': <Object?>[]},
+        'nextQuestIds': <Object?>[],
+        'nameKey': 'quest-05.name',
+        'descKey': 'quest-05.description',
+      },
+      'quest-06': {
+        'id': 'quest-06',
+        'number': 6,
+        'chapter': 5,
+        'conditions': [
+          {
+            'id': 'engine-check',
+            'type': 'skill_check',
+            'skill': 'science',
+            'locationId': 'crew-mess',
+          },
+        ],
+        'completionEffects': [
+          {
+            'type': 'damage_all_players_if_quest_active',
+            'questId': 'quest-05',
+            'amount': 2,
+          },
+        ],
+        'reward': {'credits': 0, 'items': <Object?>[]},
+        'nextQuestIds': <Object?>[],
+        'nameKey': 'quest-06.name',
+        'descKey': 'quest-06.description',
+      },
+    };
+    var state = _mvpState(
+      playerCoord: const HexCoord(0, 2),
+      storyQuestIds: const ['quest-05', 'quest-06'],
+      heroCount: 2,
+      questDefinitions: sharedQuests,
+    );
+    state = step(
+      state,
+      const SkillCheckCommand(StatType.science),
+      FixedDiceRoller([6]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.quests.statusOf('quest-05'), QuestStatus.active);
+    expect(state.quests.statusOf('quest-06'), QuestStatus.completed);
+    expect(state.players.map((player) => player.damage), [2, 2]);
+  });
+
   test('killing a monster advances damage-token quest counters', () {
     var state = _mvpState(
       storyQuestIds: const ['quest-01'],
@@ -1042,12 +1724,18 @@ void main() {
 
   test('runs the MVP from the first step through Quest 1 completion', () {
     var state = _mvpState(
+      additionalDecks: {
+        'supplies': DeckState(drawPile: ['ration']),
+      },
       eventDefinitions: {
         'cabin-noise': {
           'options': [
             {
               'skillCheck': {'skill': 'agility', 'difficulty': 1},
               'behaviorId': 'event_cabin_noise',
+              'successEffects': [
+                {'type': 'draw', 'deckId': 'supplies', 'amount': 1},
+              ],
             },
           ],
         },
@@ -1081,7 +1769,7 @@ void main() {
     ).state;
     expect(state.phase, GamePhase.playersTurn);
     expect(state.round, 2);
-    expect(state.players.single.backpack, contains('event-supply'));
+    expect(state.players.single.backpack, contains('ration'));
 
     state = step(
       state,

@@ -13,6 +13,7 @@ bool _isActionCommand(GameCommand command) =>
     command is MoveCommand ||
     command is AirlockMoveCommand ||
     command is CloseCorridorCommand ||
+    command is OpenCorridorCommand ||
     command is AttackCommand ||
     command is SkillCheckCommand ||
     command is HealCommand ||

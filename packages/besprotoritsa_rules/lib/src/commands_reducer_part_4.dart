@@ -46,6 +46,22 @@ GameStepResult _closeCorridor(GameState state, HexCoord target) =>
       ),
     );
 
+GameStepResult _openCorridor(GameState state, HexCoord target) =>
+    GameStepResult(
+      state: _copyState(
+        state,
+        actionsLeft: state.actionsLeft - 1,
+        board: [
+          for (final tile in state.board)
+            if (tile.coord == target)
+              _copyTile(tile, isBlocked: false)
+            else
+              tile,
+        ],
+        logEntry: 'corridor-opened:${state.activePlayerId}:$target',
+      ),
+    );
+
 /// Resolves threats in shared cells, creating one dodge decision per hit.
 ///
 /// Calls made while another dodge is open append their damage after the current
@@ -214,6 +230,7 @@ Iterable<HexCoord> _monsterPathNeighbors(
     if (nextTile != null &&
         nextTile.opened &&
         !nextTile.isBlocked &&
+        !nextTile.monsterAccessBlocked &&
         nextTile.hasExit(edge.opposite)) {
       yield next;
     }
@@ -226,6 +243,7 @@ Iterable<HexCoord> _monsterPathNeighbors(
     if (candidate.coord != coord &&
         candidate.opened &&
         !candidate.isBlocked &&
+        !candidate.monsterAccessBlocked &&
         candidate.ventColor == tile.ventColor) {
       yield candidate.coord;
     }

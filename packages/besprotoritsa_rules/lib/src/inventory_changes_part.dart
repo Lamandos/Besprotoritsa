@@ -252,5 +252,6 @@ abstract final class _InventoryChanges {
     stats: player.stats,
     weaponModifier: player.weaponModifier,
     actionPoints: player.actionPoints,
+    nextTurnActionDelta: player.nextTurnActionDelta,
   );
 }

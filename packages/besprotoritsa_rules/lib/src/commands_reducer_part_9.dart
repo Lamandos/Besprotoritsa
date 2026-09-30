@@ -86,6 +86,7 @@ PlayerState _copyPlayer(
   PlayerStats? stats,
   int? health,
   int? weaponModifier,
+  int? nextTurnActionDelta,
 }) => PlayerState(
   id: player.id,
   characterId: player.characterId,
@@ -102,6 +103,7 @@ PlayerState _copyPlayer(
   stats: stats ?? player.stats,
   weaponModifier: weaponModifier ?? player.weaponModifier,
   actionPoints: player.actionPoints,
+  nextTurnActionDelta: nextTurnActionDelta ?? player.nextTurnActionDelta,
 );
 
 MonsterInstance _copyMonster(

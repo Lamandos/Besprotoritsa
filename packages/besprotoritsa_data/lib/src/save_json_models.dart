@@ -19,6 +19,7 @@ abstract final class SaveJsonModels {
     'has_terminal': tile.hasTerminal,
     'vent_color': tile.ventColor.name,
     'is_blocked': tile.isBlocked,
+    'monster_access_blocked': tile.monsterAccessBlocked,
   };
   static HexTile tileFromJson(Map<String, Object?> json) => HexTile(
     id: _string(json, 'id'),
@@ -34,6 +35,10 @@ abstract final class SaveJsonModels {
       'vent_color',
     ),
     isBlocked: _boolOrDefault(json['is_blocked'], 'is_blocked'),
+    monsterAccessBlocked: _boolOrDefault(
+      json['monster_access_blocked'],
+      'monster_access_blocked',
+    ),
   );
   static Map<String, Object?> playerToJson(PlayerState player) => {
     'id': player.id,
@@ -57,6 +62,7 @@ abstract final class SaveJsonModels {
     'stats': _statsToJson(player.stats),
     'weapon_modifier': player.weaponModifier,
     'action_points': player.actionPoints,
+    'next_turn_action_delta': player.nextTurnActionDelta,
   };
   static PlayerState playerFromJson(Map<String, Object?> json) {
     final equipped = _object(json, 'equipped');
@@ -85,6 +91,7 @@ abstract final class SaveJsonModels {
       stats: _statsFromJson(_object(json, 'stats')),
       weaponModifier: _int(json, 'weapon_modifier'),
       actionPoints: _optionalInt(json, 'action_points') ?? 2,
+      nextTurnActionDelta: _optionalInt(json, 'next_turn_action_delta') ?? 0,
     );
   }
 

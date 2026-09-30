@@ -194,6 +194,23 @@ CommandRejection? validate(GameState state, GameCommand command) {
     }
   }
 
+  if (command case OpenCorridorCommand(:final target)) {
+    final player = _activePlayer(state)!;
+    final source = state.tileAt(player.coord);
+    final corridor = state.tileAt(target);
+    final edge = player.coord.edgeTowardOrNull(target);
+    if (source == null ||
+        corridor == null ||
+        edge == null ||
+        corridor.type != HexTileType.corridor ||
+        !corridor.isBlocked ||
+        !source.hasExit(edge) ||
+        !corridor.hasExit(edge.opposite)) {
+      return const CorridorCannotBeClosed();
+    }
+    if (state.actionsLeft < 1) return const NotEnoughActions();
+  }
+
   if (command case AttackCommand(:final targetInstanceId)) {
     final player = _activePlayer(state)!;
     final monster = _monsterById(state, targetInstanceId);
@@ -229,6 +246,7 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
       )!,
     ),
     CloseCorridorCommand(:final target) => _closeCorridor(state, target),
+    OpenCorridorCommand(:final target) => _openCorridor(state, target),
     AttackCommand(:final targetInstanceId) => _attack(
       state,
       targetInstanceId,
@@ -289,6 +307,22 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
             amount: creditsGained,
           ),
           playerId: player.id,
+        );
+      }
+    }
+    if (resultState.players.any(
+      (player) =>
+          player.alive &&
+          (player.equipped.weapons.isNotEmpty || player.equipped.armor != null),
+    )) {
+      final questActorId =
+          state.activePlayerId ??
+          resultState.players.where((player) => player.alive).firstOrNull?.id;
+      if (questActorId != null) {
+        resultState = _applyFullQuestEvent(
+          resultState,
+          const QuestBattleEquipmentReady(),
+          playerId: questActorId,
         );
       }
     }

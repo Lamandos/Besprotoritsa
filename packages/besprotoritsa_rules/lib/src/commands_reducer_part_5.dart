@@ -251,7 +251,12 @@ List<HexTile> _openTile(List<HexTile> board, HexTile destination) => [
       tile,
 ];
 
-HexTile _copyTile(HexTile tile, {bool? opened, bool? isBlocked}) => HexTile(
+HexTile _copyTile(
+  HexTile tile, {
+  bool? opened,
+  bool? isBlocked,
+  bool? monsterAccessBlocked,
+}) => HexTile(
   id: tile.id,
   coord: tile.coord,
   type: tile.type,
@@ -261,4 +266,5 @@ HexTile _copyTile(HexTile tile, {bool? opened, bool? isBlocked}) => HexTile(
   hasTerminal: tile.hasTerminal,
   ventColor: tile.ventColor,
   isBlocked: isBlocked ?? tile.isBlocked,
+  monsterAccessBlocked: monsterAccessBlocked ?? tile.monsterAccessBlocked,
 );

@@ -3505,7 +3505,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.vending-machine": {
       "status": "human-card-verified",
@@ -3536,7 +3541,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.pile-of-things": {
       "status": "human-card-verified",
@@ -3567,7 +3577,15 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.monster-nest": {
       "status": "human-card-verified",
@@ -3598,7 +3616,15 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 6,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.corpse": {
       "status": "human-card-verified",
@@ -3629,7 +3655,15 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.suitcases": {
       "status": "human-card-verified",
@@ -3660,7 +3694,15 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.hatch-monster": {
       "status": "human-card-verified",
@@ -3691,7 +3733,15 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.security-room": {
       "status": "human-card-verified",
@@ -3722,7 +3772,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.exposed-wires": {
       "status": "human-card-verified",
@@ -3753,7 +3808,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 6,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.monster-pack": {
       "status": "human-card-verified",
@@ -3784,7 +3844,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.rope-hatch": {
       "status": "human-card-verified",
@@ -3816,7 +3881,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 6,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.weapon-monster": {
       "status": "human-card-verified",
@@ -3848,7 +3918,15 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.repair-cleaner": {
       "status": "human-card-verified",
@@ -3880,7 +3958,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.countdown-trap": {
       "status": "human-card-verified",
@@ -3912,7 +3995,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.scientist-report": {
       "status": "human-card-verified",
@@ -3943,7 +4031,15 @@
       "behaviorIds": [
         "event.choice",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.monster-corpse": {
       "status": "human-card-verified",
@@ -3975,7 +4071,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.rubble": {
       "status": "human-card-verified",
@@ -4007,7 +4108,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.two-crates": {
       "status": "human-card-verified",
@@ -4039,7 +4145,15 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.huge-crate": {
       "status": "human-card-verified",
@@ -4071,7 +4185,15 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.toolbox": {
       "status": "human-card-verified",
@@ -4103,7 +4225,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 6,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.exoskeleton-terminal": {
       "status": "human-card-verified",
@@ -4135,7 +4262,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.contraband-cache": {
       "status": "human-card-verified",
@@ -4167,7 +4299,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.falling-monster": {
       "status": "human-card-verified",
@@ -4199,7 +4336,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.collapsed-panel": {
       "status": "human-card-verified",
@@ -4231,7 +4373,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.blood-trail": {
       "status": "human-card-verified",
@@ -4263,7 +4410,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.ship-map": {
       "status": "human-card-verified",
@@ -4295,7 +4447,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.cache-symbols": {
       "status": "human-card-verified",
@@ -4327,7 +4484,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.scientist-case": {
       "status": "human-card-verified",
@@ -4359,7 +4521,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.inventory-notes": {
       "status": "human-card-verified",
@@ -4391,7 +4558,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.nest-room": {
       "status": "human-card-verified",
@@ -4423,7 +4595,16 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 6,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "The welded door blocks monster pathfinding while preserving hero movement through the sector.",
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.needle-box": {
       "status": "human-card-verified",
@@ -4455,7 +4636,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.bloody-suitcase": {
       "status": "human-card-verified",
@@ -4487,7 +4673,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.broken-drone": {
       "status": "human-card-verified",
@@ -4519,7 +4710,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.radio-transmitter": {
       "status": "human-card-verified",
@@ -4551,7 +4747,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.lights-out": {
       "status": "human-card-verified",
@@ -4583,7 +4784,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.ventilation-failure": {
       "status": "human-card-verified",
@@ -4615,7 +4821,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.gas-pipe": {
       "status": "human-card-verified",
@@ -4647,7 +4858,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.vent-monster": {
       "status": "human-card-verified",
@@ -4679,7 +4895,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 6,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.security-console": {
       "status": "human-card-verified",
@@ -4711,7 +4932,15 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Robot exhaustion/readiness is not modeled; returning all robots to ready state is an explicit no-op, disclosed in the in-game rules reference."
+        ]
+      }
     },
     "event.cigarette-machine": {
       "status": "human-card-verified",
@@ -4743,7 +4972,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.pack-sighting": {
       "status": "human-card-verified",
@@ -4775,7 +5009,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.gas-cabin": {
       "status": "human-card-verified",
@@ -4807,7 +5046,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.hatch-scrape": {
       "status": "human-card-verified",
@@ -4839,7 +5083,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.oxygen-alarm": {
       "status": "human-card-verified",
@@ -4871,7 +5120,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.survivor-scream": {
       "status": "human-card-verified",
@@ -4903,7 +5157,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.child-cry": {
       "status": "human-card-verified",
@@ -4935,7 +5194,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.female-whisper": {
       "status": "human-card-verified",
@@ -4967,7 +5231,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.alcohol-crate": {
       "status": "human-card-verified",
@@ -4999,7 +5268,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 6,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.supply-terminal": {
       "status": "human-card-verified",
@@ -5030,7 +5304,15 @@
       "behaviorIds": [
         "event.choice",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 6,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.trade-bot": {
       "status": "human-card-verified",
@@ -5062,7 +5344,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.lockers": {
       "status": "human-card-verified",
@@ -5093,7 +5380,12 @@
       "behaviorIds": [
         "event.choice",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.body-pile": {
       "status": "human-card-verified",
@@ -5124,7 +5416,15 @@
       "behaviorIds": [
         "event.choice",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Options without a printed skill check resolve their declared automatic outcome; required-card options are only offered when the active hero owns that card."
+        ]
+      }
     },
     "event.junk-medical": {
       "status": "human-card-verified",
@@ -5156,7 +5456,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 6,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.junk-credits": {
       "status": "human-card-verified",
@@ -5188,7 +5493,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.junk-guitar": {
       "status": "human-card-verified",
@@ -5220,7 +5530,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.shelf-equipment": {
       "status": "human-card-verified",
@@ -5252,7 +5567,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.falling-beam": {
       "status": "human-card-verified",
@@ -5284,7 +5604,12 @@
         "event.choice",
         "event.skillCheck",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.meteor-stream": {
       "status": "human-card-verified",
@@ -5315,7 +5640,12 @@
       "behaviorIds": [
         "event.choice",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.fire": {
       "status": "human-card-verified",
@@ -5346,7 +5676,12 @@
       "behaviorIds": [
         "event.choice",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.monster-horde": {
       "status": "human-card-verified",
@@ -5377,7 +5712,12 @@
       "behaviorIds": [
         "event.choice",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 4,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.asteroid-alert": {
       "status": "human-card-verified",
@@ -5408,7 +5748,15 @@
       "behaviorIds": [
         "event.choice",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": [],
+        "adaptations": [
+          "Displaced creatures choose the first legal neighboring compartment by coordinates for deterministic resolution."
+        ]
+      }
     },
     "event.horde-carry": {
       "status": "human-card-verified",
@@ -5439,7 +5787,12 @@
       "behaviorIds": [
         "event.choice",
         "event.successFailure"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-open-0": {
       "status": "human-card-verified",
@@ -5470,7 +5823,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-open-1": {
       "status": "human-card-verified",
@@ -5501,7 +5859,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-escape-pods-1": {
       "status": "human-card-verified",
@@ -5532,7 +5895,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-armory-2": {
       "status": "human-card-verified",
@@ -5563,7 +5931,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-reactor-3": {
       "status": "human-card-verified",
@@ -5594,7 +5967,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-medical-bay-4": {
       "status": "human-card-verified",
@@ -5625,7 +6003,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-crew-quarters-5": {
       "status": "human-card-verified",
@@ -5656,7 +6039,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-laboratory-6": {
       "status": "human-card-verified",
@@ -5687,7 +6075,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-storage-7": {
       "status": "human-card-verified",
@@ -5718,7 +6111,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-engineering-control-post-8": {
       "status": "human-card-verified",
@@ -5749,7 +6147,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-main-computer-9": {
       "status": "human-card-verified",
@@ -5780,7 +6183,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-dining-hall-10": {
       "status": "human-card-verified",
@@ -5811,7 +6219,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-flight-control-11": {
       "status": "human-card-verified",
@@ -5842,7 +6255,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-morgue-12": {
       "status": "human-card-verified",
@@ -5873,7 +6291,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-escape-pods-13": {
       "status": "human-card-verified",
@@ -5904,7 +6327,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-armory-14": {
       "status": "human-card-verified",
@@ -5935,7 +6363,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-reactor-15": {
       "status": "human-card-verified",
@@ -5966,7 +6399,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-medical-bay-16": {
       "status": "human-card-verified",
@@ -5997,7 +6435,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-crew-quarters-17": {
       "status": "human-card-verified",
@@ -6027,7 +6470,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-laboratory-18": {
       "status": "human-card-verified",
@@ -6057,7 +6505,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-storage-19": {
       "status": "human-card-verified",
@@ -6087,7 +6540,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-engineering-control-post-20": {
       "status": "human-card-verified",
@@ -6117,7 +6575,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-main-computer-21": {
       "status": "human-card-verified",
@@ -6147,7 +6610,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-dining-hall-22": {
       "status": "human-card-verified",
@@ -6177,7 +6645,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-flight-control-23": {
       "status": "human-card-verified",
@@ -6207,7 +6680,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "event.invasion-morgue-24": {
       "status": "human-card-verified",
@@ -6237,7 +6715,12 @@
       "behaviorIds": [
         "monster.spawn",
         "monster.spawnClosedFallback"
-      ]
+      ],
+      "runtimeOutcomeCoverage": {
+        "status": "complete",
+        "outcomeBranchesEncoded": 2,
+        "outcomeBranchesMissing": []
+      }
     },
     "task.researcher": {
       "status": "human-card-verified",
@@ -6272,7 +6755,7 @@
         "aggregation": "maximum",
         "rewardCredits": 5
       },
-      "taskRuleMappingNote": "Original card text verified; targetValue is a digital metric threshold and has not been independently confirmed against a runtime map-fragment event producer."
+      "taskRuleMappingNote": "The reducer observes this metric after accepted commands and records 1 only when every tile in the generated board is opened at the same time; the personal-task maximum aggregation preserves that simultaneous observation."
     },
     "task.modernizer": {
       "status": "human-card-verified",
@@ -7105,8 +7588,16 @@
         "nextQuestIds": [
           "quest-07"
         ],
-        "prerequisiteQuestIds": []
-      }
+        "prerequisiteQuestIds": [],
+        "completionEffects": [
+          {
+            "type": "damage_all_players_if_quest_active",
+            "questId": "quest-05",
+            "amount": 2
+          }
+        ]
+      },
+      "sourceFinding": "The verified conditional effect is applied on Quest 6 completion: if Quest 5 is still active, each living hero takes 2 damage."
     },
     "quest.quest-07": {
       "status": "human-card-verified",
@@ -7475,11 +7966,6 @@
             "type": "skill_check",
             "skill": "strength",
             "locationId": "armory"
-          },
-          {
-            "id": "collect-shotgun",
-            "type": "collect_item",
-            "itemId": "shotgun"
           }
         ],
         "reward": {
@@ -7493,7 +7979,8 @@
           "quest-15"
         ],
         "prerequisiteQuestIds": []
-      }
+      },
+      "sourceFinding": "The shotgun is issued as the printed reward after the armory check; it is not a precondition to complete the quest."
     },
     "quest.quest-14": {
       "status": "human-card-verified",
@@ -7589,22 +8076,19 @@
             "type": "skill_check",
             "skill": "agility",
             "locationId": "dining-hall"
-          },
-          {
-            "id": "collect-supply",
-            "type": "collect_item",
-            "itemId": "supply"
           }
         ],
         "reward": {
           "credits": 0,
-          "items": []
+          "items": [],
+          "drawSuppliesPerPlayer": 1
         },
         "nextQuestIds": [
           "quest-17"
         ],
         "prerequisiteQuestIds": []
-      }
+      },
+      "sourceFinding": "Removed the circular collect-supply prerequisite. The verified reward draws one supply for each living hero."
     },
     "quest.quest-16": {
       "status": "human-card-verified",
@@ -7698,11 +8182,6 @@
             "type": "skill_check",
             "skill": "science",
             "locationId": "morgue"
-          },
-          {
-            "id": "collect-plague-mask",
-            "type": "collect_item",
-            "itemId": "plague-doctor-mask"
           }
         ],
         "reward": {
@@ -7715,7 +8194,8 @@
           "quest-18"
         ],
         "prerequisiteQuestIds": []
-      }
+      },
+      "sourceFinding": "The plague-doctor mask is issued as the printed reward after the morgue check; it is not a precondition to complete the quest."
     },
     "quest.quest-18": {
       "status": "human-card-verified",
@@ -7909,6 +8389,10 @@
             "type": "skill_check",
             "skill": "agility",
             "locationId": "storage"
+          },
+          {
+            "id": "equip-for-battle",
+            "type": "equipped_for_battle"
           }
         ],
         "reward": {
@@ -7921,7 +8405,7 @@
         ],
         "prerequisiteQuestIds": []
       },
-      "sourceFinding": "The printed “equip for battle” objective is not represented as a typed condition; a generic collect-item placeholder was removed. This remains a runtime rule-mapping gap."
+      "sourceFinding": "The printed battle-equipment objective is typed as equipped_for_battle; it is met when a living hero has a weapon or armor equipped."
     },
     "quest.quest-22": {
       "status": "human-card-verified",
@@ -8128,11 +8612,6 @@
             "id": "kill-viy-again",
             "type": "kill_monster",
             "monsterId": "viy"
-          },
-          {
-            "id": "collect-assault-rifle",
-            "type": "collect_item",
-            "itemId": "assault-rifle"
           }
         ],
         "reward": {
@@ -8148,7 +8627,7 @@
         "discardQuestIds": [],
         "prerequisiteQuestIds": []
       },
-      "sourceFinding": "Printed boss placement is now a typed spawnMonsterId/spawnLocationId pair and is reference-validated."
+      "sourceFinding": "The assault rifle is issued as the printed reward after defeating Viy; it is not a precondition to complete the quest."
     },
     "quest.quest-26": {
       "status": "human-card-verified",
@@ -8646,6 +9125,26 @@
         "en"
       ],
       "behaviorIdsReviewed": true
+    },
+    "decision.quest.battle-readiness": {
+      "status": "source-verified",
+      "reviewedAt": "2026-09-30",
+      "decision": "The printed “equip for battle” requirement is met when at least one living hero has a weapon or armor equipped. This lets heroes with existing equipment satisfy it and lets the objective be completed by equipping acquired gear.",
+      "source": {
+        "pdf": "materials/задания сюжет.pdf",
+        "pages": [
+          3
+        ]
+      },
+      "catalogDefinition": "content/quests.json"
+    },
+    "decision.quest.arrival-on-activation-or-replacement": {
+      "status": "digital-adaptation",
+      "reviewedAt": "2026-09-30",
+      "decision": "An arrival condition is satisfied when a quest activates while a living hero is already in its target location, and when a replacement hero returns directly to that location. Empty quests marked endsGame resolve in the same transition that activates them, with their completed status retained.",
+      "decisionSource": "runtime reachability acceptance scenario",
+      "catalogDefinition": "content/quests.json",
+      "runtimeDefinition": "packages/besprotoritsa_rules/lib/src/commands_reducer_part_7.dart; packages/besprotoritsa_rules/lib/src/commands_reducer_part_8.dart"
     }
   },
   "pdfExtraction": {

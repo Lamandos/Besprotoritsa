@@ -8,6 +8,7 @@ enum QuestConditionType {
   skillCheck,
   killMonster,
   collectItem,
+  equippedForBattle,
   counter,
 }
 
@@ -35,6 +36,8 @@ final class QuestCondition {
       'collectItem' ||
       'collect_item' ||
       'item' => QuestConditionType.collectItem,
+      'equippedForBattle' ||
+      'equipped_for_battle' => QuestConditionType.equippedForBattle,
       'counter' || 'count' => QuestConditionType.counter,
       _ => throw FormatException('Unknown quest condition type: $typeValue.'),
     };
@@ -74,12 +77,17 @@ final class QuestReward {
     this.items = const [],
     this.drawItems = 0,
     this.drawItemsPerPlayerAtTargetLocation = 0,
+    this.drawSuppliesPerPlayer = 0,
     this.creditRollDicePerPlayer = 0,
   }) : assert(credits >= 0, 'credits must not be negative'),
        assert(drawItems >= 0, 'drawItems must not be negative'),
        assert(
          drawItemsPerPlayerAtTargetLocation >= 0,
          'drawItemsPerPlayerAtTargetLocation must not be negative',
+       ),
+       assert(
+         drawSuppliesPerPlayer >= 0,
+         'drawSuppliesPerPlayer must not be negative',
        ),
        assert(
          creditRollDicePerPlayer >= 0,
@@ -92,6 +100,7 @@ final class QuestReward {
     final drawItems = json['drawItems'] ?? 0;
     final drawItemsPerPlayerAtTargetLocation =
         json['drawItemsPerPlayerAtTargetLocation'] ?? 0;
+    final drawSuppliesPerPlayer = json['drawSuppliesPerPlayer'] ?? 0;
     final creditRollDicePerPlayer = json['creditRollDicePerPlayer'] ?? 0;
     if (credits is! int || credits < 0) {
       throw const FormatException('Quest reward credits must be non-negative.');
@@ -102,6 +111,7 @@ final class QuestReward {
     if ([
       drawItems,
       drawItemsPerPlayerAtTargetLocation,
+      drawSuppliesPerPlayer,
       creditRollDicePerPlayer,
     ].any((value) => value is! int || value < 0)) {
       throw const FormatException(
@@ -114,6 +124,7 @@ final class QuestReward {
       drawItems: drawItems as int,
       drawItemsPerPlayerAtTargetLocation:
           drawItemsPerPlayerAtTargetLocation as int,
+      drawSuppliesPerPlayer: drawSuppliesPerPlayer as int,
       creditRollDicePerPlayer: creditRollDicePerPlayer as int,
     );
   }
@@ -122,7 +133,36 @@ final class QuestReward {
   final List<String> items;
   final int drawItems;
   final int drawItemsPerPlayerAtTargetLocation;
+  final int drawSuppliesPerPlayer;
   final int creditRollDicePerPlayer;
+}
+
+final class QuestCompletionEffect {
+  const QuestCompletionEffect.damageAllPlayersIfQuestActive({
+    required this.questId,
+    required this.amount,
+  });
+
+  factory QuestCompletionEffect.fromJson(Map<String, Object?> json) {
+    if (json['type'] != 'damage_all_players_if_quest_active') {
+      throw FormatException(
+        'Unknown quest completion effect: ${json['type']}.',
+      );
+    }
+    final amount = json['amount'];
+    if (amount is! int || amount < 1) {
+      throw const FormatException(
+        'Quest completion damage must be a positive integer.',
+      );
+    }
+    return QuestCompletionEffect.damageAllPlayersIfQuestActive(
+      questId: _requiredString(json, 'questId'),
+      amount: amount,
+    );
+  }
+
+  final QuestId questId;
+  final int amount;
 }
 
 final class QuestDefinition {
@@ -140,11 +180,13 @@ final class QuestDefinition {
     this.spawnMonsterId,
     this.spawnLocationId,
     Iterable<QuestId> prerequisites = const [],
+    Iterable<QuestCompletionEffect> completionEffects = const [],
     this.endsGame = false,
   }) : conditions = List.unmodifiable(conditions),
        nextQuestIds = List.unmodifiable(nextQuestIds),
        discardQuestIds = List.unmodifiable(discardQuestIds),
-       prerequisites = List.unmodifiable(prerequisites) {
+       prerequisites = List.unmodifiable(prerequisites),
+       completionEffects = List.unmodifiable(completionEffects) {
     if (id.isEmpty) throw ArgumentError.value(id, 'id', 'Must not be empty.');
     if (number < 1 || chapter < 0) {
       throw ArgumentError(
@@ -175,6 +217,13 @@ final class QuestDefinition {
     }
     final number = json['number'] ?? json['questNumber'] ?? 0;
     final chapter = json['chapter'] ?? 1;
+    final rawEffects = json['completionEffects'] ?? const <Object?>[];
+    if (rawEffects is! List<Object?> ||
+        rawEffects.any((effect) => effect is! Map<String, dynamic>)) {
+      throw const FormatException(
+        'Quest completionEffects must be an array of objects.',
+      );
+    }
     if (number is! int || chapter is! int) {
       throw const FormatException('Quest number and chapter must be integers.');
     }
@@ -205,6 +254,16 @@ final class QuestDefinition {
         'prerequisiteQuestIds',
         allowNull: true,
       ),
+      completionEffects: rawEffects.map((effect) {
+        if (effect is! Map<String, dynamic>) {
+          throw const FormatException(
+            'Quest completion effect must be an object.',
+          );
+        }
+        return QuestCompletionEffect.fromJson(
+          Map<String, Object?>.from(effect),
+        );
+      }),
       endsGame: json['endsGame'] as bool? ?? false,
       nameKey: _requiredString(json, 'nameKey'),
       descKey: _requiredString(json, 'descKey'),
@@ -221,6 +280,7 @@ final class QuestDefinition {
   final List<QuestId> nextQuestIds;
   final List<QuestId> discardQuestIds;
   final List<QuestId> prerequisites;
+  final List<QuestCompletionEffect> completionEffects;
   final QuestReward reward;
   final String nameKey;
   final String descKey;

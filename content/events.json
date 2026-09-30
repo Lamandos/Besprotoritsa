@@ -15,14 +15,36 @@
           },
           "successKey": "content.event.cabin-noise.option.o1.success",
           "failureKey": "content.event.cabin-noise.option.o1.failure",
-          "behaviorId": "event_cabin_noise"
+          "behaviorId": "event_cabin_noise",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.cabin-noise.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.cabin-noise.option.o2.success",
           "failureKey": "content.event.cabin-noise.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -47,7 +69,18 @@
           },
           "successKey": "content.event.vending-machine.option.o1.success",
           "failureKey": "content.event.vending-machine.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "heal",
+              "amount": 2
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -71,14 +104,37 @@
           },
           "successKey": "content.event.pile-of-things.option.o1.success",
           "failureKey": "content.event.pile-of-things.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "weapon"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.pile-of-things.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.pile-of-things.option.o2.success",
           "failureKey": "content.event.pile-of-things.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "autoOutcome": "success"
         }
       ],
       "behaviorIds": [
@@ -99,7 +155,20 @@
           "skillCheck": null,
           "successKey": "content.event.monster-nest.option.o1.success",
           "failureKey": "content.event.monster-nest.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "autoOutcome": "success"
         },
         {
           "actionKey": "content.event.monster-nest.option.o2.action",
@@ -109,14 +178,50 @@
           },
           "successKey": "content.event.monster-nest.option.o2.success",
           "failureKey": "content.event.monster-nest.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.monster-nest.option.o3.action",
           "skillCheck": null,
           "successKey": "content.event.monster-nest.option.o3.success",
           "failureKey": "content.event.monster-nest.option.o3.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "discard_card_id",
+              "cardId": "gas-cylinder",
+              "deckId": "supplies"
+            },
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "discard_card_id",
+              "cardId": "gas-cylinder",
+              "deckId": "supplies"
+            },
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "autoOutcome": "success",
+          "requiresCard": "gas-cylinder"
         }
       ],
       "behaviorIds": [
@@ -137,7 +242,21 @@
           "skillCheck": null,
           "successKey": "content.event.corpse.option.o1.success",
           "failureKey": "content.event.corpse.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_specific",
+              "deckId": "special_items",
+              "cardId": "old-cloak"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster",
+              "monsterId": "restless"
+            }
+          ],
+          "autoOutcome": "success"
         },
         {
           "actionKey": "content.event.corpse.option.o2.action",
@@ -147,7 +266,20 @@
           },
           "successKey": "content.event.corpse.option.o2.success",
           "failureKey": "content.event.corpse.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster",
+              "monsterId": "restless"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -171,14 +303,36 @@
           },
           "successKey": "content.event.suitcases.option.o1.success",
           "failureKey": "content.event.suitcases.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "credits",
+              "amount": 5
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.suitcases.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.suitcases.option.o2.success",
           "failureKey": "content.event.suitcases.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "autoOutcome": "success"
         }
       ],
       "behaviorIds": [
@@ -202,14 +356,44 @@
           },
           "successKey": "content.event.hatch-monster.option.o1.success",
           "failureKey": "content.event.hatch-monster.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 2
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 3
+            },
+            {
+              "type": "next_turn_action_delta",
+              "delta": -1
+            }
+          ]
         },
         {
           "actionKey": "content.event.hatch-monster.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.hatch-monster.option.o2.success",
           "failureKey": "content.event.hatch-monster.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "autoOutcome": "success"
         }
       ],
       "behaviorIds": [
@@ -233,7 +417,19 @@
           },
           "successKey": "content.event.security-room.option.o1.success",
           "failureKey": "content.event.security-room.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "items",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.security-room.option.o2.action",
@@ -243,7 +439,19 @@
           },
           "successKey": "content.event.security-room.option.o2.success",
           "failureKey": "content.event.security-room.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "choose_from_top",
+              "deckId": "items",
+              "amount": 3
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -267,7 +475,18 @@
           },
           "successKey": "content.event.exposed-wires.option.o1.success",
           "failureKey": "content.event.exposed-wires.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ]
         },
         {
           "actionKey": "content.event.exposed-wires.option.o2.action",
@@ -277,14 +496,35 @@
           },
           "successKey": "content.event.exposed-wires.option.o2.success",
           "failureKey": "content.event.exposed-wires.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ]
         },
         {
           "actionKey": "content.event.exposed-wires.option.o3.action",
           "skillCheck": null,
           "successKey": "content.event.exposed-wires.option.o3.success",
           "failureKey": "content.event.exposed-wires.option.o3.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -308,7 +548,17 @@
           },
           "successKey": "content.event.monster-pack.option.o1.success",
           "failureKey": "content.event.monster-pack.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.monster-pack.option.o2.action",
@@ -318,7 +568,17 @@
           },
           "successKey": "content.event.monster-pack.option.o2.success",
           "failureKey": "content.event.monster-pack.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "move_to_neighbor"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "move_to_neighbor"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -342,21 +602,53 @@
           },
           "successKey": "content.event.rope-hatch.option.o1.success",
           "failureKey": "content.event.rope-hatch.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.rope-hatch.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.rope-hatch.option.o2.success",
           "failureKey": "content.event.rope-hatch.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "spawn_monster_adjacent"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster_adjacent"
+            }
+          ]
         },
         {
           "actionKey": "content.event.rope-hatch.option.o3.action",
           "skillCheck": null,
           "successKey": "content.event.rope-hatch.option.o3.success",
           "failureKey": "content.event.rope-hatch.option.o3.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -380,14 +672,37 @@
           },
           "successKey": "content.event.weapon-monster.option.o1.success",
           "failureKey": "content.event.weapon-monster.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "weapon"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.weapon-monster.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.weapon-monster.option.o2.success",
           "failureKey": "content.event.weapon-monster.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "autoOutcome": "success"
         }
       ],
       "behaviorIds": [
@@ -411,14 +726,36 @@
           },
           "successKey": "content.event.repair-cleaner.option.o1.success",
           "failureKey": "content.event.repair-cleaner.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.repair-cleaner.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.repair-cleaner.option.o2.success",
           "failureKey": "content.event.repair-cleaner.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -442,7 +779,19 @@
           },
           "successKey": "content.event.countdown-trap.option.o1.success",
           "failureKey": "content.event.countdown-trap.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 4
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "kill_monster",
+              "scope": "same_or_neighbor_sector"
+            }
+          ]
         },
         {
           "actionKey": "content.event.countdown-trap.option.o2.action",
@@ -452,7 +801,22 @@
           },
           "successKey": "content.event.countdown-trap.option.o2.success",
           "failureKey": "content.event.countdown-trap.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 4
+            },
+            {
+              "type": "next_turn_action_delta",
+              "delta": -1
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "move_to_neighbor"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -473,7 +837,20 @@
           "skillCheck": null,
           "successKey": "content.event.scientist-report.option.o1.success",
           "failureKey": "content.event.scientist-report.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "stat_bonus",
+              "stat": "science",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "autoOutcome": "success"
         }
       ],
       "behaviorIds": [
@@ -496,7 +873,19 @@
           },
           "successKey": "content.event.monster-corpse.option.o1.success",
           "failureKey": "content.event.monster-corpse.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "stat_bonus",
+              "stat": "combatStrength",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -520,14 +909,39 @@
           },
           "successKey": "content.event.rubble.option.o1.success",
           "failureKey": "content.event.rubble.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "items",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 3
+            }
+          ]
         },
         {
           "actionKey": "content.event.rubble.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.rubble.option.o2.success",
           "failureKey": "content.event.rubble.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "spawn_monster",
+              "monsterId": "restless"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster",
+              "monsterId": "restless"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -551,14 +965,41 @@
           },
           "successKey": "content.event.two-crates.option.o1.success",
           "failureKey": "content.event.two-crates.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "robot"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ]
         },
         {
           "actionKey": "content.event.two-crates.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.two-crates.option.o2.success",
           "failureKey": "content.event.two-crates.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "credits",
+              "amount": 2
+            }
+          ],
+          "autoOutcome": "success"
         }
       ],
       "behaviorIds": [
@@ -582,14 +1023,53 @@
           },
           "successKey": "content.event.huge-crate.option.o1.success",
           "failureKey": "content.event.huge-crate.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "weapon"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ]
         },
         {
           "actionKey": "content.event.huge-crate.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.huge-crate.option.o2.success",
           "failureKey": "content.event.huge-crate.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "weapon"
+            },
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            },
+            {
+              "type": "discard_equipped",
+              "slot": "robot"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "autoOutcome": "condition",
+          "condition": {
+            "type": "equipped_slot",
+            "slot": "robot"
+          }
         }
       ],
       "behaviorIds": [
@@ -613,7 +1093,19 @@
           },
           "successKey": "content.event.toolbox.option.o1.success",
           "failureKey": "content.event.toolbox.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_specific",
+              "deckId": "special_items",
+              "cardId": "swiss-army-knife"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.toolbox.option.o2.action",
@@ -623,7 +1115,19 @@
           },
           "successKey": "content.event.toolbox.option.o2.success",
           "failureKey": "content.event.toolbox.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_specific",
+              "deckId": "special_items",
+              "cardId": "drg-4u"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.toolbox.option.o3.action",
@@ -633,7 +1137,19 @@
           },
           "successKey": "content.event.toolbox.option.o3.success",
           "failureKey": "content.event.toolbox.option.o3.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "armor"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -657,7 +1173,19 @@
           },
           "successKey": "content.event.exoskeleton-terminal.option.o1.success",
           "failureKey": "content.event.exoskeleton-terminal.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_specific",
+              "deckId": "special_items",
+              "cardId": "exoskeleton"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -681,14 +1209,37 @@
           },
           "successKey": "content.event.contraband-cache.option.o1.success",
           "failureKey": "content.event.contraband-cache.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "items",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 1
+            }
+          ]
         },
         {
           "actionKey": "content.event.contraband-cache.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.contraband-cache.option.o2.success",
           "failureKey": "content.event.contraband-cache.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -712,7 +1263,19 @@
           },
           "successKey": "content.event.falling-monster.option.o1.success",
           "failureKey": "content.event.falling-monster.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 3
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "discard_card_type",
+              "itemType": "weapon"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -736,14 +1299,37 @@
           },
           "successKey": "content.event.collapsed-panel.option.o1.success",
           "failureKey": "content.event.collapsed-panel.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "robot"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 1
+            }
+          ]
         },
         {
           "actionKey": "content.event.collapsed-panel.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.collapsed-panel.option.o2.success",
           "failureKey": "content.event.collapsed-panel.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "move_to_neighbor"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "move_to_neighbor"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -767,14 +1353,38 @@
           },
           "successKey": "content.event.blood-trail.option.o1.success",
           "failureKey": "content.event.blood-trail.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "weapon"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.blood-trail.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.blood-trail.option.o2.success",
           "failureKey": "content.event.blood-trail.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "damage",
+              "amount": 3
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 3
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -798,14 +1408,39 @@
           },
           "successKey": "content.event.ship-map.option.o1.success",
           "failureKey": "content.event.ship-map.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "robot"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "next_turn_action_delta",
+              "delta": -1
+            }
+          ]
         },
         {
           "actionKey": "content.event.ship-map.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.ship-map.option.o2.success",
           "failureKey": "content.event.ship-map.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "reveal_fragment",
+              "scope": "any"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "reveal_fragment",
+              "scope": "any"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -829,7 +1464,19 @@
           },
           "successKey": "content.event.cache-symbols.option.o1.success",
           "failureKey": "content.event.cache-symbols.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "choose_from_top",
+              "deckId": "supplies",
+              "amount": 3
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -853,14 +1500,38 @@
           },
           "successKey": "content.event.scientist-case.option.o1.success",
           "failureKey": "content.event.scientist-case.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "heal_all"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.scientist-case.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.scientist-case.option.o2.success",
           "failureKey": "content.event.scientist-case.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -884,7 +1555,19 @@
           },
           "successKey": "content.event.inventory-notes.option.o1.success",
           "failureKey": "content.event.inventory-notes.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "items",
+              "amount": 2
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -905,7 +1588,22 @@
           "skillCheck": null,
           "successKey": "content.event.nest-room.option.o1.success",
           "failureKey": "content.event.nest-room.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "destroy_nest"
+            }
+          ],
+          "autoOutcome": "condition",
+          "condition": {
+            "type": "owns_card",
+            "cardId": "flamethrower"
+          }
         },
         {
           "actionKey": "content.event.nest-room.option.o2.action",
@@ -915,7 +1613,17 @@
           },
           "successKey": "content.event.nest-room.option.o2.success",
           "failureKey": "content.event.nest-room.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.nest-room.option.o3.action",
@@ -925,7 +1633,21 @@
           },
           "successKey": "content.event.nest-room.option.o3.success",
           "failureKey": "content.event.nest-room.option.o3.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster",
+              "immediateCombat": false
+            },
+            {
+              "type": "move_to_neighbor"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "seal_monster_access"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -949,14 +1671,35 @@
           },
           "successKey": "content.event.needle-box.option.o1.success",
           "failureKey": "content.event.needle-box.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "heal",
+              "amount": 3
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.needle-box.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.needle-box.option.o2.success",
           "failureKey": "content.event.needle-box.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -980,7 +1723,19 @@
           },
           "successKey": "content.event.bloody-suitcase.option.o1.success",
           "failureKey": "content.event.bloody-suitcase.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.bloody-suitcase.option.o2.action",
@@ -990,7 +1745,19 @@
           },
           "successKey": "content.event.bloody-suitcase.option.o2.success",
           "failureKey": "content.event.bloody-suitcase.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1014,14 +1781,41 @@
           },
           "successKey": "content.event.broken-drone.option.o1.success",
           "failureKey": "content.event.broken-drone.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "robot"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "next_turn_action_delta",
+              "delta": -1
+            }
+          ]
         },
         {
           "actionKey": "content.event.broken-drone.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.broken-drone.option.o2.success",
           "failureKey": "content.event.broken-drone.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1045,14 +1839,35 @@
           },
           "successKey": "content.event.radio-transmitter.option.o1.success",
           "failureKey": "content.event.radio-transmitter.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "draw_supplies_all_players",
+              "amount": 1
+            }
+          ]
         },
         {
           "actionKey": "content.event.radio-transmitter.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.radio-transmitter.option.o2.success",
           "failureKey": "content.event.radio-transmitter.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1076,7 +1891,19 @@
           },
           "successKey": "content.event.lights-out.option.o1.success",
           "failureKey": "content.event.lights-out.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 3
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "reveal_fragment",
+              "scope": "nearest"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1100,14 +1927,38 @@
           },
           "successKey": "content.event.ventilation-failure.option.o1.success",
           "failureKey": "content.event.ventilation-failure.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ]
         },
         {
           "actionKey": "content.event.ventilation-failure.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.ventilation-failure.option.o2.success",
           "failureKey": "content.event.ventilation-failure.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1131,7 +1982,23 @@
           },
           "successKey": "content.event.gas-pipe.option.o1.success",
           "failureKey": "content.event.gas-pipe.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "heal",
+              "amount": 2
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            },
+            {
+              "type": "next_turn_action_delta",
+              "delta": -1
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1155,7 +2022,17 @@
           },
           "successKey": "content.event.vent-monster.option.o1.success",
           "failureKey": "content.event.vent-monster.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.vent-monster.option.o2.action",
@@ -1165,14 +2042,40 @@
           },
           "successKey": "content.event.vent-monster.option.o2.success",
           "failureKey": "content.event.vent-monster.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "items",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.vent-monster.option.o3.action",
           "skillCheck": null,
           "successKey": "content.event.vent-monster.option.o3.success",
           "failureKey": "content.event.vent-monster.option.o3.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 2
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 2
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1196,7 +2099,18 @@
           },
           "successKey": "content.event.security-console.option.o1.success",
           "failureKey": "content.event.security-console.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "kill_monster",
+              "scope": "any_non_boss"
+            }
+          ]
         },
         {
           "actionKey": "content.event.security-console.option.o2.action",
@@ -1206,7 +2120,17 @@
           },
           "successKey": "content.event.security-console.option.o2.success",
           "failureKey": "content.event.security-console.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1230,7 +2154,18 @@
           },
           "successKey": "content.event.cigarette-machine.option.o1.success",
           "failureKey": "content.event.cigarette-machine.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "credits",
+              "amount": 10
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.cigarette-machine.option.o2.action",
@@ -1240,7 +2175,18 @@
           },
           "successKey": "content.event.cigarette-machine.option.o2.success",
           "failureKey": "content.event.cigarette-machine.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "heal",
+              "amount": 2
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1264,7 +2210,18 @@
           },
           "successKey": "content.event.pack-sighting.option.o1.success",
           "failureKey": "content.event.pack-sighting.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster",
+              "monsterId": "pack"
+            }
+          ]
         },
         {
           "actionKey": "content.event.pack-sighting.option.o2.action",
@@ -1274,7 +2231,20 @@
           },
           "successKey": "content.event.pack-sighting.option.o2.success",
           "failureKey": "content.event.pack-sighting.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster",
+              "monsterId": "pack"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1298,14 +2268,36 @@
           },
           "successKey": "content.event.gas-cabin.option.o1.success",
           "failureKey": "content.event.gas-cabin.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "items",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.gas-cabin.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.gas-cabin.option.o2.success",
           "failureKey": "content.event.gas-cabin.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1329,14 +2321,34 @@
           },
           "successKey": "content.event.hatch-scrape.option.o1.success",
           "failureKey": "content.event.hatch-scrape.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.hatch-scrape.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.hatch-scrape.option.o2.success",
           "failureKey": "content.event.hatch-scrape.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1360,7 +2372,22 @@
           },
           "successKey": "content.event.oxygen-alarm.option.o1.success",
           "failureKey": "content.event.oxygen-alarm.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            },
+            {
+              "type": "next_turn_action_delta",
+              "delta": -1
+            }
+          ]
         },
         {
           "actionKey": "content.event.oxygen-alarm.option.o2.action",
@@ -1370,7 +2397,18 @@
           },
           "successKey": "content.event.oxygen-alarm.option.o2.success",
           "failureKey": "content.event.oxygen-alarm.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "move_to_neighbor"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1394,14 +2432,36 @@
           },
           "successKey": "content.event.survivor-scream.option.o1.success",
           "failureKey": "content.event.survivor-scream.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ]
         },
         {
           "actionKey": "content.event.survivor-scream.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.survivor-scream.option.o2.success",
           "failureKey": "content.event.survivor-scream.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1425,14 +2485,34 @@
           },
           "successKey": "content.event.child-cry.option.o1.success",
           "failureKey": "content.event.child-cry.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.child-cry.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.child-cry.option.o2.success",
           "failureKey": "content.event.child-cry.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1456,14 +2536,38 @@
           },
           "successKey": "content.event.female-whisper.option.o1.success",
           "failureKey": "content.event.female-whisper.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.female-whisper.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.female-whisper.option.o2.success",
           "failureKey": "content.event.female-whisper.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1484,7 +2588,17 @@
           "skillCheck": null,
           "successKey": "content.event.alcohol-crate.option.o1.success",
           "failureKey": "content.event.alcohol-crate.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.alcohol-crate.option.o2.action",
@@ -1494,7 +2608,23 @@
           },
           "successKey": "content.event.alcohol-crate.option.o2.success",
           "failureKey": "content.event.alcohol-crate.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "heal",
+              "amount": 3
+            },
+            {
+              "type": "next_turn_action_delta",
+              "delta": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "next_turn_action_delta",
+              "delta": -1
+            }
+          ]
         },
         {
           "actionKey": "content.event.alcohol-crate.option.o3.action",
@@ -1504,7 +2634,22 @@
           },
           "successKey": "content.event.alcohol-crate.option.o3.success",
           "failureKey": "content.event.alcohol-crate.option.o3.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "heal_all"
+            },
+            {
+              "type": "next_turn_action_delta",
+              "delta": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "next_turn_action_delta",
+              "delta": -1
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1525,21 +2670,64 @@
           "skillCheck": null,
           "successKey": "content.event.supply-terminal.option.o1.success",
           "failureKey": "content.event.supply-terminal.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "market",
+              "offers": 5,
+              "maxPurchases": 2,
+              "discount": 2,
+              "allowSell": false
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "autoOutcome": "success"
         },
         {
           "actionKey": "content.event.supply-terminal.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.supply-terminal.option.o2.success",
           "failureKey": "content.event.supply-terminal.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "market",
+              "offers": 0,
+              "maxPurchases": 0,
+              "discount": 0,
+              "allowSell": true
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "market",
+              "offers": 0,
+              "maxPurchases": 0,
+              "discount": 0,
+              "allowSell": true
+            }
+          ]
         },
         {
           "actionKey": "content.event.supply-terminal.option.o3.action",
           "skillCheck": null,
           "successKey": "content.event.supply-terminal.option.o3.success",
           "failureKey": "content.event.supply-terminal.option.o3.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1562,14 +2750,38 @@
           },
           "successKey": "content.event.trade-bot.option.o1.success",
           "failureKey": "content.event.trade-bot.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "market",
+              "offers": 5,
+              "maxPurchases": 5,
+              "discount": 0,
+              "allowSell": true
+            }
+          ]
         },
         {
           "actionKey": "content.event.trade-bot.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.trade-bot.option.o2.success",
           "failureKey": "content.event.trade-bot.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1590,14 +2802,38 @@
           "skillCheck": null,
           "successKey": "content.event.lockers.option.o1.success",
           "failureKey": "content.event.lockers.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "clothing"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "clothing"
+            }
+          ]
         },
         {
           "actionKey": "content.event.lockers.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.lockers.option.o2.success",
           "failureKey": "content.event.lockers.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1617,14 +2853,42 @@
           "skillCheck": null,
           "successKey": "content.event.body-pile.option.o1.success",
           "failureKey": "content.event.body-pile.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "spawn_monster",
+              "monsterId": "restless"
+            },
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "clothing"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster",
+              "monsterId": "restless"
+            }
+          ],
+          "autoOutcome": "success"
         },
         {
           "actionKey": "content.event.body-pile.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.body-pile.option.o2.success",
           "failureKey": "content.event.body-pile.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1644,7 +2908,21 @@
           "skillCheck": null,
           "successKey": "content.event.junk-medical.option.o1.success",
           "failureKey": "content.event.junk-medical.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "modification"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "draw_filtered",
+              "deckId": "items",
+              "filterType": "modification"
+            }
+          ]
         },
         {
           "actionKey": "content.event.junk-medical.option.o2.action",
@@ -1654,7 +2932,20 @@
           },
           "successKey": "content.event.junk-medical.option.o2.success",
           "failureKey": "content.event.junk-medical.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 1
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "items",
+              "amount": 1
+            }
+          ]
         },
         {
           "actionKey": "content.event.junk-medical.option.o3.action",
@@ -1664,7 +2955,18 @@
           },
           "successKey": "content.event.junk-medical.option.o3.success",
           "failureKey": "content.event.junk-medical.option.o3.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "credits",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1685,7 +2987,19 @@
           "skillCheck": null,
           "successKey": "content.event.junk-credits.option.o1.success",
           "failureKey": "content.event.junk-credits.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "credits",
+              "amount": 5
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "credits",
+              "amount": 5
+            }
+          ]
         },
         {
           "actionKey": "content.event.junk-credits.option.o2.action",
@@ -1695,7 +3009,19 @@
           },
           "successKey": "content.event.junk-credits.option.o2.success",
           "failureKey": "content.event.junk-credits.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "items",
+              "amount": 1
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1716,7 +3042,17 @@
           "skillCheck": null,
           "successKey": "content.event.junk-guitar.option.o1.success",
           "failureKey": "content.event.junk-guitar.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         },
         {
           "actionKey": "content.event.junk-guitar.option.o2.action",
@@ -1726,7 +3062,18 @@
           },
           "successKey": "content.event.junk-guitar.option.o2.success",
           "failureKey": "content.event.junk-guitar.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "credits",
+              "amount": 10
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1750,7 +3097,20 @@
           },
           "successKey": "content.event.shelf-equipment.option.o1.success",
           "failureKey": "content.event.shelf-equipment.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "items",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ]
         },
         {
           "actionKey": "content.event.shelf-equipment.option.o2.action",
@@ -1760,7 +3120,19 @@
           },
           "successKey": "content.event.shelf-equipment.option.o2.success",
           "failureKey": "content.event.shelf-equipment.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "draw",
+              "deckId": "supplies",
+              "amount": 1
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1784,7 +3156,19 @@
           },
           "successKey": "content.event.falling-beam.option.o1.success",
           "failureKey": "content.event.falling-beam.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 3
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "damage",
+              "amount": 1
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1805,7 +3189,17 @@
           "skillCheck": null,
           "successKey": "content.event.meteor-stream.option.o1.success",
           "failureKey": "content.event.meteor-stream.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "damage_each_player_roll_die"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage_each_player_roll_die"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1825,14 +3219,36 @@
           "skillCheck": null,
           "successKey": "content.event.fire.option.o1.success",
           "failureKey": "content.event.fire.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "damage_roll_die"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage_roll_die"
+            }
+          ]
         },
         {
           "actionKey": "content.event.fire.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.fire.option.o2.success",
           "failureKey": "content.event.fire.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "damage",
+              "amount": 3
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 3
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1852,14 +3268,36 @@
           "skillCheck": null,
           "successKey": "content.event.monster-horde.option.o1.success",
           "failureKey": "content.event.monster-horde.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "spawn_monster"
+            }
+          ]
         },
         {
           "actionKey": "content.event.monster-horde.option.o2.action",
           "skillCheck": null,
           "successKey": "content.event.monster-horde.option.o2.success",
           "failureKey": "content.event.monster-horde.option.o2.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1879,7 +3317,17 @@
           "skillCheck": null,
           "successKey": "content.event.asteroid-alert.option.o1.success",
           "failureKey": "content.event.asteroid-alert.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "asteroid_alert"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "asteroid_alert"
+            }
+          ]
         }
       ],
       "behaviorIds": [
@@ -1899,7 +3347,19 @@
           "skillCheck": null,
           "successKey": "content.event.horde-carry.option.o1.success",
           "failureKey": "content.event.horde-carry.option.o1.failure",
-          "behaviorId": "event.successFailure"
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "damage",
+              "amount": 2
+            }
+          ]
         }
       ],
       "behaviorIds": [

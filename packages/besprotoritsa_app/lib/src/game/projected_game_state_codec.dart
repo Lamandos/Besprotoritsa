@@ -69,6 +69,7 @@ final class ProjectedGameStateCodec {
       hasTerminal: tile['hasTerminal'] == true,
       ventColor: _enum(VentColor.values, _string(tile, 'ventColor')),
       isBlocked: tile['isBlocked'] == true,
+      monsterAccessBlocked: tile['monsterAccessBlocked'] == true,
     );
   }
 
@@ -94,6 +95,7 @@ final class ProjectedGameStateCodec {
       conditions: _strings(json['conditions']),
       alive: json['alive'] == true,
       actionPoints: _int(json, 'actionPoints', fallback: 2),
+      nextTurnActionDelta: _int(json, 'nextTurnActionDelta', fallback: 0),
     );
   }
 
