@@ -181,6 +181,13 @@ final class GameState {
   final int actionsTakenThisTurn;
   final PendingDecision? pendingDecision;
 
+  /// The immutable player list is also the saved turn order. The first player
+  /// is the leader for setup and reads the opening prologue.
+  List<PlayerId> get turnOrder => List.unmodifiable(players.map((p) => p.id));
+
+  /// The first player in [turnOrder], or null for a state without players.
+  PlayerId? get leaderPlayerId => players.isEmpty ? null : players.first.id;
+
   HexTile? tileAt(HexCoord coord) {
     for (final tile in board) {
       if (tile.coord == coord) {
