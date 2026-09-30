@@ -1861,6 +1861,9 @@ Map<String, Object?>? _pendingDecisionToJson(
         'type': 'heroReplacement',
         'playerId': playerId,
         'characterIds': characterIds,
+        'counterAttackMonsterInstanceId':
+            decision.counterAttackMonsterInstanceId,
+        'counterAttackPlayerId': decision.counterAttackPlayerId,
       },
     AwaitingOtherPlayerDecision(:final awaitingPlayerId) => <String, Object?>{
       'type': 'hidden',

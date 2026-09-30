@@ -92,6 +92,27 @@ GameStepResult _resolveEventOption(
   }
   final definition = selected.eventDefinitions[pending.eventId];
   if (definition != null) {
+    if (choice.option.startsWith('sector:')) {
+      final coord = _parseEventSectorOption(choice.option);
+      final spawn = definition['spawn'];
+      if (coord == null ||
+          spawn is! Map<String, Object?> ||
+          spawn['target'] != 'openSector' ||
+          !_eventOpenSectors(selected).contains(coord)) {
+        return GameStepResult(
+          state: state,
+          rejection: const ActionBlockedByPendingDecision(),
+        );
+      }
+      final resolved = _resolveEventMonsterSpawn(
+        selected,
+        definition,
+        playerId,
+        dice,
+        spawnCoord: coord,
+      );
+      return GameStepResult(state: _resumeAutomaticPhase(resolved));
+    }
     final optionIndex = int.tryParse(choice.option.replaceFirst('option-', ''));
     final rawOptions = definition['options'];
     if (optionIndex == null ||
@@ -112,6 +133,34 @@ GameStepResult _resolveEventOption(
     }
     final check = rawOption['skillCheck'];
     if (check == null) {
+      final spawn = definition['spawn'];
+      if (rawOption['behaviorId'] == 'monster.spawn' &&
+          rawOption['resolution'] == 'immediate' &&
+          spawn is Map<String, Object?> &&
+          spawn['target'] == 'openSector') {
+        final sectors = _eventOpenSectors(selected);
+        if (sectors.length > 1) {
+          return GameStepResult(
+            state: _copyState(
+              selected,
+              pendingDecision: AwaitingEventOption(
+                options: sectors.map(_eventSectorOption),
+                playerId: playerId,
+                eventId: pending.eventId,
+              ),
+            ),
+          );
+        }
+        if (sectors.isEmpty) return GameStepResult(state: selected);
+        final resolved = _resolveEventMonsterSpawn(
+          selected,
+          definition,
+          playerId,
+          dice,
+          spawnCoord: sectors.single,
+        );
+        return GameStepResult(state: _resumeAutomaticPhase(resolved));
+      }
       final resolved =
           rawOption['behaviorId'] == 'monster.spawn' &&
               rawOption['resolution'] == 'immediate'
@@ -168,8 +217,9 @@ GameState _resolveEventMonsterSpawn(
   GameState state,
   Map<String, Object?> event,
   PlayerId playerId,
-  DiceRoller dice,
-) {
+  DiceRoller dice, {
+  HexCoord? spawnCoord,
+}) {
   final spawn = event['spawn'];
   final monsterDeck = state.decks['monsters'];
   if (spawn is! Map<String, Object?> || monsterDeck == null) return state;
@@ -180,7 +230,7 @@ GameState _resolveEventMonsterSpawn(
   if (draw.cards.isEmpty) return state;
   final monsterId = draw.cards.single;
   final definition = state.monsterDefinitions[monsterId];
-  final coord = _eventMonsterSpawnCoord(state, event, spawn);
+  final coord = spawnCoord ?? _eventMonsterSpawnCoord(state, event, spawn);
   if (definition == null || coord == null) return state;
 
   final monsters = Map<DeckId, DeckState>.of(state.decks)
@@ -230,13 +280,8 @@ HexCoord? _eventMonsterSpawnCoord(
 ) {
   final target = spawn['target'];
   if (target == 'openSector') {
-    for (final tile in state.board) {
-      if (tile.type == HexTileType.compartment &&
-          tile.opened &&
-          !tile.isBlocked) {
-        return tile.coord;
-      }
-    }
+    final sectors = _eventOpenSectors(state);
+    if (sectors.isNotEmpty) return sectors.first;
   } else if (target == 'location') {
     final locationId = event['locationId'];
     if (locationId is String) {
@@ -257,6 +302,21 @@ HexCoord? _eventMonsterSpawnCoord(
     }
   }
   return null;
+}
+
+List<HexCoord> _eventOpenSectors(GameState state) => [
+  for (final tile in state.board)
+    if (tile.opened && !tile.isBlocked) tile.coord,
+];
+
+String _eventSectorOption(HexCoord coord) => 'sector:${coord.q}:${coord.r}';
+
+HexCoord? _parseEventSectorOption(String option) {
+  final parts = option.split(':');
+  if (parts.length != 3 || parts.first != 'sector') return null;
+  final q = int.tryParse(parts[1]);
+  final r = int.tryParse(parts[2]);
+  return q == null || r == null ? null : HexCoord(q, r);
 }
 
 GameState _startImmediateMonsterAttack(

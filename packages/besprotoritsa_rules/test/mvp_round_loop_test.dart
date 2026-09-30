@@ -32,6 +32,55 @@ void main() {
     expect(context.difficulty, 2);
   });
 
+  test('invasion lets the player choose any open sector', () {
+    var state = _mvpState(
+      eventId: 'invasion-open',
+      corridorOpened: true,
+      eventDefinitions: {
+        'invasion-open': {
+          'immediateCombat': true,
+          'spawn': {'behaviorId': 'monster.spawn', 'target': 'openSector'},
+          'options': [
+            {
+              'skillCheck': null,
+              'behaviorId': 'monster.spawn',
+              'resolution': 'immediate',
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 0,
+          'movement': 0,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    final placement = state.pendingDecision! as AwaitingEventOption;
+    expect(placement.options, ['sector:0:0', 'sector:0:1']);
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('sector:0:1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters.single.coord, const HexCoord(0, 1));
+  });
+
   test('event skill checks do not advance the full story quest', () {
     var state = _mvpState(
       eventId: 'runtime-event',
@@ -289,6 +338,91 @@ void main() {
       expect(state.phase, GamePhase.eventsPhase);
     },
   );
+
+  test('Nest counterattack resumes after another hero is replaced', () {
+    var state = _mvpState(
+      eventId: 'invasion-card',
+      playerCoord: const HexCoord(0, 2),
+      heroCount: 2,
+      secondHeroDamage: 2,
+      reserveHeroes: [
+        ReserveHero(
+          characterId: 'scientist',
+          health: 3,
+          stats: const PlayerStats(science: 1, agility: 1),
+        ),
+      ],
+      eventDefinitions: {
+        'invasion-card': {
+          'id': 'invasion-card',
+          'locationId': 'crew-mess',
+          'immediateCombat': true,
+          'spawn': {
+            'behaviorId': 'monster.spawn',
+            'target': 'location',
+            'fallback': 'closedSector',
+          },
+          'options': [
+            {
+              'skillCheck': null,
+              'behaviorId': 'monster.spawn',
+              'resolution': 'immediate',
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'nest': {
+          'health': 2,
+          'defense': 0,
+          'attack': 0,
+          'movement': 0,
+          'features': ['stationary', 'spawns-boil-instead-of-attack'],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['nest']),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(DodgeChoice()),
+      FixedDiceRoller([6]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(DodgeChoice()),
+      FixedDiceRoller([1]),
+    ).state;
+
+    final replacement = state.pendingDecision! as AwaitingHeroReplacement;
+    expect(replacement.counterAttackMonsterInstanceId, contains('-nest'));
+    expect(replacement.counterAttackPlayerId, 'ada');
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        SelectReplacementHeroChoice('scientist'),
+      ),
+      FixedDiceRoller([6]),
+    ).state;
+
+    expect(state.players.last.characterId, 'scientist');
+    expect(state.players.last.alive, isTrue);
+    expect(
+      state.monsters
+          .where((monster) => monster.monsterId == 'nest')
+          .single
+          .damage,
+      1,
+    );
+  });
 
   test('full inventory changes complete collect-item quests', () {
     final item = CardDefinition.fromJson({
@@ -937,8 +1071,11 @@ GameState _mvpState({
   Iterable<MonsterInstance> monsters = const [],
   Map<String, Map<String, Object?>> monsterDefinitions = const {},
   int heroCount = 1,
+  int secondHeroDamage = 0,
+  Iterable<ReserveHero> reserveHeroes = const [],
   int initialCredits = 0,
   VentColor corridorVentColor = VentColor.none,
+  bool corridorOpened = false,
 }) => GameState(
   seed: 17,
   round: 1,
@@ -957,7 +1094,7 @@ GameState _mvpState({
       id: 'corridor',
       coord: const HexCoord(0, 1),
       type: HexTileType.corridor,
-      opened: false,
+      opened: corridorOpened,
       exits: const {HexEdge.north, HexEdge.south},
       ventColor: corridorVentColor,
     ),
@@ -976,7 +1113,7 @@ GameState _mvpState({
         id: index == 0 ? 'ada' : 'hero-${index + 1}',
         characterId: index == 0 ? 'engineer' : 'guard',
         coord: playerCoord,
-        damage: 0,
+        damage: index == 1 ? secondHeroDamage : 0,
         credits: initialCredits,
         backpack: const [],
         equipped: const EquippedGear(),
@@ -988,6 +1125,7 @@ GameState _mvpState({
       ),
   ],
   monsters: monsters,
+  reserveHeroes: reserveHeroes,
   decks: {
     'events': DeckState(drawPile: [eventId]),
     ...additionalDecks,

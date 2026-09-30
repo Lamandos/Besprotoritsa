@@ -72,9 +72,25 @@ void main() {
                 .decode(codec.encode(_withPending(base, pendingAttack)))
                 .pendingDecision!
             as AwaitingRerollChoice;
+    final pendingReplacement = AwaitingHeroReplacement(
+      playerId: 'hero-2',
+      characterIds: const ['scientist'],
+      counterAttackMonsterInstanceId: 'event-ghoul',
+      counterAttackPlayerId: 'ada',
+    );
+    final restoredReplacement =
+        codec
+                .decode(codec.encode(_withPending(base, pendingReplacement)))
+                .pendingDecision!
+            as AwaitingHeroReplacement;
 
     expect(restoredDodge.counterAttackMonsterInstanceId, 'event-ghoul');
     expect(restoredDodge.counterAttackPlayerId, 'ada');
+    expect(
+      restoredReplacement.counterAttackMonsterInstanceId,
+      'event-ghoul',
+    );
+    expect(restoredReplacement.counterAttackPlayerId, 'ada');
     expect(
       (restoredAttack.context! as AttackRollContext).resumeAutomaticPhase,
       isTrue,
