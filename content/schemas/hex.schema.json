@@ -4,21 +4,61 @@
   "title": "Hex",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "type", "locationNameKey", "hasTerminal", "ventColor", "exits"],
+  "required": [
+    "id",
+    "type",
+    "locationNameKey",
+    "hasTerminal",
+    "ventColor",
+    "exits"
+  ],
   "properties": {
-    "id": { "$ref": "#/$defs/id" },
-    "type": { "enum": ["start", "compartment", "corridor", "airlock"] },
-    "locationNameKey": { "$ref": "#/$defs/localizationKey" },
-    "hasTerminal": { "type": "boolean" },
-    "ventColor": { "enum": ["none", "green", "red"] },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "type": {
+      "enum": [
+        "start",
+        "compartment",
+        "corridor",
+        "airlock"
+      ]
+    },
+    "locationNameKey": {
+      "$ref": "#/$defs/localizationKey"
+    },
+    "hasTerminal": {
+      "type": "boolean"
+    },
+    "ventColor": {
+      "enum": [
+        "none",
+        "green",
+        "red"
+      ]
+    },
     "exits": {
       "type": "array",
       "uniqueItems": true,
-      "items": { "type": "integer", "minimum": 0, "maximum": 5 }
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 5
+      }
+    },
+    "copies": {
+      "type": "integer",
+      "minimum": 1
     }
   },
   "$defs": {
-    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
-    "localizationKey": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" }
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "localizationKey": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]*$"
+    }
   }
 }

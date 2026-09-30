@@ -69,26 +69,60 @@ final class QuestCondition {
 }
 
 final class QuestReward {
-  const QuestReward({this.credits = 0, this.items = const []})
-    : assert(credits >= 0, 'credits must not be negative');
+  const QuestReward({
+    this.credits = 0,
+    this.items = const [],
+    this.drawItems = 0,
+    this.drawItemsPerPlayerAtTargetLocation = 0,
+    this.creditRollDicePerPlayer = 0,
+  }) : assert(credits >= 0, 'credits must not be negative'),
+       assert(drawItems >= 0, 'drawItems must not be negative'),
+       assert(
+         drawItemsPerPlayerAtTargetLocation >= 0,
+         'drawItemsPerPlayerAtTargetLocation must not be negative',
+       ),
+       assert(
+         creditRollDicePerPlayer >= 0,
+         'creditRollDicePerPlayer must not be negative',
+       );
 
   factory QuestReward.fromJson(Map<String, Object?> json) {
     final credits = json['credits'] ?? 0;
     final items = json['items'] ?? const <Object?>[];
+    final drawItems = json['drawItems'] ?? 0;
+    final drawItemsPerPlayerAtTargetLocation =
+        json['drawItemsPerPlayerAtTargetLocation'] ?? 0;
+    final creditRollDicePerPlayer = json['creditRollDicePerPlayer'] ?? 0;
     if (credits is! int || credits < 0) {
       throw const FormatException('Quest reward credits must be non-negative.');
     }
     if (items is! List<Object?> || items.any((item) => item is! String)) {
       throw const FormatException('Quest reward items must be strings.');
     }
+    if ([
+      drawItems,
+      drawItemsPerPlayerAtTargetLocation,
+      creditRollDicePerPlayer,
+    ].any((value) => value is! int || value < 0)) {
+      throw const FormatException(
+        'Quest reward counts must be non-negative integers.',
+      );
+    }
     return QuestReward(
       credits: credits,
       items: List<String>.from(items),
+      drawItems: drawItems as int,
+      drawItemsPerPlayerAtTargetLocation:
+          drawItemsPerPlayerAtTargetLocation as int,
+      creditRollDicePerPlayer: creditRollDicePerPlayer as int,
     );
   }
 
   final int credits;
   final List<String> items;
+  final int drawItems;
+  final int drawItemsPerPlayerAtTargetLocation;
+  final int creditRollDicePerPlayer;
 }
 
 final class QuestDefinition {
@@ -101,11 +135,15 @@ final class QuestDefinition {
     required this.reward,
     required this.nameKey,
     required this.descKey,
+    Iterable<QuestId> discardQuestIds = const [],
     this.targetLocation,
+    this.spawnMonsterId,
+    this.spawnLocationId,
     Iterable<QuestId> prerequisites = const [],
     this.endsGame = false,
   }) : conditions = List.unmodifiable(conditions),
        nextQuestIds = List.unmodifiable(nextQuestIds),
+       discardQuestIds = List.unmodifiable(discardQuestIds),
        prerequisites = List.unmodifiable(prerequisites) {
     if (id.isEmpty) throw ArgumentError.value(id, 'id', 'Must not be empty.');
     if (number < 1 || chapter < 0) {
@@ -145,6 +183,8 @@ final class QuestDefinition {
       number: number,
       chapter: chapter,
       targetLocation: _optionalString(json['targetLocation']),
+      spawnMonsterId: _optionalString(json['spawnMonsterId']),
+      spawnLocationId: _optionalString(json['spawnLocationId']),
       conditions: rawConditions.map((condition) {
         if (condition is! Map<String, dynamic>) {
           throw const FormatException('Quest condition must be an object.');
@@ -155,6 +195,11 @@ final class QuestDefinition {
         Map<String, Object?>.from(rawReward),
       ),
       nextQuestIds: _stringList(json['nextQuestIds'], 'nextQuestIds'),
+      discardQuestIds: _stringList(
+        json['discardQuestIds'],
+        'discardQuestIds',
+        allowNull: true,
+      ),
       prerequisites: _stringList(
         json['prerequisiteQuestIds'] ?? json['prerequisites'],
         'prerequisiteQuestIds',
@@ -170,8 +215,11 @@ final class QuestDefinition {
   final int number;
   final int chapter;
   final String? targetLocation;
+  final String? spawnMonsterId;
+  final String? spawnLocationId;
   final List<QuestCondition> conditions;
   final List<QuestId> nextQuestIds;
+  final List<QuestId> discardQuestIds;
   final List<QuestId> prerequisites;
   final QuestReward reward;
   final String nameKey;

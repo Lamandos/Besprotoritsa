@@ -19,6 +19,36 @@ void main() {
       expect(report.records, greaterThan(200));
     });
 
+    test('requires English text for visually verified catalog cards', () async {
+      final tempRoot = await Directory.systemTemp.createTemp(
+        'besprotoritsa-content-en-audit-',
+      );
+      addTearDown(() => tempRoot.delete(recursive: true));
+      final copiedContent = Directory('${tempRoot.path}/content');
+      await _copyDirectory(Directory(_repoContentPath), copiedContent);
+
+      final localeFile = File('${copiedContent.path}/i18n/en.json');
+      final locale = jsonDecode(await localeFile.readAsString()) as Map;
+      ((locale['content']! as Map)['item']! as Map).remove('circular-saw');
+      await localeFile.writeAsString(
+        const JsonEncoder.withIndent('  ').convert(locale),
+      );
+
+      final report = await validator.validateContent(
+        contentDirectory: copiedContent,
+        contentSetId: 'full',
+      );
+      expect(
+        report.issues.any(
+          (issue) =>
+              issue.contains('item.circular-saw') &&
+              issue.contains('missing en i18n key'),
+        ),
+        isTrue,
+        reason: report.issues.join('\n'),
+      );
+    });
+
     for (final fixtureName in const [
       'quest_link',
       'location_link',

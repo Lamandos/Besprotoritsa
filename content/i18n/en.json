@@ -5,7 +5,1891 @@
       "description": ""
     },
     "location": {
-      "unknown": ""
+      "unknown": "",
+      "airlock": "Airlock",
+      "corridor": "Corridor",
+      "corridor-green": "Corridor with green ventilation",
+      "corridor-red": "Corridor with red ventilation"
+    },
+    "item": {
+      "lucky-socks": {
+        "name": "Lucky Socks",
+        "description": "+1 Endurance. +1 Agility."
+      },
+      "spacesuit-mk2": {
+        "name": "Spacesuit MK2",
+        "description": "+1 Defense. +1 Endurance. Allows movement along the ship's outer hull between airlocks."
+      },
+      "gu4-rd": {
+        "name": "GU4-RD",
+        "description": "Before attacking, roll 1 die. On a success, deal 1 damage to the enemy."
+      },
+      "medic-bag": {
+        "name": "Field Medic's Bag",
+        "description": "Spend an action and credits to heal yourself or another player in your space or an adjacent space (1 credit = 1 health)."
+      },
+      "hard-hat": {
+        "name": "Hard Hat",
+        "description": "+1 Defense. +1 Repair."
+      },
+      "backpack": {
+        "name": "Backpack",
+        "description": "Allows you to carry 2 additional items."
+      },
+      "pistol": {
+        "name": "Pistol",
+        "description": "+2 combat strength. Reroll one die once per attack."
+      },
+      "smuggler-mark": {
+        "name": "Smuggler's Mark",
+        "description": "Get a 2-credit discount on any purchase. You may trade one item with any player anywhere on the map as an action."
+      },
+      "circular-saw": {
+        "name": "Circular Saw",
+        "description": "Up to 2 rerolls of one die per attack."
+      },
+      "laser-cutter": {
+        "name": "Laser Cutter",
+        "description": "After you kill an enemy, deal 1 damage to all enemies in the same sector."
+      },
+      "exo-gloves": {
+        "name": "Exo Gloves",
+        "description": "In combat, any pair of matching die results adds 1 hit."
+      },
+      "pneumo-cannon": {
+        "name": "Pneumatic Cannon",
+        "description": "+1 combat strength. A roll of 3 counts as a hit; a 6 deals damage to both the enemy and the character."
+      },
+      "nailgun": {
+        "name": "Nail Gun",
+        "description": "Ignore the enemy’s defense."
+      },
+      "flamethrower": {
+        "name": "Flamethrower",
+        "description": "+3 combat strength. Enemies leave no loot."
+      },
+      "knife": {
+        "name": "Knife",
+        "description": "+1 combat strength. If you score no hits during an attack, take 1 damage."
+      },
+      "ultrasonic-hammer": {
+        "name": "Ultrasonic Hammer",
+        "description": "+4 combat strength. After defeating an enemy, spend 5 credits to recharge."
+      },
+      "spacesuit": {
+        "name": "Spacesuit",
+        "description": "+1 defense. Allows movement along the ship’s outer hull between airlocks."
+      },
+      "frying-pan": {
+        "name": "Frying Pan",
+        "description": "+1 combat strength. +1 defense."
+      },
+      "last-chance": {
+        "name": "Last Chance",
+        "description": "+1 combat strength. If you score no hits during an attack, deal 1 damage to that enemy."
+      },
+      "load-bearing-vest": {
+        "name": "Load-Bearing Vest",
+        "description": "+1 defense. You can carry 2 weapons."
+      },
+      "engineer-coveralls": {
+        "name": "Engineer’s Coveralls",
+        "description": "Allows you to use 2 robots."
+      },
+      "laser-scalpel": {
+        "name": "Laser Scalpel",
+        "description": "+1 Science. In combat, use your Science instead of Strength."
+      },
+      "pipe-wrench": {
+        "name": "Pipe Wrench",
+        "description": "+1 combat strength. +1 Repair. You may reroll any number of dice during a Repair check."
+      },
+      "guard-suit": {
+        "name": "Guard Suit",
+        "description": "+1 defense. +1 Strength."
+      },
+      "tank-top": {
+        "name": "Tank Top",
+        "description": "+1 Agility."
+      },
+      "camouflage": {
+        "name": "Camouflage",
+        "description": "+1 Endurance."
+      },
+      "shirt": {
+        "name": "Shirt",
+        "description": "+1 Repair."
+      },
+      "coveralls": {
+        "name": "Coveralls",
+        "description": "+1 defense. +1 Repair."
+      },
+      "lab-coat": {
+        "name": "Lab Coat",
+        "description": "+1 Science."
+      },
+      "t-shirt": {
+        "name": "T-Shirt",
+        "description": "+1 Strength."
+      },
+      "shooter-helmet": {
+        "name": "Marksman’s Helmet",
+        "description": "In combat, a die result of 3 counts as a hit."
+      },
+      "hauler-uniform": {
+        "name": "Hauler Uniform",
+        "description": "+1 Defense. +1 Endurance."
+      },
+      "implant-agility": {
+        "name": "Implant A",
+        "description": "+1 Agility. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "implant-endurance": {
+        "name": "Implant B",
+        "description": "+1 Endurance. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "implant-repair": {
+        "name": "Implant R",
+        "description": "+1 Repair. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "armor-vest": {
+        "name": "Bulletproof Vest",
+        "description": "+1 Defense. +1 Agility."
+      },
+      "implant-science": {
+        "name": "Implant N",
+        "description": "+1 Science. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "implant-strength": {
+        "name": "Implant S",
+        "description": "+1 Strength. Can be transferred, takes no backpack slot, cannot be removed after use; maximum of 2 implants in use."
+      },
+      "laboratory-suit": {
+        "name": "Laboratory Suit",
+        "description": "+1 Defense. +1 Science."
+      },
+      "ghb-dtn": {
+        "name": "GHB-DTN",
+        "description": "During your turn, you may exhaust this robot to move yourself or an ally up to 2 sectors."
+      },
+      "r69-nic3": {
+        "name": "R69-NIC3",
+        "description": "During your turn, you may exhaust this robot to ignore all non-boss enemy abilities until the end of the round."
+      },
+      "gtu-b1c4": {
+        "name": "GTU-B1c4",
+        "description": "In combat, you may exhaust this robot to add 1 hit to an enemy."
+      },
+      "c6-car-courier": {
+        "name": "C6-CAR “Courier”",
+        "description": "During your turn, you may exhaust this robot to trade any number of items with another player anywhere on the map."
+      },
+      "sc0-u7": {
+        "name": "SC0-U7",
+        "description": "During your turn, you may exhaust this robot to reveal any map tile."
+      },
+      "prot2-ct": {
+        "name": "PROT2-CT",
+        "description": "In combat, you may exhaust this robot to gain +1 Defense until the end of the round."
+      },
+      "alarm-bot": {
+        "name": "ALARM BOT",
+        "description": "During your turn, you may exhaust this robot to ignore all non-boss enemy abilities until the end of the round."
+      },
+      "sc13-nc3": {
+        "name": "SC13-NC3",
+        "description": "During a Science or Repair check, you may exhaust this robot to reroll all dice."
+      },
+      "f1t-b07": {
+        "name": "F1T-B07",
+        "description": "During an Endurance or Agility check, you may exhaust this robot to reroll all dice."
+      },
+      "prot3-ct": {
+        "name": "PROT3-CT",
+        "description": "You may exhaust this robot to ignore any damage until the end of the round."
+      },
+      "h3-al": {
+        "name": "H3-AL",
+        "description": "During your turn, you may exhaust this robot to restore 3 health to yourself or an ally."
+      },
+      "pipe": {
+        "name": "Pipe",
+        "description": "Reroll one die in combat."
+      },
+      "brass-knuckles": {
+        "name": "Makeshift Knuckles",
+        "description": "During an attack, you may take 2 damage to add 1 hit."
+      },
+      "helmet": {
+        "name": "Helmet",
+        "description": "+1 Defense."
+      },
+      "makeshift-armor": {
+        "name": "Makeshift Armor",
+        "description": "+1 Defense. -1 Agility."
+      },
+      "welding-mask": {
+        "name": "Welding Mask",
+        "description": "+2 Defense. -1 Strength. -1 Agility."
+      },
+      "cleaver": {
+        "name": "Cleaver",
+        "description": "+1 combat strength."
+      },
+      "old-cloak": {
+        "name": "Old Cloak",
+        "description": "+1 Defense. Healing effects restore 1 additional health."
+      },
+      "assault-rifle": {
+        "name": "Assault Rifle",
+        "description": "+2 combat strength. Once per attack, reroll any number of dice."
+      },
+      "shotgun": {
+        "name": "Shotgun",
+        "description": "+3 combat strength. After attacking, if a non-boss enemy survives, push it up to 2 open spaces in any direction."
+      },
+      "drg-4u": {
+        "name": "DRG-4U",
+        "description": "Carry 2 additional items. During a Strength check or attack, you may exhaust this robot to reroll all dice."
+      },
+      "swiss-army-knife": {
+        "name": "Swiss Army Knife",
+        "description": "+1 Strength, Science, Repair, Endurance and Agility. It also has a corkscrew."
+      },
+      "exoskeleton": {
+        "name": "Exoskeleton",
+        "description": "+2 Defense. +1 Agility."
+      },
+      "plague-doctor-mask": {
+        "name": "Plague Doctor Mask",
+        "description": "+1 Defense. Completely prevents damage from boils."
+      }
+    },
+    "supply": {
+      "nanobots": {
+        "name": "Nanobots",
+        "description": "Discard to restore 1 health and gain +1 Defense until the end of the round."
+      },
+      "air-canister": {
+        "name": "Air Canister",
+        "description": "Discard this card and spend an action to move once between airlocks."
+      },
+      "adrenaline-supply": {
+        "name": "Adrenaline",
+        "description": "During your turn, discard this card to gain 1 additional action."
+      },
+      "credits": {
+        "name": "Credits",
+        "description": "Discard immediately to gain 5 credits."
+      },
+      "defibrillator": {
+        "name": "Defibrillator",
+        "description": "During your turn, discard this card to reroll any number of dice."
+      },
+      "stash": {
+        "name": "Stash",
+        "description": "Discard immediately to gain 10 credits."
+      },
+      "dry-rations": {
+        "name": "Dry Rations",
+        "description": "During your turn, you may discard this card to restore 4 health."
+      },
+      "tripwire": {
+        "name": "Tripwire",
+        "description": "Spend an action and place this in your sector to kill one non-boss enemy that appears there or enters it."
+      },
+      "gas-cylinder": {
+        "name": "Gas Cylinder",
+        "description": "Spend an action and discard this card to kill one non-boss enemy in your sector."
+      },
+      "door-remote": {
+        "name": "Door Remote",
+        "description": "Spend 1 action and 2 credits to remotely open or close any corridor passage."
+      },
+      "flashlight": {
+        "name": "Flashlight",
+        "description": "You do not spend a step to reveal a map tile when entering it."
+      },
+      "medkit": {
+        "name": "Medkit",
+        "description": "During your turn, you may discard this card to restore all health."
+      },
+      "proton-shield": {
+        "name": "Proton Shield",
+        "description": "During your turn, discard this card to prevent all damage until the end of the round."
+      },
+      "water": {
+        "name": "Water",
+        "description": "During your turn, you may discard this card to restore 3 health."
+      },
+      "ration": {
+        "name": "Ration",
+        "description": "During your turn, you may discard this card to restore 5 health."
+      },
+      "adrenaline-x": {
+        "name": "Adrenaline-X",
+        "description": "During your turn, discard this card to gain 2 additional actions."
+      },
+      "power-cell": {
+        "name": "Power Cell",
+        "description": "During your turn, discard this card to ready one of your robots."
+      },
+      "science-stimulant": {
+        "name": "Science Stimulant",
+        "description": "During a Science check, discard this card to reroll 1 die."
+      },
+      "agility-stimulant": {
+        "name": "Agility Stimulant",
+        "description": "During an Agility check, discard this card to reroll 1 die."
+      },
+      "endurance-stimulant": {
+        "name": "Endurance Stimulant",
+        "description": "During an Endurance check, discard this card to reroll 1 die."
+      },
+      "repair-stimulant": {
+        "name": "Repair Stimulant",
+        "description": "During a Repair check, discard this card to reroll 1 die."
+      },
+      "strength-stimulant": {
+        "name": "Strength Stimulant",
+        "description": "During a Strength check, discard this card to reroll 1 die."
+      }
+    },
+    "monster": {
+      "volot": {
+        "name": "Volot",
+        "description": "Slow but strong enemy."
+      },
+      "drekovac": {
+        "name": "Drekovac",
+        "description": "Slow but strong enemy. The player’s combat strength is reduced by 1."
+      },
+      "vurdalak": {
+        "name": "Vurdalak",
+        "description": "A resilient enemy: it restores all health if not killed during the turn."
+      },
+      "plagued": {
+        "name": "Plagued",
+        "description": "An enemy afflicted by boils: when it dies, it leaves 1 boil in each adjacent space."
+      },
+      "nest": {
+        "name": "Nest",
+        "description": "A stationary enemy. Instead of attacking, it spreads boils."
+      },
+      "likho": {
+        "name": "Likho",
+        "description": "A stationary enemy that blocks passages."
+      },
+      "pack": {
+        "name": "Pack",
+        "description": "Several small enemies. Can move through vents."
+      },
+      "werewolf": {
+        "name": "Werewolf",
+        "description": "A nimble, fast enemy. The player’s combat strength is reduced by 1."
+      },
+      "ghoul": {
+        "name": "Ghoul",
+        "description": "An advanced form of the Restless. Can move through vents."
+      },
+      "seeker": {
+        "name": "Seeker",
+        "description": "Hunts the player with the lowest health. Can move through vents."
+      },
+      "restless": {
+        "name": "Restless",
+        "description": "Infected human. The player’s combat strength is reduced by 1."
+      },
+      "mother": {
+        "name": "Mother",
+        "description": "Boss. Attacks ignore defense. Health and attack increase by 1 for each player."
+      },
+      "viy": {
+        "name": "Viy",
+        "description": "Boss. Health and attack increase by 1 for each player."
+      },
+      "swarm": {
+        "name": "Swarm",
+        "description": "Boss. Health and attack increase by 1 for each living monster in play."
+      },
+      "leshy": {
+        "name": "Leshy",
+        "description": "Boss. Flees from players and leaves 2 boils in its space before its turn."
+      },
+      "boil": {
+        "name": "Boil",
+        "description": "A stationary gas bubble. It bursts and dies when it shares a space with a player."
+      }
+    },
+    "condition": {
+      "malaise": {
+        "name": "Malaise",
+        "description": "-1 Strength."
+      },
+      "concussion": {
+        "name": "Concussion",
+        "description": "-1 Repair."
+      },
+      "nausea": {
+        "name": "Nausea",
+        "description": "-1 Science."
+      },
+      "fracture": {
+        "name": "Fracture",
+        "description": "-1 Agility."
+      },
+      "shortness-of-breath": {
+        "name": "Shortness of Breath",
+        "description": "-1 Endurance."
+      },
+      "adrenaline": {
+        "name": "Adrenaline",
+        "description": "+1 to all stats."
+      }
+    },
+    "task": {
+      "researcher": {
+        "name": "Researcher",
+        "description": "All map tiles are open simultaneously."
+      },
+      "modernizer": {
+        "name": "Modernizer",
+        "description": "Implant two implants."
+      },
+      "quartermaster": {
+        "name": "Quartermaster",
+        "description": "There are 5 cards in the chest."
+      },
+      "agile": {
+        "name": "Daredevil",
+        "description": "Dodge 3 attacks in one turn without taking damage."
+      },
+      "wealthy": {
+        "name": "Wealthy",
+        "description": "Have 15 or more credits."
+      },
+      "strongman": {
+        "name": "Strongman",
+        "description": "Have 7 or more combat strength."
+      },
+      "cripple": {
+        "name": "Cripple",
+        "description": "Have 3 or more Condition cards at once."
+      },
+      "robot-owner": {
+        "name": "Robot Owner",
+        "description": "Use and recharge a robot twice during the game."
+      },
+      "lucky": {
+        "name": "Lucky",
+        "description": "Roll 4 successes in a single roll."
+      },
+      "hunter": {
+        "name": "Hunter",
+        "description": "Kill two enemies in one turn."
+      },
+      "special": {
+        "name": "Special",
+        "description": "Obtain a card from the Special Items deck without trading for it."
+      },
+      "abscessive": {
+        "name": "Abscessive",
+        "description": "Pop more than 5 Abscesses at once."
+      },
+      "exterminator": {
+        "name": "Exterminator",
+        "description": "Defeat a strong enemy alone in one turn."
+      },
+      "fashionable": {
+        "name": "Fashionable",
+        "description": "Wear clothing and armor."
+      },
+      "merchant": {
+        "name": "Merchant",
+        "description": "Buy a Supply item worth 10 or more credits."
+      },
+      "lively": {
+        "name": "Lively",
+        "description": "Have only 1 health point."
+      }
+    },
+    "event": {
+      "cabin-noise": {
+        "name": "Cabin Noise",
+        "description": "As you pass a cabin, you hear a commotion inside.",
+        "option": {
+          "o1": {
+            "action": "Check what is happening.",
+            "success": "You open an empty cabin and find a bag hanging from a squeaky hook. Draw a Supply card.",
+            "failure": "The door flies open and an angry monster lunges at you. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Ignore it and keep walking.",
+            "success": "You decide not to get involved in trouble.",
+            "failure": "You walk past, but danger is waiting ahead."
+          }
+        }
+      },
+      "vending-machine": {
+        "name": "Vending Machine",
+        "description": "As you wander through the ship, you find a vending machine with someone’s food still inside.",
+        "option": {
+          "o1": {
+            "action": "Try to get the food.",
+            "success": "You wrench your hand free with the food. Restore 2 health.",
+            "failure": "Your hand gets stuck in the machine. When you finally get free, you see a monster approaching. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "pile-of-things": {
+        "name": "Pile of Things",
+        "description": "You enter a room and see a pile of objects that might contain something useful.",
+        "option": {
+          "o1": {
+            "action": "Search through the pile.",
+            "success": "You find a suitable weapon. Draw an Item card.",
+            "failure": "Something moves among the objects. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Leave the pile alone and leave the room.",
+            "success": "You get away from the strange pile in time.",
+            "failure": "A monster notices you before you can leave. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "monster-nest": {
+        "name": "Monster Lair",
+        "description": "You have found a creature’s lair. There must be something interesting inside.",
+        "option": {
+          "o1": {
+            "action": "Storm the lair.",
+            "success": "After defeating the monster, draw 1 Supply card.",
+            "failure": "Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Sneak inside quietly.",
+            "success": "You enter the lair and leave with supplies without being noticed. Draw a Supply card.",
+            "failure": "The noise wakes a sleeping monster. Draw a Monster card and fight it."
+          },
+          "o3": {
+            "action": "Throw a gas cylinder.",
+            "success": "Discard a Gas Cylinder. The blast destroys the lair; draw a Supply card.",
+            "failure": "Discard a Gas Cylinder, but the blast attracts a monster. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "corpse": {
+        "name": "Crew Member’s Corpse",
+        "description": "Searching the ship, you spot a person. As you get closer, you realize it is a corpse.",
+        "option": {
+          "o1": {
+            "action": "Search the corpse.",
+            "success": "You put the family photo back and take an Old Cloak from the Special Items deck.",
+            "failure": "You cannot get away in time: the corpse reanimates. Draw a Restless card and fight it."
+          },
+          "o2": {
+            "action": "Leave the corpse alone and search the room.",
+            "success": "You leave the body alone and find supplies. Draw a Supply card.",
+            "failure": "The corpse reanimates behind you. Draw a Restless card and fight it."
+          }
+        }
+      },
+      "suitcases": {
+        "name": "Suitcases of the Dead",
+        "description": "You find a pile of suitcases that belonged to deceased crew members.",
+        "option": {
+          "o1": {
+            "action": "Search the suitcases.",
+            "success": "You find a few credits in the suitcases. Gain 5 credits.",
+            "failure": "A monster has made its home inside. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Leave the suitcases alone.",
+            "success": "You walk past, and it was the right choice: a monster runs by.",
+            "failure": "You disturb the monster after all. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "hatch-monster": {
+        "name": "Monster in the Hatch",
+        "description": "While searching for supplies, you slide open a hatch and see a monster hiding inside.",
+        "option": {
+          "o1": {
+            "action": "Slip past it to the supplies.",
+            "success": "The monster is distracted by the noise. Draw 2 Supply cards.",
+            "failure": "The monster spots you. Take 3 damage and perform 1 fewer action next turn."
+          },
+          "o2": {
+            "action": "Close the hatch and search elsewhere.",
+            "success": "You close the hatch and find a package nearby. Draw a Supply card.",
+            "failure": "As you leave, the noise attracts a monster. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "security-room": {
+        "name": "Security Room",
+        "description": "You enter a security room. The alarm is still active.",
+        "option": {
+          "o1": {
+            "action": "Sneak in and steal something.",
+            "success": "You grab the first thing you see. Draw an Item card.",
+            "failure": "The alarm attracts a monster. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Try to disable the alarm.",
+            "success": "You search the room undisturbed. Draw the top 3 Item cards, choose 1, and shuffle the rest back into the deck.",
+            "failure": "The alarm attracts a monster. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "exposed-wires": {
+        "name": "Exposed Wires",
+        "description": "The wiring in the corridor ahead is damaged. Bare wires touch the floor.",
+        "option": {
+          "o1": {
+            "action": "Cross using the pipes.",
+            "success": "You cross to the other end of the room.",
+            "failure": "You touch a wire and take 2 damage."
+          },
+          "o2": {
+            "action": "Find the power source and shut it off.",
+            "success": "The power is off, and you pass safely.",
+            "failure": "You touch a wire and take 2 damage."
+          },
+          "o3": {
+            "action": "Find another way.",
+            "success": "You avoid the wires, but meet a monster on your way back. Draw a Monster card and fight it.",
+            "failure": "Draw a Monster card and fight it."
+          }
+        }
+      },
+      "monster-pack": {
+        "name": "Pack Around the Corner",
+        "description": "You hear growling and the footsteps of a group of monsters coming toward you from around the corner.",
+        "option": {
+          "o1": {
+            "action": "Try to hide.",
+            "success": "You hide and the pack passes by.",
+            "failure": "One of the monsters spots you. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Run away.",
+            "success": "Move to an adjacent sector.",
+            "failure": "You run into another enemy. Move to an adjacent sector, draw a Monster card, and fight it."
+          }
+        }
+      },
+      "rope-hatch": {
+        "name": "Rope in the Hatch",
+        "description": "You notice a deep hatch at your feet. A rope tied to a post has been lowered into it.",
+        "option": {
+          "o1": {
+            "action": "Pull up the rope.",
+            "success": "You pull up a bloodstained belt with a pouch. Draw a Supply card.",
+            "failure": "You decide it is not worth throwing out your back."
+          },
+          "o2": {
+            "action": "Untie the rope.",
+            "success": "A loud noise from the bottom of the hatch attracts a monster. Place a Monster card in any adjacent sector.",
+            "failure": "A loud noise from the bottom of the hatch attracts a monster. Place a Monster card in any adjacent sector."
+          },
+          "o3": {
+            "action": "Walk past.",
+            "success": "You walk past and leave the hatch alone.",
+            "failure": "You walk past and leave the hatch alone."
+          }
+        }
+      },
+      "weapon-monster": {
+        "name": "Weapon in Its Mouth",
+        "description": "At the far end of the room, you see a monster with something like a weapon sticking out of its mouth.",
+        "option": {
+          "o1": {
+            "action": "Attack the monster.",
+            "success": "You wrench out the weapon and smash the monster’s head. Draw a Weapon card.",
+            "failure": "The monster attacks. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Hide.",
+            "success": "You decide not to risk it and stay unnoticed.",
+            "failure": "You attract the monster’s attention. Draw a Monster card and fight it."
+          }
+        }
+      },
+      "repair-cleaner": {
+        "name": "Broken Cleaning Robot",
+        "description": "A cleaning robot lies on its side in the corner, sparking and crackling.",
+        "option": {
+          "o1": {
+            "action": "Repair the robot.",
+            "success": "There is a useful find in its waste tank. Draw a Supply card.",
+            "failure": "You decide not to waste parts on this pile of scrap."
+          },
+          "o2": {
+            "action": "Leave the robot.",
+            "success": "This mess is the least of your problems.",
+            "failure": "This mess is the least of your problems."
+          }
+        }
+      },
+      "countdown-trap": {
+        "name": "Countdown",
+        "description": "A mechanical voice reaches you: “10,” “9,” “8.” It looks like you triggered a trap.",
+        "option": {
+          "o1": {
+            "action": "Try to disarm the trap.",
+            "success": "You pull out a wire. Kill one monster in your sector or an adjacent sector, ignoring loot.",
+            "failure": "You take 4 damage."
+          },
+          "o2": {
+            "action": "Run.",
+            "success": "You leap out of the room. Move 1 sector.",
+            "failure": "The blast knocks you down. Take 4 damage and take one fewer action on your next turn."
+          }
+        }
+      },
+      "scientist-report": {
+        "name": "Scientific Report",
+        "description": "You see a disfigured body in a white coat, holding a folder of papers.",
+        "option": {
+          "o1": {
+            "action": "Study the notes.",
+            "success": "This is Dr. Neumyvakin’s report. Keep this card; get +1 Science.",
+            "failure": "The numbers and charts mean nothing to you. Leave the papers."
+          }
+        }
+      },
+      "monster-corpse": {
+        "name": "Monster’s Body",
+        "description": "A horrible stench hangs in the air around the dismembered monster.",
+        "option": {
+          "o1": {
+            "action": "Examine the monster’s body.",
+            "success": "You find a clue to its weak points. Keep this card; get +1 Combat Strength.",
+            "failure": "The disgusting sight makes you leave."
+          }
+        }
+      },
+      "rubble": {
+        "name": "Rubble",
+        "description": "You walk calmly through the ship and come across rubble blocking the way.",
+        "option": {
+          "o1": {
+            "action": "Clear the rubble.",
+            "success": "The way is clear, and a heavy bag lies beneath the debris. Draw an Item card.",
+            "failure": "The debris collapses on you. Take 3 damage."
+          },
+          "o2": {
+            "action": "Go around.",
+            "success": "You go around the rubble but run into a Restless. Draw a Restless card and fight it.",
+            "failure": "The route leads straight to a monster. Draw a Restless card and fight it."
+          }
+        }
+      },
+      "two-crates": {
+        "name": "Two Crates",
+        "description": "You enter a cabin and see two crates: one very large and the other small.",
+        "option": {
+          "o1": {
+            "action": "Carry the large crate.",
+            "success": "There is a droid inside. Take a Robot from the Item deck.",
+            "failure": "The crate falls on you. Take 2 damage."
+          },
+          "o2": {
+            "action": "Don’t overestimate yourself; take the small crate.",
+            "success": "You carry the crate somewhere safe. Draw a Supply card.",
+            "failure": "You drop the crate but find 2 credits nearby."
+          }
+        }
+      },
+      "huge-crate": {
+        "name": "Huge Crate",
+        "description": "You enter a cabin and see a very large crate.",
+        "option": {
+          "o1": {
+            "action": "Carry the crate.",
+            "success": "You drag the crate and find a weapon. Draw a Weapon card.",
+            "failure": "The crate falls on you. Take 2 damage."
+          },
+          "o2": {
+            "action": "Send the droid for the crate.",
+            "success": "Discard a Robot card. Take a Weapon and draw 1 Supply card.",
+            "failure": "The droid breaks, and you leave the crate."
+          }
+        }
+      },
+      "toolbox": {
+        "name": "Tools and Parts",
+        "description": "You found a box of tools and parts. What can you do with it?",
+        "option": {
+          "o1": {
+            "action": "Make a weapon.",
+            "success": "You make a strange but effective weapon. Take a Swiss Army Knife from the Special Items deck.",
+            "failure": "You fail to make anything."
+          },
+          "o2": {
+            "action": "Build a robot.",
+            "success": "The pile of metal gives a cheerful beep. Take the DRG-4U robot from the Special Items deck.",
+            "failure": "You fail to make anything."
+          },
+          "o3": {
+            "action": "Make armor.",
+            "success": "The armor is not fashionable, but it works. Draw an Item card.",
+            "failure": "You fail to make anything."
+          }
+        }
+      },
+      "exoskeleton-terminal": {
+        "name": "Cargo Terminal",
+        "description": "You see a terminal for cargo loaders’ special equipment on the wall. Its door is damaged.",
+        "option": {
+          "o1": {
+            "action": "Force open the terminal door.",
+            "success": "Behind it is a heavy-load suit. Take the Exoskeleton from the Special Items deck.",
+            "failure": "The door is jammed shut."
+          }
+        }
+      },
+      "contraband-cache": {
+        "name": "Smugglers’ Stash",
+        "description": "Behind the electrical panel door is a note with the location of a stash beneath the navigation terminal.",
+        "option": {
+          "o1": {
+            "action": "Move the terminal.",
+            "success": "There is a sealed box beneath it. Draw an Item card.",
+            "failure": "You hit the terminal. Take 1 damage."
+          },
+          "o2": {
+            "action": "Leave the stash alone.",
+            "success": "You decide the stash must be a trap and leave.",
+            "failure": "You decide the stash must be a trap and leave."
+          }
+        }
+      },
+      "falling-monster": {
+        "name": "Falling Monster",
+        "description": "A mangled body drops from the ceiling and reaches for your throat with its teeth.",
+        "option": {
+          "o1": {
+            "action": "Push the monster away.",
+            "success": "You smash the monster’s head with the first thing at hand. Discard a Weapon card.",
+            "failure": "You fall onto a spike. Take 3 damage."
+          }
+        }
+      },
+      "collapsed-panel": {
+        "name": "Beeping Under the Panel",
+        "description": "You hear a muffled beep beneath a collapsed ceiling panel.",
+        "option": {
+          "o1": {
+            "action": "Find the source of the sound.",
+            "success": "There is a robot under the debris. Take a Robot from the Item deck.",
+            "failure": "You are injured while clearing the rubble. Take 1 damage."
+          },
+          "o2": {
+            "action": "Don’t risk it; get away.",
+            "success": "You leave and move to an adjacent sector.",
+            "failure": "You leave and move to an adjacent sector."
+          }
+        }
+      },
+      "blood-trail": {
+        "name": "Bloody Tracks",
+        "description": "You notice bloody tracks, but they clearly do not belong to a human.",
+        "option": {
+          "o1": {
+            "action": "Follow the tracks.",
+            "success": "The tracks lead to a dead human and monster. Draw a Weapon card.",
+            "failure": "You get lost and run into a monster. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Do not follow the tracks.",
+            "success": "A monster attacks from behind. Take 3 damage.",
+            "failure": "A monster attacks from behind. Take 3 damage."
+          }
+        }
+      },
+      "ship-map": {
+        "name": "Unknown Map",
+        "description": "You found a ship map showing an unfamiliar passage.",
+        "option": {
+          "o1": {
+            "action": "Study the map.",
+            "success": "You find the passage and a droid. Take a Robot from the Item deck.",
+            "failure": "You cannot find your way out of the passage. Take one fewer action next turn."
+          },
+          "o2": {
+            "action": "Don’t waste time.",
+            "success": "Leave the map and reveal any unexplored map tile.",
+            "failure": "Leave the map and reveal any unexplored map tile."
+          }
+        }
+      },
+      "cache-symbols": {
+        "name": "Stash Symbols",
+        "description": "You find markings on the wall pointing to a supply stash.",
+        "option": {
+          "o1": {
+            "action": "Study the symbols.",
+            "success": "You find the stash. Draw the top 3 Supply cards, choose 1, and shuffle the others back.",
+            "failure": "You cannot decipher the symbols and waste time."
+          }
+        }
+      },
+      "scientist-case": {
+        "name": "Scientist’s Briefcase",
+        "description": "You find a dead scientist clutching a metal briefcase to their chest.",
+        "option": {
+          "o1": {
+            "action": "Open the briefcase.",
+            "success": "Inside is a healing serum. Restore all health.",
+            "failure": "There are only incomprehensible notes from the scientist."
+          },
+          "o2": {
+            "action": "Leave the body undisturbed and search elsewhere.",
+            "success": "There is a useful item on the nearby shelves. Draw a Supply card.",
+            "failure": "There is a useful item on the nearby shelves. Draw a Supply card."
+          }
+        }
+      },
+      "inventory-notes": {
+        "name": "Inventory Notes",
+        "description": "You stumble over a box of charred papers: records of the latest deliveries.",
+        "option": {
+          "o1": {
+            "action": "Try to make sense of the notes.",
+            "success": "A route map leads to an equipment storeroom. Draw 2 Item cards.",
+            "failure": "The notes are too damaged to be useful."
+          }
+        }
+      },
+      "nest-room": {
+        "name": "Monster Nest",
+        "description": "You enter a room and see that monsters have made a nest there.",
+        "option": {
+          "o1": {
+            "action": "Burn the nest.",
+            "success": "If you have a flamethrower, the nest is destroyed.",
+            "failure": "You have no flamethrower, or you decide not to spend it."
+          },
+          "o2": {
+            "action": "Make an explosive mixture.",
+            "success": "You find ingredients for explosives.",
+            "failure": "Your search attracts the monster guarding the nest. Draw a Monster card and fight it."
+          },
+          "o3": {
+            "action": "Seal off the room.",
+            "success": "You weld the door shut, keeping the monsters from reaching you.",
+            "failure": "The welding noise attracts a monster. Draw a Monster card, place it in your sector, and move to an adjacent sector."
+          }
+        }
+      },
+      "needle-box": {
+        "name": "Box of Needles",
+        "description": "A strange box with needles sticking out lies on the floor.",
+        "option": {
+          "o1": {
+            "action": "Study the strange object.",
+            "success": "It is a portable vaccine injector. Restore 3 health and gain +1 Defense for the next round.",
+            "failure": "The terminology is incomprehensible, so you leave the box."
+          },
+          "o2": {
+            "action": "Ignore this junk.",
+            "success": "You decide not to touch the strange object.",
+            "failure": "You decide not to touch the strange object."
+          }
+        }
+      },
+      "bloody-suitcase": {
+        "name": "Suitcase with a Bloody Message",
+        "description": "There is a suitcase in front of you with a severed arm. Something is written on it in blood.",
+        "option": {
+          "o1": {
+            "action": "Examine the suitcase carefully.",
+            "success": "You decipher a code in the message. Draw a Supply card.",
+            "failure": "The writing turns out to be a waste of time."
+          },
+          "o2": {
+            "action": "Try to open the suitcase.",
+            "success": "You pick the lock and find personal belongings. Draw a Supply card.",
+            "failure": "The lock will not open, so you leave the suitcase."
+          }
+        }
+      },
+      "broken-drone": {
+        "name": "Broken Droid",
+        "description": "You enter a room looking for something useful and see a broken droid.",
+        "option": {
+          "o1": {
+            "action": "Try to repair the droid.",
+            "success": "The droid gets back on its feet. Take a Robot from the Item deck.",
+            "failure": "An electric shock stuns you. Take one fewer action next turn."
+          },
+          "o2": {
+            "action": "Ignore it and move on.",
+            "success": "You walk past, but do not leave empty-handed. Draw a Supply card.",
+            "failure": "You walk past, but do not leave empty-handed. Draw a Supply card."
+          }
+        }
+      },
+      "radio-transmitter": {
+        "name": "Radio Transmitter",
+        "description": "You find a radio transmitter and decide to send a distress signal.",
+        "option": {
+          "o1": {
+            "action": "Repair the transmitter.",
+            "success": "The signal is received. Each crew member draws a Supply card.",
+            "failure": "The transmitter’s static attracts a monster. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Don’t waste time.",
+            "success": "Technology repair is not your strength, so you move on.",
+            "failure": "Technology repair is not your strength, so you move on."
+          }
+        }
+      },
+      "lights-out": {
+        "name": "Lights Out",
+        "description": "You discover that the lights are out in some rooms.",
+        "option": {
+          "o1": {
+            "action": "Repair the lights in the nearest room.",
+            "success": "The lights come on. Reveal the nearest unexplored map tile.",
+            "failure": "You take 3 damage from the wiring."
+          }
+        }
+      },
+      "ventilation-failure": {
+        "name": "Faulty Ventilation",
+        "description": "The ventilation system starts failing in the room.",
+        "option": {
+          "o1": {
+            "action": "Repair the ventilation.",
+            "success": "Behind the grate you find a body and a heavy bag. Draw a Supply card.",
+            "failure": "A monster crawls out of the vent. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Leave the room.",
+            "success": "You get out in time. Take 2 damage.",
+            "failure": "You get out in time. Take 2 damage."
+          }
+        }
+      },
+      "gas-pipe": {
+        "name": "Burst Pipe",
+        "description": "You smell something strange and realize you are surrounded by gas.",
+        "option": {
+          "o1": {
+            "action": "Repair the pipe.",
+            "success": "You repair the pipe. Restore 2 health.",
+            "failure": "You inhale gas. Take 2 damage and take one fewer action next turn."
+          }
+        }
+      },
+      "vent-monster": {
+        "name": "Growling in the Vent",
+        "description": "You hear growling from the air duct.",
+        "option": {
+          "o1": {
+            "action": "Redirect the airflow.",
+            "success": "The airflow pulls the monster back.",
+            "failure": "Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Weld the outlet grate shut.",
+            "success": "You secure the room. Draw an Item card.",
+            "failure": "The monster breaks free. Draw a Monster card and fight it."
+          },
+          "o3": {
+            "action": "Blow up the duct.",
+            "success": "Discard the Gas Canister and draw 2 Supply cards.",
+            "failure": "Discard the Gas Canister and draw 2 Supply cards."
+          }
+        }
+      },
+      "security-console": {
+        "name": "Security Console",
+        "description": "The security control console seems to have no power, but is undamaged.",
+        "option": {
+          "o1": {
+            "action": "Repair the console.",
+            "success": "The security system is on. Kill any non-boss monster aboard the ship.",
+            "failure": "The console cannot be repaired."
+          },
+          "o2": {
+            "action": "Take the console apart for parts.",
+            "success": "The parts will be useful. Ready all your Robots.",
+            "failure": "The junk turns out to be useless."
+          }
+        }
+      },
+      "cigarette-machine": {
+        "name": "Cigarette Vending Machine",
+        "description": "The light is still on in the cigarette machine in front of you.",
+        "option": {
+          "o1": {
+            "action": "Search inside the machine.",
+            "success": "You find the change. Gain 10 credits.",
+            "failure": "The machine is well protected from clever people like you."
+          },
+          "o2": {
+            "action": "Kick the machine.",
+            "success": "The machine pays you off with a pack of cigarettes. Restore 2 health and ready your Robots.",
+            "failure": "You leave the machine alone."
+          }
+        }
+      },
+      "pack-sighting": {
+        "name": "Pack",
+        "description": "You run into a pack. You should flee, but you notice something valuable.",
+        "option": {
+          "o1": {
+            "action": "Run away quickly.",
+            "success": "You decide not to take the risk and run.",
+            "failure": "The pack spots you. Draw a Pack card and fight it."
+          },
+          "o2": {
+            "action": "Walk past the pack.",
+            "success": "You remain unnoticed and draw a Supply card.",
+            "failure": "The pack chases you. Draw a Pack card and fight it."
+          }
+        }
+      },
+      "gas-cabin": {
+        "name": "Green Gas",
+        "description": "You pass a cabin filled with a strange green gas.",
+        "option": {
+          "o1": {
+            "action": "Enter the cabin.",
+            "success": "You grab an item and get out. Draw an Item card.",
+            "failure": "You run into an Abscess. Take one fewer action next turn."
+          },
+          "o2": {
+            "action": "Don’t bother.",
+            "success": "You decide not to enter the cabin.",
+            "failure": "You decide not to enter the cabin."
+          }
+        }
+      },
+      "hatch-scrape": {
+        "name": "Scraping Under the Hatch",
+        "description": "It sounds like something is scraping inside the maintenance hatch beneath your feet.",
+        "option": {
+          "o1": {
+            "action": "Block the hatch.",
+            "success": "You pile crates over the hatch.",
+            "failure": "The hatch opens. Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Fight it.",
+            "success": "Draw a Monster card and fight it. After winning, draw an additional Item card.",
+            "failure": "Draw a Monster card and fight it."
+          }
+        }
+      },
+      "oxygen-alarm": {
+        "name": "Oxygen Depletion",
+        "description": "The system reports a power overload and that oxygen is being pumped out.",
+        "option": {
+          "o1": {
+            "action": "Hold your breath.",
+            "success": "You wait until oxygen supply resumes.",
+            "failure": "You lose consciousness and take 2 damage; take one fewer action next turn."
+          },
+          "o2": {
+            "action": "Run out before the doors seal.",
+            "success": "You rush into an adjacent sector.",
+            "failure": "You do not make it in time. Take 2 damage and take one fewer action next turn."
+          }
+        }
+      },
+      "survivor-scream": {
+        "name": "Cry for Help",
+        "description": "You hear a scream. It sounds like another survivor.",
+        "option": {
+          "o1": {
+            "action": "Hurry to help.",
+            "success": "There is a monster standing over a guard’s body. Draw a Monster card and fight it.",
+            "failure": "There are useful supplies by the body. Draw a Supply card."
+          },
+          "o2": {
+            "action": "Ignore the scream.",
+            "success": "Survival leaves no room for morality.",
+            "failure": "Survival leaves no room for morality."
+          }
+        }
+      },
+      "child-cry": {
+        "name": "Child’s Cry",
+        "description": "You hear a child crying. How could there be a child here?",
+        "option": {
+          "o1": {
+            "action": "Find the source as quickly as possible.",
+            "success": "It is a monster growling. Draw a Monster card and fight it.",
+            "failure": "You cannot find the source. Place a monster in any adjacent sector."
+          },
+          "o2": {
+            "action": "Ignore it.",
+            "success": "You refuse to let your imagination take over and continue on.",
+            "failure": "You refuse to let your imagination take over and continue on."
+          }
+        }
+      },
+      "female-whisper": {
+        "name": "Whisper",
+        "description": "You hear a woman whispering, but cannot make out any words.",
+        "option": {
+          "o1": {
+            "action": "Resist; it is only your imagination.",
+            "success": "You calm down: it is only the hum of the lights.",
+            "failure": "Other voices join the whisper. Place a monster in every adjacent sector."
+          },
+          "o2": {
+            "action": "Follow the call.",
+            "success": "It is a plea for help. Draw a Supply card.",
+            "failure": "It is a plea for help. Draw a Supply card."
+          }
+        }
+      },
+      "alcohol-crate": {
+        "name": "Crate of Alcohol",
+        "description": "You find the last thing you expected: a crate of alcohol.",
+        "option": {
+          "o1": {
+            "action": "Walk past.",
+            "success": "You keep a clear head.",
+            "failure": "You keep a clear head."
+          },
+          "o2": {
+            "action": "Have a little.",
+            "success": "Restore 3 health and take one extra action next turn.",
+            "failure": "Take one fewer action next turn."
+          },
+          "o3": {
+            "action": "Go all out!",
+            "success": "Restore all health, gain an extra action, and take no damage from monsters until the end of next round.",
+            "failure": "You lose control and take one fewer action next turn."
+          }
+        }
+      },
+      "supply-terminal": {
+        "name": "Supply Terminal",
+        "description": "The supply terminal is flashing brightly. It seems to have malfunctioned.",
+        "option": {
+          "o1": {
+            "action": "Buy supplies.",
+            "success": "Draw 5 Supply cards; you may buy 2 Items at a 2-credit discount, and shuffle the rest back.",
+            "failure": "The terminal is broken, but you can still inspect it."
+          },
+          "o2": {
+            "action": "Sell supplies.",
+            "success": "Sell any number of your Items at full value.",
+            "failure": "Sell any number of your Items at full value."
+          },
+          "o3": {
+            "action": "Walk past.",
+            "success": "You do not stop and keep moving.",
+            "failure": "You do not stop and keep moving."
+          }
+        }
+      },
+      "trade-bot": {
+        "name": "Trade Bot",
+        "description": "A trade bot has fallen on its side. It looks battered but still operational.",
+        "option": {
+          "o1": {
+            "action": "Repair the bot.",
+            "success": "Draw 5 Supply cards; you may buy them and sell Items at full value.",
+            "failure": "The damage is too severe. The bot does not work."
+          },
+          "o2": {
+            "action": "Break into the bot’s cargo bay.",
+            "success": "The corporation protects its bots well, and you get nothing.",
+            "failure": "The corporation protects its bots well, and you get nothing."
+          }
+        }
+      },
+      "lockers": {
+        "name": "Personal Lockers",
+        "description": "A blood trail leads to the personal lockers of the local workers.",
+        "option": {
+          "o1": {
+            "action": "Check the lockers.",
+            "success": "There are bloodstained clothes in one locker. Draw a Clothing card.",
+            "failure": "There are bloodstained clothes in one locker. Draw a Clothing card."
+          },
+          "o2": {
+            "action": "Get away.",
+            "success": "You decide not to tempt fate and leave.",
+            "failure": "You decide not to tempt fate and leave."
+          }
+        }
+      },
+      "body-pile": {
+        "name": "Seven Bags",
+        "description": "Seven bags containing the bodies of dead crew members are piled in the corner.",
+        "option": {
+          "o1": {
+            "action": "Search the pile of bodies.",
+            "success": "There are personal belongings under the bags. Draw a Clothing card and a Restless card, and fight it.",
+            "failure": "Draw a Restless card and fight it."
+          },
+          "o2": {
+            "action": "Leave the dead undisturbed.",
+            "success": "You are content that the dead are not following you.",
+            "failure": "You are content that the dead are not following you."
+          }
+        }
+      },
+      "junk-medical": {
+        "name": "Medical Junk",
+        "description": "A heap of rubble and junk catches your attention.",
+        "option": {
+          "o1": {
+            "action": "Quickly search the pile.",
+            "success": "There is an implant left in a medical case. Take an Implant from the Item deck.",
+            "failure": "There is an implant left in a medical case. Take an Implant from the Item deck."
+          },
+          "o2": {
+            "action": "Search the junk for something useful.",
+            "success": "You find an Item card.",
+            "failure": "You cut yourself on a rusty beam. Take 1 damage."
+          },
+          "o3": {
+            "action": "Make your way to the far crates.",
+            "success": "There is nothing useful in the crates. Gain 1 credit.",
+            "failure": "You give up after an unsuccessful attempt."
+          }
+        }
+      },
+      "junk-credits": {
+        "name": "Waist Pouch",
+        "description": "Among the rubble, junk, and crates, you notice someone’s belt.",
+        "option": {
+          "o1": {
+            "action": "Quickly search the pile.",
+            "success": "There are 5 credits in the pouch.",
+            "failure": "There are 5 credits in the pouch."
+          },
+          "o2": {
+            "action": "Search the junk for something useful.",
+            "success": "There is an Item card in the far crate.",
+            "failure": "The junk starts to slide, so you retreat."
+          }
+        }
+      },
+      "junk-guitar": {
+        "name": "Heap of Junk",
+        "description": "The stench from the pile of rubble drives even the monsters away.",
+        "option": {
+          "o1": {
+            "action": "Quickly search the pile.",
+            "success": "You find an almost intact guitar and leave.",
+            "failure": "You find an almost intact guitar and leave."
+          },
+          "o2": {
+            "action": "Make your way to the far crates.",
+            "success": "A stash is tied to the pile. Gain 10 credits.",
+            "failure": "The junk is too slippery, and you decide not to climb over it."
+          }
+        }
+      },
+      "shelf-equipment": {
+        "name": "Top Shelf",
+        "description": "You see some equipment on the top shelf of a rack in the corner.",
+        "option": {
+          "o1": {
+            "action": "Take the equipment.",
+            "success": "You take the loot. Draw an Item card.",
+            "failure": "The shelves give way. Take 2 damage."
+          },
+          "o2": {
+            "action": "Search the lower shelves.",
+            "success": "You find something useful. Draw a Supply card.",
+            "failure": "You find nothing useful."
+          }
+        }
+      },
+      "falling-beam": {
+        "name": "Falling Beam",
+        "description": "A massive metal beam falls on you and pins you to the floor.",
+        "option": {
+          "o1": {
+            "action": "Get out from under the rubble.",
+            "success": "You take 1 damage.",
+            "failure": "Take 3 damage and discard an Armor card."
+          }
+        }
+      },
+      "meteor-stream": {
+        "name": "Meteor Stream",
+        "description": "You feel a series of jolts: the ship has entered a meteor stream.",
+        "option": {
+          "o1": {
+            "action": "Find shelter quickly.",
+            "success": "Each player rolls a die and takes damage equal to the result.",
+            "failure": "Each player rolls a die and takes damage equal to the result."
+          }
+        }
+      },
+      "fire": {
+        "name": "Fire",
+        "description": "Metal groans and pops as fire spreads through the ventilation system.",
+        "option": {
+          "o1": {
+            "action": "Escape the fire.",
+            "success": "Roll a die and take damage equal to the result.",
+            "failure": "Roll a die and take damage equal to the result."
+          },
+          "o2": {
+            "action": "Try to put out the fire.",
+            "success": "Take 3 damage.",
+            "failure": "Take 3 damage."
+          }
+        }
+      },
+      "monster-horde": {
+        "name": "Horde",
+        "description": "A loud explosion has scattered a monster nest. Fast footsteps are getting louder.",
+        "option": {
+          "o1": {
+            "action": "Prepare for battle.",
+            "success": "Draw a Monster card and fight it.",
+            "failure": "Draw a Monster card and fight it."
+          },
+          "o2": {
+            "action": "Hide as quickly as possible.",
+            "success": "Take 2 damage.",
+            "failure": "Take 2 damage."
+          }
+        }
+      },
+      "asteroid-alert": {
+        "name": "Asteroid Alert",
+        "description": "The system announces: “Asteroid detected. All ship compartments are being sealed.”",
+        "option": {
+          "o1": {
+            "action": "Get out of the corridor quickly.",
+            "success": "Each player in a corridor rolls a die and takes that much damage. Close all corridors and move creatures in them to adjacent sectors.",
+            "failure": "Each player in a corridor rolls a die and takes that much damage. Close all corridors and move creatures in them to adjacent sectors."
+          }
+        }
+      },
+      "horde-carry": {
+        "name": "Footsteps All Around",
+        "description": "Fast footsteps come from every direction. There is no doubt: a horde of monsters is rushing this way.",
+        "option": {
+          "o1": {
+            "action": "Run, dropping extra cargo.",
+            "success": "Discard all cards from your backpack or take 2 damage for each card you keep.",
+            "failure": "Discard all cards from your backpack or take 2 damage for each card you keep."
+          }
+        }
+      },
+      "invasion-open-0": {
+        "name": "INVASION: Open Sector",
+        "description": "Draw a Monster card and place its monster token in any open sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in any open sector.",
+            "success": "Draw a Monster card and place it in an open sector.",
+            "failure": "Draw a Monster card and place it in an open sector."
+          }
+        }
+      },
+      "invasion-open-1": {
+        "name": "INVASION: Open Sector",
+        "description": "Draw a Monster card and place its monster token in any open sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in any open sector.",
+            "success": "Draw a Monster card and place it in an open sector.",
+            "failure": "Draw a Monster card and place it in an open sector."
+          }
+        }
+      },
+      "invasion-escape-pods-1": {
+        "name": "INVASION: Escape Pods",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-armory-2": {
+        "name": "INVASION: Armory",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-reactor-3": {
+        "name": "INVASION: Reactor",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-medical-bay-4": {
+        "name": "INVASION: Medical Bay",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-crew-quarters-5": {
+        "name": "INVASION: Crew Quarters",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-laboratory-6": {
+        "name": "INVASION: Laboratory",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-storage-7": {
+        "name": "INVASION: Storage Bay",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-engineering-control-post-8": {
+        "name": "INVASION: Engineering Control Post",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-main-computer-9": {
+        "name": "INVASION: Main Computer",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-dining-hall-10": {
+        "name": "INVASION: Dining Hall",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-flight-control-11": {
+        "name": "INVASION: Flight Control",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-morgue-12": {
+        "name": "INVASION: Morgue",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-escape-pods-13": {
+        "name": "INVASION: Escape Pods",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-armory-14": {
+        "name": "INVASION: Armory",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-reactor-15": {
+        "name": "INVASION: Reactor",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-medical-bay-16": {
+        "name": "INVASION: Medical Bay",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-crew-quarters-17": {
+        "name": "INVASION: Crew Quarters",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-laboratory-18": {
+        "name": "INVASION: Laboratory",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-storage-19": {
+        "name": "INVASION: Storage Bay",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-engineering-control-post-20": {
+        "name": "INVASION: Engineering Control Post",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-main-computer-21": {
+        "name": "INVASION: Main Computer",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-dining-hall-22": {
+        "name": "INVASION: Dining Hall",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-flight-control-23": {
+        "name": "INVASION: Flight Control",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      },
+      "invasion-morgue-24": {
+        "name": "INVASION: Morgue",
+        "description": "Draw a Monster card and place its token in the indicated sector. If it is not open, place the Monster card face down in any closed sector.",
+        "option": {
+          "o1": {
+            "action": "Place the monster in the indicated sector.",
+            "success": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve.",
+            "failure": "Draw a Monster card and place it in the indicated sector; if it is closed, place it face down in the closed reserve."
+          }
+        }
+      }
+    },
+    "quest": {
+      "quest-01": {
+        "name": "Awakening",
+        "description": "Your awakening is accompanied by a message on the monitor in front of you: “sleep cycle complete.” The nearby chambers are empty, which is strange: they should not have woken before you, and those that are occupied do not respond to manual control. Your relief crew is missing too, which is far from normal procedure. The lack of communication and the frightening grinding behind the wall worry you even more. You must find out what is happening."
+      },
+      "quest-02": {
+        "name": "Survival Law",
+        "description": "After making it through the darkness and the horror hidden within, you realize that you will find no one here. At least, no one alive. Blood and disorder surround you, the ship’s systems do not work, and metal grinds without end. To survive, you must not panic. You will not last long if you simply hide and wait for help. The main task now is to bring the ship back to life. But first, you should ensure your own safety."
+      },
+      "quest-03": {
+        "name": "The Ship Awakens",
+        "description": "According to the terminal, most of the electronics and communications systems are not working. That means the autopilot is down, as are the ship’s engines. Horrified at the prospect of being trapped here with these monsters, you decide to wake the ship so you can get home. The terminal has diagnosed multiple failures in the reactor room."
+      },
+      "quest-04": {
+        "name": "Infected",
+        "description": "The ship’s power has been restored. At last, you can start the engines and set a course home. Less than a minute later, you feel a severe bout of arrhythmia. The weakness you felt can no longer be blamed on cryosleep. There is now one more problem on the path to safety, as if the horrors around you were not enough."
+      },
+      "quest-05": {
+        "name": "Antidote",
+        "description": "The blood samples have been collected and the analysis is complete. You are infected, and dangerous. You cannot return to Earth while there is a risk of spreading this disease. The only way out is to go to the laboratory and make a cure. But you must act quickly: it is unclear how soon the illness will fully emerge or how it will progress."
+      },
+      "quest-06": {
+        "name": "Rescue",
+        "description": "Only a few corridors separate you from the ship’s main computer. You only need to get there and turn on power to the engines. Then you can direct the ship home!"
+      },
+      "quest-07": {
+        "name": "Plan B",
+        "description": "Turning on the power was not enough. The sensors show that the engines have been damaged from outside. You cannot handle this on your own. There is only one right decision: leave the ship and all the creatures behind, and escape in the capsules. Home is close; all you need to do is get into a capsule and set off."
+      },
+      "quest-08": {
+        "name": "Search",
+        "description": "“Does anything on this ship still work?” you shout, kicking the broken escape pod. Exhausted by the troubles piling up, you set out to find the missing part. In the storage bay, you find the place buried under useful and useless things in total chaos. It will be very difficult to find what you need."
+      },
+      "quest-09": {
+        "name": "Captain",
+        "description": "You have one more problem to solve if you do not want to drift in a capsule through open space: entering the coordinates of the nearest border base. It seems you will have to visit the ship’s captain in Flight Control…"
+      },
+      "quest-10": {
+        "name": "Final Preparations",
+        "description": "After finding the missing parts, you return to the escape pods. There is almost nothing left to do: install the part and head home."
+      },
+      "quest-11": {
+        "name": "Home",
+        "description": "At last everything is in order. You are eager to leave this cursed place and never return. As you head for the launch panel, you hear a roar that shakes the walls. What in the world is that creature!?"
+      },
+      "quest-12": {
+        "name": "Epilogue",
+        "description": "Leaning back in your chair, you slowly exhale. Thoughts of the friends and colleagues you lost fill your mind, but you have no desire to look back. One last task remains: warn Earth about what happened."
+      },
+      "quest-13": {
+        "name": "Time for a Boomstick",
+        "description": "Walking around the ship unarmed is suicide. You urgently need something for protection, preferably a firearm. Right! The ship has an armory with all the security equipment. Perhaps something remains that can blow these monsters apart."
+      },
+      "quest-14": {
+        "name": "Annihilation",
+        "description": "So many deaths… Many of them were your friends. Rage fills you. It is time to take revenge on these creatures."
+      },
+      "quest-15": {
+        "name": "Survival Guide",
+        "description": "Now that you have a weapon, it is time to find supplies. Perhaps there is something useful in the dining hall. It is worth checking."
+      },
+      "quest-16": {
+        "name": "Heart of the Swarm",
+        "description": "It seems you have stirred up a hornet’s nest. The monsters appear to be changing strategy. You see several creatures run past, ignoring you."
+      },
+      "quest-17": {
+        "name": "Plague Doctor",
+        "description": "It is time to learn more about the infection that has ravaged the crew’s bodies. Perhaps it can still be stopped…"
+      },
+      "quest-18": {
+        "name": "Source of the Infection",
+        "description": "You have found the source of the infection you were looking for. Or rather, it has found you."
+      },
+      "quest-19": {
+        "name": "Plan Z",
+        "description": "There are too many of these creatures. You cannot just leave things as they are. If there is no other way out, at least you will take them all with you…"
+      },
+      "quest-20": {
+        "name": "Critical Reactor Damage",
+        "description": "“Critical reactor damage.” You close your eyes beneath the emergency siren and exhale. The fear gives way to long-awaited relief. Was it worth it? Of course. This was the price you had to pay to stop these creatures from spreading, scattering their remains into the all-consuming dark."
+      },
+      "quest-21": {
+        "name": "Rally",
+        "description": "It is dangerous to explore the ship alone, and especially dangerous to do so unarmed. You need to regroup and get equipped."
+      },
+      "quest-22": {
+        "name": "Belongings",
+        "description": "“Fifteen men on a dead man’s chest…” You may not be fifteen, but these belongings will not be needed by their owners anymore, right?"
+      },
+      "quest-23": {
+        "name": "Long-Term Investment",
+        "description": "You have been on this ship for a long time and know all the hidden places your colleagues used to stash things they did not want others to know about."
+      },
+      "quest-24": {
+        "name": "Mystery",
+        "description": "Unable to find a single working escape pod, you decide to take one last desperate step: clear the ship of this filth. It is a matter of “us or them.” But where are these monsters coming from? Perhaps the captain has the answer."
+      },
+      "quest-25": {
+        "name": "Heart of the Nightmare",
+        "description": "You cannot find the captain, but you have found his notes. It seems the artifacts found on the planet affected the computer that controls the holographic recreation room for crew not in cryosleep. But holograms cannot come to life, can they?"
+      },
+      "quest-26": {
+        "name": "Software Error",
+        "description": "If the captain’s notes have anything to do with reality, the only place to find answers is the server room. You hope your knowledge is enough to understand the hologram-generation program."
+      },
+      "quest-27": {
+        "name": "Mother Instinct",
+        "description": "After defeating another fiend, you have no time even to catch your breath before a howl reaches you, chilling you to the bone. Fighting your instinct to run from the sound as fast as possible, you realize the only way is through the dark corridors it comes from."
+      },
+      "quest-28": {
+        "name": "Sweet Dreams",
+        "description": "The system diagnostic found many faults, including a failure in the dream-suppression system in the cryosleep pods in the anabiosis bay. After fixing all the errors, you decide to return and check the place where it all began: your cryosleep pod."
+      },
+      "quest-29": {
+        "name": "Epilogue",
+        "description": "As soon as you lie down, you immediately black out. Your awakening is accompanied by a message on the monitor in front of you: “sleep cycle complete.” The nearby chambers are empty, which is strange: they should not have woken before you, and those that are occupied do not respond to manual control. Your relief crew is missing too, which is far from normal procedure. The lack of communication and the frightening grinding behind the wall worry you even more. You must find out what is happening…"
+      }
     }
   }
 }

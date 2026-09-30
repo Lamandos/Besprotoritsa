@@ -428,7 +428,10 @@ class _JournalContents extends StatelessWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.flag_outlined),
-              title: Text(quest),
+              title: Text(_questCardLabel(state, quest)),
+              subtitle: _questCardDescription(state, quest) == null
+                  ? null
+                  : Text(_questCardDescription(state, quest)!),
             ),
       ],
     );

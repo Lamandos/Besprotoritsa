@@ -235,6 +235,10 @@ abstract final class SaveJsonModels {
     'statuses': {
       for (final entry in quests.statuses.entries) entry.key: entry.value.name,
     },
+    'condition_progress': {
+      for (final entry in quests.conditionProgress.entries)
+        entry.key: entry.value,
+    },
   };
 
   static QuestState questsFromJson(Map<String, Object?> json) => QuestState(
@@ -250,6 +254,23 @@ abstract final class SaveJsonModels {
           _asString(entry.value, 'statuses.${entry.key}'),
           'statuses.${entry.key}',
         ),
+    },
+    conditionProgress: {
+      for (final entry
+          in (json['condition_progress'] == null
+                  ? <String, Object?>{}
+                  : _object(json, 'condition_progress'))
+              .entries)
+        entry.key: {
+          for (final value in _asObject(
+            entry.value,
+            'condition_progress.${entry.key}',
+          ).entries)
+            value.key: _asInt(
+              value.value,
+              'condition_progress.${entry.key}.${value.key}',
+            ),
+        },
     },
   );
 

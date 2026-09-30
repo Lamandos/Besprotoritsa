@@ -32,18 +32,17 @@ class _GameBottomSheet extends StatelessWidget {
   );
 }
 
+// This journal is shared at the table, so it only lists public story quests.
 List<String> _activeQuests(GameState state) => [
   for (final questId in state.quests.storyQuestIds)
     if (state.quests.statusOf(questId) == QuestStatus.active) questId,
-  for (final entry in state.quests.personalTasksByPlayer.entries)
-    for (final questId in entry.value)
-      if (state.quests.statusOf(questId) == QuestStatus.active) questId,
 ];
 
 class _PendingDecisionModal extends ConsumerWidget {
-  const _PendingDecisionModal({required this.decision});
+  const _PendingDecisionModal({required this.decision, required this.state});
 
   final PendingDecision decision;
+  final GameState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,7 +54,7 @@ class _PendingDecisionModal extends ConsumerWidget {
           child: AlertDialog(
             title: Text(strings.decisionRequired),
             content: Text(_decisionPrompt(decision, strings)),
-            actions: _decisionActions(ref, decision, strings),
+            actions: _decisionActions(ref, decision, strings, state),
           ),
         ),
       ),
@@ -67,6 +66,7 @@ List<Widget> _decisionActions(
   WidgetRef ref,
   PendingDecision decision,
   AppStrings strings,
+  GameState state,
 ) => switch (decision) {
   AwaitingRerollChoice(
     :final availableRerolls,
@@ -116,7 +116,7 @@ List<Widget> _decisionActions(
             .dispatch(
               ResolvePendingDecisionCommand(EventOptionChoice(option)),
             ),
-        child: Text(option),
+        child: Text(_eventOptionLabel(state, decision.eventId, option)),
       ),
   ],
   AwaitingTerminalPick(:final offeredCards) => [

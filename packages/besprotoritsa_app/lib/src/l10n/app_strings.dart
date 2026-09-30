@@ -27,6 +27,9 @@ class AppStrings {
   String get menuSubtitle => _value('menuSubtitle');
   String get rosterTitle => _value('rosterTitle');
   String get rosterSubtitle => _value('rosterSubtitle');
+  String get mvpContentSet => _value('mvpContentSet');
+  String get fullContentSet => _value('fullContentSet');
+  String get contentSetTitle => _value('contentSetTitle');
   String get startGame => _value('startGame');
   String get scientist => _value('scientist');
   String get guard => _value('guard');
@@ -138,6 +141,9 @@ const Map<String, String> _ruValues = <String, String>{
   'menuSubtitle': 'Локальная игра',
   'rosterTitle': 'Сформируйте отряд',
   'rosterSubtitle': 'Выберите от 2 до 4 персонажей для экспедиции.',
+  'contentSetTitle': 'Набор контента',
+  'mvpContentSet': 'MVP · сценарий',
+  'fullContentSet': 'Полный набор',
   'startGame': 'Начать игру',
   'scientist': 'Учёная',
   'guard': 'Охранник',

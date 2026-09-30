@@ -43,16 +43,16 @@ const storyLocationIds = <String>{
   'anabiosis',
   'morgue',
   'engineering-control-post',
-  'dining-room',
+  'dining-hall',
   'reactor',
-  'warehouse-compartment',
-  'management-compartment',
-  'medical-compartment',
-  'cabins',
+  'storage',
+  'flight-control',
+  'medical-bay',
+  'crew-quarters',
   'main-computer',
   'armory',
   'laboratory',
-  'rescue-capsules',
+  'escape-pods',
 };
 
 /// Builds a reproducible, physically connected ship board from a numeric seed.
@@ -68,40 +68,145 @@ final class ShipBoardGenerator {
     final airlocks = List<String>.generate(4, (index) => 'airlock-${index + 1}')
       ..shuffle(random);
     locations.addAll(airlocks);
+    return _generate(locations, random: random);
+  }
 
+  /// Builds the complete physical tile inventory recorded in the full set.
+  ShipBoard generateFullSet(
+    int seed, {
+    required Iterable<String> compartmentIds,
+    required Iterable<String> airlockIds,
+    required Iterable<VentColor> corridorVentColors,
+  }) {
+    final compartments = compartmentIds.toSet();
+    final expectedCompartments = storyLocationIds.difference({'anabiosis'});
+    if (compartments.length != expectedCompartments.length ||
+        !compartments.containsAll(expectedCompartments)) {
+      throw ArgumentError.value(
+        compartmentIds,
+        'compartmentIds',
+        'Must contain every catalog compartment exactly once.',
+      );
+    }
+    final airlocks = airlockIds.toList();
+    if (airlocks.length != 4 || airlocks.toSet().length != 4) {
+      throw ArgumentError.value(
+        airlockIds,
+        'airlockIds',
+        'The field inventory contains four unique airlock tiles.',
+      );
+    }
+    final vents = corridorVentColors.toList();
+    if (vents.length != 18 ||
+        VentColor.values
+            .where((color) => vents.where((vent) => vent == color).length != 6)
+            .isNotEmpty ||
+        vents.contains(VentColor.none) == false) {
+      throw ArgumentError.value(
+        corridorVentColors,
+        'corridorVentColors',
+        'The field inventory contains six corridors of each vent color.',
+      );
+    }
+    final random = Random(seed);
+    final locations = <String>[...compartments, ...airlocks]
+      ..sort()
+      ..shuffle(random);
+    vents.shuffle(random);
+    return _generate(
+      locations,
+      random: random,
+      corridorVentColors: vents,
+      addPhysicalCorridorCopies: true,
+    );
+  }
+
+  ShipBoard _generate(
+    List<String> locations, {
+    required Random random,
+    List<VentColor>? corridorVentColors,
+    bool addPhysicalCorridorCopies = false,
+  }) {
     final tiles = <HexTile>[
       _room('anabiosis', const HexCoord(0, 0), HexTileType.start, const {}),
     ];
     var room = tiles.single;
     var direction = HexEdge.values[random.nextInt(HexEdge.values.length)];
-    var nextDirection = _turnFrom(direction, random);
+    var nextDirection = addPhysicalCorridorCopies
+        ? _turnSideways(direction, random)
+        : _turnFrom(direction, random);
+    var corridorIndex = 0;
+    final secondBend = locations.length ~/ 2;
     for (var index = 0; index < locations.length; index++) {
+      if (addPhysicalCorridorCopies && index == secondBend) {
+        nextDirection = _turnSideways(direction, random);
+      }
       final corridorCoord = room.coord.neighbor(direction);
       final nextRoomCoord = corridorCoord.neighbor(nextDirection);
       final corridor = _corridor(
-        index,
+        corridorIndex++,
         corridorCoord,
         incoming: direction.opposite,
         outgoing: nextDirection,
+        ventColor: corridorVentColors == null
+            ? null
+            : corridorVentColors[corridorIndex - 1],
       );
       final type = locations[index].startsWith('airlock-')
           ? HexTileType.airlock
           : HexTileType.compartment;
+      final hasAlternateCorridor =
+          addPhysicalCorridorCopies && nextDirection != direction;
+      final nextRoomExits = <HexEdge>{
+        nextDirection.opposite,
+        if (hasAlternateCorridor) direction.opposite,
+      };
       final nextRoom = _room(
         locations[index],
         nextRoomCoord,
         type,
-        {nextDirection.opposite},
+        nextRoomExits,
       );
       tiles[tiles.indexOf(room)] = _withExit(room, direction);
+      if (hasAlternateCorridor) {
+        final roomIndex = tiles.indexWhere((tile) => tile.id == room.id);
+        tiles[roomIndex] = _withExit(tiles[roomIndex], nextDirection);
+      }
       tiles.addAll([corridor, nextRoom]);
+      if (hasAlternateCorridor) {
+        final alternate = room.coord.neighbor(nextDirection);
+        tiles.add(
+          _corridor(
+            corridorIndex++,
+            alternate,
+            incoming: nextDirection.opposite,
+            outgoing: direction,
+            ventColor: corridorVentColors![corridorIndex - 1],
+          ),
+        );
+      }
       room = nextRoom;
       direction = nextDirection;
       // After the initial turn, the chain expands in one direction.  This
       // prevents unrelated hex sides from touching and creating false ports.
       nextDirection = direction;
     }
+    if (corridorVentColors != null &&
+        corridorIndex != corridorVentColors.length) {
+      throw StateError(
+        'Generated $corridorIndex of ${corridorVentColors.length} corridors.',
+      );
+    }
     return ShipBoard(tiles);
+  }
+
+  HexEdge _turnSideways(HexEdge incoming, Random random) {
+    final options =
+        HexEdge.values
+            .where((edge) => edge != incoming && edge != incoming.opposite)
+            .toList()
+          ..shuffle(random);
+    return options.first;
   }
 
   HexEdge _turnFrom(HexEdge incoming, Random random) {
@@ -116,6 +221,7 @@ final class ShipBoardGenerator {
     HexCoord coord, {
     required HexEdge incoming,
     required HexEdge outgoing,
+    VentColor? ventColor,
   }) => HexTile(
     id: 'corridor-${index + 1}',
     coord: coord,
@@ -123,11 +229,13 @@ final class ShipBoardGenerator {
     opened: true,
     exits: {incoming, outgoing},
     hasTerminal: false,
-    ventColor: switch (index % 6) {
-      2 || 3 => VentColor.green,
-      4 => VentColor.red,
-      _ => VentColor.none,
-    },
+    ventColor:
+        ventColor ??
+        switch (index % 6) {
+          2 || 3 => VentColor.green,
+          4 => VentColor.red,
+          _ => VentColor.none,
+        },
   );
 }
 

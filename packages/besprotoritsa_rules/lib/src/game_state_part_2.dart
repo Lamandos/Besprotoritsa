@@ -181,15 +181,22 @@ abstract final class DeckRules {
       }
     }
     final cards = List<CardId>.of(prepared.drawPile);
-    if (!cards.remove(cardId)) {
+    if (cards.remove(cardId)) {
+      return DeckDraw(
+        cards: [cardId],
+        deck: DeckState(
+          drawPile: _shuffled(cards, seed),
+          discardPile: prepared.discardPile,
+        ),
+      );
+    }
+    final discard = List<CardId>.of(prepared.discardPile);
+    if (!discard.remove(cardId)) {
       return DeckDraw(cards: const [], deck: prepared);
     }
     return DeckDraw(
       cards: [cardId],
-      deck: DeckState(
-        drawPile: _shuffled(cards, seed),
-        discardPile: prepared.discardPile,
-      ),
+      deck: DeckState(drawPile: prepared.drawPile, discardPile: discard),
     );
   }
 

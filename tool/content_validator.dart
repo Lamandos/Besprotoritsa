@@ -55,19 +55,130 @@ Future<ContentValidationReport> validateContent({
 }) async {
   final issues = <String>[];
   final catalog = await _loadCatalog(contentDirectory, issues);
-  final selected = await _loadMvp(contentDirectory, contentSetId, issues);
+  final selected = switch (contentSetId) {
+    'mvp' => await _loadMvp(contentDirectory, issues),
+    'full' => catalog,
+    _ => _loadUnsupported(contentDirectory, contentSetId, issues),
+  };
   _validateMvpCharacterFiles(contentDirectory, contentSetId, issues);
-  final allRecords = [...catalog, ...selected];
+  final allRecords = contentSetId == 'full'
+      ? catalog
+      : [...catalog, ...selected];
+  if (contentSetId == 'full') {
+    _validatePhysicalHexInventory(catalog, issues);
+  }
   _validateSchemas(allRecords, contentDirectory, issues);
   _validateMetadata(allRecords, issues);
   _validateRuntimeCompatibility(allRecords, issues);
   _validateUniqueIds(allRecords, issues);
   _validateEffects(allRecords, issues);
   await _validateLocalization(allRecords, contentDirectory, issues);
-  _validateReferences(catalog, selected, issues);
+  _validateReferences(
+    catalog,
+    selected,
+    issues,
+    validateFullCharacterEquipment: contentSetId == 'full',
+  );
   await _validateMvpLayout(contentDirectory, selected, issues);
+  if (contentSetId == 'mvp') {
+    await _validateMvpDecks(contentDirectory, selected, issues);
+  }
   await _validateCampaign(catalog, contentDirectory, issues);
   return ContentValidationReport(allRecords.length, List.unmodifiable(issues));
+}
+
+void _validatePhysicalHexInventory(List<_Record> catalog, List<String> issues) {
+  final hexes = catalog.where((record) => record.schema == 'hex').toList();
+  final copiesByType = <String, int>{};
+  final corridorCopiesByVent = <String, int>{};
+  for (final record in hexes) {
+    final copies = record.value['copies'];
+    if (copies is! int || copies < 1) {
+      issues.add(
+        '${record.label}.copies: full field tile must declare copies.',
+      );
+      continue;
+    }
+    final type = record.value['type'];
+    if (type is! String) continue;
+    copiesByType.update(
+      type,
+      (count) => count + copies,
+      ifAbsent: () => copies,
+    );
+    if (type == 'corridor') {
+      final ventColor = record.value['ventColor'];
+      if (ventColor is String) {
+        corridorCopiesByVent.update(
+          ventColor,
+          (count) => count + copies,
+          ifAbsent: () => copies,
+        );
+      }
+    }
+  }
+  const expected = <String, int>{
+    'start': 1,
+    'compartment': 12,
+    'airlock': 4,
+    'corridor': 18,
+  };
+  for (final entry in expected.entries) {
+    if (copiesByType[entry.key] != entry.value) {
+      issues.add(
+        'content/hexes.json [id=<physical-inventory>]: expected '
+        '${entry.value} ${entry.key} tiles, '
+        'found ${copiesByType[entry.key] ?? 0}',
+      );
+    }
+  }
+  for (final color in const ['none', 'green', 'red']) {
+    if (corridorCopiesByVent[color] != 6) {
+      issues.add(
+        'content/hexes.json [id=<physical-inventory>]: expected six '
+        '$color corridors, found ${corridorCopiesByVent[color] ?? 0}',
+      );
+    }
+  }
+}
+
+Future<void> _validateMvpDecks(
+  Directory content,
+  List<_Record> selected,
+  List<String> issues,
+) async {
+  final file = File('${content.path}/mvp/decks.json');
+  final decks = await _read(file, issues);
+  if (decks == null) return;
+  const sources = <String, String>{
+    'conditions': 'condition',
+    'events': 'event',
+    'storyQuests': 'quest',
+  };
+  for (final entry in sources.entries) {
+    final rawIds = decks[entry.key];
+    if (rawIds is! List) {
+      issues.add('${file.path}.${entry.key}: expected an array of ids');
+      continue;
+    }
+    final available = selected
+        .where((record) => record.schema == entry.value)
+        .map((record) => record.id)
+        .whereType<String>()
+        .toSet();
+    final used = <String>{};
+    for (var index = 0; index < rawIds.length; index++) {
+      final id = rawIds[index];
+      if (id is! String || !available.contains(id)) {
+        issues.add(
+          '${file.path}.${entry.key}[$index]: unknown MVP '
+          '${entry.value} id "$id"',
+        );
+      } else if (!used.add(id)) {
+        issues.add('${file.path}.${entry.key}[$index]: duplicate id "$id"');
+      }
+    }
+  }
 }
 
 void _validateMvpCharacterFiles(
@@ -146,15 +257,20 @@ String _catalogNamespace(String schema, Map<String, Object?> value) {
   return 'catalog:$schema';
 }
 
-Future<List<_Record>> _loadMvp(
+List<_Record> _loadUnsupported(
   Directory content,
   String id,
   List<String> issues,
+) {
+  issues.add('${content.path} [id=$id]: unsupported contentSetId');
+  return const [];
+}
+
+Future<List<_Record>> _loadMvp(
+  Directory content,
+  List<String> issues,
 ) async {
-  if (id != 'mvp') {
-    issues.add('${content.path} [id=$id]: unsupported contentSetId');
-    return const [];
-  }
+  const id = 'mvp';
   final root = Directory('${content.path}/mvp');
   if (!root.existsSync()) {
     issues.add('${root.path} [id=$id]: selected content set is missing');
@@ -240,7 +356,7 @@ void _validateSchemas(
 }
 
 void _validateMetadata(List<_Record> records, List<String> issues) {
-  const allowedSources = {'items', 'supplies', 'specialItems'};
+  const allowedSources = {'items', 'supplies', 'starterItems', 'specialItems'};
   for (final record in records) {
     for (final field in const ['importBatch', 'copies']) {
       final value = record.value[field];
@@ -261,10 +377,12 @@ void _validateMetadata(List<_Record> records, List<String> issues) {
     if (record.namespace == 'catalog:item' &&
         source != null &&
         source != 'items' &&
-        source != 'supplies') {
+        source != 'supplies' &&
+        source != 'starterItems') {
       issues.add(
-        '${record.label}.sourceDeck: catalog item must use "items" or '
-        '"supplies"; "specialItems" records belong in special_items.json',
+        '${record.label}.sourceDeck: catalog item must use "items", '
+        '"supplies" or "starterItems"; "specialItems" records belong in '
+        'special_items.json',
       );
     }
     if (record.schema == 'supply' && source != null && source != 'supplies') {
@@ -441,12 +559,17 @@ Future<void> _validateLocalization(
     File('${content.path}/i18n/ru.json'),
     issues,
   );
+  final englishLocale = await _read(
+    File('${content.path}/i18n/en.json'),
+    issues,
+  );
   final mvpLocale = await _read(
     File('${content.path}/mvp/i18n_ru.json'),
     issues,
   );
   final translations = <String, Set<String>>{
     'catalog': _flattenTranslations(catalogLocale ?? {}),
+    'english': _flattenTranslations(englishLocale ?? {}),
     'mvp': _flattenTranslations(mvpLocale ?? {}),
   };
   for (final record in records) {
@@ -460,14 +583,47 @@ Future<void> _validateLocalization(
       }
     });
   }
+  final auditFile = File('${content.path}/review_status.json');
+  final audit = await _read(auditFile, issues);
+  final reviews = audit?['reviews'];
+  if (reviews is! Map<String, Object?>) return;
+  for (final record in records.where(
+    (record) => record.namespace.startsWith('catalog:') && record.id != null,
+  )) {
+    final sourceDeck = record.value['sourceDeck'];
+    final reviewPrefix = switch (record.schema) {
+      'item' when sourceDeck == 'starterItems' => 'starter-item',
+      'item' => 'item',
+      'special_item' => 'special_item',
+      final schema => schema,
+    };
+    final review = reviews['$reviewPrefix.${record.id}'];
+    if (review is! Map<String, Object?> ||
+        review['status'] != 'human-card-verified') {
+      continue;
+    }
+    _visit(record.value, (key, value, path) {
+      if (!key.endsWith('Key') || value is! String) return;
+      if (!(translations['english']?.contains(value) ?? false)) {
+        issues.add(
+          '${record.label}.$path: missing en i18n key "$value" for '
+          'human-card-verified record',
+        );
+      }
+    });
+  }
 }
 
 void _validateReferences(
   List<_Record> catalog,
   List<_Record> selected,
-  List<String> issues,
-) {
-  for (final group in [catalog, selected]) {
+  List<String> issues, {
+  bool validateFullCharacterEquipment = false,
+}) {
+  final groups = validateFullCharacterEquipment
+      ? [selected]
+      : [catalog, selected];
+  for (final group in groups) {
     final prefix = group.isNotEmpty && group.first.namespace.startsWith('mvp:')
         ? 'mvp'
         : 'catalog';
@@ -486,7 +642,11 @@ void _validateReferences(
     };
     for (final record in group) {
       if (record.schema == 'quest') {
-        for (final field in const ['nextQuestIds', 'prerequisiteQuestIds']) {
+        for (final field in const [
+          'nextQuestIds',
+          'discardQuestIds',
+          'prerequisiteQuestIds',
+        ]) {
           final values = record.value[field];
           if (values is List) {
             for (final target in values.whereType<String>()) {
@@ -502,7 +662,9 @@ void _validateReferences(
       }
       if (record.schema == 'quest' || record.schema == 'event') {
         _visit(record.value, (key, value, path) {
-          if ((key == 'targetLocation' || key == 'locationId') &&
+          if ((key == 'targetLocation' ||
+                  key == 'locationId' ||
+                  key == 'spawnLocationId') &&
               value is String &&
               !hexIds.contains(value)) {
             issues.add(
@@ -511,7 +673,7 @@ void _validateReferences(
             );
           }
           if (record.schema == 'quest' &&
-              key == 'monsterId' &&
+              (key == 'monsterId' || key == 'spawnMonsterId') &&
               value is String &&
               !monsterIds.contains(value)) {
             issues.add(
@@ -545,6 +707,20 @@ void _validateReferences(
           }
         }
       }
+      if (validateFullCharacterEquipment && record.schema == 'character') {
+        final starts = record.value['startItems'];
+        if (starts is List) {
+          for (var index = 0; index < starts.length; index++) {
+            final id = starts[index];
+            if (id is String && !itemIds.contains(id)) {
+              issues.add(
+                '${record.label}.startItems[$index]: card "$id" is '
+                'unavailable in full',
+              );
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -554,6 +730,9 @@ Future<void> _validateMvpLayout(
   List<_Record> selected,
   List<String> issues,
 ) async {
+  if (selected.isNotEmpty && !selected.first.namespace.startsWith('mvp:')) {
+    return;
+  }
   final file = File('${content.path}/mvp/layout.json');
   final layout = await _read(file, issues);
   if (layout == null) return;
@@ -716,7 +895,10 @@ Future<void> _validateMvpLayout(
       );
     }
     _visit(quest.value, (key, value, path) {
-      if ((key == 'targetLocation' || key == 'locationId') && value is String) {
+      if ((key == 'targetLocation' ||
+              key == 'locationId' ||
+              key == 'spawnLocationId') &&
+          value is String) {
         requiredQuestLocations.putIfAbsent(
           value,
           () => '${quest.label}.$path',

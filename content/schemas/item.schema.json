@@ -7,7 +7,7 @@
   "required": ["id", "category", "slots", "cost", "stats", "nameKey", "descKey"],
   "properties": {
     "id": { "$ref": "#/$defs/id" },
-    "category": { "enum": ["weapon", "armor", "clothing", "robot", "modification"] },
+    "category": { "enum": ["weapon", "armor", "clothing", "robot", "modification", "supply"] },
     "slots": { "type": "array", "uniqueItems": true, "items": { "enum": ["weapon", "armor", "clothing", "robot", "modification"] } },
     "cost": { "$ref": "#/$defs/nonNegativeInteger" },
     "stats": {
@@ -27,7 +27,7 @@
     "range": { "$ref": "#/$defs/nonNegativeInteger" },
     "copies": { "type": "integer", "minimum": 1 },
     "importBatch": { "type": "integer", "minimum": 1 },
-    "sourceDeck": { "enum": ["items", "supplies", "specialItems"] },
+    "sourceDeck": { "enum": ["items", "supplies", "starterItems"] },
     "behaviorId": { "$ref": "#/$defs/behaviorId" },
     "behaviorIds": {
       "type": "array",

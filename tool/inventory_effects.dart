@@ -19,6 +19,7 @@ Future<void> main() async {
       'sourceTextByPage': sourceTextByPage,
       'deckCardCounts': <String, int>{
         'items': 42,
+        'starterItems': 8,
         'supplies': 64,
         'specialItems': 7,
         'monsters': 48,
@@ -69,6 +70,7 @@ Future<void> main() async {
 
 const _sources = <Map<String, Object>>[
   {'deck': 'items', 'file': 'materials/колода предметов.pdf', 'pages': 7},
+  {'deck': 'starterItems', 'file': 'materials/персонажи.pdf', 'pages': 6},
   {'deck': 'supplies', 'file': 'materials/колода припасов.pdf', 'pages': 9},
   {'deck': 'specialItems', 'file': 'materials/особые предметы.pdf', 'pages': 2},
   {'deck': 'monsters', 'file': 'materials/монстры.pdf', 'pages': 10},
@@ -180,6 +182,13 @@ final _behaviors = <Map<String, Object>>[
     hooks: ['onRoll'],
   ),
   _behavior(
+    'pistol_attack_reroll',
+    'diceModifier',
+    'один переброс одного кубика за атаку',
+    ['Пистолет'],
+    hooks: ['onRoll'],
+  ),
+  _behavior(
     'dice.reroll.anyCountPerAttack',
     'diceModifier',
     'один переброс любого количества кубиков за атаку',
@@ -220,6 +229,13 @@ final _behaviors = <Map<String, Object>>[
     'пара одинаковых значений добавляет 1 попадание',
     ['Экзо-перчатки'],
     hooks: ['onHit'],
+  ),
+  _behavior(
+    'gu4_rd_pre_attack_roll',
+    'preAttackDamage',
+    'перед атакой бросить 1 кубик; при успехе нанести врагу 1 урон',
+    ['GU4-RD'],
+    hooks: ['onRoll'],
   ),
   _behavior(
     'combat.addHit',
@@ -339,6 +355,12 @@ final _behaviors = <Map<String, Object>>[
     ['Старый плащ'],
   ),
   _behavior(
+    'health.restorePerCredit',
+    'health',
+    'восстановить 1 здоровье за каждый потраченный кредит себе или игроку в своей/соседней клетке',
+    ['Саквояж фельдшера'],
+  ),
+  _behavior(
     'stat.modify',
     'stat',
     '+/- к силе, защите, науке, ремонту, ловкости или выносливости',
@@ -406,6 +428,12 @@ final _behaviors = <Map<String, Object>>[
   _behavior('economy.sell', 'economy', 'продать предметы за полную стоимость', [
     'События: терминал снабжения, торговый бот',
   ]),
+  _behavior(
+    'economy.purchaseDiscount.2',
+    'economy',
+    'скидка 2 кредита при любой покупке',
+    ['Метка контрабандиста'],
+  ),
   _behavior('equipment.extraWeaponSlot', 'equipment', 'можно носить 2 оружия', [
     'Разгрузочный жилет',
   ]),
@@ -621,11 +649,66 @@ Map<String, Object> _card(
 
 final _cards = <Map<String, Object>>[
   ..._itemCards,
+  ..._starterItemCards,
   ..._supplyCards,
   ..._specialCards,
   ..._monsterCards,
   ..._conditionCards,
   ..._eventCards,
+];
+
+final _starterItemCards = <Map<String, Object>>[
+  _card(
+    'starterItems',
+    'Счастливые носки',
+    1,
+    '+1 к выносливости; +1 к ловкости.',
+    [],
+  ),
+  _card(
+    'starterItems',
+    'Скафандр МК2',
+    1,
+    '+1 к защите; +1 к выносливости; перемещение по обшивке между шлюзами.',
+    ['map.moveHullBetweenAirlocks'],
+  ),
+  _card(
+    'starterItems',
+    'GU4-RD',
+    1,
+    'Перед атакой бросить 1 кубик; при успехе нанести врагу 1 урон.',
+    ['gu4_rd_pre_attack_roll'],
+  ),
+  _card(
+    'starterItems',
+    'Саквояж фельдшера',
+    1,
+    'Потратить действие и кредиты: вылечить себя или игрока в своей/соседней клетке; 1 кредит за 1 здоровье.',
+    ['health.restorePerCredit'],
+  ),
+  _card('starterItems', 'Каска', 1, '+1 к защите; +1 к ремонту.', []),
+  _card(
+    'starterItems',
+    'Рюкзак',
+    1,
+    'Позволяет носить на 2 предмета больше.',
+    ['equipment.extraBackpackCapacity'],
+  ),
+  _card(
+    'starterItems',
+    'Пистолет',
+    1,
+    '+2 к силе в бою; один переброс одного кубика за атаку.',
+    ['pistol_attack_reroll'],
+  ),
+  _card(
+    'starterItems',
+    'Метка контрабандиста',
+    1,
+    'Скидка 2 кредита при покупке; обмен одним предметом с игроком '
+        'в любой части карты.',
+    ['economy.purchaseDiscount.2', 'map.remoteExchange'],
+  ),
 ];
 
 final _itemCards = <Map<String, Object>>[
