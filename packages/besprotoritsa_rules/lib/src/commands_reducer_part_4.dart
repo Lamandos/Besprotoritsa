@@ -232,14 +232,39 @@ Iterable<HexCoord> _monsterPathNeighbors(
   }
 }
 
-/// Places a Boil and immediately checks whether it detonates under a hero.
-GameState spawnBoil(GameState state, BoilToken boil) => resolveColocation(
-  _copyState(
+/// Places a Boil and immediately resolves only that token
+/// if a hero is below it.
+GameState spawnBoil(GameState state, BoilToken boil) {
+  final spawned = _copyState(
     state,
     boils: [...state.boils, boil],
     logEntry: 'boil-spawn:${boil.instanceId}:${boil.coord}',
-  ),
-);
+  );
+  final occupants = spawned.players
+      .where((player) => player.alive && player.coord == boil.coord)
+      .toList();
+  if (occupants.isEmpty) return spawned;
+
+  final damage = <IncomingDamage>[
+    for (final player in occupants)
+      if (!_ignoresBoils(spawned, player))
+        IncomingDamage(
+          targetPlayerId: player.id,
+          amount: 1,
+          agilityDice: _statDice(player, spawned, StatType.agility),
+          source: DamageSource.boil,
+        ),
+  ];
+  return _startNextIncomingDamage(
+    _copyState(
+      spawned,
+      boils: spawned.boils.where(
+        (current) => current.instanceId != boil.instanceId,
+      ),
+      pendingDamage: [...spawned.pendingDamage, ...damage],
+    ),
+  );
+}
 
 /// Places a monster and immediately resolves attacks in its arrival cell.
 GameState spawnMonster(GameState state, MonsterInstance monster) =>

@@ -283,6 +283,25 @@ void main() {
       expect(resolved.state.players.single.conditions, isEmpty);
     });
 
+    test('a spawned Boil does not re-trigger monsters in other cells', () {
+      final spawned = spawnBoil(
+        _state(
+          players: [
+            _player(),
+            _player(id: 'boris', coord: const HexCoord(0, 1)),
+          ],
+          monster: _monster(coord: const HexCoord(0, 1), attack: 2),
+        ),
+        const BoilToken(instanceId: 'boil-1', coord: HexCoord(0, 0)),
+      );
+
+      final dodge = spawned.pendingDecision! as AwaitingDodge;
+      expect(dodge.source, DamageSource.boil);
+      expect(dodge.targetPlayerId, 'ada');
+      expect(spawned.pendingDamage, isEmpty);
+      expect(spawned.players.last.damage, 0);
+    });
+
     test('plague doctor mask cancels Boil damage but consumes the Boil', () {
       final spawned = spawnBoil(
         _state(
