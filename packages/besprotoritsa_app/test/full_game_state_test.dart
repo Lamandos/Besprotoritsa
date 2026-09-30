@@ -229,10 +229,12 @@ void main() {
   });
 }
 
-String _tileSignature(HexTile tile) =>
-    '${tile.id}:${tile.coord.q},${tile.coord.r}:${tile.type.name}:'
-    '${tile.opened}:${(tile.exits.map((edge) => edge.index).toList()..sort()).join(',')}:'
-    '${tile.hasTerminal}:${tile.ventColor.name}';
+String _tileSignature(HexTile tile) {
+  final exits = tile.exits.map((edge) => edge.index).toList()..sort();
+  return '${tile.id}:${tile.coord.q},${tile.coord.r}:${tile.type.name}:'
+      '${tile.opened}:${exits.join(',')}:${tile.hasTerminal}:'
+      '${tile.ventColor.name}';
+}
 
 List<String> _startingCards(List<String> backpack, EquippedGear equipped) => [
   ...backpack,
@@ -275,8 +277,9 @@ void _expectFullBoard(GameState state) {
       if (next == null) continue;
       final currentTile = state.tileAt(current)!;
       expect(currentTile.hasExit(edge), next.hasExit(edge.opposite));
-      if (currentTile.hasExit(edge) && visited.add(nextCoord))
+      if (currentTile.hasExit(edge) && visited.add(nextCoord)) {
         pending.add(nextCoord);
+      }
     }
   }
   expect(visited, hasLength(35));
