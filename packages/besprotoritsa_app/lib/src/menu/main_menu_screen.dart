@@ -162,7 +162,8 @@ class _MenuContents extends StatelessWidget {
               context,
               GameSessionScreen(
                 initialState: createMvpGameState(),
-                storage: storage,
+                // The short demo must never replace an in-progress campaign.
+                storage: InMemoryGameStorage(),
               ),
             ),
             icon: const Icon(Icons.school_outlined),
