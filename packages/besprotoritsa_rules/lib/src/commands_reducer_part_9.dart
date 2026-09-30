@@ -88,6 +88,7 @@ PlayerState _copyPlayer(
   int? weaponModifier,
   int? nextTurnActionDelta,
   int? monsterDamageImmuneThroughRound,
+  int? monsterDefenseBonusRound,
 }) => PlayerState(
   id: player.id,
   characterId: player.characterId,
@@ -107,6 +108,8 @@ PlayerState _copyPlayer(
   nextTurnActionDelta: nextTurnActionDelta ?? player.nextTurnActionDelta,
   monsterDamageImmuneThroughRound:
       monsterDamageImmuneThroughRound ?? player.monsterDamageImmuneThroughRound,
+  monsterDefenseBonusRound:
+      monsterDefenseBonusRound ?? player.monsterDefenseBonusRound,
 );
 
 MonsterInstance _copyMonster(

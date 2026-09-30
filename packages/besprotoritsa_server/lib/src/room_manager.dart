@@ -1796,6 +1796,8 @@ Map<String, Object?> _projectedPlayerToJson(ProjectedPlayerState player) =>
       'alive': player.alive,
       'actionPoints': player.actionPoints,
       'nextTurnActionDelta': player.nextTurnActionDelta,
+      'monsterDamageImmuneThroughRound': player.monsterDamageImmuneThroughRound,
+      'monsterDefenseBonusRound': player.monsterDefenseBonusRound,
       'isViewer': player.isViewer,
       'backpack': player.backpack,
       'carriedMods': player.carriedMods,

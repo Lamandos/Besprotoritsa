@@ -431,6 +431,9 @@ String _eventOptionLabel(GameState state, String? eventId, String option) {
   if (sector.length == 3 && sector.first == 'move') {
     return 'Перейти в сектор ${sector[1]}, ${sector[2]}';
   }
+  if (sector.length == 4 && sector.first == 'move_spawn') {
+    return 'Перейти в сектор ${sector[2]}, ${sector[3]} и вступить в бой';
+  }
   if (sector.length == 3 && sector.first == 'reveal') {
     return 'Открыть фрагмент ${sector[1]}, ${sector[2]}';
   }

@@ -65,6 +65,7 @@ abstract final class SaveJsonModels {
     'next_turn_action_delta': player.nextTurnActionDelta,
     'monster_damage_immune_through_round':
         player.monsterDamageImmuneThroughRound,
+    'monster_defense_bonus_round': player.monsterDefenseBonusRound,
   };
   static PlayerState playerFromJson(Map<String, Object?> json) {
     final equipped = _object(json, 'equipped');
@@ -97,6 +98,10 @@ abstract final class SaveJsonModels {
       monsterDamageImmuneThroughRound: _optionalInt(
         json,
         'monster_damage_immune_through_round',
+      ),
+      monsterDefenseBonusRound: _optionalInt(
+        json,
+        'monster_defense_bonus_round',
       ),
     );
   }

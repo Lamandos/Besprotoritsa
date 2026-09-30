@@ -1114,6 +1114,178 @@ void main() {
     expect(state.players.single.nextTurnActionDelta, 0);
   });
 
+  test('filtered implant draws go to carried modifications', () {
+    final definition = CardDefinition(
+      id: 'implant',
+      type: ItemType.modification,
+      slots: const [],
+      cost: 1,
+      staticEffects: CardStaticEffects(const {}),
+    );
+    var state = _mvpState(
+      eventId: 'implant-event',
+      playerBackpack: const ['supply-a', 'supply-b', 'supply-c'],
+      cardDefinitions: {'implant': definition},
+      additionalDecks: {
+        'items': DeckState(drawPile: const ['implant']),
+      },
+      eventDefinitions: {
+        'implant-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {
+                  'type': 'draw_filtered',
+                  'deckId': 'items',
+                  'filterType': 'modification',
+                },
+              ],
+              'failureEffects': [
+                {
+                  'type': 'draw_filtered',
+                  'deckId': 'items',
+                  'filterType': 'modification',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.backpack, ['supply-a', 'supply-b', 'supply-c']);
+    expect(state.players.single.carriedMods, ['implant']);
+    state = step(
+      state,
+      const ImplantModificationCommand('implant'),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.players.single.implanted, ['implant']);
+  });
+
+  test('move and fight event failure spawns a monster in the destination', () {
+    var state = _mvpState(
+      eventId: 'pack-event',
+      corridorOpened: true,
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 1,
+          'movement': 0,
+          'features': <String>[],
+        },
+      },
+      eventDefinitions: {
+        'pack-event': {
+          'id': 'pack-event',
+          'options': [
+            {
+              'skillCheck': {'skill': 'endurance', 'difficulty': 1},
+              'successEffects': [
+                {'type': 'move_to_neighbor'},
+              ],
+              'failureEffects': [
+                {'type': 'move_to_neighbor_and_spawn_monster'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([1]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+    final options = (state.pendingDecision! as AwaitingEventOption).options;
+    expect(options, contains('move_spawn:1:0:1'));
+    final moveResult = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        EventOptionChoice('move_spawn:1:0:1'),
+      ),
+      FixedDiceRoller([]),
+    );
+    state = moveResult.state;
+
+    expect(state.players.single.coord, const HexCoord(0, 1));
+    expect(state.monsters.single.coord, const HexCoord(0, 1));
+    expect(state.monsters.single.monsterId, 'ghoul');
+    expect(state.pendingDecision, isA<AwaitingDodge>());
+  });
+
+  test(
+    'next round defense bonus is scheduled and applied to monster damage',
+    () {
+      final armor = CardDefinition(
+        id: 'armor',
+        type: ItemType.armor,
+        slots: const [],
+        cost: 1,
+        staticEffects: CardStaticEffects(const {CardStat.defense: 1}),
+      );
+      var state = _mvpState(
+        eventId: 'defense-event',
+        cardDefinitions: {'armor': armor},
+        playerEquipment: const EquippedGear(armor: 'armor'),
+        additionalDecks: {
+          'monsters': DeckState(drawPile: const ['ghoul']),
+        },
+        eventDefinitions: {
+          'defense-event': {
+            'id': 'defense-event',
+            'options': [
+              {
+                'skillCheck': null,
+                'autoOutcome': 'success',
+                'successEffects': [
+                  {'type': 'heal', 'amount': 3},
+                  {'type': 'monster_defense_bonus_next_round'},
+                ],
+                'failureEffects': [
+                  {'type': 'monster_defense_bonus_next_round'},
+                ],
+              },
+            ],
+          },
+        },
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 2,
+            'defense': 0,
+            'attack': 2,
+            'movement': 0,
+            'features': <String>[],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([]),
+      ).state;
+      expect(state.players.single.monsterDefenseBonusRound, state.round);
+    },
+  );
+
   test('event monster placement resolves after choosing a neighbor sector', () {
     var state = _mvpState(
       eventId: 'placement-event',
@@ -2188,6 +2360,7 @@ GameState _mvpState({
   Map<String, Map<String, Object?>> eventDefinitions = const {},
   HexCoord playerCoord = const HexCoord(0, 0),
   Iterable<CardId> playerBackpack = const [],
+  EquippedGear playerEquipment = const EquippedGear(),
   List<String> storyQuestIds = const ['chapter-1-awakening'],
   Map<PlayerId, Iterable<String>> personalTasksByPlayer = const {},
   Map<String, Map<String, int>> conditionProgress = const {},
@@ -2245,7 +2418,7 @@ GameState _mvpState({
         credits: initialCredits,
         health: playerHealth,
         backpack: playerBackpack,
-        equipped: const EquippedGear(),
+        equipped: playerEquipment,
         carriedMods: const [],
         implanted: const [],
         conditions: const [],

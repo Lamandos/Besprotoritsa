@@ -576,7 +576,7 @@
           ],
           "failureEffects": [
             {
-              "type": "move_to_neighbor"
+              "type": "move_to_neighbor_and_spawn_monster"
             }
           ]
         }
@@ -1676,6 +1676,9 @@
             {
               "type": "heal",
               "amount": 3
+            },
+            {
+              "type": "monster_defense_bonus_next_round"
             }
           ],
           "failureEffects": [
@@ -2289,7 +2292,8 @@
           ],
           "failureEffects": [
             {
-              "type": "no_effect"
+              "type": "next_turn_action_delta",
+              "delta": -1
             }
           ]
         },
@@ -2413,6 +2417,10 @@
             {
               "type": "damage",
               "amount": 2
+            },
+            {
+              "type": "next_turn_action_delta",
+              "delta": -1
             }
           ],
           "successEffects": [

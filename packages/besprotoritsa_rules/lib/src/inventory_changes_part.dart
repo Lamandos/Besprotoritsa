@@ -254,5 +254,6 @@ abstract final class _InventoryChanges {
     actionPoints: player.actionPoints,
     nextTurnActionDelta: player.nextTurnActionDelta,
     monsterDamageImmuneThroughRound: player.monsterDamageImmuneThroughRound,
+    monsterDefenseBonusRound: player.monsterDefenseBonusRound,
   );
 }

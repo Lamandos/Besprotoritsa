@@ -217,6 +217,7 @@ final class PlayerState {
     this.actionPoints = 2,
     this.nextTurnActionDelta = 0,
     this.monsterDamageImmuneThroughRound,
+    this.monsterDefenseBonusRound,
   }) : backpack = List.unmodifiable(backpack),
        carriedMods = List.unmodifiable(carriedMods),
        implanted = List.unmodifiable(implanted),
@@ -278,6 +279,9 @@ final class PlayerState {
   /// is active.
   final int? monsterDamageImmuneThroughRound;
 
+  /// Round in which a temporary +1 monster-defense effect applies.
+  final int? monsterDefenseBonusRound;
+
   /// Returns this character with the supplied per-round action point count.
   PlayerState withActionPoints(int value) => PlayerState(
     id: id,
@@ -297,6 +301,7 @@ final class PlayerState {
     actionPoints: value,
     nextTurnActionDelta: nextTurnActionDelta,
     monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
+    monsterDefenseBonusRound: monsterDefenseBonusRound,
   );
 
   PlayerState withNextTurnActionDelta(int value) => PlayerState(
@@ -317,6 +322,7 @@ final class PlayerState {
     actionPoints: actionPoints,
     nextTurnActionDelta: value,
     monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
+    monsterDefenseBonusRound: monsterDefenseBonusRound,
   );
 }
 

@@ -141,7 +141,8 @@ int _playerDefense(GameState state, PlayerState player) =>
         }
         return total + definition.staticEffects[CardStat.defense];
       },
-    );
+    ) +
+    (player.monsterDefenseBonusRound == state.round ? 1 : 0);
 
 bool _monsterIgnoresDefense(GameState state, MonsterInstance monster) {
   final features = state.monsterDefinitions[monster.monsterId]?['features'];

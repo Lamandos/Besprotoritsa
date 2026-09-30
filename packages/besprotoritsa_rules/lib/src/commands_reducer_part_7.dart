@@ -370,6 +370,60 @@ GameStepResult _resolveEventOption(
           );
     return GameStepResult(state: _resumeAutomaticPhase(withQuestEvent));
   }
+  if (choice.option.startsWith('move_spawn:')) {
+    final parts = choice.option.split(':');
+    if (parts.length != 4) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
+    final optionIndex = int.tryParse(parts[1]);
+    final q = int.tryParse(parts[2]);
+    final r = int.tryParse(parts[3]);
+    final targetCoord = q == null || r == null ? null : HexCoord(q, r);
+    final target = targetCoord == null
+        ? null
+        : _eventMoveTargets(
+            selected,
+            playerId,
+          ).where((tile) => tile.coord == targetCoord).firstOrNull;
+    final eventDefinition = pending.eventId == null
+        ? null
+        : selected.eventDefinitions[pending.eventId];
+    if (optionIndex == null || target == null || eventDefinition == null) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
+    final moved = _copyState(
+      selected,
+      players: _replacePlayer(
+        selected,
+        playerId,
+        (hero) => _copyPlayer(hero, coord: target.coord),
+      ),
+      logEntry: 'event-move:$playerId:${target.coord}',
+    );
+    final locationId = target.locationId;
+    final arrived = locationId == null
+        ? moved
+        : _applyFullQuestEvent(
+            moved,
+            QuestArrived(locationId),
+            playerId: playerId,
+          );
+    final spawned = _spawnEventOptionMonster(
+      arrived,
+      eventDefinition,
+      playerId,
+      optionIndex,
+      target.coord,
+      dice,
+    );
+    return GameStepResult(state: _resumeAutomaticPhase(spawned));
+  }
   if (pending.eventId == null) {
     return GameStepResult(state: _resumeAutomaticPhase(selected));
   }
@@ -540,6 +594,49 @@ GameStepResult _resolveEventOption(
     ),
     consumesAction: false,
   );
+}
+
+GameState _spawnEventOptionMonster(
+  GameState state,
+  Map<String, Object?> event,
+  PlayerId playerId,
+  int optionIndex,
+  HexCoord coord,
+  DiceRoller dice,
+) {
+  final deck = state.decks['monsters'];
+  if (deck == null) return state;
+  final draw = DeckRules.draw(
+    deck,
+    seed: _deckSeed(
+      state,
+      'event-move-monster:${event['id']}:$optionIndex:$playerId',
+    ),
+  );
+  if (draw.cards.isEmpty) return state;
+  final monsterId = draw.cards.single;
+  final definition = state.monsterDefinitions[monsterId];
+  if (definition == null) return state;
+  final monster = MonsterInstance(
+    instanceId:
+        'event-${state.round}-${state.eventTurnIndex}-'
+        '${event['id']}-$optionIndex-$monsterId',
+    monsterId: monsterId,
+    coord: coord,
+    damage: 0,
+    health: _scaledMonsterStat(state, definition, 'health'),
+    defense: definition['defense']! as int,
+    attack: _scaledMonsterStat(state, definition, 'attack'),
+    movement: definition['movement']! as int,
+    returnsToMonsterDeck: true,
+  );
+  final spawned = _copyState(
+    state,
+    monsters: [...state.monsters, monster],
+    decks: Map<DeckId, DeckState>.of(state.decks)..['monsters'] = draw.deck,
+    logEntry: 'event-monster-spawn:${event['id']}:$monsterId:$coord',
+  );
+  return _startImmediateMonsterAttack(spawned, playerId, monster, dice);
 }
 
 bool? _eventAutomaticOutcome(
@@ -1334,6 +1431,19 @@ GameState _resolveEventOutcome(
           ),
           logEntry: 'event-next-turn-actions:$playerId:$delta',
         );
+      case 'monster_defense_bonus_next_round':
+        current = _copyState(
+          current,
+          players: _replacePlayer(
+            current,
+            playerId,
+            (hero) => _copyPlayer(
+              hero,
+              monsterDefenseBonusRound: current.round + 1,
+            ),
+          ),
+          logEntry: 'event-monster-defense-next-round:$playerId',
+        );
       case 'draw':
         final deckId = rawEffect['deckId'];
         final deck = deckId is String ? current.decks[deckId] : null;
@@ -1477,12 +1587,19 @@ GameState _resolveEventOutcome(
           ),
         );
         if (filtered == null) continue;
-        final backpack = List<CardId>.of(player.backpack);
+        var receivedPlayer = player;
         var updatedDeck = filtered.deck;
-        if (backpack.length <
-            InventoryRules.backpackCapacity(player, current.cardDefinitions)) {
-          backpack.add(filtered.cardId);
-        } else {
+        try {
+          receivedPlayer = InventoryRules.receive(
+            player,
+            filtered.cardId,
+            current.cardDefinitions,
+          );
+        } on Object catch (error) {
+          if (error is! BackpackCapacityExceeded &&
+              error is! InventoryRuleViolation) {
+            rethrow;
+          }
           updatedDeck = DeckRules.returnAndShuffle(
             updatedDeck,
             [filtered.cardId],
@@ -1499,7 +1616,7 @@ GameState _resolveEventOutcome(
           players: _replacePlayer(
             current,
             playerId,
-            (hero) => _copyPlayer(hero, backpack: backpack),
+            (_) => receivedPlayer,
           ),
           logEntry: 'event-draw-filtered:$playerId:$targetDeckId:$filterType',
         );
@@ -1712,12 +1829,19 @@ GameState _resolveEventOutcome(
               'event-monsters-adjacent:${definition['id']}:${monsters.length}',
         );
       case 'move_to_neighbor':
+      case 'move_to_neighbor_and_spawn_monster':
         final targets = _eventMoveTargets(current, playerId);
         if (targets.isEmpty) continue;
+        final moveAndFight =
+            rawEffect['type'] == 'move_to_neighbor_and_spawn_monster';
         return _copyState(
           current,
           pendingDecision: AwaitingEventOption(
-            options: targets.map((tile) => _eventMoveOption(tile.coord)),
+            options: targets.map(
+              (tile) => moveAndFight
+                  ? _eventMoveSpawnOption(optionIndex, tile.coord)
+                  : _eventMoveOption(tile.coord),
+            ),
             playerId: playerId,
             eventId: definition['id'] as String?,
           ),
@@ -2089,6 +2213,9 @@ PlayerState _removeOwnedMarketCard(PlayerState player, String cardId) {
 }
 
 String _eventMoveOption(HexCoord coord) => 'move:${coord.q}:${coord.r}';
+
+String _eventMoveSpawnOption(int optionIndex, HexCoord coord) =>
+    'move_spawn:$optionIndex:${coord.q}:${coord.r}';
 
 String _eventPlaceOption(String instanceId, HexCoord coord) =>
     'place:$instanceId:${coord.q}:${coord.r}';

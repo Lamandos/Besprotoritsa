@@ -47,6 +47,7 @@ final class ProjectedPlayerState {
     required this.actionPoints,
     required this.nextTurnActionDelta,
     required this.monsterDamageImmuneThroughRound,
+    required this.monsterDefenseBonusRound,
     required this.isViewer,
     required Iterable<CardId> backpack,
     required Iterable<CardId> carriedMods,
@@ -79,6 +80,7 @@ final class ProjectedPlayerState {
       actionPoints: state.actionPoints,
       nextTurnActionDelta: state.nextTurnActionDelta,
       monsterDamageImmuneThroughRound: state.monsterDamageImmuneThroughRound,
+      monsterDefenseBonusRound: state.monsterDefenseBonusRound,
       isViewer: isViewer,
       backpack: isViewer ? state.backpack : const [],
       carriedMods: isViewer ? state.carriedMods : const [],
@@ -99,6 +101,7 @@ final class ProjectedPlayerState {
   final int actionPoints;
   final int nextTurnActionDelta;
   final int? monsterDamageImmuneThroughRound;
+  final int? monsterDefenseBonusRound;
   final bool isViewer;
   final List<CardId> backpack;
   final List<CardId> carriedMods;
