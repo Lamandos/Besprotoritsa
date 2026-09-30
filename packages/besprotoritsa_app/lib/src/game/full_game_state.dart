@@ -282,6 +282,7 @@ Map<String, CardDefinition> _allCards() {
       'category': 'supply',
       'slots': const <String>[],
       'stats': row['stats'] ?? const <String, int>{},
+      'sourceDeck': row['sourceDeck'] ?? 'supplies',
     };
     final definition = CardDefinition.fromJson(supply);
     cards[definition.id] = definition;

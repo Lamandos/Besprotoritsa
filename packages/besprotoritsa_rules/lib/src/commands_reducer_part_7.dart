@@ -102,7 +102,7 @@ GameStepResult _resolveEventOption(
         rejection: const ActionBlockedByPendingDecision(),
       );
     }
-    final deckId = definition.type == ItemType.supply ? 'supplies' : 'items';
+    final deckId = _cardSourceDeck(selected, definition);
     final decks = Map<DeckId, DeckState>.of(selected.decks);
     final deck = decks[deckId];
     if (deck != null) {
@@ -1030,7 +1030,7 @@ GameState _resolveEventOutcome(
         if (cardId == null) continue;
         final card = current.cardDefinitions[cardId];
         if (card == null) continue;
-        final deckId = card.type == ItemType.supply ? 'supplies' : 'items';
+        final deckId = _cardSourceDeck(current, card);
         final deck = current.decks[deckId];
         final decks = Map<DeckId, DeckState>.of(current.decks);
         if (deck != null) {
@@ -1831,7 +1831,7 @@ GameStepResult _resolveEventMarketChoice(
       );
     }
     final sold = _removeOwnedMarketCard(hero, targetCardId);
-    final deckId = definition.type == ItemType.supply ? 'supplies' : 'items';
+    final deckId = _cardSourceDeck(state, definition);
     final decks = Map<DeckId, DeckState>.of(state.decks);
     final deck = decks[deckId];
     if (deck != null) {
@@ -1889,6 +1889,20 @@ List<String> _ownedMarketCards(PlayerState player) => [
   if (player.equipped.robot != null) player.equipped.robot!,
   ...player.carriedMods,
 ];
+
+DeckId _cardSourceDeck(GameState state, CardDefinition definition) {
+  final sourceDeck = definition.sourceDeck;
+  if (sourceDeck != null &&
+      const {'items', 'supplies', 'specialItems'}.contains(sourceDeck) &&
+      state.decks.containsKey(sourceDeck)) {
+    return sourceDeck;
+  }
+  return switch (definition.type) {
+    ItemType.supply => 'supplies',
+    ItemType.specialItem => 'specialItems',
+    _ => 'items',
+  };
+}
 
 PlayerState _removeOwnedMarketCard(PlayerState player, String cardId) {
   final backpack = List<String>.of(player.backpack);

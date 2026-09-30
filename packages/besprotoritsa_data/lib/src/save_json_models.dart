@@ -198,6 +198,7 @@ abstract final class SaveJsonModels {
     },
     'range': card.staticEffects.range,
     'behaviorIds': card.behaviorIds,
+    if (card.sourceDeck != null) 'sourceDeck': card.sourceDeck,
   };
 
   static CardDefinition cardDefinitionFromJson(Map<String, Object?> json) {

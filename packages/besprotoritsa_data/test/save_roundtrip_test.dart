@@ -22,6 +22,7 @@ void main() {
       );
       expect(restored, isNotNull);
       expect(codec.encode(restored!), savedJson);
+      expect(restored.cardDefinitions['pistol']!.sourceDeck, 'items');
       expect(restored.pendingDecision, isA<AwaitingRerollChoice>());
       final context =
           (restored.pendingDecision! as AwaitingRerollChoice).context!
@@ -221,6 +222,7 @@ GameState _interruptedState() => GameState(
       slots: const {ItemSlot.weapon},
       cost: 2,
       staticEffects: CardStaticEffects(const {CardStat.strength: 1}, range: 2),
+      sourceDeck: 'items',
       behaviorIds: const ['pistol_attack_reroll'],
     ),
   },

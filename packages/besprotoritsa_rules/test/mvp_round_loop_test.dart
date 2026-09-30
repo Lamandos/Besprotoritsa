@@ -518,6 +518,95 @@ void main() {
     expect(state.decks['supplies']!.discardPile, contains('ration'));
   });
 
+  test('event market returns sold cards to their source deck', () {
+    final definitions = {
+      'supply-helmet': CardDefinition.fromJson({
+        'id': 'supply-helmet',
+        'category': 'armor',
+        'slots': ['armor'],
+        'cost': 2,
+        'stats': <String, int>{},
+        'sourceDeck': 'supplies',
+      }),
+      'special-armor': CardDefinition.fromJson({
+        'id': 'special-armor',
+        'category': 'armor',
+        'slots': ['armor'],
+        'cost': 3,
+        'stats': <String, int>{},
+        'sourceDeck': 'specialItems',
+      }),
+    };
+    var state = _mvpState(
+      eventId: 'source-deck-market',
+      playerBackpack: const ['supply-helmet', 'special-armor'],
+      cardDefinitions: definitions,
+      eventDefinitions: {
+        'source-deck-market': {
+          'id': 'source-deck-market',
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'successEffects': [
+                {
+                  'type': 'market',
+                  'offers': 0,
+                  'maxPurchases': 0,
+                  'discount': 0,
+                  'allowSell': true,
+                },
+              ],
+              'failureEffects': [
+                {'type': 'no_effect'},
+              ],
+            },
+          ],
+        },
+      },
+      additionalDecks: {
+        'items': DeckState(drawPile: const []),
+        'supplies': DeckState(drawPile: const []),
+        'specialItems': DeckState(drawPile: const []),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    var market = state.pendingDecision! as AwaitingEventOption;
+    state = step(
+      state,
+      ResolvePendingDecisionCommand(
+        EventOptionChoice(
+          market.options.firstWhere(
+            (option) => option.endsWith('|sell|supply-helmet'),
+          ),
+        ),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    market = state.pendingDecision! as AwaitingEventOption;
+    state = step(
+      state,
+      ResolvePendingDecisionCommand(
+        EventOptionChoice(
+          market.options.firstWhere(
+            (option) => option.endsWith('|sell|special-armor'),
+          ),
+        ),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.decks['supplies']!.discardPile, ['supply-helmet']);
+    expect(state.decks['specialItems']!.discardPile, ['special-armor']);
+    expect(state.decks['items']!.discardPile, isEmpty);
+  });
+
   test('asteroid event damages and displaces corridor occupants', () {
     var state = _mvpState(
       eventId: 'asteroid-alert',

@@ -60,6 +60,7 @@ final class CardDefinition {
     required Iterable<ItemSlot> slots,
     required this.cost,
     required this.staticEffects,
+    this.sourceDeck,
     Iterable<String> behaviorIds = const [],
   }) : slots = Set.unmodifiable(slots),
        behaviorIds = List.unmodifiable(behaviorIds) {
@@ -87,12 +88,17 @@ final class CardDefinition {
     if (cost is! int) {
       throw const FormatException('Card cost must be an integer.');
     }
+    final sourceDeck = json['sourceDeck'];
+    if (sourceDeck != null && sourceDeck is! String) {
+      throw const FormatException('Card sourceDeck must be a string.');
+    }
     return CardDefinition(
       id: id,
       type: type,
       slots: slots,
       cost: cost,
       staticEffects: CardStaticEffects.fromJson(json),
+      sourceDeck: sourceDeck as String?,
       behaviorIds: _behaviorIds(json),
     );
   }
@@ -102,6 +108,7 @@ final class CardDefinition {
   final Set<ItemSlot> slots;
   final int cost;
   final CardStaticEffects staticEffects;
+  final String? sourceDeck;
   final List<String> behaviorIds;
 }
 
