@@ -55,6 +55,15 @@ const storyLocationIds = <String>{
   'escape-pods',
 };
 
+/// Compartments with terminals in the full physical set.
+const storyTerminalLocationIds = <String>{
+  'engineering-control-post',
+  'reactor',
+  'laboratory',
+  'main-computer',
+  'flight-control',
+};
+
 /// Builds a reproducible, physically connected ship board from a numeric seed.
 final class ShipBoardGenerator {
   const ShipBoardGenerator();
@@ -77,6 +86,7 @@ final class ShipBoardGenerator {
     required Iterable<String> compartmentIds,
     required Iterable<String> airlockIds,
     required Iterable<VentColor> corridorVentColors,
+    Iterable<String> terminalLocationIds = storyTerminalLocationIds,
   }) {
     final compartments = compartmentIds.toSet();
     final expectedCompartments = storyLocationIds.difference({'anabiosis'});
@@ -117,6 +127,7 @@ final class ShipBoardGenerator {
       locations,
       random: random,
       corridorVentColors: vents,
+      terminalLocationIds: terminalLocationIds.toSet(),
       addPhysicalCorridorCopies: true,
     );
   }
@@ -125,10 +136,17 @@ final class ShipBoardGenerator {
     List<String> locations, {
     required Random random,
     List<VentColor>? corridorVentColors,
+    Set<String> terminalLocationIds = storyTerminalLocationIds,
     bool addPhysicalCorridorCopies = false,
   }) {
     final tiles = <HexTile>[
-      _room('anabiosis', const HexCoord(0, 0), HexTileType.start, const {}),
+      _room(
+        'anabiosis',
+        const HexCoord(0, 0),
+        HexTileType.start,
+        const {},
+        terminalLocationIds,
+      ),
     ];
     var room = tiles.single;
     var direction = HexEdge.values[random.nextInt(HexEdge.values.length)];
@@ -166,6 +184,7 @@ final class ShipBoardGenerator {
         nextRoomCoord,
         type,
         nextRoomExits,
+        terminalLocationIds,
       );
       tiles[tiles.indexOf(room)] = _withExit(room, direction);
       if (hasAlternateCorridor) {
@@ -377,6 +396,7 @@ HexTile _room(
   HexCoord coord,
   HexTileType type,
   Set<HexEdge> exits,
+  Set<String> terminalLocationIds,
 ) => HexTile(
   id: id,
   coord: coord,
@@ -384,7 +404,7 @@ HexTile _room(
   opened: true,
   exits: exits,
   locationId: id,
-  hasTerminal: id == 'engineering-control-post' || id == 'main-computer',
+  hasTerminal: terminalLocationIds.contains(id),
   ventColor: VentColor.none,
 );
 

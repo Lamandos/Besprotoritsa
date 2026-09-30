@@ -88,6 +88,10 @@ GameState createFullGameState({
               for (var copy = 0; copy < _copies(row); copy++)
                 VentColor.values.byName(_string(row, 'ventColor')),
         ],
+        terminalLocationIds: {
+          for (final row in hexRows)
+            if (row['hasTerminal'] == true) _string(row, 'id'),
+        },
       )
       .tiles
       .map(_concealNonStartTile)
