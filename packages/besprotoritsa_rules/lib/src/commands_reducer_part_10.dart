@@ -41,6 +41,16 @@ PersonalTaskEvent? _personalTaskObservation(
   final player = _playerById(after, playerId);
   final previous = _playerById(before, playerId);
   if (player == null || previous == null) return null;
+  final attackingPlayerId = switch (command) {
+    AttackCommand() => before.activePlayerId,
+    ResolvePendingDecisionCommand(choice: KeepRollChoice()) =>
+      switch (before.pendingDecision) {
+        AwaitingRerollChoice(context: AttackRollContext(:final playerId)) =>
+          playerId,
+        _ => null,
+      },
+    _ => null,
+  };
   int? value;
   var amount = 1;
   switch (metric) {
@@ -69,6 +79,7 @@ PersonalTaskEvent? _personalTaskObservation(
           .length;
       if (amount == 0) return null;
     case 'enemies_killed':
+      if (playerId != attackingPlayerId) return null;
       final remaining = after.monsters
           .map((monster) => monster.instanceId)
           .toSet();
@@ -77,6 +88,7 @@ PersonalTaskEvent? _personalTaskObservation(
           .length;
       if (amount == 0) return null;
     case 'strong_enemy_solo':
+      if (playerId != attackingPlayerId) return null;
       final remaining = after.monsters
           .map((monster) => monster.instanceId)
           .toSet();

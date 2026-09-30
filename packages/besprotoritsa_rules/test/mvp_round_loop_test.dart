@@ -198,6 +198,61 @@ void main() {
     expect(state.log.join(' '), isNot(contains('wealthy-test')));
   });
 
+  test('enemy kills advance only the attacking player personal task', () {
+    var state = _mvpState(
+      heroCount: 2,
+      personalTasksByPlayer: const {
+        'ada': ['hunter-ada'],
+        'hero-2': ['hunter-hero-2'],
+      },
+      taskDefinitions: {
+        for (final id in ['hunter-ada', 'hunter-hero-2'])
+          id: {
+            'id': id,
+            'targetType': 'metric',
+            'metric': 'enemies_killed',
+            'targetValue': 1,
+            'window': 'perTurn',
+            'aggregation': 'sum',
+            'rewardCredits': 5,
+            'nameKey': 'task.hunter.name',
+            'descKey': 'task.hunter.description',
+          },
+      },
+      monsters: [
+        MonsterInstance(
+          instanceId: 'hunter-target',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+        ),
+      ],
+    );
+
+    state = step(
+      state,
+      const AttackCommand('hunter-target'),
+      FixedDiceRoller([6]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.quests.statusOf('hunter-ada'), QuestStatus.completed);
+    expect(state.quests.statusOf('hunter-hero-2'), QuestStatus.active);
+    expect(
+      state.quests.conditionProgress['hunter-hero-2']?['personal-task-value'],
+      isNull,
+    );
+    expect(state.players.firstWhere((player) => player.id == 'ada').credits, 5);
+    expect(
+      state.players.firstWhere((player) => player.id == 'hero-2').credits,
+      0,
+    );
+  });
+
   test('full quest rewards draw items for players at the target location', () {
     final items = {
       for (final id in ['item-a', 'item-b', 'item-c'])
