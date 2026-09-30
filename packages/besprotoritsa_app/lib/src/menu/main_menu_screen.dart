@@ -162,8 +162,10 @@ class _MenuContents extends StatelessWidget {
               context,
               GameSessionScreen(
                 initialState: createMvpGameState(),
-                // The short demo must never replace an in-progress campaign.
-                storage: InMemoryGameStorage(),
+                storage: storage,
+                // Demo autosaves are isolated; explicit manual saves remain
+                // available in the player's normal save slots.
+                autosaveStorage: InMemoryGameStorage(),
               ),
             ),
             icon: const Icon(Icons.school_outlined),
