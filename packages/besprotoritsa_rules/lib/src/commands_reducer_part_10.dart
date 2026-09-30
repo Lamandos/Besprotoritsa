@@ -31,6 +31,72 @@ GameState _recordPersonalTaskProgress(
   return state;
 }
 
+GameState _recordPersonalTaskKillProgress(
+  GameState before,
+  GameState after,
+  PlayerId playerId,
+) {
+  final assigned = after.quests.personalTasksByPlayer[playerId];
+  if (assigned == null || assigned.isEmpty) return after;
+  final catalog = PersonalTaskCatalog(
+    tasks: after.taskDefinitions.values.map(PersonalTaskDefinition.fromJson),
+  );
+  final metrics = assigned
+      .where((id) => catalog[id] != null)
+      .map((id) => catalog.task(id).metric)
+      .toSet();
+  if (metrics.isEmpty) return after;
+  final remainingIds = after.monsters
+      .map((monster) => monster.instanceId)
+      .toSet();
+  final defeated = before.monsters
+      .where((monster) => !remainingIds.contains(monster.instanceId))
+      .toList();
+  if (defeated.isEmpty) return after;
+
+  var state = after;
+  if (metrics.contains('enemies_killed')) {
+    state = _recordPersonalTaskEvent(
+      state,
+      catalog,
+      PersonalTaskEvent(
+        playerId: playerId,
+        metric: 'enemies_killed',
+        amount: defeated.length,
+        turn: after.round,
+      ),
+    );
+  }
+  if (metrics.contains('strong_enemy_solo')) {
+    final strongDefeated = defeated.where((monster) {
+      final features =
+          before.monsterDefinitions[monster.monsterId]?['features'];
+      return features is List<Object?> &&
+          features.contains('strong') &&
+          before.players
+                  .where((hero) => hero.alive && hero.coord == monster.coord)
+                  .length ==
+              1 &&
+          before.players.any(
+            (hero) => hero.id == playerId && hero.coord == monster.coord,
+          );
+    }).length;
+    if (strongDefeated > 0) {
+      state = _recordPersonalTaskEvent(
+        state,
+        catalog,
+        PersonalTaskEvent(
+          playerId: playerId,
+          metric: 'strong_enemy_solo',
+          amount: strongDefeated,
+          turn: after.round,
+        ),
+      );
+    }
+  }
+  return state;
+}
+
 PersonalTaskEvent? _personalTaskObservation(
   GameState before,
   GameState after,
@@ -41,16 +107,6 @@ PersonalTaskEvent? _personalTaskObservation(
   final player = _playerById(after, playerId);
   final previous = _playerById(before, playerId);
   if (player == null || previous == null) return null;
-  final attackingPlayerId = switch (command) {
-    AttackCommand() => before.activePlayerId,
-    ResolvePendingDecisionCommand(choice: KeepRollChoice()) =>
-      switch (before.pendingDecision) {
-        AwaitingRerollChoice(context: AttackRollContext(:final playerId)) =>
-          playerId,
-        _ => null,
-      },
-    _ => null,
-  };
   int? value;
   var amount = 1;
   switch (metric) {
@@ -79,34 +135,9 @@ PersonalTaskEvent? _personalTaskObservation(
           .length;
       if (amount == 0) return null;
     case 'enemies_killed':
-      if (playerId != attackingPlayerId) return null;
-      final remaining = after.monsters
-          .map((monster) => monster.instanceId)
-          .toSet();
-      amount = before.monsters
-          .where((monster) => !remaining.contains(monster.instanceId))
-          .length;
-      if (amount == 0) return null;
+      return null;
     case 'strong_enemy_solo':
-      if (playerId != attackingPlayerId) return null;
-      final remaining = after.monsters
-          .map((monster) => monster.instanceId)
-          .toSet();
-      amount = before.monsters.where((monster) {
-        if (remaining.contains(monster.instanceId)) return false;
-        final definition = before.monsterDefinitions[monster.monsterId];
-        final features = definition?['features'];
-        return features is List<Object?> &&
-            features.contains('strong') &&
-            before.players
-                    .where((hero) => hero.alive && hero.coord == monster.coord)
-                    .length ==
-                1 &&
-            before.players.any(
-              (hero) => hero.id == playerId && hero.coord == monster.coord,
-            );
-      }).length;
-      if (amount == 0) return null;
+      return null;
     case 'special_items_received':
       final beforeCards = _ownedCardCounts(previous);
       final afterCards = _ownedCardCounts(player);

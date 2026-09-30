@@ -386,17 +386,22 @@ GameState _resolveAttackRoll(
       ),
     ),
   );
-  if (!defeated || state.questDefinitions.isEmpty) return resolved;
-  final withKill = _applyFullQuestEvent(
-    resolved,
-    QuestMonsterKilled(monsterId: monster.monsterId),
-    playerId: playerId,
-  );
-  return _applyFullQuestEvent(
-    withKill,
-    const QuestCounterIncremented(metric: 'damage_tokens_collected'),
-    playerId: playerId,
-  );
+  var afterAttack = resolved;
+  if (defeated && state.questDefinitions.isNotEmpty) {
+    afterAttack = _applyFullQuestEvent(
+      afterAttack,
+      QuestMonsterKilled(monsterId: monster.monsterId),
+      playerId: playerId,
+    );
+    afterAttack = _applyFullQuestEvent(
+      afterAttack,
+      const QuestCounterIncremented(metric: 'damage_tokens_collected'),
+      playerId: playerId,
+    );
+  }
+  return defeated
+      ? _recordPersonalTaskKillProgress(state, afterAttack, playerId)
+      : afterAttack;
 }
 
 ({PlayerState player, List<CardId> unclaimed}) _awardRestlessTrophies(

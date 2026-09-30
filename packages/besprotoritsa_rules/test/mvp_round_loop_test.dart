@@ -418,6 +418,89 @@ void main() {
     );
   });
 
+  test('immediate event counterattack advances personal kill tasks', () {
+    var state = _mvpState(
+      eventId: 'invasion-card',
+      playerCoord: const HexCoord(0, 2),
+      personalTasksByPlayer: const {
+        'ada': ['event-hunter', 'event-exterminator'],
+      },
+      taskDefinitions: {
+        'event-hunter': {
+          'id': 'event-hunter',
+          'targetType': 'metric',
+          'metric': 'enemies_killed',
+          'targetValue': 1,
+          'window': 'perTurn',
+          'aggregation': 'sum',
+          'rewardCredits': 5,
+          'nameKey': 'task.hunter.name',
+          'descKey': 'task.hunter.description',
+        },
+        'event-exterminator': {
+          'id': 'event-exterminator',
+          'targetType': 'metric',
+          'metric': 'strong_enemy_solo',
+          'targetValue': 1,
+          'window': 'perTurn',
+          'aggregation': 'sum',
+          'rewardCredits': 5,
+          'nameKey': 'task.exterminator.name',
+          'descKey': 'task.exterminator.description',
+        },
+      },
+      eventDefinitions: {
+        'invasion-card': {
+          'id': 'invasion-card',
+          'locationId': 'crew-mess',
+          'immediateCombat': true,
+          'spawn': {
+            'behaviorId': 'monster.spawn',
+            'target': 'location',
+            'fallback': 'closedSector',
+          },
+          'options': [
+            {
+              'skillCheck': null,
+              'behaviorId': 'monster.spawn',
+              'resolution': 'immediate',
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 1,
+          'defense': 0,
+          'attack': 2,
+          'movement': 1,
+          'features': ['strong'],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.pendingDecision, isA<AwaitingDodge>());
+
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(DodgeChoice()),
+      FixedDiceRoller([1, 6]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.quests.statusOf('event-hunter'), QuestStatus.completed);
+    expect(state.quests.statusOf('event-exterminator'), QuestStatus.completed);
+    expect(state.players.single.credits, 10);
+  });
+
   test('full quest rewards draw items for players at the target location', () {
     final items = {
       for (final id in ['item-a', 'item-b', 'item-c'])
