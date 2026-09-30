@@ -1,6 +1,7 @@
 // Route widgets and their constructor fields are documented by their names.
 // ignore_for_file: public_member_api_docs
 
+import 'package:besprotoritsa_app/src/game/mvp_game_state.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/game_session_screen.dart';
 import 'package:besprotoritsa_app/src/menu/multiplayer_lobby_screens.dart';
@@ -152,7 +153,20 @@ class _MenuContents extends StatelessWidget {
             onPressed: () =>
                 _push(context, RosterSelectionScreen(storage: storage)),
             icon: const Icon(Icons.explore_outlined),
-            label: Text(strings.newGame),
+            label: Text(strings.newFullGame),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            key: const ValueKey<String>('mvp-demo-button'),
+            onPressed: () => _push(
+              context,
+              GameSessionScreen(
+                initialState: createMvpGameState(),
+                storage: storage,
+              ),
+            ),
+            icon: const Icon(Icons.school_outlined),
+            label: Text(strings.mvpDemo),
           ),
           const SizedBox(height: 10),
           FilledButton.tonalIcon(
