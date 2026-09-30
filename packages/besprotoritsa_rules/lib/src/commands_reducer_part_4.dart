@@ -58,7 +58,7 @@ GameState resolveColocation(GameState state) {
     }
     for (final player in state.players) {
       if (player.alive && player.coord == monster.coord) {
-        final defense = _monsterIgnoresDefense(monster)
+        final defense = _monsterIgnoresDefense(state, monster)
             ? 0
             : _playerDefense(state, player);
         final incoming = (monster.attack - defense).clamp(0, monster.attack);
@@ -127,9 +127,10 @@ int _playerDefense(GameState state, PlayerState player) =>
       },
     );
 
-bool _monsterIgnoresDefense(MonsterInstance monster) =>
-    // Mother has the `ignores-defense` feature in monsters.json.
-    const {'mother'}.contains(monster.monsterId);
+bool _monsterIgnoresDefense(GameState state, MonsterInstance monster) {
+  final features = state.monsterDefinitions[monster.monsterId]?['features'];
+  return features is List<Object?> && features.contains('ignores-defense');
+}
 
 /// Moves a monster one board step and immediately resolves shared-cell attacks.
 GameState moveMonsterOneStep(
@@ -146,7 +147,7 @@ GameState moveMonsterOneStep(
   final edge = monster.coord.edgeTowardOrNull(target);
   final ventilationStep =
       monster.coord != target &&
-      _monsterUsesVentilation(monster) &&
+      _monsterUsesVentilation(state, monster) &&
       source != null &&
       destination != null &&
       source.opened &&
@@ -158,6 +159,8 @@ GameState moveMonsterOneStep(
   }
   if (source == null ||
       destination == null ||
+      !source.opened ||
+      !destination.opened ||
       source.isBlocked ||
       destination.isBlocked ||
       (!ventilationStep &&
@@ -181,9 +184,13 @@ GameState moveMonsterOneStep(
   );
 }
 
-bool _monsterUsesVentilation(MonsterInstance monster) =>
-    // These IDs carry the `moves-through-vents` feature in monsters.json.
-    const {'pack', 'ghoul', 'seeker'}.contains(monster.monsterId);
+bool _monsterUsesVentilation(GameState state, MonsterInstance monster) {
+  // Capabilities are content data.  In particular, do not infer movement
+  // rules from a localized name or from a particular card identifier.
+  final definition = state.monsterDefinitions[monster.monsterId];
+  final features = definition?['features'];
+  return features is List<Object?> && features.contains('moves-through-vents');
+}
 
 Iterable<HexCoord> _monsterPathNeighbors(
   GameState state,
@@ -202,7 +209,8 @@ Iterable<HexCoord> _monsterPathNeighbors(
       yield next;
     }
   }
-  if (!_monsterUsesVentilation(monster) || tile.ventColor == VentColor.none) {
+  if (!_monsterUsesVentilation(state, monster) ||
+      tile.ventColor == VentColor.none) {
     return;
   }
   for (final candidate in state.board) {
@@ -315,12 +323,26 @@ GameState _resolveAttackRoll(
             .damageByEnemyId
       : const <String, int>{};
   final monsters = <MonsterInstance>[];
+  final returnedMonsterCards = <CardId>[];
+  if (defeated && monster.returnsToMonsterDeck) {
+    returnedMonsterCards.add(monster.monsterId);
+  }
   for (final current in state.monsters) {
     if (current.instanceId == monster.instanceId) continue;
     final totalDamage = current.damage + (collateral[current.instanceId] ?? 0);
     if (totalDamage < current.health) {
       monsters.add(_copyMonster(current, damage: totalDamage));
+    } else if (current.returnsToMonsterDeck) {
+      returnedMonsterCards.add(current.monsterId);
     }
+  }
+  final decks = Map<DeckId, DeckState>.of(state.decks);
+  final monsterDeck = decks['monsters'];
+  if (monsterDeck != null && returnedMonsterCards.isNotEmpty) {
+    decks['monsters'] = DeckState(
+      drawPile: monsterDeck.drawPile,
+      discardPile: [...monsterDeck.discardPile, ...returnedMonsterCards],
+    );
   }
   var awardedPlayer = _copyPlayer(
     player,
@@ -345,6 +367,7 @@ GameState _resolveAttackRoll(
         if (!defeated) _copyMonster(monster, damage: monster.damage + damage),
         ...monsters,
       ],
+      decks: decks,
       logEntry: _attackLog(
         player,
         monster,

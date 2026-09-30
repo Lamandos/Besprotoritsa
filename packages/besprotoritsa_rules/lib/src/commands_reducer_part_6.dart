@@ -198,7 +198,7 @@ GameStepResult _resolveReroll(
 ) {
   if (choice is KeepRollChoice) {
     final resolved = _copyState(state, clearPendingDecision: true);
-    return GameStepResult(state: _completeRoll(resolved, pending));
+    return GameStepResult(state: _completeRoll(resolved, pending, dice));
   }
   if (choice is! RerollChoice || pending.availableRerolls == 0) {
     return GameStepResult(
@@ -277,6 +277,20 @@ GameStepResult _resolveDodge(
       damaged && targetStillLives && pending.source == DamageSource.monster
       ? _drawCondition(withDamage, targetId)
       : withDamage;
+  final counterAttackId = pending.counterAttackMonsterInstanceId;
+  if (counterAttackId != null && targetStillLives) {
+    final monster = _monsterById(withCondition, counterAttackId);
+    if (monster != null) {
+      return GameStepResult(
+        state: _startImmediateCounterAttack(
+          withCondition,
+          targetId,
+          monster,
+          dice,
+        ),
+      );
+    }
+  }
   return GameStepResult(
     state: _resumeAutomaticPhase(
       _startNextIncomingDamage(

@@ -94,36 +94,120 @@ void main() {
     expect(state.isComplete, isFalse);
   });
 
-  test('full cabin-noise checks still resolve their event outcome', () {
-    var state = _mvpState(
-      storyQuestIds: const ['quest-01'],
-      questDefinitions: {
-        'quest-01': {
-          'id': 'quest-01',
-          'number': 1,
-          'chapter': 1,
-          'conditions': <Object?>[],
-          'reward': {'credits': 0, 'items': <Object?>[]},
-          'nextQuestIds': [],
-          'nameKey': 'quest-01.name',
-          'descKey': 'quest-01.description',
+  test(
+    'event mechanics follow option behavior data, independent of card id',
+    () {
+      var state = _mvpState(
+        eventId: 'unfamiliar-card-id',
+        storyQuestIds: const ['quest-01'],
+        questDefinitions: {
+          'quest-01': {
+            'id': 'quest-01',
+            'number': 1,
+            'chapter': 1,
+            'conditions': <Object?>[],
+            'reward': {'credits': 0, 'items': <Object?>[]},
+            'nextQuestIds': [],
+            'nameKey': 'quest-01.name',
+            'descKey': 'quest-01.description',
+          },
         },
-      },
-    );
-    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
-    state = step(
-      state,
-      const ResolvePendingDecisionCommand(EventOptionChoice('investigate')),
-      FixedDiceRoller([6]),
-    ).state;
-    state = step(
-      state,
-      const ResolvePendingDecisionCommand(KeepRollChoice()),
-      FixedDiceRoller([]),
-    ).state;
+        eventDefinitions: {
+          'unfamiliar-card-id': {
+            'options': [
+              {
+                'skillCheck': {'skill': 'agility', 'difficulty': 1},
+                'behaviorId': 'event_cabin_noise',
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([6]),
+      ).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(KeepRollChoice()),
+        FixedDiceRoller([]),
+      ).state;
 
-    expect(state.players.single.backpack, contains('event-supply'));
-  });
+      expect(state.players.single.backpack, contains('event-supply'));
+    },
+  );
+
+  test(
+    'immediate event spawn starts an out-of-turn dodge and counterattack',
+    () {
+      var state = _mvpState(
+        eventId: 'invasion-card',
+        playerCoord: const HexCoord(0, 2),
+        eventDefinitions: {
+          'invasion-card': {
+            'id': 'invasion-card',
+            'locationId': 'crew-mess',
+            'immediateCombat': true,
+            'spawn': {
+              'behaviorId': 'monster.spawn',
+              'target': 'location',
+              'fallback': 'closedSector',
+            },
+            'options': [
+              {
+                'skillCheck': null,
+                'behaviorId': 'monster.spawn',
+                'resolution': 'immediate',
+              },
+            ],
+          },
+        },
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 2,
+            'defense': 0,
+            'attack': 2,
+            'movement': 1,
+          },
+        },
+        additionalDecks: {
+          'monsters': DeckState(drawPile: const ['ghoul']),
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([1, 6]),
+      ).state;
+
+      expect(state.pendingDecision, isA<AwaitingDodge>());
+      expect(state.monsters.single.monsterId, 'ghoul');
+      expect(state.decks['monsters']!.drawPile, isEmpty);
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([1, 6]),
+      ).state;
+
+      expect(state.pendingDecision, isNull);
+      expect(state.monsters.single.damage, 1);
+      expect(state.players.single.damage, 2);
+      expect(state.actionsLeft, 2);
+      expect(state.phase, GamePhase.playersTurn);
+
+      state = step(
+        state,
+        const AttackCommand('event-1-1-invasion-card-ghoul'),
+        FixedDiceRoller([6]),
+      ).state;
+      expect(state.monsters, isEmpty);
+      expect(state.decks['monsters']!.discardPile, ['ghoul']);
+    },
+  );
 
   test('full inventory changes complete collect-item quests', () {
     final item = CardDefinition.fromJson({
@@ -586,7 +670,18 @@ void main() {
   );
 
   test('runs the MVP from the first step through Quest 1 completion', () {
-    var state = _mvpState();
+    var state = _mvpState(
+      eventDefinitions: {
+        'cabin-noise': {
+          'options': [
+            {
+              'skillCheck': {'skill': 'agility', 'difficulty': 1},
+              'behaviorId': 'event_cabin_noise',
+            },
+          ],
+        },
+      },
+    );
 
     state = step(
       state,
@@ -604,7 +699,7 @@ void main() {
 
     state = step(
       state,
-      const ResolvePendingDecisionCommand(EventOptionChoice('investigate')),
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
       FixedDiceRoller([6]),
     ).state;
     expect(state.pendingDecision, isA<AwaitingRerollChoice>());
@@ -631,7 +726,7 @@ void main() {
     expect(state.pendingDecision, isA<AwaitingEventOption>());
     state = step(
       state,
-      const ResolvePendingDecisionCommand(EventOptionChoice('investigate')),
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
       FixedDiceRoller([6]),
     ).state;
     state = step(

@@ -138,6 +138,7 @@ abstract final class SaveJsonModels {
     'attack': monster.attack,
     'movement': monster.movement,
     'carried_gear': monster.carriedGear,
+    'returns_to_monster_deck': monster.returnsToMonsterDeck,
   };
   static MonsterInstance monsterFromJson(Map<String, Object?> json) =>
       MonsterInstance(
@@ -150,6 +151,7 @@ abstract final class SaveJsonModels {
         attack: _int(json, 'attack'),
         movement: _int(json, 'movement'),
         carriedGear: _strings(json, 'carried_gear'),
+        returnsToMonsterDeck: json['returns_to_monster_deck'] == true,
       );
   static Map<String, Object?> boilToJson(BoilToken boil) => {
     'instance_id': boil.instanceId,
@@ -291,6 +293,8 @@ abstract final class SaveJsonModels {
           'required_agility_successes': decision.requiredAgilitySuccesses,
           'target_player_id': decision.targetPlayerId,
           'source': decision.source.name,
+          'counter_attack_monster_instance_id':
+              decision.counterAttackMonsterInstanceId,
         },
         AwaitingEventOption() => {
           'type': 'event_option',
@@ -336,6 +340,10 @@ abstract final class SaveJsonModels {
           'target_player_id',
         ),
         source: _enum(DamageSource.values, _string(json, 'source'), 'source'),
+        counterAttackMonsterInstanceId: _nullableString(
+          json['counter_attack_monster_instance_id'],
+          'counter_attack_monster_instance_id',
+        ),
       ),
       'event_option' => AwaitingEventOption(
         options: _strings(json, 'options'),

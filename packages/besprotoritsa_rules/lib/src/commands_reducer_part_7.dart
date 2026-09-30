@@ -106,7 +106,12 @@ GameStepResult _resolveEventOption(
     }
     final check = rawOption['skillCheck'];
     if (check == null) {
-      return GameStepResult(state: _resumeAutomaticPhase(selected));
+      final resolved =
+          rawOption['behaviorId'] == 'monster.spawn' &&
+              rawOption['resolution'] == 'immediate'
+          ? _resolveEventMonsterSpawn(selected, definition, playerId, dice)
+          : selected;
+      return GameStepResult(state: _resumeAutomaticPhase(resolved));
     }
     if (check is! Map<String, dynamic> ||
         check['skill'] is! String ||
@@ -128,6 +133,8 @@ GameStepResult _resolveEventOption(
         stat: skill,
         difficulty: difficulty,
         eventId: pending.eventId,
+        eventBehaviorId: rawOption['behaviorId'] as String?,
+        eventOptionIndex: optionIndex,
       ),
       consumesAction: false,
     );
@@ -151,14 +158,188 @@ GameStepResult _resolveEventOption(
   );
 }
 
+GameState _resolveEventMonsterSpawn(
+  GameState state,
+  Map<String, Object?> event,
+  PlayerId playerId,
+  DiceRoller dice,
+) {
+  final spawn = event['spawn'];
+  final monsterDeck = state.decks['monsters'];
+  if (spawn is! Map<String, Object?> || monsterDeck == null) return state;
+  final draw = DeckRules.draw(
+    monsterDeck,
+    seed: _deckSeed(state, 'event-monster:${event['id']}:$playerId'),
+  );
+  if (draw.cards.isEmpty) return state;
+  final monsterId = draw.cards.single;
+  final definition = state.monsterDefinitions[monsterId];
+  final coord = _eventMonsterSpawnCoord(state, event, spawn);
+  if (definition == null || coord == null) return state;
+
+  final monsters = Map<DeckId, DeckState>.of(state.decks)
+    ..['monsters'] = draw.deck;
+  final eventId = event['id'];
+  final monster = MonsterInstance(
+    instanceId:
+        'event-${state.round}-${state.eventTurnIndex}-'
+        '$eventId-$monsterId',
+    monsterId: monsterId,
+    coord: coord,
+    damage: 0,
+    health: _scaledMonsterStat(state, definition, 'health'),
+    defense: definition['defense']! as int,
+    attack: _scaledMonsterStat(state, definition, 'attack'),
+    movement: definition['movement']! as int,
+    returnsToMonsterDeck: true,
+  );
+  final spawned = _copyState(
+    state,
+    monsters: [...state.monsters, monster],
+    decks: monsters,
+    logEntry: 'event-monster-spawn:${event['id']}:$monsterId:$coord',
+  );
+  final immediateCombat = event['immediateCombat'] == true;
+  if (!immediateCombat) return spawned;
+  final occupants = spawned.players
+      .where((player) => player.alive && player.coord == coord)
+      .toList();
+  if (occupants.isEmpty) return spawned;
+  final combatant = occupants.firstWhere(
+    (player) => player.id == playerId,
+    orElse: () => occupants.first,
+  );
+  return _startImmediateMonsterAttack(
+    spawned,
+    combatant.id,
+    monster,
+    dice,
+  );
+}
+
+HexCoord? _eventMonsterSpawnCoord(
+  GameState state,
+  Map<String, Object?> event,
+  Map<String, Object?> spawn,
+) {
+  final target = spawn['target'];
+  if (target == 'openSector') {
+    for (final tile in state.board) {
+      if (tile.type == HexTileType.compartment &&
+          tile.opened &&
+          !tile.isBlocked) {
+        return tile.coord;
+      }
+    }
+  } else if (target == 'location') {
+    final locationId = event['locationId'];
+    if (locationId is String) {
+      for (final tile in state.board) {
+        if (tile.locationId == locationId && tile.opened && !tile.isBlocked) {
+          return tile.coord;
+        }
+      }
+    }
+  }
+  if (spawn['fallback'] == 'closedSector') {
+    for (final tile in state.board) {
+      if (tile.type == HexTileType.compartment &&
+          !tile.opened &&
+          !tile.isBlocked) {
+        return tile.coord;
+      }
+    }
+  }
+  return null;
+}
+
+GameState _startImmediateMonsterAttack(
+  GameState state,
+  PlayerId playerId,
+  MonsterInstance monster,
+  DiceRoller dice,
+) {
+  final player = _playerById(state, playerId)!;
+  final incoming =
+      (monster.attack -
+              (_monsterIgnoresDefense(state, monster)
+                  ? 0
+                  : _playerDefense(state, player)))
+          .clamp(0, monster.attack);
+  if (incoming == 0) {
+    return _startImmediateCounterAttack(state, playerId, monster, dice);
+  }
+  return _copyState(
+    state,
+    pendingDecision: AwaitingDodge(
+      monsterDamage: incoming,
+      requiredAgilitySuccesses: _statDice(player, state, StatType.agility),
+      targetPlayerId: playerId,
+      counterAttackMonsterInstanceId: monster.instanceId,
+    ),
+    logEntry: 'event-monster-attack:${monster.instanceId}:$playerId:$incoming',
+  );
+}
+
+GameState _startImmediateCounterAttack(
+  GameState state,
+  PlayerId playerId,
+  MonsterInstance monster,
+  DiceRoller dice,
+) {
+  final player = _playerById(state, playerId);
+  final target = _monsterById(state, monster.instanceId);
+  if (player == null || !player.alive || target == null) {
+    return _resumeAutomaticPhase(state);
+  }
+  final hooks = _activeEffectHooks(state, player);
+  final preAttackHooks = hooks.whereType<PreAttackDamageHook>();
+  final preAttackDamage = preAttackHooks.isEmpty
+      ? 0
+      : const EffectEngine()
+            .resolvePreAttackRoll(dice.rollDice(1), preAttackHooks)
+            .targetDamage;
+  final diceRoll = dice.rollDice(_heroAttackDice(player, state));
+  final roll = const EffectEngine().resolveRoll(diceRoll, hooks);
+  if (roll.rerollsAvailable > 0) {
+    return _copyState(
+      state,
+      pendingDecision: AwaitingRerollChoice(
+        dice: diceRoll,
+        availableRerolls: roll.rerollsAvailable,
+        maxDicePerReroll: 1,
+        window: const DecisionWindow(remainingTicks: 1),
+        context: AttackRollContext(
+          playerId: playerId,
+          targetInstanceId: monster.instanceId,
+          preAttackDamage: preAttackDamage,
+          resumeAutomaticPhase: true,
+        ),
+      ),
+      logEntry: 'event-counterattack-roll:$playerId:${monster.instanceId}',
+    );
+  }
+  return _resumeAutomaticPhase(
+    _resolveAttackRoll(
+      state,
+      playerId,
+      monster.instanceId,
+      diceRoll,
+      consumesAction: false,
+      preAttackDamage: preAttackDamage,
+    ),
+  );
+}
+
 GameState _completeRoll(
   GameState state,
   AwaitingRerollChoice pending,
+  DiceRoller dice,
 ) {
   final context = pending.context;
   if (context == null) return _resumeAutomaticPhase(state);
   if (context case AttackRollContext()) {
-    return _resolveAttackRoll(
+    final resolved = _resolveAttackRoll(
       state,
       context.playerId,
       context.targetInstanceId,
@@ -166,11 +347,14 @@ GameState _completeRoll(
       consumesAction: false,
       preAttackDamage: context.preAttackDamage,
     );
+    return context.resumeAutomaticPhase
+        ? _resumeAutomaticPhase(resolved)
+        : resolved;
   }
   if (context is! SkillCheckContext) return _resumeAutomaticPhase(state);
   final succeeded = countHits(pending.dice) >= context.difficulty;
-  if (context.eventId == 'cabin-noise') {
-    return _resolveCabinNoise(state, context, succeeded);
+  if (context.eventBehaviorId == 'event_cabin_noise') {
+    return _resolveCabinNoise(state, context, succeeded, dice);
   }
   if (context.questId != null && succeeded) {
     return _completeMvpQuest(state, context);
@@ -452,6 +636,7 @@ GameState _resolveCabinNoise(
   GameState state,
   SkillCheckContext context,
   bool succeeded,
+  DiceRoller dice,
 ) {
   if (succeeded) {
     final player = _playerById(state, context.playerId)!;
@@ -466,7 +651,8 @@ GameState _resolveCabinNoise(
                 backpack: [...current.backpack, 'event-supply'],
               ),
             ),
-            logEntry: 'event-success:cabin-noise:${player.id}:supply',
+            logEntry:
+                'event-success:${context.eventBehaviorId}:${player.id}:supply',
           )
         : _copyState(
             state,
@@ -478,24 +664,26 @@ GameState _resolveCabinNoise(
                 credits: current.credits + 1,
               ),
             ),
-            logEntry: 'event-success:cabin-noise:${player.id}:credit',
+            logEntry:
+                'event-success:${context.eventBehaviorId}:${player.id}:credit',
           );
     return _resumeAutomaticPhase(withSupply);
   }
   final player = _playerById(state, context.playerId)!;
-  return _resumeAutomaticPhase(
-    spawnMonster(
-      _copyState(state, logEntry: 'event-failure:cabin-noise:${player.id}'),
-      MonsterInstance(
-        instanceId: 'ghoul-event-${state.round}-${player.id}',
-        monsterId: 'ghoul',
-        coord: player.coord,
-        damage: 0,
-        health: 2,
-        attack: 2,
-      ),
-    ),
+  final monster = MonsterInstance(
+    instanceId: 'ghoul-event-${state.round}-${player.id}',
+    monsterId: 'ghoul',
+    coord: player.coord,
+    damage: 0,
+    health: 2,
+    attack: 2,
   );
+  final spawned = _copyState(
+    state,
+    monsters: [...state.monsters, monster],
+    logEntry: 'event-failure:${context.eventBehaviorId}:${player.id}',
+  );
+  return _startImmediateMonsterAttack(spawned, player.id, monster, dice);
 }
 
 GameState _completeMvpQuest(GameState state, SkillCheckContext context) {
