@@ -260,6 +260,26 @@ class _MvpGameLayout extends ConsumerWidget {
           : AppBar(
               title: Text(strings.mvpTitle),
               actions: [
+                IconButton(
+                  key: const ValueKey<String>('event-card-button'),
+                  tooltip: 'Карта события',
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (sheetContext) => SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                        child: SizedBox(
+                          height: MediaQuery.sizeOf(sheetContext).height * .78,
+                          child: _EventCardPanel(state: state),
+                        ),
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.auto_stories_outlined),
+                ),
                 if (onExitRequested != null)
                   IconButton(
                     key: const ValueKey<String>('pause-menu-button'),
