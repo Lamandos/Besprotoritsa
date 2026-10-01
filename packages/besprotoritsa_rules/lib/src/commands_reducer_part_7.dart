@@ -261,14 +261,23 @@ GameStepResult _resolveEventOption(
       );
     }
     final hero = _playerById(selected, playerId)!;
-    final backpackCapacity = InventoryRules.backpackCapacity(
-      hero,
-      selected.cardDefinitions,
-    );
     final returnedCards = List<String>.of(offered);
     final selectedIndex = returnedCards.indexOf(cardId);
     if (selectedIndex >= 0) returnedCards.removeAt(selectedIndex);
-    if (hero.backpack.length >= backpackCapacity) returnedCards.add(cardId);
+    var receivedHero = hero;
+    try {
+      receivedHero = InventoryRules.receive(
+        hero,
+        cardId,
+        selected.cardDefinitions,
+      );
+    } on Object catch (error) {
+      if (error is! BackpackCapacityExceeded &&
+          error is! InventoryRuleViolation) {
+        rethrow;
+      }
+      returnedCards.add(cardId);
+    }
     final decks = Map<DeckId, DeckState>.of(selected.decks);
     if (returnedCards.isNotEmpty) {
       decks[deckId] = DeckRules.returnAndShuffle(
@@ -280,15 +289,13 @@ GameStepResult _resolveEventOption(
         ),
       );
     }
-    final backpack = List<CardId>.of(hero.backpack);
-    if (hero.backpack.length < backpackCapacity) backpack.add(cardId);
     final picked = _copyState(
       selected,
       decks: decks,
       players: _replacePlayer(
         selected,
         playerId,
-        (current) => _copyPlayer(current, backpack: backpack),
+        (_) => receivedHero,
       ),
       logEntry: 'event-picked:$playerId:$cardId',
     );
@@ -1461,16 +1468,20 @@ GameState _resolveEventOutcome(
         if (draw.cards.isEmpty) continue;
         final updatedDecks = Map<DeckId, DeckState>.of(current.decks)
           ..[targetDeckId] = draw.deck;
-        final backpack = List<CardId>.of(player.backpack);
         final returned = <CardId>[];
-        final backpackCapacity = InventoryRules.backpackCapacity(
-          player,
-          current.cardDefinitions,
-        );
+        var receivedPlayer = player;
         for (final cardId in draw.cards) {
-          if (backpack.length < backpackCapacity) {
-            backpack.add(cardId);
-          } else {
+          try {
+            receivedPlayer = InventoryRules.receive(
+              receivedPlayer,
+              cardId,
+              current.cardDefinitions,
+            );
+          } on Object catch (error) {
+            if (error is! BackpackCapacityExceeded &&
+                error is! InventoryRuleViolation) {
+              rethrow;
+            }
             returned.add(cardId);
           }
         }
@@ -1488,7 +1499,7 @@ GameState _resolveEventOutcome(
           players: _replacePlayer(
             current,
             playerId,
-            (hero) => _copyPlayer(hero, backpack: backpack),
+            (_) => receivedPlayer,
           ),
           logEntry: 'event-draw:$playerId:$targetDeckId:$cardsKept',
         );
@@ -1637,11 +1648,18 @@ GameState _resolveEventOutcome(
         if (draw.cards.isEmpty) continue;
         final updatedDecks = Map<DeckId, DeckState>.of(current.decks)
           ..[targetDeckId] = draw.deck;
-        final backpack = List<CardId>.of(player.backpack);
-        if (backpack.length <
-            InventoryRules.backpackCapacity(player, current.cardDefinitions)) {
-          backpack.add(cardId);
-        } else {
+        var receivedPlayer = player;
+        try {
+          receivedPlayer = InventoryRules.receive(
+            player,
+            cardId,
+            current.cardDefinitions,
+          );
+        } on Object catch (error) {
+          if (error is! BackpackCapacityExceeded &&
+              error is! InventoryRuleViolation) {
+            rethrow;
+          }
           updatedDecks[targetDeckId] = DeckRules.returnAndShuffle(
             updatedDecks[targetDeckId]!,
             [cardId],
@@ -1657,7 +1675,7 @@ GameState _resolveEventOutcome(
           players: _replacePlayer(
             current,
             playerId,
-            (hero) => _copyPlayer(hero, backpack: backpack),
+            (_) => receivedPlayer,
           ),
           logEntry: 'event-draw-specific:$playerId:$cardId',
         );
