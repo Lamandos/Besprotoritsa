@@ -7,6 +7,30 @@ part 'save_json_helpers.dart';
 
 /// JSON primitives for the nested rule models used in a save document.
 abstract final class SaveJsonModels {
+  static Map<String, Object?>? pendingEventMonsterSpawnToJson(
+    PendingEventMonsterSpawn? pending,
+  ) => pending == null
+      ? null
+      : {
+          'event_id': pending.eventId,
+          'player_id': pending.playerId,
+          'option_index': pending.optionIndex,
+          'coord': _coordToJson(pending.coord),
+        };
+
+  static PendingEventMonsterSpawn? pendingEventMonsterSpawnFromJson(
+    Object? value,
+  ) {
+    if (value == null) return null;
+    final json = _asObject(value, 'pending_event_monster_spawn');
+    return PendingEventMonsterSpawn(
+      eventId: _string(json, 'event_id'),
+      playerId: _string(json, 'player_id'),
+      optionIndex: _int(json, 'option_index'),
+      coord: _coordFromJson(_object(json, 'coord')),
+    );
+  }
+
   static GamePhase gamePhaseFromJson(String value) =>
       _enum(GamePhase.values, value, 'phase');
   static Map<String, Object?> tileToJson(HexTile tile) => {

@@ -146,7 +146,11 @@ GameStepResult _resolveHeroReplacement(
           dice,
         )
       : queued;
-  return GameStepResult(state: _resumeAutomaticPhase(continued));
+  return GameStepResult(
+    state: _resumeAutomaticPhase(
+      _resumePendingEventMonsterSpawn(continued, dice),
+    ),
+  );
 }
 
 GameStepResult _resolveTerminalPick(
@@ -374,11 +378,14 @@ GameStepResult _resolveDodge(
   }
   return GameStepResult(
     state: _resumeAutomaticPhase(
-      _startNextIncomingDamage(
-        _copyState(
-          withContinuation,
-          logEntry: 'dodge:$targetId:$remainingDamage',
+      _resumePendingEventMonsterSpawn(
+        _startNextIncomingDamage(
+          _copyState(
+            withContinuation,
+            logEntry: 'dodge:$targetId:$remainingDamage',
+          ),
         ),
+        dice,
       ),
     ),
   );

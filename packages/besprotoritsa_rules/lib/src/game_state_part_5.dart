@@ -41,6 +41,7 @@ final class GameState {
     this.eventTurnIndex = 0,
     this.actionsTakenThisTurn = 0,
     this.pendingDecision,
+    this.pendingEventMonsterSpawn,
   }) : board = List.unmodifiable(board),
        players = List.unmodifiable([
          for (final player in players)
@@ -180,6 +181,7 @@ final class GameState {
   /// than inferring it from a variable number of remaining actions.
   final int actionsTakenThisTurn;
   final PendingDecision? pendingDecision;
+  final PendingEventMonsterSpawn? pendingEventMonsterSpawn;
 
   /// The immutable player list is also the saved turn order. The first player
   /// is the leader for setup and reads the opening prologue.

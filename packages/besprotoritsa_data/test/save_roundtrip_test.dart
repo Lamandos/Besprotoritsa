@@ -139,23 +139,56 @@ void main() {
 
     expect(() => codec.fromJson(invalid), throwsFormatException);
   });
+
+  test('preserves a deferred event fight across a forced-movement dodge', () {
+    final base = _interruptedState();
+    final codec = GameStateJsonCodec();
+    final restored = codec.decode(
+      codec.encode(
+        _withPending(
+          base,
+          const AwaitingDodge(
+            monsterDamage: 1,
+            requiredAgilitySuccesses: 1,
+            targetPlayerId: 'ada',
+            source: DamageSource.boil,
+          ),
+          pendingEventMonsterSpawn: const PendingEventMonsterSpawn(
+            eventId: 'monster-pack',
+            playerId: 'ada',
+            optionIndex: 2,
+            coord: HexCoord(0, 1),
+          ),
+        ),
+      ),
+    );
+
+    expect(restored.pendingEventMonsterSpawn, isNotNull);
+    expect(restored.pendingEventMonsterSpawn!.eventId, 'monster-pack');
+    expect(restored.pendingEventMonsterSpawn!.optionIndex, 2);
+    expect(restored.pendingEventMonsterSpawn!.coord, const HexCoord(0, 1));
+  });
 }
 
-GameState _withPending(GameState source, PendingDecision pendingDecision) =>
-    GameState(
-      seed: source.seed,
-      difficulty: source.difficulty,
-      round: source.round,
-      phase: source.phase,
-      activePlayerId: source.activePlayerId,
-      actionsLeft: source.actionsLeft,
-      board: source.board,
-      players: source.players,
-      monsters: source.monsters,
-      decks: source.decks,
-      quests: source.quests,
-      pendingDecision: pendingDecision,
-    );
+GameState _withPending(
+  GameState source,
+  PendingDecision pendingDecision, {
+  PendingEventMonsterSpawn? pendingEventMonsterSpawn,
+}) => GameState(
+  seed: source.seed,
+  difficulty: source.difficulty,
+  round: source.round,
+  phase: source.phase,
+  activePlayerId: source.activePlayerId,
+  actionsLeft: source.actionsLeft,
+  board: source.board,
+  players: source.players,
+  monsters: source.monsters,
+  decks: source.decks,
+  quests: source.quests,
+  pendingDecision: pendingDecision,
+  pendingEventMonsterSpawn: pendingEventMonsterSpawn,
+);
 
 GameState _interruptedState() => GameState(
   seed: 0xDEADBEEF,

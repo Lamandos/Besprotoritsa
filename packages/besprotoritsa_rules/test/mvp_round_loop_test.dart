@@ -1572,6 +1572,178 @@ void main() {
   });
 
   test(
+    'move and fight resolves destination hazards before spawning the monster',
+    () {
+      var state = _mvpState(
+        eventId: 'pack-event',
+        corridorOpened: true,
+        boils: [
+          const BoilToken(
+            instanceId: 'destination-boil',
+            coord: HexCoord(0, 1),
+          ),
+        ],
+        additionalDecks: {
+          'monsters': DeckState(drawPile: const ['ghoul']),
+        },
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 2,
+            'defense': 0,
+            'attack': 1,
+            'movement': 0,
+            'features': <String>[],
+          },
+        },
+        eventDefinitions: {
+          'pack-event': {
+            'id': 'pack-event',
+            'options': [
+              {
+                'skillCheck': {'skill': 'endurance', 'difficulty': 1},
+                'successEffects': [
+                  {'type': 'move_to_neighbor'},
+                ],
+                'failureEffects': [
+                  {'type': 'move_to_neighbor_and_spawn_monster'},
+                ],
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([1]),
+      ).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(KeepRollChoice()),
+        FixedDiceRoller([]),
+      ).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(
+          EventOptionChoice('move_spawn:1:0:1'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(state.pendingDecision, isA<AwaitingDodge>());
+      expect(state.pendingEventMonsterSpawn, isNotNull);
+      expect(state.monsters, isEmpty);
+      expect(state.boils, isEmpty);
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([1]),
+      ).state;
+
+      expect(state.players.single.damage, 1);
+      expect(state.monsters.single.monsterId, 'ghoul');
+      expect(state.pendingDecision, isA<AwaitingDodge>());
+      expect(state.pendingEventMonsterSpawn, isNull);
+    },
+  );
+
+  test(
+    'starter gear leaves runtime decks when discarded and cannot be sold',
+    () {
+      final starterPistol = CardDefinition(
+        id: 'pistol',
+        type: ItemType.weapon,
+        slots: {ItemSlot.weapon},
+        cost: 0,
+        staticEffects: CardStaticEffects(const {}),
+        sourceDeck: 'starterItems',
+      );
+      var state = _mvpState(
+        eventId: 'discard-starter',
+        playerEquipment: const EquippedGear(weapon: 'pistol'),
+        cardDefinitions: {'pistol': starterPistol},
+        additionalDecks: {
+          'items': DeckState(drawPile: const ['regular-item']),
+        },
+        eventDefinitions: {
+          'discard-starter': {
+            'id': 'discard-starter',
+            'options': [
+              {
+                'skillCheck': null,
+                'autoOutcome': 'success',
+                'behaviorId': 'event.successFailure',
+                'successEffects': [
+                  {'type': 'discard_equipped', 'slot': 'weapon'},
+                ],
+                'failureEffects': [
+                  {'type': 'discard_equipped', 'slot': 'weapon'},
+                ],
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([]),
+      ).state;
+      expect(state.players.single.equipped.weapon, isNull);
+      expect(state.decks['items']!.drawPile, ['regular-item']);
+      expect(state.decks['items']!.discardPile, isEmpty);
+
+      state = _mvpState(
+        eventId: 'starter-market',
+        playerEquipment: const EquippedGear(weapon: 'pistol'),
+        cardDefinitions: {'pistol': starterPistol},
+        eventDefinitions: {
+          'starter-market': {
+            'id': 'starter-market',
+            'options': [
+              {
+                'skillCheck': null,
+                'autoOutcome': 'success',
+                'behaviorId': 'event.successFailure',
+                'successEffects': [
+                  {
+                    'type': 'market',
+                    'offers': 0,
+                    'maxPurchases': 0,
+                    'allowSell': true,
+                  },
+                ],
+                'failureEffects': [
+                  {
+                    'type': 'market',
+                    'offers': 0,
+                    'maxPurchases': 0,
+                    'allowSell': true,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        additionalDecks: {
+          'supplies': DeckState(drawPile: const ['supply']),
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([]),
+      ).state;
+      final options = (state.pendingDecision! as AwaitingEventOption).options;
+      expect(options.any((option) => option.contains('|sell|pistol')), isFalse);
+    },
+  );
+
+  test(
     'next round defense bonus is scheduled and applied to monster damage',
     () {
       final armor = CardDefinition(

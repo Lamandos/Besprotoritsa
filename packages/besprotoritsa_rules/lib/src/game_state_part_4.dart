@@ -137,6 +137,22 @@ final class AwaitingEventOption extends PendingDecision {
   final CardId? eventId;
 }
 
+/// A monster fight that resumes after forced-movement threats are resolved.
+@immutable
+final class PendingEventMonsterSpawn {
+  const PendingEventMonsterSpawn({
+    required this.eventId,
+    required this.playerId,
+    required this.optionIndex,
+    required this.coord,
+  });
+
+  final CardId eventId;
+  final PlayerId playerId;
+  final int optionIndex;
+  final HexCoord coord;
+}
+
 /// A terminal has revealed supply cards and awaits either one purchase or a
 /// decline. The cards are temporarily out of the deck until this is resolved.
 @immutable

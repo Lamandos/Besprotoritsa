@@ -12,6 +12,37 @@ GameState _resumeAutomaticPhase(GameState state) {
   };
 }
 
+GameState _resumePendingEventMonsterSpawn(GameState state, DiceRoller dice) {
+  final pending = state.pendingEventMonsterSpawn;
+  if (pending == null ||
+      state.pendingDecision != null ||
+      state.pendingDamage.isNotEmpty) {
+    return state;
+  }
+  final cleared = _copyState(state, clearPendingEventMonsterSpawn: true);
+  if (state.isComplete) return cleared;
+  final locationId = cleared.tileAt(pending.coord)?.locationId;
+  final arrived = locationId == null
+      ? cleared
+      : _applyFullQuestEvent(
+          cleared,
+          QuestArrived(locationId),
+          playerId: pending.playerId,
+        );
+  if (arrived.isComplete) return arrived;
+  final player = _playerById(arrived, pending.playerId);
+  final definition = arrived.eventDefinitions[pending.eventId];
+  if (player == null || !player.alive || definition == null) return arrived;
+  return _spawnEventOptionMonster(
+    arrived,
+    definition,
+    pending.playerId,
+    pending.optionIndex,
+    pending.coord,
+    dice,
+  );
+}
+
 int? _nextLivingPlayerIndex(List<PlayerState> players, int activeIndex) {
   if (players.isEmpty) {
     return null;
@@ -157,6 +188,8 @@ GameState _copyState(
   int? actionsTakenThisTurn,
   PendingDecision? pendingDecision,
   bool clearPendingDecision = false,
+  PendingEventMonsterSpawn? pendingEventMonsterSpawn,
+  bool clearPendingEventMonsterSpawn = false,
   String? logEntry,
 }) => GameState(
   schemaVersion: state.schemaVersion,
@@ -195,4 +228,7 @@ GameState _copyState(
   pendingDecision: clearPendingDecision
       ? null
       : pendingDecision ?? state.pendingDecision,
+  pendingEventMonsterSpawn: clearPendingEventMonsterSpawn
+      ? null
+      : pendingEventMonsterSpawn ?? state.pendingEventMonsterSpawn,
 );

@@ -111,8 +111,8 @@ GameStepResult _resolveEventOption(
     }
     final deckId = _cardSourceDeck(selected, definition);
     final decks = Map<DeckId, DeckState>.of(selected.decks);
-    final deck = decks[deckId];
-    if (deck != null) {
+    final deck = deckId == null ? null : decks[deckId];
+    if (deckId != null && deck != null) {
       decks[deckId] = DeckState(
         drawPile: deck.drawPile,
         discardPile: [...deck.discardPile, cardId],
@@ -159,8 +159,8 @@ GameStepResult _resolveEventOption(
         final definition = selected.cardDefinitions[cardId];
         if (definition == null) continue;
         final deckId = _cardSourceDeck(selected, definition);
-        final deck = decks[deckId];
-        if (deck != null) {
+        final deck = deckId == null ? null : decks[deckId];
+        if (deckId != null && deck != null) {
           decks[deckId] = DeckState(
             drawPile: deck.drawPile,
             discardPile: [...deck.discardPile, cardId],
@@ -423,11 +423,26 @@ GameStepResult _resolveEventOption(
       ),
       logEntry: 'event-move:$playerId:${target.coord}',
     );
+    final afterColocation = resolveColocation(moved);
+    if (afterColocation.pendingDecision != null ||
+        afterColocation.pendingDamage.isNotEmpty) {
+      return GameStepResult(
+        state: _copyState(
+          afterColocation,
+          pendingEventMonsterSpawn: PendingEventMonsterSpawn(
+            eventId: pending.eventId!,
+            playerId: playerId,
+            optionIndex: optionIndex,
+            coord: target.coord,
+          ),
+        ),
+      );
+    }
     final locationId = target.locationId;
     final arrived = locationId == null
-        ? moved
+        ? afterColocation
         : _applyFullQuestEvent(
-            moved,
+            afterColocation,
             QuestArrived(locationId),
             playerId: playerId,
           );
@@ -1231,9 +1246,9 @@ GameState _resolveEventOutcome(
         final card = current.cardDefinitions[cardId];
         if (card == null) continue;
         final deckId = _cardSourceDeck(current, card);
-        final deck = current.decks[deckId];
+        final deck = deckId == null ? null : current.decks[deckId];
         final decks = Map<DeckId, DeckState>.of(current.decks);
-        if (deck != null) {
+        if (deckId != null && deck != null) {
           decks[deckId] = DeckState(
             drawPile: deck.drawPile,
             discardPile: [...deck.discardPile, cardId],
@@ -1989,7 +2004,10 @@ List<String> _eventMarketOptions(
               when hero.credits >= (definition.cost - discount).clamp(0, 999))
             token('buy', '$index:$cardId'),
     if (allowSell)
-      for (final cardId in _ownedMarketCards(hero)) token('sell', cardId),
+      for (final cardId in _ownedMarketCards(hero))
+        if (state.cardDefinitions[cardId] case final definition?
+            when _cardSourceDeck(state, definition) != null)
+          token('sell', cardId),
     token('done'),
   ];
 }
@@ -2145,6 +2163,12 @@ GameStepResult _resolveEventMarketChoice(
     }
     final sold = _removeOwnedMarketCard(hero, targetCardId);
     final deckId = _cardSourceDeck(state, definition);
+    if (deckId == null) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
     final decks = Map<DeckId, DeckState>.of(state.decks);
     final deck = decks[deckId];
     if (deck != null) {
@@ -2203,8 +2227,9 @@ List<String> _ownedMarketCards(PlayerState player) => [
   ...player.carriedMods,
 ];
 
-DeckId _cardSourceDeck(GameState state, CardDefinition definition) {
+DeckId? _cardSourceDeck(GameState state, CardDefinition definition) {
   final sourceDeck = definition.sourceDeck;
+  if (sourceDeck == 'starterItems') return null;
   if (sourceDeck != null &&
       const {'items', 'supplies', 'specialItems'}.contains(sourceDeck) &&
       state.decks.containsKey(sourceDeck)) {
