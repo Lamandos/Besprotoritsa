@@ -6,7 +6,7 @@ Build from the Flutter application directory:
 
 ```sh
 cd packages/besprotoritsa_app
-flutter build web --release --pwa-strategy=offline-first --base-href="/" --wasm
+flutter build web --release --base-href="/" --wasm
 ```
 
 The distributable directory is `packages/besprotoritsa_app/build/web`. Do not
@@ -23,22 +23,20 @@ network connection. The service worker also requires a secure context (HTTPS,
 or localhost for development).
 
 `--wasm` produces an SKWasm/WASM target (`main.dart.wasm` and `main.dart.mjs`)
-with an optimized CanvasKit JavaScript fallback for browsers without WasmGC.
-The supplied `--pwa-strategy=offline-first` flag is accepted by Flutter 3.47
-but deprecated by Flutter; the production offline behavior is intentionally
-owned by `web/service_worker.js`, not Flutter's retiring generated worker.
-When a future Flutter removes that flag, omit only
-`--pwa-strategy=offline-first`; keep the remaining command and the custom
-worker.
+and keeps `main.dart.js` as the JavaScript fallback. COOP and COEP are needed
+for the SKWasm renderer; use a host that can send the headers below. The
+production offline behavior is owned by `web/service_worker.js`, not Flutter's
+generated worker.
 
 The custom bootstrap deliberately does not load `flutter_service_worker.js`.
 It registers `service_worker.js`, which precaches the app shell, local
-CanvasKit/SKWasm, JavaScript, WASM, the current game illustrations, and the
-Material Icons font. Thus a first successful online visit followed by service
-worker activation has the crew, board, and event artwork needed for offline
-play. Other assets requested later are cached by the worker's cache-first
-handler. Keep the precache list in `web/service_worker.js` in sync with the app
-artwork and bump `CACHE_VERSION` whenever cached asset behavior changes.
+CanvasKit/SKWasm, both app runtimes, the current game illustrations, shaders,
+and Material Icons. The page reports offline readiness only after the worker
+confirms the shell and both runtimes are cached; it also exposes the browser's
+install prompt when available and indicates when running as an installed PWA.
+Other assets requested later are cached by the worker's cache-first handler.
+Keep the precache list in `web/service_worker.js` in sync with app assets and
+bump `CACHE_VERSION` whenever cached asset behavior changes.
 
 ## Save persistence verification
 
@@ -108,7 +106,7 @@ cd packages/besprotoritsa_app
 flutter analyze
 flutter test
 flutter test --platform chrome test/web_indexed_db_storage_test.dart
-flutter build web --release --pwa-strategy=offline-first --base-href="/" --wasm
+flutter build web --release --base-href="/" --wasm
 find build/web -maxdepth 1 -type f | sort
 ```
 

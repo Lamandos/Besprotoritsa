@@ -28,7 +28,7 @@ jobs:
       - name: Build web application
         working-directory: packages/besprotoritsa_app
         run: >-
-          flutter build web --release --pwa-strategy=offline-first
+          flutter build web --release
           --base-href="/Besprotoritsa/" --wasm
       - uses: actions/upload-pages-artifact@v3
         with:

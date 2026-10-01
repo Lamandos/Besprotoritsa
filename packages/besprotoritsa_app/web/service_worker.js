@@ -6,7 +6,7 @@
  * the app later use the cache-first fetch handler when they are requested.
  */
 const CACHE_PREFIX = 'besprotoritsa-web';
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `${CACHE_PREFIX}-${CACHE_VERSION}`;
 const APP_SHELL = [
   './',
@@ -70,7 +70,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)),
   );
-  self.skipWaiting();
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
@@ -127,4 +127,20 @@ self.addEventListener('fetch', (event) => {
   } else if (isGameAsset(request)) {
     event.respondWith(cacheFirst(request));
   }
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type !== 'GET_OFFLINE_STATUS') return;
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const cachedShell = await Promise.all(
+        APP_SHELL.map((path) => cache.match(path)),
+      );
+      event.source?.postMessage({
+        type: 'OFFLINE_STATUS',
+        ready: cachedShell.every(Boolean),
+        version: CACHE_VERSION,
+      });
+    }),
+  );
 });
