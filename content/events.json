@@ -2361,7 +2361,8 @@
           ],
           "successEffects": [
             {
-              "type": "spawn_monster"
+              "type": "spawn_monster",
+              "defeatRewardDeckId": "items"
             }
           ]
         }

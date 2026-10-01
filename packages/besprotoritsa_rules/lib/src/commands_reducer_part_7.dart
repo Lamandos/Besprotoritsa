@@ -1728,6 +1728,7 @@ GameState _resolveEventOutcome(
           attack: _scaledMonsterStat(current, monsterDefinition, 'attack'),
           movement: monsterDefinition['movement']! as int,
           returnsToMonsterDeck: true,
+          defeatRewardDeckId: rawEffect['defeatRewardDeckId'] as String?,
         );
         final decks = Map<DeckId, DeckState>.of(current.decks)
           ..['monsters'] = draw.deck;

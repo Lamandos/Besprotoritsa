@@ -402,6 +402,45 @@ GameState _resolveAttackRoll(
     damage: player.damage + roll.ownerDamage,
   );
   var unclaimedLoot = const <CardId>[];
+  final rewardDeckId = monster.defeatRewardDeckId;
+  if (defeated && rewardDeckId != null) {
+    final rewardDeck = decks[rewardDeckId];
+    if (rewardDeck != null) {
+      final draw = DeckRules.draw(
+        rewardDeck,
+        seed: _deckSeed(state, 'defeat-reward:${monster.instanceId}'),
+      );
+      if (draw.cards.isNotEmpty) {
+        final rewardCard = draw.cards.single;
+        try {
+          awardedPlayer = InventoryRules.receive(
+            awardedPlayer,
+            rewardCard,
+            state.cardDefinitions,
+          );
+          decks[rewardDeckId] = draw.deck;
+        } on BackpackCapacityExceeded {
+          decks[rewardDeckId] = DeckRules.returnAndShuffle(
+            draw.deck,
+            [rewardCard],
+            seed: _deckSeed(
+              state,
+              'defeat-reward-return:${monster.instanceId}',
+            ),
+          );
+        } on InventoryRuleViolation {
+          decks[rewardDeckId] = DeckRules.returnAndShuffle(
+            draw.deck,
+            [rewardCard],
+            seed: _deckSeed(
+              state,
+              'defeat-reward-return:${monster.instanceId}',
+            ),
+          );
+        }
+      }
+    }
+  }
   if (defeated && monster.monsterId == RestlessMonster.restlessMonsterId) {
     final loot = _awardRestlessTrophies(awardedPlayer, monster, state);
     awardedPlayer = loot.player;

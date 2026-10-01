@@ -91,29 +91,36 @@ GameStepResult _resolveHeroReplacement(
   );
   if (pending.remainingPlayerIds.isNotEmpty) {
     if (selected.reserveHeroes.isEmpty) {
+      if (selected.queuedReplacements.isEmpty) {
+        return GameStepResult(
+          state: _copyState(
+            selected,
+            isComplete: true,
+            pendingDamage: const <IncomingDamage>[],
+            clearPendingDecision: true,
+            logEntry: 'replacement-reserves-exhausted',
+          ),
+        );
+      }
+      // The selected reserve must still activate even if later simultaneous
+      // deaths have no reserve available.
+    } else {
       return GameStepResult(
         state: _copyState(
           selected,
-          isComplete: true,
-          pendingDamage: const <IncomingDamage>[],
-          clearPendingDecision: true,
-          logEntry: 'replacement-reserves-exhausted',
+          pendingDecision: AwaitingHeroReplacement(
+            playerId: pending.remainingPlayerIds.first,
+            characterIds: selected.reserveHeroes.map(
+              (hero) => hero.characterId,
+            ),
+            remainingPlayerIds: pending.remainingPlayerIds.skip(1),
+            counterAttackMonsterInstanceId:
+                pending.counterAttackMonsterInstanceId,
+            counterAttackPlayerId: pending.counterAttackPlayerId,
+          ),
         ),
       );
     }
-    return GameStepResult(
-      state: _copyState(
-        selected,
-        pendingDecision: AwaitingHeroReplacement(
-          playerId: pending.remainingPlayerIds.first,
-          characterIds: selected.reserveHeroes.map((hero) => hero.characterId),
-          remainingPlayerIds: pending.remainingPlayerIds.skip(1),
-          counterAttackMonsterInstanceId:
-              pending.counterAttackMonsterInstanceId,
-          counterAttackPlayerId: pending.counterAttackPlayerId,
-        ),
-      ),
-    );
   }
   // A death can interrupt a queue of monster/boil damage.  Choosing a reserve
   // must return to that queue before any new player command becomes legal.

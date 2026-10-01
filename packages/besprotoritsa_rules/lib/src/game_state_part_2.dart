@@ -18,6 +18,7 @@ class MonsterInstance {
     this.attack = 0,
     this.movement = 1,
     this.returnsToMonsterDeck = false,
+    this.defeatRewardDeckId,
     Iterable<CardId> carriedGear = const [],
   }) : carriedGear = List.unmodifiable(carriedGear) {
     _requireId(instanceId, 'instanceId');
@@ -40,6 +41,7 @@ class MonsterInstance {
   /// Number of connected, opened sectors this monster traverses per round.
   final int movement;
   final bool returnsToMonsterDeck;
+  final DeckId? defeatRewardDeckId;
   final List<CardId> carriedGear;
 }
 

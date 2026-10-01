@@ -486,6 +486,120 @@ void main() {
   });
 
   test(
+    'queued replacement activates when simultaneous deaths exhaust reserves',
+    () {
+      var state = _mvpState(
+        eventId: 'mass-casualty',
+        heroCount: 2,
+        playerHealth: 1,
+        reserveHeroes: [
+          ReserveHero(
+            characterId: 'scientist',
+            health: 3,
+            stats: const PlayerStats(),
+          ),
+        ],
+        eventDefinitions: {
+          'mass-casualty': {
+            'options': [
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'damage_all_players', 'amount': 1},
+                ],
+                'failureEffects': [
+                  {'type': 'damage_all_players', 'amount': 1},
+                ],
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(state.pendingDecision, isA<AwaitingHeroReplacement>());
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(
+          SelectReplacementHeroChoice('scientist'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(
+        state.players.map((hero) => hero.characterId),
+        contains('scientist'),
+      );
+      expect(
+        state.players
+            .singleWhere((hero) => hero.characterId == 'scientist')
+            .alive,
+        isTrue,
+      );
+      expect(state.isComplete, isFalse);
+    },
+  );
+
+  test('event spawn grants its configured deck reward after victory', () {
+    var state = _mvpState(
+      eventId: 'reward-event',
+      eventDefinitions: {
+        'reward-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'successEffects': [
+                {'type': 'spawn_monster', 'defeatRewardDeckId': 'items'},
+              ],
+              'failureEffects': [
+                {'type': 'no_effect'},
+              ],
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 1,
+          'defense': 0,
+          'attack': 0,
+          'movement': 0,
+        },
+      },
+      cardDefinitions: {
+        'ration': CardDefinition(
+          id: 'ration',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+        ),
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+        'items': DeckState(drawPile: const ['ration']),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([6]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.players.single.backpack, contains('ration'));
+    expect(state.decks['items']!.drawPile, isEmpty);
+  });
+
+  test(
     'events without a printed check use their declared automatic outcome',
     () {
       var state = _mvpState(

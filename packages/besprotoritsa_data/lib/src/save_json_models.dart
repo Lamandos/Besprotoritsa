@@ -157,6 +157,7 @@ abstract final class SaveJsonModels {
     'movement': monster.movement,
     'carried_gear': monster.carriedGear,
     'returns_to_monster_deck': monster.returnsToMonsterDeck,
+    'defeat_reward_deck_id': monster.defeatRewardDeckId,
   };
   static MonsterInstance monsterFromJson(Map<String, Object?> json) =>
       MonsterInstance(
@@ -170,6 +171,7 @@ abstract final class SaveJsonModels {
         movement: _int(json, 'movement'),
         carriedGear: _strings(json, 'carried_gear'),
         returnsToMonsterDeck: json['returns_to_monster_deck'] == true,
+        defeatRewardDeckId: json['defeat_reward_deck_id'] as String?,
       );
   static Map<String, Object?> boilToJson(BoilToken boil) => {
     'instance_id': boil.instanceId,
