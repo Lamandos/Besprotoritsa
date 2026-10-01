@@ -1,12 +1,12 @@
 {
-    "name": "besprotoritsa_app",
-    "short_name": "besprotoritsa_app",
-    "start_url": ".",
+    "name": "Беспроторница",
+    "short_name": "Беспроторница",
+    "start_url": "./",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#15120F",
+    "theme_color": "#211A15",
+    "description": "Офлайн-кооперативная игра на выживание.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
