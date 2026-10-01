@@ -129,10 +129,30 @@ Offset _layoutPosition(HexCoord coord, List<HexTile> board) {
     };
     if (position != null) return position;
   }
+  final coordinates = board.map((tile) => tile.coord).toList();
+  final minX = coordinates
+      .map((point) => point.q * 168 + point.r * 84)
+      .reduce((left, right) => left < right ? left : right);
+  final minY = coordinates
+      .map((point) => point.r * 145)
+      .reduce((left, right) => left < right ? left : right);
   return Offset(
-    24 + (coord.q + coord.r * .5) * 138,
-    16 + coord.r * 118,
+    16.0 + coord.q * 168 + coord.r * 84 - minX,
+    16.0 + coord.r * 145 - minY,
   );
+}
+
+Size _boardCanvasSize(List<HexTile> board) {
+  if (board.length == 3) return const Size(640, 450);
+  final positions = board.map((tile) {
+    final coord = tile.coord;
+    return Offset(coord.q * 168 + coord.r * 84, coord.r * 145);
+  }).toList();
+  final minX = positions.map((point) => point.dx).reduce(math.min);
+  final maxX = positions.map((point) => point.dx).reduce(math.max);
+  final minY = positions.map((point) => point.dy).reduce(math.min);
+  final maxY = positions.map((point) => point.dy).reduce(math.max);
+  return Size(maxX - minX + 256, maxY - minY + 224);
 }
 
 String _eventLabel(GameEvent event, AppStrings strings) => switch (event) {
