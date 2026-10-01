@@ -64,7 +64,6 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
   late final SaveSystem _autosaves;
   late GameState _latestState;
   Future<void> _saveChain = Future<void>.value();
-  bool _exitApproved = false;
 
   @override
   void initState() {
@@ -84,15 +83,9 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
       _latestState = next;
       _queueAutosave(next);
     });
-    return PopScope<void>(
-      canPop: _exitApproved,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && !_exitApproved) _confirmExitToMenu();
-      },
-      child: MvpGameScreen(
-        onManualSaveRequested: _saveManual,
-        onExitRequested: _confirmExitToMenu,
-      ),
+    return MvpGameScreen(
+      onManualSaveRequested: _saveManual,
+      onExitRequested: _confirmExitToMenu,
     );
   }
 
@@ -165,12 +158,7 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
     );
     if (leave != true || !mounted) return;
     await _saveChain;
-    if (mounted) {
-      setState(() => _exitApproved = true);
-      await WidgetsBinding.instance.endOfFrame;
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    }
+    if (mounted) Navigator.of(context).pop();
   }
 
   Future<_ManualSaveChoice?> _showManualSaveDialog() async {

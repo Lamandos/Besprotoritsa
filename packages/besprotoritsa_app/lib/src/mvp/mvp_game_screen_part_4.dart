@@ -436,12 +436,34 @@ class _JournalContents extends StatelessWidget {
         if (currentGoal == null)
           const Text('Нет активной сюжетной цели.')
         else
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.flag, color: Color(0xFFD3AD75)),
-            title: Text(_questCardLabel(state, currentGoal)),
-            subtitle: Text(
-              _questCardDescription(state, currentGoal) ?? currentGoal,
+          Material(
+            color: Colors.transparent,
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.flag, color: Color(0xFFD3AD75)),
+              title: Text(_questCardLabel(state, currentGoal)),
+              subtitle: Text(
+                _questCardDescription(state, currentGoal) ?? currentGoal,
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () => showDialog<void>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: Text(_questCardLabel(state, currentGoal)),
+                  content: SingleChildScrollView(
+                    child: Text(
+                      _questCardDescription(state, currentGoal) ?? currentGoal,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: const Text('Закрыть'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         const SizedBox(height: 12),

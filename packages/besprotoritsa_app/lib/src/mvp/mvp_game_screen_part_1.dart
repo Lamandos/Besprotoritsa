@@ -42,9 +42,7 @@ const mvpInventoryButtonKey = ValueKey<String>('mvp-inventory-button');
 const mvpJournalButtonKey = ValueKey<String>('mvp-journal-button');
 
 const _minimumTouchTarget = Size(48, 48);
-// The immersive canvas is fixed-design art. Below this width, use the
-// scrollable compact layout so labels and card text keep a readable size.
-const _wideLayoutMinimumWidth = 1560.0;
+const _wideLayoutMinimumWidth = 840.0;
 
 Future<void> _dispatchWithFeedback(
   BuildContext context,
