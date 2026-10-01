@@ -56,10 +56,16 @@ class _ImmersiveGameHeader extends StatelessWidget {
   const _ImmersiveGameHeader({
     required this.state,
     required this.onSave,
+    required this.onExit,
+    required this.onScaleText,
+    required this.textScale,
   });
 
   final GameState state;
   final VoidCallback? onSave;
+  final Future<void> Function()? onExit;
+  final VoidCallback onScaleText;
+  final double textScale;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -142,6 +148,25 @@ class _ImmersiveGameHeader extends StatelessWidget {
             onPressed: onSave,
             icon: const Icon(Icons.save_outlined),
           ),
+        if (onExit != null)
+          IconButton(
+            key: const ValueKey<String>('pause-menu-button'),
+            tooltip: 'Пауза и меню',
+            onPressed: onExit,
+            icon: const Icon(Icons.pause_circle_outline),
+          ),
+        IconButton(
+          key: const ValueKey<String>('rules-reference-button'),
+          tooltip: 'Справочник правил',
+          onPressed: () => _openRulesReference(context),
+          icon: const Icon(Icons.rule_folder_outlined),
+        ),
+        IconButton(
+          key: const ValueKey<String>('text-scale-button'),
+          tooltip: 'Размер текста: ${textScale.toStringAsFixed(2)}×',
+          onPressed: onScaleText,
+          icon: const Icon(Icons.text_fields),
+        ),
       ],
     ),
   );
@@ -354,15 +379,49 @@ class _EventCardPanel extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Expanded(
-                child: Text(
-                  runtimeDescription ?? cardCopy,
-                  maxLines: 5,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF493A2A),
-                    fontSize: 13,
-                    height: 1.35,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        runtimeDescription ?? cardCopy,
+                        maxLines: 5,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF493A2A),
+                          fontSize: 13,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(48, 36),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          foregroundColor: const Color(0xFF493A2A),
+                        ),
+                        onPressed: () => showDialog<void>(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            title: Text(cardTitle),
+                            content: SingleChildScrollView(
+                              child: Text(runtimeDescription ?? cardCopy),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
+                                child: const Text('Закрыть'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        child: const Text('Читать полностью'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const Divider(color: Color(0xFF9B8057)),
@@ -827,9 +886,7 @@ class _MoveConfirmButton extends ConsumerWidget {
         ),
         onPressed: canMove
             ? () {
-                ref
-                    .read(gameControllerProvider.notifier)
-                    .dispatch(MoveCommand(target!));
+                _dispatchWithFeedback(context, ref, MoveCommand(target!));
                 onClearDestination();
               }
             : null,
@@ -933,11 +990,13 @@ class _WideCommandButton extends ConsumerWidget {
                 foregroundColor: const Color(0xFFFFE8C2),
                 side: const BorderSide(color: Color(0xFFE0A364), width: 1.4),
               ),
-              onPressed: enabled
-                  ? () => ref
-                        .read(gameControllerProvider.notifier)
-                        .dispatch(command.command)
-                  : null,
+              onPressed: () => enabled
+                  ? _dispatchWithFeedback(context, ref, command.command)
+                  : ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Завершить ход сейчас недоступно.'),
+                      ),
+                    ),
               child: child,
             )
           : OutlinedButton(
@@ -958,11 +1017,13 @@ class _WideCommandButton extends ConsumerWidget {
                   borderRadius: BorderRadius.all(Radius.circular(3)),
                 ),
               ),
-              onPressed: enabled
-                  ? () => ref
-                        .read(gameControllerProvider.notifier)
-                        .dispatch(command.command)
-                  : null,
+              onPressed: () => enabled
+                  ? _dispatchWithFeedback(context, ref, command.command)
+                  : ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Это действие сейчас недоступно.'),
+                      ),
+                    ),
               child: child,
             ),
     );

@@ -11,6 +11,9 @@ class _WideGameLayout extends StatefulWidget {
     required this.blocked,
     required this.onOpenLog,
     required this.onManualSaveRequested,
+    required this.onExitRequested,
+    required this.onScaleText,
+    required this.textScale,
     super.key,
   });
 
@@ -19,6 +22,9 @@ class _WideGameLayout extends StatefulWidget {
   final bool blocked;
   final VoidCallback onOpenLog;
   final VoidCallback? onManualSaveRequested;
+  final Future<void> Function()? onExitRequested;
+  final VoidCallback onScaleText;
+  final double textScale;
 
   @override
   State<_WideGameLayout> createState() => _WideGameLayoutState();
@@ -121,6 +127,9 @@ class _WideGameLayoutState extends State<_WideGameLayout>
                           child: _ImmersiveGameHeader(
                             state: state,
                             onSave: widget.onManualSaveRequested,
+                            onExit: widget.onExitRequested,
+                            onScaleText: widget.onScaleText,
+                            textScale: widget.textScale,
                           ),
                         ),
                         Positioned(
@@ -260,9 +269,14 @@ class _GameStatus extends StatelessWidget {
           const SizedBox(width: 8),
           Flexible(
             child: Text(
-              strings.roundStatus(state.round, state.actionsLeft),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              '${strings.roundStatus(state.round, state.actionsLeft)} · '
+              '${switch (state.phase) {
+                GamePhase.playersTurn => 'ХОД ЭКИПАЖА',
+                GamePhase.monstersTurn => 'ХОД МОНСТРОВ',
+                GamePhase.eventsPhase => 'ФАЗА СОБЫТИЙ',
+              }}',
+              maxLines: 2,
+              overflow: TextOverflow.fade,
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 letterSpacing: .4,

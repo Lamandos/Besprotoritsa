@@ -83,7 +83,10 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
       _latestState = next;
       _queueAutosave(next);
     });
-    return MvpGameScreen(onManualSaveRequested: _saveManual);
+    return MvpGameScreen(
+      onManualSaveRequested: _saveManual,
+      onExitRequested: _confirmExitToMenu,
+    );
   }
 
   @override
@@ -130,6 +133,32 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
         );
       }
     }
+  }
+
+  Future<void> _confirmExitToMenu() async {
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Вернуться в меню?'),
+        content: const Text(
+          'Партия сохранится автоматически. После перезапуска её можно '
+          'продолжить из главного меню.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Продолжить партию'),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('В меню'),
+          ),
+        ],
+      ),
+    );
+    if (leave != true || !mounted) return;
+    await _saveChain;
+    if (mounted) Navigator.of(context).pop();
   }
 
   Future<_ManualSaveChoice?> _showManualSaveDialog() async {

@@ -19,8 +19,7 @@ class _CommandButton extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
             )
           : null,
-      onPressed: () =>
-          ref.read(gameControllerProvider.notifier).dispatch(command.command),
+      onPressed: () => _dispatchWithFeedback(context, ref, command.command),
       child: Text(command.label),
     ),
   );
@@ -397,10 +396,13 @@ class _JournalContents extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
-    final entries = <String>[
+    final allEntries = <String>[
       ...state.log.map((entry) => _displayLogLine(state, entry)),
       ...queue.history.map((event) => _eventLabel(event, strings)),
     ];
+    final entries = allEntries.length <= 20
+        ? allEntries
+        : allEntries.sublist(allEntries.length - 20);
     final activeQuests = _activeQuests(state);
     final currentGoal = activeQuests
         .where(
@@ -434,14 +436,34 @@ class _JournalContents extends StatelessWidget {
         if (currentGoal == null)
           const Text('Нет активной сюжетной цели.')
         else
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.flag, color: Color(0xFFD3AD75)),
-            title: Text(_questCardLabel(state, currentGoal)),
-            subtitle: Text(
-              _questCardDescription(state, currentGoal) ?? currentGoal,
-              maxLines: 5,
-              overflow: TextOverflow.ellipsis,
+          Material(
+            color: Colors.transparent,
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.flag, color: Color(0xFFD3AD75)),
+              title: Text(_questCardLabel(state, currentGoal)),
+              subtitle: Text(
+                _questCardDescription(state, currentGoal) ?? currentGoal,
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () => showDialog<void>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: Text(_questCardLabel(state, currentGoal)),
+                  content: SingleChildScrollView(
+                    child: Text(
+                      _questCardDescription(state, currentGoal) ?? currentGoal,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: const Text('Закрыть'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         const SizedBox(height: 12),

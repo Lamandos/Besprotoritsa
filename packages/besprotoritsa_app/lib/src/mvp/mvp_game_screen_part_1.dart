@@ -44,16 +44,79 @@ const mvpJournalButtonKey = ValueKey<String>('mvp-journal-button');
 const _minimumTouchTarget = Size(48, 48);
 const _wideLayoutMinimumWidth = 840.0;
 
+Future<void> _dispatchWithFeedback(
+  BuildContext context,
+  WidgetRef ref,
+  GameCommand command,
+) async {
+  if (command is ImplantModificationCommand) {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Необратимое вживление'),
+        content: const Text(
+          'Вживлённую модификацию нельзя снять или передать. Продолжить?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Вживить'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !context.mounted) return;
+  }
+  final accepted = ref.read(gameControllerProvider.notifier).dispatch(command);
+  if (!accepted && context.mounted) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Действие сейчас недоступно. Проверьте активную фазу, '
+            'условия действия и незавершённые решения.',
+          ),
+        ),
+      );
+  }
+}
+
+void _openRulesReference(BuildContext context) {
+  Navigator.of(context).push<void>(
+    MaterialPageRoute<void>(builder: (_) => const RulesReferenceScreen()),
+  );
+}
+
 /// The playable board, adaptive command palette, animation status, and log.
-class MvpGameScreen extends ConsumerWidget {
+class MvpGameScreen extends ConsumerStatefulWidget {
   /// Creates the MVP game screen.
-  const MvpGameScreen({this.onManualSaveRequested, super.key});
+  const MvpGameScreen({
+    this.onManualSaveRequested,
+    this.onExitRequested,
+    super.key,
+  });
 
   /// Called with the current immutable snapshot when the player saves.
   final Future<void> Function(GameState state)? onManualSaveRequested;
 
+  /// Called after the player confirms returning to the main menu.
+  final Future<void> Function()? onExitRequested;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MvpGameScreen> createState() => _MvpGameScreenState();
+}
+
+class _MvpGameScreenState extends ConsumerState<MvpGameScreen> {
+  int _textScaleIndex = 0;
+  static const _textScales = <double>[1, 1.15, 1.3];
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(gameControllerProvider);
     final outcome = _gameOutcome(state);
     if (outcome != null) {
@@ -62,10 +125,34 @@ class MvpGameScreen extends ConsumerWidget {
     final queue = ref.read(eventQueueProvider);
     return ListenableBuilder(
       listenable: queue,
-      builder: (context, _) => _MvpGameLayout(
-        state: state,
-        queue: queue,
-        onManualSaveRequested: onManualSaveRequested,
+      builder: (context, _) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(_textScales[_textScaleIndex]),
+        ),
+        child: _MvpGameLayout(
+          state: state,
+          queue: queue,
+          onManualSaveRequested: widget.onManualSaveRequested,
+          onExitRequested: widget.onExitRequested,
+          onScaleText: () {
+            setState(
+              () =>
+                  _textScaleIndex = (_textScaleIndex + 1) % _textScales.length,
+            );
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Размер текста: '
+                    '${(_textScales[_textScaleIndex] * 100).round()}%',
+                  ),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+          },
+          textScale: _textScales[_textScaleIndex],
+        ),
       ),
     );
   }
@@ -126,6 +213,13 @@ class _GameOutcomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text('Раунд ${state.round}'),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  key: const ValueKey<String>('outcome-menu-button'),
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.home_outlined),
+                  label: const Text('Вернуться в меню'),
+                ),
               ],
             ),
           ),
@@ -140,11 +234,17 @@ class _MvpGameLayout extends ConsumerWidget {
     required this.state,
     required this.queue,
     required this.onManualSaveRequested,
+    required this.onExitRequested,
+    required this.onScaleText,
+    required this.textScale,
   });
 
   final GameState state;
   final EventQueue queue;
   final Future<void> Function(GameState state)? onManualSaveRequested;
+  final Future<void> Function()? onExitRequested;
+  final VoidCallback onScaleText;
+  final double textScale;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -160,6 +260,25 @@ class _MvpGameLayout extends ConsumerWidget {
           : AppBar(
               title: Text(strings.mvpTitle),
               actions: [
+                if (onExitRequested != null)
+                  IconButton(
+                    key: const ValueKey<String>('pause-menu-button'),
+                    tooltip: 'Пауза и меню',
+                    onPressed: onExitRequested,
+                    icon: const Icon(Icons.pause_circle_outline),
+                  ),
+                IconButton(
+                  key: const ValueKey<String>('rules-reference-button'),
+                  tooltip: 'Справочник правил',
+                  onPressed: () => _openRulesReference(context),
+                  icon: const Icon(Icons.rule_folder_outlined),
+                ),
+                IconButton(
+                  key: const ValueKey<String>('text-scale-button'),
+                  tooltip: 'Размер текста: ${textScale.toStringAsFixed(2)}×',
+                  onPressed: onScaleText,
+                  icon: const Icon(Icons.text_fields),
+                ),
                 if (onManualSaveRequested != null)
                   IconButton(
                     key: const ValueKey<String>('manual-save-button'),
@@ -199,6 +318,9 @@ class _MvpGameLayout extends ConsumerWidget {
                       onManualSaveRequested: onManualSaveRequested == null
                           ? null
                           : () => onManualSaveRequested!(state),
+                      onExitRequested: onExitRequested,
+                      onScaleText: onScaleText,
+                      textScale: textScale,
                     )
                   else
                     _CompactGameLayout(
