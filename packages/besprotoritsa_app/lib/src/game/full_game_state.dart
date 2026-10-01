@@ -153,7 +153,6 @@ GameState createFullGameState({
   return GameState(
     seed: seed,
     contentSetId: 'full',
-    contentSetVersion: '1',
     round: 1,
     phase: GamePhase.playersTurn,
     activePlayerId: playerStates.first.id,

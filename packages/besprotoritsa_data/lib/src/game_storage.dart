@@ -15,6 +15,8 @@ abstract interface class GameStorage {
 }
 
 /// Optional slot deletion supported by durable application backends.
+// This one-method interface keeps deletion optional for existing host backends.
+// ignore: one_member_abstracts
 abstract interface class SaveSlotManagementStorage {
   /// Deletes only [slotId]'s snapshot and associated player-facing metadata.
   Future<void> deleteGame(String slotId);
@@ -111,10 +113,11 @@ Map<String, Object?> _migrateVersionOne(Map<String, Object?> document) {
   final migrated = Map<String, Object?>.of(document);
   final seed = migrated['seed'];
   if (seed is! int) throw const FormatException('seed must be an integer.');
-  migrated.putIfAbsent('prng_state', () => seed & 0xFFFFFFFF);
-  migrated.putIfAbsent('content_set_id', () => 'mvp');
-  migrated.putIfAbsent('content_set_version', () => '1');
-  migrated['schema_version'] = 2;
+  migrated
+    ..putIfAbsent('prng_state', () => seed & 0xFFFFFFFF)
+    ..putIfAbsent('content_set_id', () => 'mvp')
+    ..putIfAbsent('content_set_version', () => '1')
+    ..['schema_version'] = 2;
   return migrated;
 }
 

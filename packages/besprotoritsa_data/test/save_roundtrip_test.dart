@@ -73,8 +73,7 @@ void main() {
 
   test('continues the same PRNG stream after a saved checkpoint', () {
     final codec = GameStateJsonCodec();
-    final roller = SeededDiceRoller(_interruptedState().seed);
-    roller.rollDice(5);
+    final roller = SeededDiceRoller(_interruptedState().seed)..rollDice(5);
     final checkpointed = _interruptedState().withPrngState(roller.checkpoint);
     final restored = codec.decode(codec.encode(checkpointed));
     final resumed = SeededDiceRoller(

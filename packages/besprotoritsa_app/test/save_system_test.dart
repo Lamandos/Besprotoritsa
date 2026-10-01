@@ -36,7 +36,7 @@ void main() {
     'renames and deletes one slot without changing neighboring saves',
     () async {
       final saves = SaveSystem(storage: InMemoryGameStorage());
-      await saves.saveManual('slot-1', _state(round: 1), name: 'Old name');
+      await saves.saveManual('slot-1', _state(), name: 'Old name');
       await saves.saveManual('slot-2', _state(round: 2), name: 'Keep me');
 
       await saves.renameManual('slot-1', 'Renamed');

@@ -91,7 +91,6 @@ class GameStateJsonCodec {
     );
     return GameState(
       // GameState's schemaVersion describes the rules model, not the save file.
-      schemaVersion: 1,
       seed: _int(json, 'seed'),
       prngState: _int(json, 'prng_state'),
       contentSetId: _string(json, 'content_set_id'),

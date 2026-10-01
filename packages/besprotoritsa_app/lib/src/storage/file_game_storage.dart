@@ -52,6 +52,7 @@ class FileGameStorage
   @override
   Future<void> deleteGame(String slotId) async {
     final file = await _fileFor(slotId);
+    // Await deletion so filesystem work does not block the UI isolate.
     // ignore: avoid_slow_async_io
     if (await file.exists()) await file.delete();
     await saveSlotName(slotId, null);
