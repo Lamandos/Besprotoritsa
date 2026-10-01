@@ -47,13 +47,57 @@ class _PendingDecisionModal extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final strings = AppStrings.of(context);
+    final eventId = switch (decision) {
+      AwaitingEventOption(:final eventId) => eventId,
+      _ => null,
+    };
+    final eventTitle = eventId == null
+        ? null
+        : _runtimeEventText(state, eventId, 'nameKey') ??
+              _eventCardTitle(eventId);
+    final eventDescription = eventId == null
+        ? null
+        : _runtimeEventText(state, eventId, 'descKey');
     return Positioned.fill(
       child: ColoredBox(
         color: Colors.black54,
         child: Center(
           child: AlertDialog(
-            title: Text(strings.decisionRequired),
-            content: Text(_decisionPrompt(decision, strings)),
+            title: Text(
+              eventTitle ?? strings.decisionRequired,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            content: eventId == null
+                ? Text(_decisionPrompt(decision, strings))
+                : SingleChildScrollView(
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFD6BF95),
+                            Color(0xFFC6AA7D),
+                            Color(0xFFD9C398),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFF8B683B),
+                          width: 2,
+                        ),
+                      ),
+                      child: Text(
+                        eventDescription ?? _decisionPrompt(decision, strings),
+                        style: const TextStyle(
+                          color: Color(0xFF493A2A),
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ),
             actions: _decisionActions(ref, decision, strings, state),
           ),
         ),
