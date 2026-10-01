@@ -47,7 +47,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
+    expect(find.text('Текущая цель кампании'), findsOneWidget);
+    expect(find.text('Пробуждение'), findsWidgets);
+    expect(find.textContaining('0/1'), findsWidgets);
     expect(find.text(privateTaskName), findsNothing);
+    await tester.tap(find.text('Личные задачи активного героя'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text(privateTaskName), findsOneWidget);
   });
 
   testWidgets(

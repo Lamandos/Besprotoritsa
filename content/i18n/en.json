@@ -1118,7 +1118,7 @@
           },
           "o2": {
             "action": "Take the console apart for parts.",
-            "success": "The parts will be useful. Ready all your Robots.",
+            "success": "Digital rule: robots do not become exhausted or spent, so this action does not change their state.",
             "failure": "The junk turns out to be useless."
           }
         }

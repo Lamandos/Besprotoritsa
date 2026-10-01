@@ -12,6 +12,37 @@ GameState _resumeAutomaticPhase(GameState state) {
   };
 }
 
+GameState _resumePendingEventMonsterSpawn(GameState state, DiceRoller dice) {
+  final pending = state.pendingEventMonsterSpawn;
+  if (pending == null ||
+      state.pendingDecision != null ||
+      state.pendingDamage.isNotEmpty) {
+    return state;
+  }
+  final cleared = _copyState(state, clearPendingEventMonsterSpawn: true);
+  if (state.isComplete) return cleared;
+  final locationId = cleared.tileAt(pending.coord)?.locationId;
+  final arrived = locationId == null
+      ? cleared
+      : _applyFullQuestEvent(
+          cleared,
+          QuestArrived(locationId),
+          playerId: pending.playerId,
+        );
+  if (arrived.isComplete) return arrived;
+  final player = _playerById(arrived, pending.playerId);
+  final definition = arrived.eventDefinitions[pending.eventId];
+  if (player == null || !player.alive || definition == null) return arrived;
+  return _spawnEventOptionMonster(
+    arrived,
+    definition,
+    pending.playerId,
+    pending.optionIndex,
+    pending.coord,
+    dice,
+  );
+}
+
 int? _nextLivingPlayerIndex(List<PlayerState> players, int activeIndex) {
   if (players.isEmpty) {
     return null;
@@ -82,10 +113,14 @@ PlayerState _copyPlayer(
   Iterable<CardId>? carriedMods,
   Iterable<CardId>? implanted,
   Iterable<CardId>? conditions,
+  Iterable<CardId>? retainedEventCards,
   bool? alive,
   PlayerStats? stats,
   int? health,
   int? weaponModifier,
+  int? nextTurnActionDelta,
+  int? monsterDamageImmuneThroughRound,
+  int? monsterDefenseBonusRound,
 }) => PlayerState(
   id: player.id,
   characterId: player.characterId,
@@ -98,10 +133,16 @@ PlayerState _copyPlayer(
   carriedMods: carriedMods ?? player.carriedMods,
   implanted: implanted ?? player.implanted,
   conditions: conditions ?? player.conditions,
+  retainedEventCards: retainedEventCards ?? player.retainedEventCards,
   alive: alive ?? player.alive,
   stats: stats ?? player.stats,
   weaponModifier: weaponModifier ?? player.weaponModifier,
   actionPoints: player.actionPoints,
+  nextTurnActionDelta: nextTurnActionDelta ?? player.nextTurnActionDelta,
+  monsterDamageImmuneThroughRound:
+      monsterDamageImmuneThroughRound ?? player.monsterDamageImmuneThroughRound,
+  monsterDefenseBonusRound:
+      monsterDefenseBonusRound ?? player.monsterDefenseBonusRound,
 );
 
 MonsterInstance _copyMonster(
@@ -119,6 +160,7 @@ MonsterInstance _copyMonster(
   movement: monster.movement,
   carriedGear: monster.carriedGear,
   returnsToMonsterDeck: monster.returnsToMonsterDeck,
+  defeatRewardDeckId: monster.defeatRewardDeckId,
 );
 
 GameState _copyState(
@@ -146,6 +188,8 @@ GameState _copyState(
   int? actionsTakenThisTurn,
   PendingDecision? pendingDecision,
   bool clearPendingDecision = false,
+  PendingEventMonsterSpawn? pendingEventMonsterSpawn,
+  bool clearPendingEventMonsterSpawn = false,
   String? logEntry,
 }) => GameState(
   schemaVersion: state.schemaVersion,
@@ -184,4 +228,7 @@ GameState _copyState(
   pendingDecision: clearPendingDecision
       ? null
       : pendingDecision ?? state.pendingDecision,
+  pendingEventMonsterSpawn: clearPendingEventMonsterSpawn
+      ? null
+      : pendingEventMonsterSpawn ?? state.pendingEventMonsterSpawn,
 );

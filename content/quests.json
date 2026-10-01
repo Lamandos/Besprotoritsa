@@ -172,7 +172,14 @@
         "quest-07"
       ],
       "nameKey": "content.quest.quest-06.name",
-      "descKey": "content.quest.quest-06.description"
+      "descKey": "content.quest.quest-06.description",
+      "completionEffects": [
+        {
+          "type": "damage_all_players_if_quest_active",
+          "questId": "quest-05",
+          "amount": 2
+        }
+      ]
     },
     {
       "id": "quest-07",
@@ -361,11 +368,6 @@
           "type": "skill_check",
           "skill": "strength",
           "locationId": "armory"
-        },
-        {
-          "id": "collect-shotgun",
-          "type": "collect_item",
-          "itemId": "shotgun"
         }
       ],
       "reward": {
@@ -420,16 +422,12 @@
           "type": "skill_check",
           "skill": "agility",
           "locationId": "dining-hall"
-        },
-        {
-          "id": "collect-supply",
-          "type": "collect_item",
-          "itemId": "supply"
         }
       ],
       "reward": {
         "credits": 0,
-        "items": []
+        "items": [],
+        "drawSuppliesPerPlayer": 1
       },
       "nextQuestIds": [
         "quest-17"
@@ -476,11 +474,6 @@
           "type": "skill_check",
           "skill": "science",
           "locationId": "morgue"
-        },
-        {
-          "id": "collect-plague-mask",
-          "type": "collect_item",
-          "itemId": "plague-doctor-mask"
         }
       ],
       "reward": {
@@ -580,6 +573,10 @@
           "type": "skill_check",
           "skill": "agility",
           "locationId": "storage"
+        },
+        {
+          "id": "equip-for-battle",
+          "type": "equipped_for_battle"
         }
       ],
       "reward": {
@@ -688,11 +685,6 @@
           "id": "kill-viy-again",
           "type": "kill_monster",
           "monsterId": "viy"
-        },
-        {
-          "id": "collect-assault-rifle",
-          "type": "collect_item",
-          "itemId": "assault-rifle"
         }
       ],
       "reward": {

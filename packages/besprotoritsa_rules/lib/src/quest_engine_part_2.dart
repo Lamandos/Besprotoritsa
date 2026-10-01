@@ -156,6 +156,10 @@ final class QuestItemCollected extends QuestEvent {
   final int count;
 }
 
+final class QuestBattleEquipmentReady extends QuestEvent {
+  const QuestBattleEquipmentReady();
+}
+
 final class QuestCounterIncremented extends QuestEvent {
   const QuestCounterIncremented({required this.metric, this.amount = 1});
   final String metric;

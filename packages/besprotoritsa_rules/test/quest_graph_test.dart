@@ -290,9 +290,96 @@ void main() {
     expect(graph.quest('quest-09').spawnMonsterId, 'viy');
     expect(graph.quest('quest-09').spawnLocationId, 'flight-control');
     expect(graph.quest('quest-14').reward.creditRollDicePerPlayer, 6);
+    expect(graph.quest('quest-15').reward.drawSuppliesPerPlayer, 1);
+    expect(
+      graph.quest('quest-06').completionEffects.single.amount,
+      2,
+    );
+    expect(graph.quest('quest-25').conditions, hasLength(2));
+    expect(
+      graph.quest('quest-21').conditions.map((condition) => condition.type),
+      contains(QuestConditionType.equippedForBattle),
+    );
     expect(graph.quest('quest-24').discardQuestIds, ['quest-08']);
   });
+
+  test('the verified alternate campaign branch reaches true victory at 29', () {
+    var progress = engine.initialProgress();
+    var won = false;
+    for (final event in _alternateVictoryRoute) {
+      final transition = engine.apply(progress, event);
+      progress = transition.progress;
+      won = won || transition.gameWon;
+    }
+
+    expect(won, isTrue);
+    expect(progress.isCompleted('quest-28'), isTrue);
+    expect(progress.isCompleted('quest-29'), isTrue);
+    expect(progress.isCompleted('quest-12'), isFalse);
+  });
 }
+
+const _alternateVictoryRoute = <QuestEvent>[
+  QuestArrived('crew-quarters'),
+  QuestSkillChecked(
+    skill: StatType.science,
+    locationId: 'crew-quarters',
+    success: true,
+  ),
+  QuestArrived('engineering-control-post'),
+  QuestSkillChecked(
+    skill: StatType.repair,
+    locationId: 'engineering-control-post',
+    success: true,
+  ),
+  QuestArrived('reactor'),
+  QuestSkillChecked(
+    skill: StatType.repair,
+    locationId: 'reactor',
+    success: true,
+  ),
+  QuestArrived('medical-bay'),
+  QuestSkillChecked(
+    skill: StatType.science,
+    locationId: 'medical-bay',
+    success: true,
+  ),
+  QuestArrived('laboratory'),
+  QuestSkillChecked(
+    skill: StatType.science,
+    locationId: 'laboratory',
+    success: true,
+  ),
+  QuestArrived('main-computer'),
+  QuestSkillChecked(
+    skill: StatType.repair,
+    locationId: 'main-computer',
+    success: true,
+  ),
+  QuestArrived('escape-pods'),
+  QuestSkillChecked(
+    skill: StatType.science,
+    locationId: 'escape-pods',
+    success: true,
+  ),
+  QuestArrived('flight-control'),
+  QuestSkillChecked(
+    skill: StatType.agility,
+    locationId: 'flight-control',
+    success: true,
+  ),
+  QuestArrived('armory'),
+  QuestMonsterKilled(monsterId: 'viy'),
+  QuestArrived('main-computer'),
+  QuestSkillChecked(
+    skill: StatType.repair,
+    locationId: 'main-computer',
+    success: true,
+  ),
+  QuestArrived('anabiosis'),
+  QuestMonsterKilled(monsterId: 'mother'),
+  QuestArrived('anabiosis'),
+];
 
 QuestProgress _progressAfter(QuestEngine engine, Iterable<QuestEvent> events) {
   var progress = engine.initialProgress();

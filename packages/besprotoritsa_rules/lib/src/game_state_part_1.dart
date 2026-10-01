@@ -110,6 +110,7 @@ final class HexTile {
     required this.hasTerminal,
     required this.ventColor,
     this.isBlocked = false,
+    this.monsterAccessBlocked = false,
   }) : exits = Set.unmodifiable(exits) {
     _requireId(id, 'id');
     if (locationId != null) {
@@ -126,6 +127,9 @@ final class HexTile {
   final bool hasTerminal;
   final VentColor ventColor;
   final bool isBlocked;
+
+  /// A welded event door blocks monster pathing while heroes may still pass.
+  final bool monsterAccessBlocked;
 
   bool hasExit(HexEdge edge) => exits.contains(edge);
 }
@@ -207,14 +211,19 @@ final class PlayerState {
     required Iterable<CardId> carriedMods,
     required Iterable<CardId> implanted,
     required Iterable<CardId> conditions,
+    Iterable<CardId> retainedEventCards = const [],
     required this.alive,
     this.stats = const PlayerStats(),
     this.weaponModifier = 0,
     this.actionPoints = 2,
+    this.nextTurnActionDelta = 0,
+    this.monsterDamageImmuneThroughRound,
+    this.monsterDefenseBonusRound,
   }) : backpack = List.unmodifiable(backpack),
        carriedMods = List.unmodifiable(carriedMods),
        implanted = List.unmodifiable(implanted),
-       conditions = List.unmodifiable(conditions) {
+       conditions = List.unmodifiable(conditions),
+       retainedEventCards = List.unmodifiable(retainedEventCards) {
     _requireId(id, 'id');
     _requireId(characterId, 'characterId');
     _requireNonNegative(damage, 'damage');
@@ -256,6 +265,7 @@ final class PlayerState {
   final List<CardId> carriedMods;
   final List<CardId> implanted;
   final List<CardId> conditions;
+  final List<CardId> retainedEventCards;
   final bool alive;
   final PlayerStats stats;
 
@@ -264,6 +274,16 @@ final class PlayerState {
 
   /// Remaining action points for this character in the current round.
   final int actionPoints;
+
+  /// One-shot action-point adjustment applied at this hero's next turn.
+  final int nextTurnActionDelta;
+
+  /// Last round in which monster damage is ignored, if a temporary effect
+  /// is active.
+  final int? monsterDamageImmuneThroughRound;
+
+  /// Round in which a temporary +1 monster-defense effect applies.
+  final int? monsterDefenseBonusRound;
 
   /// Returns this character with the supplied per-round action point count.
   PlayerState withActionPoints(int value) => PlayerState(
@@ -278,10 +298,36 @@ final class PlayerState {
     carriedMods: carriedMods,
     implanted: implanted,
     conditions: conditions,
+    retainedEventCards: retainedEventCards,
     alive: alive,
     stats: stats,
     weaponModifier: weaponModifier,
     actionPoints: value,
+    nextTurnActionDelta: nextTurnActionDelta,
+    monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
+    monsterDefenseBonusRound: monsterDefenseBonusRound,
+  );
+
+  PlayerState withNextTurnActionDelta(int value) => PlayerState(
+    id: id,
+    characterId: characterId,
+    coord: coord,
+    damage: damage,
+    health: health,
+    credits: credits,
+    backpack: backpack,
+    equipped: equipped,
+    carriedMods: carriedMods,
+    implanted: implanted,
+    conditions: conditions,
+    retainedEventCards: retainedEventCards,
+    alive: alive,
+    stats: stats,
+    weaponModifier: weaponModifier,
+    actionPoints: actionPoints,
+    nextTurnActionDelta: value,
+    monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
+    monsterDefenseBonusRound: monsterDefenseBonusRound,
   );
 }
 

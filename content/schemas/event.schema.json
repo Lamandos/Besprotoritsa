@@ -55,7 +55,50 @@
         "successKey": { "$ref": "#/$defs/localizationKey" },
         "failureKey": { "$ref": "#/$defs/localizationKey" },
         "behaviorId": { "$ref": "#/$defs/behaviorId" },
-        "resolution": { "enum": ["afterChoiceAndRoll", "immediate"] }
+        "resolution": { "enum": ["afterChoiceAndRoll", "immediate"] },
+        "successEffects": { "$ref": "#/$defs/effects" },
+        "failureEffects": { "$ref": "#/$defs/effects" },
+        "autoOutcome": { "enum": ["success", "failure", "condition"] },
+        "condition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": { "enum": ["equipped_slot", "owns_card"] },
+            "slot": { "enum": ["weapon", "armor", "clothing", "robot"] },
+            "cardId": { "$ref": "#/$defs/id" }
+          }
+        },
+        "requiresCard": { "$ref": "#/$defs/id" }
+      }
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type"],
+        "properties": {
+          "type": { "enum": ["no_effect", "heal", "heal_all", "damage", "damage_all_players", "damage_roll_die", "damage_each_player_roll_die", "credits", "stat_bonus", "next_turn_action_delta", "draw", "draw_supplies_all_players", "draw_filtered", "draw_specific", "choose_from_top", "spawn_monster", "spawn_monster_adjacent", "spawn_monsters_adjacent", "horde_backpack_choice", "monster_damage_immunity", "monster_defense_bonus_next_round", "move_to_neighbor", "move_to_neighbor_and_spawn_monster", "reveal_fragment", "kill_monster", "market", "discard_card_type", "discard_equipped", "discard_card_id", "seal_monster_access", "asteroid_alert", "destroy_nest"] },
+          "amount": { "type": "integer", "minimum": 0 },
+          "delta": { "type": "integer", "minimum": -2, "maximum": 2 },
+          "immediateCombat": { "type": "boolean" },
+          "retainEventCard": { "type": "boolean" },
+          "defeatRewardDeckId": { "type": "string", "pattern": "^[a-z][A-Za-z0-9_-]*$" },
+          "deckId": { "type": "string", "pattern": "^[a-z][A-Za-z0-9_-]*$" },
+          "cardId": { "$ref": "#/$defs/id" },
+          "monsterId": { "$ref": "#/$defs/id" },
+          "filterType": { "enum": ["weapon", "armor", "clothing", "robot", "modification", "supply", "specialItem"] },
+          "stat": { "enum": ["strength", "combatStrength", "science", "repair", "endurance", "agility"] },
+          "scope": { "enum": ["same_or_neighbor_sector", "any_non_boss", "any", "nearest"] }
+          ,"itemType": { "enum": ["weapon", "armor", "clothing", "robot", "modification", "supply", "specialItem"] },
+          "slot": { "enum": ["weapon", "armor", "clothing", "robot"] },
+          "offers": { "type": "integer", "minimum": 0 },
+          "maxPurchases": { "type": "integer", "minimum": 0 },
+          "discount": { "type": "integer", "minimum": 0 },
+          "allowSell": { "type": "boolean" },
+          "requiredCard": { "$ref": "#/$defs/id" }
+        }
       }
     },
     "spawn": {

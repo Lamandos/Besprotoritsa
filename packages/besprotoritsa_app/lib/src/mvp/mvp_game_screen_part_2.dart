@@ -388,6 +388,7 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
                       key: mvpBoardStaticRepaintBoundaryKey,
                       child: _StaticBoardLayer(
                         board: widget.state.board,
+                        contentTranslations: widget.state.contentTranslations,
                         selectedDestination: widget.selectedDestination,
                         onSelectDestination: widget.onSelectDestination,
                       ),

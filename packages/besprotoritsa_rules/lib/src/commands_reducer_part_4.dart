@@ -46,6 +46,22 @@ GameStepResult _closeCorridor(GameState state, HexCoord target) =>
       ),
     );
 
+GameStepResult _openCorridor(GameState state, HexCoord target) =>
+    GameStepResult(
+      state: _copyState(
+        state,
+        actionsLeft: state.actionsLeft - 1,
+        board: [
+          for (final tile in state.board)
+            if (tile.coord == target)
+              _copyTile(tile, isBlocked: false)
+            else
+              tile,
+        ],
+        logEntry: 'corridor-opened:${state.activePlayerId}:$target',
+      ),
+    );
+
 /// Resolves threats in shared cells, creating one dodge decision per hit.
 ///
 /// Calls made while another dodge is open append their damage after the current
@@ -125,7 +141,8 @@ int _playerDefense(GameState state, PlayerState player) =>
         }
         return total + definition.staticEffects[CardStat.defense];
       },
-    );
+    ) +
+    (player.monsterDefenseBonusRound == state.round ? 1 : 0);
 
 bool _monsterIgnoresDefense(GameState state, MonsterInstance monster) {
   final features = state.monsterDefinitions[monster.monsterId]?['features'];
@@ -214,6 +231,7 @@ Iterable<HexCoord> _monsterPathNeighbors(
     if (nextTile != null &&
         nextTile.opened &&
         !nextTile.isBlocked &&
+        !nextTile.monsterAccessBlocked &&
         nextTile.hasExit(edge.opposite)) {
       yield next;
     }
@@ -226,6 +244,7 @@ Iterable<HexCoord> _monsterPathNeighbors(
     if (candidate.coord != coord &&
         candidate.opened &&
         !candidate.isBlocked &&
+        !candidate.monsterAccessBlocked &&
         candidate.ventColor == tile.ventColor) {
       yield candidate.coord;
     }
@@ -383,6 +402,45 @@ GameState _resolveAttackRoll(
     damage: player.damage + roll.ownerDamage,
   );
   var unclaimedLoot = const <CardId>[];
+  final rewardDeckId = monster.defeatRewardDeckId;
+  if (defeated && rewardDeckId != null) {
+    final rewardDeck = decks[rewardDeckId];
+    if (rewardDeck != null) {
+      final draw = DeckRules.draw(
+        rewardDeck,
+        seed: _deckSeed(state, 'defeat-reward:${monster.instanceId}'),
+      );
+      if (draw.cards.isNotEmpty) {
+        final rewardCard = draw.cards.single;
+        try {
+          awardedPlayer = InventoryRules.receive(
+            awardedPlayer,
+            rewardCard,
+            state.cardDefinitions,
+          );
+          decks[rewardDeckId] = draw.deck;
+        } on BackpackCapacityExceeded {
+          decks[rewardDeckId] = DeckRules.returnAndShuffle(
+            draw.deck,
+            [rewardCard],
+            seed: _deckSeed(
+              state,
+              'defeat-reward-return:${monster.instanceId}',
+            ),
+          );
+        } on InventoryRuleViolation {
+          decks[rewardDeckId] = DeckRules.returnAndShuffle(
+            draw.deck,
+            [rewardCard],
+            seed: _deckSeed(
+              state,
+              'defeat-reward-return:${monster.instanceId}',
+            ),
+          );
+        }
+      }
+    }
+  }
   if (defeated && monster.monsterId == RestlessMonster.restlessMonsterId) {
     final loot = _awardRestlessTrophies(awardedPlayer, monster, state);
     awardedPlayer = loot.player;

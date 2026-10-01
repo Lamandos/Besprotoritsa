@@ -151,11 +151,13 @@ GameState _advanceEvents(GameState state) {
     final eventId = draw.cards.single;
     final eventDefinition = current.eventDefinitions[eventId];
     final rawOptions = eventDefinition?['options'];
-    final optionCount = rawOptions is List<Object?> ? rawOptions.length : 0;
+    final optionList = rawOptions is List<Object?> ? rawOptions : null;
+    final optionCount = optionList?.length ?? 0;
     final options = optionCount > 0
         ? [
             for (var index = 0; index < optionCount; index++)
-              'option-${index + 1}',
+              if (_eventOptionIsAvailable(player, optionList![index]))
+                'option-${index + 1}',
           ]
         : const ['investigate'];
     final decks = Map<DeckId, DeckState>.of(current.decks);
@@ -184,6 +186,13 @@ bool _hasAggressiveMonster(GameState state, PlayerState player) =>
           monster.coord == player.coord && _monsterIsActive(state, monster),
     );
 
+bool _eventOptionIsAvailable(PlayerState player, Object? rawOption) {
+  if (rawOption is! Map<String, dynamic>) return true;
+  final requiredCard = rawOption['requiresCard'];
+  return requiredCard is! String ||
+      _ownedMarketCards(player).contains(requiredCard);
+}
+
 bool _monsterIsActive(GameState state, MonsterInstance monster) {
   final activity = state.monsterDefinitions[monster.monsterId]?['activity'];
   if (activity is String) return activity == 'active';
@@ -192,9 +201,27 @@ bool _monsterIsActive(GameState state, MonsterInstance monster) {
 }
 
 GameState _startNextPlayersTurn(GameState state) {
-  final withReplacements = _activateQueuedReplacements(state);
+  var withReplacements = _activateQueuedReplacements(state);
+  for (final playerId in state.queuedReplacements.keys) {
+    final player = withReplacements.players
+        .where((candidate) => candidate.id == playerId && candidate.alive)
+        .firstOrNull;
+    final locationId = player == null
+        ? null
+        : withReplacements.tileAt(player.coord)?.locationId;
+    if (locationId != null) {
+      withReplacements = _applyFullQuestEvent(
+        withReplacements,
+        QuestArrived(locationId),
+        playerId: playerId,
+      );
+    }
+  }
   final refreshedPlayers = [
-    for (final player in withReplacements.players) player.withActionPoints(2),
+    for (final player in withReplacements.players)
+      player
+          .withActionPoints((2 + player.nextTurnActionDelta).clamp(0, 999))
+          .withNextTurnActionDelta(0),
   ];
   PlayerState? first;
   for (final player in refreshedPlayers) {
@@ -218,7 +245,7 @@ GameState _startNextPlayersTurn(GameState state) {
     round: withReplacements.round + 1,
     phase: GamePhase.playersTurn,
     activePlayerId: first.id,
-    actionsLeft: 2,
+    actionsLeft: first.actionPoints,
     actionsTakenThisTurn: 0,
     eventTurnIndex: 0,
     logEntry: 'round-start:${withReplacements.round + 1}',

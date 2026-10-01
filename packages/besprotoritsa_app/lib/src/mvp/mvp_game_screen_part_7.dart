@@ -411,9 +411,66 @@ String? _runtimeEventText(GameState state, String eventId, String field) {
 }
 
 String _eventOptionLabel(GameState state, String? eventId, String option) {
+  if (option == 'horde|discard') return 'Сбросить весь рюкзак';
+  if (option == 'horde|keep') return 'Оставить карты и получить урон';
+  if (option.startsWith('market|')) {
+    final parts = option.split('|');
+    if (parts.length == 9) {
+      return switch (parts[7]) {
+        'buy' => 'Купить: ${parts[8].split(':').last}',
+        'sell' => 'Продать: ${parts[8]}',
+        'done' => 'Закончить торговлю',
+        _ => option,
+      };
+    }
+  }
   final sector = option.split(':');
   if (sector.length == 3 && sector.first == 'sector') {
     return 'Сектор ${sector[1]}, ${sector[2]}';
+  }
+  if (sector.length == 3 && sector.first == 'move') {
+    return 'Перейти в сектор ${sector[1]}, ${sector[2]}';
+  }
+  if (sector.length == 4 && sector.first == 'move_spawn') {
+    return 'Перейти в сектор ${sector[2]}, ${sector[3]} и вступить в бой';
+  }
+  if (sector.length == 3 && sector.first == 'reveal') {
+    return 'Открыть фрагмент ${sector[1]}, ${sector[2]}';
+  }
+  if (sector.length == 4 && sector.first == 'place') {
+    final monster = state.monsters
+        .where((entry) => entry.instanceId == sector[1])
+        .firstOrNull;
+    final nameKey = monster == null
+        ? null
+        : state.monsterDefinitions[monster.monsterId]?['nameKey'];
+    final name = nameKey is String
+        ? state.contentTranslations[nameKey] ?? monster?.monsterId
+        : monster?.monsterId;
+    return 'Разместить ${name ?? 'монстра'} в секторе ${sector[2]}, ${sector[3]}';
+  }
+  if (option.startsWith('kill:')) {
+    final monster = state.monsters
+        .where((entry) => entry.instanceId == option.substring(5))
+        .firstOrNull;
+    final definition = monster == null
+        ? null
+        : state.monsterDefinitions[monster.monsterId];
+    final nameKey = definition?['nameKey'];
+    final name = nameKey is String
+        ? state.contentTranslations[nameKey] ?? monster?.monsterId
+        : monster?.monsterId;
+    return 'Убить монстра: ${name ?? option.substring(5)}';
+  }
+  if (option.startsWith('pick:')) {
+    final parts = option.split(':');
+    final cardId = parts.length == 3 ? parts[2] : option;
+    final name =
+        state.contentTranslations['content.item.$cardId.name'] ??
+        state.contentTranslations['content.supply.$cardId.name'] ??
+        state.contentTranslations['content.special_item.$cardId.name'] ??
+        cardId;
+    return 'Выбрать: $name';
   }
   if (eventId == null) return option;
   final index = int.tryParse(option.replaceFirst('option-', ''));
@@ -514,6 +571,79 @@ String? _questCardDescription(GameState state, String id) {
   final definition = state.questDefinitions[id] ?? state.taskDefinitions[id];
   final key = definition?['descKey'];
   return key is String ? state.contentTranslations[key] : null;
+}
+
+Widget _questProgressSummary(GameState state, String id) {
+  final definition = state.questDefinitions[id];
+  final conditions = definition?['conditions'];
+  final description = _questCardDescription(state, id);
+  if (conditions is! List<Object?> || conditions.isEmpty) {
+    return Text(description ?? 'Цель завершена автоматически.');
+  }
+  final progress = state.quests.conditionProgress[id] ?? const {};
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      if (description != null) Text(description, maxLines: 3),
+      for (final rawCondition in conditions)
+        if (rawCondition is Map<String, dynamic>)
+          Builder(
+            builder: (context) {
+              final condition = Map<String, Object?>.from(rawCondition);
+              final conditionId = condition['id'] as String? ?? '';
+              final value = progress[conditionId] ?? 0;
+              final target = condition['targetValue'] as int? ?? 1;
+              final complete = value >= target;
+              return Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      complete
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      size: 15,
+                      color: complete
+                          ? const Color(0xFF9AC879)
+                          : const Color(0xFFD3AD75),
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        '${_questConditionLabel(state, condition)} · $value/$target',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+    ],
+  );
+}
+
+String _questConditionLabel(GameState state, Map<String, Object?> condition) {
+  String translated(String key, String fallback) =>
+      state.contentTranslations[key] ?? fallback;
+  final locationId = condition['locationId'] as String?;
+  final location = locationId == null
+      ? null
+      : translated('content.location.$locationId', locationId);
+  return switch (condition['type']) {
+    'arrive' => 'Достичь: $location',
+    'skill_check' =>
+      'Проверка «${_statLabel(StatType.values.byName(condition['skill']! as String))}»'
+          '${location == null ? '' : ' в $location'}',
+    'kill_monster' =>
+      'Победить: ${translated('content.monster.${condition['monsterId']}.name', condition['monsterId']! as String)}',
+    'collect_item' =>
+      'Получить: ${translated('content.item.${condition['itemId']}.name', condition['itemId']! as String)}',
+    'equipped_for_battle' => 'Экипировать оружие или броню для боя',
+    'counter' => 'Выполнить: ${condition['metric']}',
+    _ => 'Выполнить условие',
+  };
 }
 
 class _WideActionDock extends StatelessWidget {

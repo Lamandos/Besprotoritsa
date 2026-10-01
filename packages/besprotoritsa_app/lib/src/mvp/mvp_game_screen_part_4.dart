@@ -398,10 +398,20 @@ class _JournalContents extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     final entries = <String>[
-      ...state.log,
+      ...state.log.map((entry) => _displayLogLine(state, entry)),
       ...queue.history.map((event) => _eventLabel(event, strings)),
     ];
     final activeQuests = _activeQuests(state);
+    final currentGoal = activeQuests
+        .where(
+          (id) => (state.questDefinitions[id]?['chapter'] as int? ?? 0) > 0,
+        )
+        .firstOrNull;
+    final activePlayerId = state.activePlayerId;
+    final personalTasks = activePlayerId == null
+        ? const <String>[]
+        : state.quests.personalTasksByPlayer[activePlayerId] ??
+              const <String>[];
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
@@ -418,6 +428,49 @@ class _JournalContents extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(entry, style: const TextStyle(height: 1.4)),
             ),
+        const SizedBox(height: 16),
+        const Text('Текущая цель кампании'),
+        const SizedBox(height: 4),
+        if (currentGoal == null)
+          const Text('Нет активной сюжетной цели.')
+        else
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.flag, color: Color(0xFFD3AD75)),
+            title: Text(_questCardLabel(state, currentGoal)),
+            subtitle: Text(
+              _questCardDescription(state, currentGoal) ?? currentGoal,
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        const SizedBox(height: 12),
+        Material(
+          color: Colors.transparent,
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: const Text('Личные задачи активного героя'),
+            subtitle: const Text('Скрыты от остальных игроков'),
+            children: [
+              if (personalTasks.isEmpty)
+                const ListTile(title: Text('Личных задач нет.'))
+              else
+                for (final taskId in personalTasks)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      state.quests.statusOf(taskId) == QuestStatus.completed
+                          ? Icons.check_circle_outline
+                          : Icons.person_outline,
+                    ),
+                    title: Text(_questCardLabel(state, taskId)),
+                    subtitle: _questCardDescription(state, taskId) == null
+                        ? null
+                        : Text(_questCardDescription(state, taskId)!),
+                  ),
+            ],
+          ),
+        ),
         const SizedBox(height: 20),
         const Text('Активные задания'),
         const SizedBox(height: 4),
@@ -429,13 +482,34 @@ class _JournalContents extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.flag_outlined),
               title: Text(_questCardLabel(state, quest)),
-              subtitle: _questCardDescription(state, quest) == null
-                  ? null
-                  : Text(_questCardDescription(state, quest)!),
+              subtitle: _questProgressSummary(state, quest),
             ),
       ],
     );
   }
+}
+
+String _displayLogLine(GameState state, String entry) {
+  if (entry.startsWith('event-result-unresolved:')) {
+    return 'Событие продолжено: эту ветвь нужно разрешить по правилам боя.';
+  }
+  final parts = entry.split(':');
+  if (parts.length == 4 && parts.first == 'event-result') {
+    final optionIndex = int.tryParse(parts[2]);
+    final outcome = parts[3];
+    final options = state.eventDefinitions[parts[1]]?['options'];
+    if (optionIndex != null &&
+        options is List<Object?> &&
+        optionIndex >= 1 &&
+        optionIndex <= options.length) {
+      final option = options[optionIndex - 1];
+      if (option is Map<String, Object?>) {
+        final key = option['${outcome}Key'];
+        if (key is String) return state.contentTranslations[key] ?? entry;
+      }
+    }
+  }
+  return entry;
 }
 
 void _showInventorySheet(

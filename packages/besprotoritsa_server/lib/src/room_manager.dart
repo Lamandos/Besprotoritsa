@@ -1623,6 +1623,7 @@ GameCommand _commandFromJson(
       ),
     ),
     'closeCorridor' => CloseCorridorCommand(_coord(json)),
+    'openCorridor' => OpenCorridorCommand(_coord(json)),
     'attack' => AttackCommand(_requiredString(json, 'targetInstanceId')),
     'skillCheck' => SkillCheckCommand(
       _enumByName(StatType.values, json, 'stat'),
@@ -1773,6 +1774,7 @@ Map<String, Object?> _projectedTileToJson(ProjectedHexTile tile) =>
           'hasTerminal': visible.hasTerminal,
           'ventColor': visible.ventColor.name,
           'isBlocked': visible.isBlocked,
+          'monsterAccessBlocked': visible.monsterAccessBlocked,
         },
     };
 
@@ -1793,6 +1795,9 @@ Map<String, Object?> _projectedPlayerToJson(ProjectedPlayerState player) =>
       },
       'alive': player.alive,
       'actionPoints': player.actionPoints,
+      'nextTurnActionDelta': player.nextTurnActionDelta,
+      'monsterDamageImmuneThroughRound': player.monsterDamageImmuneThroughRound,
+      'monsterDefenseBonusRound': player.monsterDefenseBonusRound,
       'isViewer': player.isViewer,
       'backpack': player.backpack,
       'carriedMods': player.carriedMods,
@@ -1856,11 +1861,16 @@ Map<String, Object?>? _pendingDecisionToJson(
         'playerId': playerId,
         'offeredCards': offeredCards,
       },
-    AwaitingHeroReplacement(:final playerId, :final characterIds) =>
+    AwaitingHeroReplacement(
+      :final playerId,
+      :final characterIds,
+      :final remainingPlayerIds,
+    ) =>
       <String, Object?>{
         'type': 'heroReplacement',
         'playerId': playerId,
         'characterIds': characterIds,
+        'remainingPlayerIds': remainingPlayerIds,
         'counterAttackMonsterInstanceId':
             decision.counterAttackMonsterInstanceId,
         'counterAttackPlayerId': decision.counterAttackPlayerId,

@@ -28,6 +28,13 @@ final class CloseCorridorCommand extends GameCommand {
   final HexCoord target;
 }
 
+/// Reopens an adjacent corridor that was closed by an event or player action.
+final class OpenCorridorCommand extends GameCommand {
+  const OpenCorridorCommand(this.target);
+
+  final HexCoord target;
+}
+
 final class AttackCommand extends GameCommand {
   const AttackCommand(this.targetInstanceId);
 

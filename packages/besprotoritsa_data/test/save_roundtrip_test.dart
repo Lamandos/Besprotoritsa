@@ -22,6 +22,10 @@ void main() {
       );
       expect(restored, isNotNull);
       expect(codec.encode(restored!), savedJson);
+      expect(restored.cardDefinitions['pistol']!.sourceDeck, 'items');
+      expect(restored.players.first.monsterDamageImmuneThroughRound, 3);
+      expect(restored.players.first.monsterDefenseBonusRound, 5);
+      expect(restored.players.first.retainedEventCards, ['scientist-report']);
       expect(restored.pendingDecision, isA<AwaitingRerollChoice>());
       final context =
           (restored.pendingDecision! as AwaitingRerollChoice).context!
@@ -95,6 +99,7 @@ void main() {
     final pendingReplacement = AwaitingHeroReplacement(
       playerId: 'hero-2',
       characterIds: const ['scientist'],
+      remainingPlayerIds: const ['hero-3'],
       counterAttackMonsterInstanceId: 'event-ghoul',
       counterAttackPlayerId: 'ada',
     );
@@ -111,6 +116,7 @@ void main() {
       'event-ghoul',
     );
     expect(restoredReplacement.counterAttackPlayerId, 'ada');
+    expect(restoredReplacement.remainingPlayerIds, ['hero-3']);
     expect(
       (restoredAttack.context! as AttackRollContext).resumeAutomaticPhase,
       isTrue,
@@ -133,23 +139,56 @@ void main() {
 
     expect(() => codec.fromJson(invalid), throwsFormatException);
   });
+
+  test('preserves a deferred event fight across a forced-movement dodge', () {
+    final base = _interruptedState();
+    final codec = GameStateJsonCodec();
+    final restored = codec.decode(
+      codec.encode(
+        _withPending(
+          base,
+          const AwaitingDodge(
+            monsterDamage: 1,
+            requiredAgilitySuccesses: 1,
+            targetPlayerId: 'ada',
+            source: DamageSource.boil,
+          ),
+          pendingEventMonsterSpawn: const PendingEventMonsterSpawn(
+            eventId: 'monster-pack',
+            playerId: 'ada',
+            optionIndex: 2,
+            coord: HexCoord(0, 1),
+          ),
+        ),
+      ),
+    );
+
+    expect(restored.pendingEventMonsterSpawn, isNotNull);
+    expect(restored.pendingEventMonsterSpawn!.eventId, 'monster-pack');
+    expect(restored.pendingEventMonsterSpawn!.optionIndex, 2);
+    expect(restored.pendingEventMonsterSpawn!.coord, const HexCoord(0, 1));
+  });
 }
 
-GameState _withPending(GameState source, PendingDecision pendingDecision) =>
-    GameState(
-      seed: source.seed,
-      difficulty: source.difficulty,
-      round: source.round,
-      phase: source.phase,
-      activePlayerId: source.activePlayerId,
-      actionsLeft: source.actionsLeft,
-      board: source.board,
-      players: source.players,
-      monsters: source.monsters,
-      decks: source.decks,
-      quests: source.quests,
-      pendingDecision: pendingDecision,
-    );
+GameState _withPending(
+  GameState source,
+  PendingDecision pendingDecision, {
+  PendingEventMonsterSpawn? pendingEventMonsterSpawn,
+}) => GameState(
+  seed: source.seed,
+  difficulty: source.difficulty,
+  round: source.round,
+  phase: source.phase,
+  activePlayerId: source.activePlayerId,
+  actionsLeft: source.actionsLeft,
+  board: source.board,
+  players: source.players,
+  monsters: source.monsters,
+  decks: source.decks,
+  quests: source.quests,
+  pendingDecision: pendingDecision,
+  pendingEventMonsterSpawn: pendingEventMonsterSpawn,
+);
 
 GameState _interruptedState() => GameState(
   seed: 0xDEADBEEF,
@@ -185,6 +224,9 @@ GameState _interruptedState() => GameState(
       characterId: 'engineer',
       coord: const HexCoord(0, 0),
       conditions: const ['malaise'],
+      monsterDamageImmuneThroughRound: 3,
+      monsterDefenseBonusRound: 5,
+      retainedEventCards: const ['scientist-report'],
     ),
     _player(
       id: 'boris',
@@ -221,6 +263,7 @@ GameState _interruptedState() => GameState(
       slots: const {ItemSlot.weapon},
       cost: 2,
       staticEffects: CardStaticEffects(const {CardStat.strength: 1}, range: 2),
+      sourceDeck: 'items',
       behaviorIds: const ['pistol_attack_reroll'],
     ),
   },
@@ -287,6 +330,9 @@ PlayerState _player({
   required HexCoord coord,
   Iterable<String> conditions = const [],
   bool alive = true,
+  int? monsterDamageImmuneThroughRound,
+  int? monsterDefenseBonusRound,
+  Iterable<String> retainedEventCards = const [],
 }) => PlayerState(
   id: id,
   characterId: characterId,
@@ -304,6 +350,7 @@ PlayerState _player({
   carriedMods: const ['mod-1'],
   implanted: const ['implant-1'],
   conditions: conditions,
+  retainedEventCards: retainedEventCards,
   alive: alive,
   stats: const PlayerStats(
     strength: 3,
@@ -314,4 +361,6 @@ PlayerState _player({
     agility: 1,
   ),
   weaponModifier: 2,
+  monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
+  monsterDefenseBonusRound: monsterDefenseBonusRound,
 );

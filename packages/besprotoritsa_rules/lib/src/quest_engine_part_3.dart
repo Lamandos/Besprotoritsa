@@ -148,6 +148,8 @@ final class QuestEngine {
                   condition.itemId == itemId
               ? count
               : 0,
+        QuestBattleEquipmentReady() =>
+          condition.type == QuestConditionType.equippedForBattle ? 1 : 0,
         QuestCounterIncremented(:final metric, :final amount) =>
           condition.type == QuestConditionType.counter &&
                   condition.metric == metric

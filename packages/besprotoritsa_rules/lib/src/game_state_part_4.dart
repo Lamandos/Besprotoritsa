@@ -137,6 +137,22 @@ final class AwaitingEventOption extends PendingDecision {
   final CardId? eventId;
 }
 
+/// A monster fight that resumes after forced-movement threats are resolved.
+@immutable
+final class PendingEventMonsterSpawn {
+  const PendingEventMonsterSpawn({
+    required this.eventId,
+    required this.playerId,
+    required this.optionIndex,
+    required this.coord,
+  });
+
+  final CardId eventId;
+  final PlayerId playerId;
+  final int optionIndex;
+  final HexCoord coord;
+}
+
 /// A terminal has revealed supply cards and awaits either one purchase or a
 /// decline. The cards are temporarily out of the deck until this is resolved.
 @immutable
@@ -169,9 +185,11 @@ final class AwaitingHeroReplacement extends PendingDecision {
   AwaitingHeroReplacement({
     required this.playerId,
     required Iterable<CharacterId> characterIds,
+    Iterable<PlayerId> remainingPlayerIds = const <PlayerId>[],
     this.counterAttackMonsterInstanceId,
     this.counterAttackPlayerId,
-  }) : characterIds = List.unmodifiable(characterIds) {
+  }) : characterIds = List.unmodifiable(characterIds),
+       remainingPlayerIds = List.unmodifiable(remainingPlayerIds) {
     _requireId(playerId, 'playerId');
     if (this.characterIds.isEmpty) {
       throw ArgumentError.value(
@@ -184,6 +202,7 @@ final class AwaitingHeroReplacement extends PendingDecision {
 
   final PlayerId playerId;
   final List<CharacterId> characterIds;
+  final List<PlayerId> remainingPlayerIds;
   final String? counterAttackMonsterInstanceId;
   final PlayerId? counterAttackPlayerId;
 }

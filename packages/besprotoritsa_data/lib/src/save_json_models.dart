@@ -7,6 +7,30 @@ part 'save_json_helpers.dart';
 
 /// JSON primitives for the nested rule models used in a save document.
 abstract final class SaveJsonModels {
+  static Map<String, Object?>? pendingEventMonsterSpawnToJson(
+    PendingEventMonsterSpawn? pending,
+  ) => pending == null
+      ? null
+      : {
+          'event_id': pending.eventId,
+          'player_id': pending.playerId,
+          'option_index': pending.optionIndex,
+          'coord': _coordToJson(pending.coord),
+        };
+
+  static PendingEventMonsterSpawn? pendingEventMonsterSpawnFromJson(
+    Object? value,
+  ) {
+    if (value == null) return null;
+    final json = _asObject(value, 'pending_event_monster_spawn');
+    return PendingEventMonsterSpawn(
+      eventId: _string(json, 'event_id'),
+      playerId: _string(json, 'player_id'),
+      optionIndex: _int(json, 'option_index'),
+      coord: _coordFromJson(_object(json, 'coord')),
+    );
+  }
+
   static GamePhase gamePhaseFromJson(String value) =>
       _enum(GamePhase.values, value, 'phase');
   static Map<String, Object?> tileToJson(HexTile tile) => {
@@ -19,6 +43,7 @@ abstract final class SaveJsonModels {
     'has_terminal': tile.hasTerminal,
     'vent_color': tile.ventColor.name,
     'is_blocked': tile.isBlocked,
+    'monster_access_blocked': tile.monsterAccessBlocked,
   };
   static HexTile tileFromJson(Map<String, Object?> json) => HexTile(
     id: _string(json, 'id'),
@@ -34,6 +59,10 @@ abstract final class SaveJsonModels {
       'vent_color',
     ),
     isBlocked: _boolOrDefault(json['is_blocked'], 'is_blocked'),
+    monsterAccessBlocked: _boolOrDefault(
+      json['monster_access_blocked'],
+      'monster_access_blocked',
+    ),
   );
   static Map<String, Object?> playerToJson(PlayerState player) => {
     'id': player.id,
@@ -53,10 +82,15 @@ abstract final class SaveJsonModels {
     'carried_mods': player.carriedMods,
     'implanted': player.implanted,
     'conditions': player.conditions,
+    'retained_event_cards': player.retainedEventCards,
     'alive': player.alive,
     'stats': _statsToJson(player.stats),
     'weapon_modifier': player.weaponModifier,
     'action_points': player.actionPoints,
+    'next_turn_action_delta': player.nextTurnActionDelta,
+    'monster_damage_immune_through_round':
+        player.monsterDamageImmuneThroughRound,
+    'monster_defense_bonus_round': player.monsterDefenseBonusRound,
   };
   static PlayerState playerFromJson(Map<String, Object?> json) {
     final equipped = _object(json, 'equipped');
@@ -81,10 +115,22 @@ abstract final class SaveJsonModels {
       carriedMods: _strings(json, 'carried_mods'),
       implanted: _strings(json, 'implanted'),
       conditions: _strings(json, 'conditions'),
+      retainedEventCards: json.containsKey('retained_event_cards')
+          ? _strings(json, 'retained_event_cards')
+          : const <String>[],
       alive: _bool(json, 'alive'),
       stats: _statsFromJson(_object(json, 'stats')),
       weaponModifier: _int(json, 'weapon_modifier'),
       actionPoints: _optionalInt(json, 'action_points') ?? 2,
+      nextTurnActionDelta: _optionalInt(json, 'next_turn_action_delta') ?? 0,
+      monsterDamageImmuneThroughRound: _optionalInt(
+        json,
+        'monster_damage_immune_through_round',
+      ),
+      monsterDefenseBonusRound: _optionalInt(
+        json,
+        'monster_defense_bonus_round',
+      ),
     );
   }
 
@@ -139,6 +185,7 @@ abstract final class SaveJsonModels {
     'movement': monster.movement,
     'carried_gear': monster.carriedGear,
     'returns_to_monster_deck': monster.returnsToMonsterDeck,
+    'defeat_reward_deck_id': monster.defeatRewardDeckId,
   };
   static MonsterInstance monsterFromJson(Map<String, Object?> json) =>
       MonsterInstance(
@@ -152,6 +199,7 @@ abstract final class SaveJsonModels {
         movement: _int(json, 'movement'),
         carriedGear: _strings(json, 'carried_gear'),
         returnsToMonsterDeck: json['returns_to_monster_deck'] == true,
+        defeatRewardDeckId: json['defeat_reward_deck_id'] as String?,
       );
   static Map<String, Object?> boilToJson(BoilToken boil) => {
     'instance_id': boil.instanceId,
@@ -191,6 +239,7 @@ abstract final class SaveJsonModels {
     },
     'range': card.staticEffects.range,
     'behaviorIds': card.behaviorIds,
+    if (card.sourceDeck != null) 'sourceDeck': card.sourceDeck,
   };
 
   static CardDefinition cardDefinitionFromJson(Map<String, Object?> json) {
@@ -313,6 +362,7 @@ abstract final class SaveJsonModels {
           'type': 'hero_replacement',
           'player_id': decision.playerId,
           'character_ids': decision.characterIds,
+          'remaining_player_ids': decision.remainingPlayerIds,
           'counter_attack_monster_instance_id':
               decision.counterAttackMonsterInstanceId,
           'counter_attack_player_id': decision.counterAttackPlayerId,
@@ -366,6 +416,9 @@ abstract final class SaveJsonModels {
       'hero_replacement' => AwaitingHeroReplacement(
         playerId: _string(json, 'player_id'),
         characterIds: _strings(json, 'character_ids'),
+        remainingPlayerIds: json['remaining_player_ids'] == null
+            ? const <String>[]
+            : _strings(json, 'remaining_player_ids'),
         counterAttackMonsterInstanceId: _nullableString(
           json['counter_attack_monster_instance_id'],
           'counter_attack_monster_instance_id',

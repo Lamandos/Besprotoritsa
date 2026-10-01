@@ -69,6 +69,7 @@ final class ProjectedGameStateCodec {
       hasTerminal: tile['hasTerminal'] == true,
       ventColor: _enum(VentColor.values, _string(tile, 'ventColor')),
       isBlocked: tile['isBlocked'] == true,
+      monsterAccessBlocked: tile['monsterAccessBlocked'] == true,
     );
   }
 
@@ -94,6 +95,14 @@ final class ProjectedGameStateCodec {
       conditions: _strings(json['conditions']),
       alive: json['alive'] == true,
       actionPoints: _int(json, 'actionPoints', fallback: 2),
+      nextTurnActionDelta: _int(json, 'nextTurnActionDelta', fallback: 0),
+      monsterDamageImmuneThroughRound:
+          json['monsterDamageImmuneThroughRound'] is int
+          ? json['monsterDamageImmuneThroughRound']! as int
+          : null,
+      monsterDefenseBonusRound: json['monsterDefenseBonusRound'] is int
+          ? json['monsterDefenseBonusRound']! as int
+          : null,
     );
   }
 
@@ -153,6 +162,9 @@ final class ProjectedGameStateCodec {
       'heroReplacement' => AwaitingHeroReplacement(
         playerId: _string(json, 'playerId'),
         characterIds: _strings(json['characterIds']),
+        remainingPlayerIds: json['remainingPlayerIds'] == null
+            ? const <String>[]
+            : _strings(json['remainingPlayerIds']),
       ),
       _ => null,
     };

@@ -74,6 +74,10 @@ class GameStateJsonCodec {
     'monster_steps_remaining': state.monsterStepsRemaining,
     'event_turn_index': state.eventTurnIndex,
     'pending_decision': SaveJsonModels.decisionToJson(state.pendingDecision),
+    'pending_event_monster_spawn':
+        SaveJsonModels.pendingEventMonsterSpawnToJson(
+          state.pendingEventMonsterSpawn,
+        ),
   };
 
   /// Migrates [document] to the current version and reconstructs its state.
@@ -167,6 +171,9 @@ class GameStateJsonCodec {
       monsterStepsRemaining: _int(json, 'monster_steps_remaining'),
       eventTurnIndex: _int(json, 'event_turn_index'),
       pendingDecision: pendingDecision,
+      pendingEventMonsterSpawn: SaveJsonModels.pendingEventMonsterSpawnFromJson(
+        json['pending_event_monster_spawn'],
+      ),
     );
   }
 }
