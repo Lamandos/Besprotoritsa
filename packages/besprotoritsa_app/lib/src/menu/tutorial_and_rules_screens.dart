@@ -32,12 +32,19 @@ class _TutorialScreenState extends State<TutorialScreen> {
             constraints: const BoxConstraints(maxWidth: 560),
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: ValueListenableBuilder<int>(
-                valueListenable: _step,
-                builder: (context, step, _) => _TutorialStage(
-                  step: step,
-                  onAction: _advance,
-                  onComplete: () => Navigator.of(context).pop(),
+              child: SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: MediaQuery.sizeOf(context).height - 100,
+                  ),
+                  child: ValueListenableBuilder<int>(
+                    valueListenable: _step,
+                    builder: (context, step, _) => _TutorialStage(
+                      step: step,
+                      onAction: _advance,
+                      onComplete: () => Navigator.of(context).pop(),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -207,6 +214,19 @@ class RulesReferenceScreen extends StatelessWidget {
             title: strings.rulesHealthTitle,
             body: strings.rulesHealthBody,
             icon: Icons.medical_services,
+          ),
+          const _RuleSection(
+            title: 'Фазы раунда и цель',
+            body:
+                'Раунд проходит в три фазы: сначала ходят герои и тратят '
+                'действия, затем действуют монстры, после этого открываются '
+                'события. На экране отмечена текущая фаза и оставшиеся '
+                'действия. Текущая сюжетная цель и её условия находятся в '
+                'журнале; откройте его кнопкой книги. Команда появляется, '
+                'только когда выполнены её условия. Если команда отклонена, '
+                'сообщение подскажет проверить фазу, условия и незакрытые '
+                'решения.',
+            icon: Icons.flag_outlined,
           ),
           const _RuleSection(
             title: 'Кампания и решения',

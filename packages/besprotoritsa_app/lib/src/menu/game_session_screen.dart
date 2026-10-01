@@ -64,6 +64,7 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
   late final SaveSystem _autosaves;
   late GameState _latestState;
   Future<void> _saveChain = Future<void>.value();
+  bool _exitApproved = false;
 
   @override
   void initState() {
@@ -83,7 +84,16 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
       _latestState = next;
       _queueAutosave(next);
     });
-    return MvpGameScreen(onManualSaveRequested: _saveManual);
+    return PopScope<void>(
+      canPop: _exitApproved,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !_exitApproved) _confirmExitToMenu();
+      },
+      child: MvpGameScreen(
+        onManualSaveRequested: _saveManual,
+        onExitRequested: _confirmExitToMenu,
+      ),
+    );
   }
 
   @override
@@ -129,6 +139,37 @@ class _AutosavingGameState extends ConsumerState<_AutosavingGame>
           const SnackBar(content: Text('Не удалось сохранить партию.')),
         );
       }
+    }
+  }
+
+  Future<void> _confirmExitToMenu() async {
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Вернуться в меню?'),
+        content: const Text(
+          'Партия сохранится автоматически. После перезапуска её можно '
+          'продолжить из главного меню.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Продолжить партию'),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('В меню'),
+          ),
+        ],
+      ),
+    );
+    if (leave != true || !mounted) return;
+    await _saveChain;
+    if (mounted) {
+      setState(() => _exitApproved = true);
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      Navigator.of(context).pop();
     }
   }
 
