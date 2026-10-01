@@ -194,6 +194,9 @@ GameState _copyState(
 }) => GameState(
   schemaVersion: state.schemaVersion,
   seed: state.seed,
+  prngState: state.prngState,
+  contentSetId: state.contentSetId,
+  contentSetVersion: state.contentSetVersion,
   difficulty: state.difficulty,
   round: round ?? state.round,
   phase: phase ?? state.phase,

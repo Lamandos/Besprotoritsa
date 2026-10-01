@@ -11,6 +11,9 @@ final class GameState {
   GameState({
     this.schemaVersion = 1,
     required this.seed,
+    this.prngState,
+    this.contentSetId = 'mvp',
+    this.contentSetVersion = '1',
     this.difficulty = 1,
     required this.round,
     required this.phase,
@@ -136,6 +139,13 @@ final class GameState {
   final int schemaVersion;
   final int seed;
 
+  /// Current xorshift32 state; null is used by pre-checkpoint save snapshots.
+  final int? prngState;
+
+  /// Content identity captured at game creation, independent of app release.
+  final String contentSetId;
+  final String contentSetVersion;
+
   /// Required successful hits for skill checks in this game.
   final int difficulty;
   final int round;
@@ -198,6 +208,46 @@ final class GameState {
     }
     return null;
   }
+
+  /// Returns this exact snapshot with an updated deterministic RNG checkpoint.
+  GameState withPrngState(int value) => GameState(
+    schemaVersion: schemaVersion,
+    seed: seed,
+    prngState: value,
+    contentSetId: contentSetId,
+    contentSetVersion: contentSetVersion,
+    difficulty: difficulty,
+    round: round,
+    phase: phase,
+    activePlayerId: activePlayerId,
+    actionsLeft: actionsLeft,
+    actionsTakenThisTurn: actionsTakenThisTurn,
+    board: board,
+    players: players,
+    monsters: monsters,
+    boils: boils,
+    reserveHeroes: reserveHeroes,
+    queuedReplacements: queuedReplacements,
+    conditionCards: conditionCards,
+    cardDefinitions: cardDefinitions,
+    eventDefinitions: eventDefinitions,
+    questDefinitions: questDefinitions,
+    taskDefinitions: taskDefinitions,
+    monsterDefinitions: monsterDefinitions,
+    contentTranslations: contentTranslations,
+    pendingDamage: pendingDamage,
+    chestCards: chestCards,
+    decks: decks,
+    quests: quests,
+    log: log,
+    gameEvents: gameEvents,
+    isComplete: isComplete,
+    monsterTurnIndex: monsterTurnIndex,
+    monsterStepsRemaining: monsterStepsRemaining,
+    eventTurnIndex: eventTurnIndex,
+    pendingDecision: pendingDecision,
+    pendingEventMonsterSpawn: pendingEventMonsterSpawn,
+  );
 }
 
 Map<String, Map<String, Object?>> _freezeDefinitions(

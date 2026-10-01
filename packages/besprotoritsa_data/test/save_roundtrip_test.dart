@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
@@ -18,7 +19,7 @@ void main() {
 
       expect(
         (jsonDecode(savedJson) as Map<String, dynamic>)['schema_version'],
-        1,
+        currentSaveSchemaVersion,
       );
       expect(restored, isNotNull);
       expect(codec.encode(restored!), savedJson);
@@ -35,7 +36,7 @@ void main() {
     },
   );
 
-  test('migrates an unversioned legacy document to schema version 1', () {
+  test('migrates an unversioned legacy document to current schema', () {
     final codec = GameStateJsonCodec();
     final legacy = Map<String, Object?>.of(codec.toJson(_interruptedState()))
       ..remove('schema_version')
@@ -43,7 +44,44 @@ void main() {
 
     final restored = codec.fromJson(legacy);
 
-    expect(codec.toJson(restored)['schema_version'], 1);
+    expect(
+      codec.toJson(restored)['schema_version'],
+      currentSaveSchemaVersion,
+    );
+  });
+
+  test('migrates checked in unversioned and release-1 save fixtures', () {
+    final prefix = File('test/fixtures/save_schema_v0.json').existsSync()
+        ? 'test/fixtures'
+        : 'packages/besprotoritsa_data/test/fixtures';
+    final codec = GameStateJsonCodec();
+
+    for (final fixtureName in ['save_schema_v0.json', 'save_schema_v1.json']) {
+      final restored = codec.decode(
+        File('$prefix/$fixtureName').readAsStringSync(),
+      );
+      expect(
+        codec.toJson(restored)['schema_version'],
+        currentSaveSchemaVersion,
+      );
+      expect(restored.contentSetId, 'mvp');
+      expect(restored.contentSetVersion, '1');
+      expect(restored.prngState, restored.seed);
+      expect(restored.turnOrder, ['ada', 'boris']);
+    }
+  });
+
+  test('continues the same PRNG stream after a saved checkpoint', () {
+    final codec = GameStateJsonCodec();
+    final roller = SeededDiceRoller(_interruptedState().seed)..rollDice(5);
+    final checkpointed = _interruptedState().withPrngState(roller.checkpoint);
+    final restored = codec.decode(codec.encode(checkpointed));
+    final resumed = SeededDiceRoller(
+      restored.seed,
+      checkpoint: restored.prngState,
+    );
+
+    expect(resumed.rollDice(12), roller.rollDice(12));
   });
 
   test('restores legacy cabin-noise behavior for a pending skill roll', () {

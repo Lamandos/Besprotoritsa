@@ -11,9 +11,14 @@ import 'package:web_socket_channel/io.dart';
 void main() {
   test('restores a persisted room and protects reconnect identities', () async {
     final directory = await Directory.systemTemp.createTemp('besprotoritsa-');
-    addTearDown(() => directory.delete(recursive: true));
-
     final firstManager = RoomManager(persistenceDirectory: directory);
+    final managers = <RoomManager>[firstManager];
+    addTearDown(() async {
+      for (final manager in managers) {
+        await manager.flushPersistence();
+      }
+      await directory.delete(recursive: true);
+    });
     final created = firstManager.createRoom(
       state: _twoHeroState(),
       started: true,
@@ -47,6 +52,7 @@ void main() {
     );
     final updated = await adaInbox.next();
     expect(updated['revision'], 1);
+    await firstManager.flushPersistence();
     final journalFile = File(
       '${directory.path}/${created.code}.commands.ndjson',
     );
@@ -72,7 +78,9 @@ void main() {
 
     // Simulate a process crash: a fresh manager knows only what reached disk.
     await server.close(force: true);
+    await firstManager.flushPersistence();
     var restoredManager = RoomManager(persistenceDirectory: directory);
+    managers.add(restoredManager);
     var restored = restoredManager.room(created.code);
     expect(restored, isNotNull);
     final recoveredRoom = restored!;
@@ -104,6 +112,7 @@ void main() {
       flush: true,
     );
     restoredManager = RoomManager(persistenceDirectory: directory);
+    managers.add(restoredManager);
     restored = restoredManager.room(created.code);
     expect(restored, isNotNull);
     final restoredRoom = restored!;

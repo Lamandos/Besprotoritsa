@@ -56,6 +56,25 @@ class SaveSystem {
     await _saveName(slotId, name);
   }
 
+  /// Changes a manual slot's display name without changing its snapshot.
+  Future<void> renameManual(String slotId, String? name) async {
+    _requireManualSlot(slotId);
+    if (await _storage.loadGame(slotId) == null) {
+      throw StateError('Cannot rename an empty save slot: $slotId.');
+    }
+    await _saveName(slotId, name);
+  }
+
+  /// Deletes one manual snapshot and its name, leaving every other slot intact.
+  Future<void> deleteManual(String slotId) async {
+    _requireManualSlot(slotId);
+    if (_storage case final SaveSlotManagementStorage storage) {
+      await storage.deleteGame(slotId);
+      return;
+    }
+    throw UnsupportedError('This storage backend cannot delete save slots.');
+  }
+
   /// Returns a validated snapshot, or null for an empty known slot.
   Future<GameState?> load(String slotId) async {
     _requireKnownSlot(slotId);

@@ -20,7 +20,8 @@ const _legacySaveKeyPrefix = 'besprotoritsa.save.';
 /// IndexedDB is asynchronous and is not constrained by the small synchronous
 /// quota of LocalStorage. On the first read, a save written by the preceding
 /// LocalStorage release is migrated so existing players retain progress.
-class WebIndexedDbGameStorage implements GameStorage, SaveSlotMetadataStorage {
+class WebIndexedDbGameStorage
+    implements GameStorage, SaveSlotMetadataStorage, SaveSlotManagementStorage {
   /// Creates browser storage using the supplied [codec].
   WebIndexedDbGameStorage({GameStateJsonCodec? codec})
     : _codec = codec ?? GameStateJsonCodec();
@@ -57,6 +58,15 @@ class WebIndexedDbGameStorage implements GameStorage, SaveSlotMetadataStorage {
     _nameKeyFor(slotId),
     legacyKey: '${_legacyKeyFor(slotId)}.name',
   );
+
+  @override
+  Future<void> deleteGame(String slotId) async {
+    final encoded = _encodedSlotId(slotId);
+    await _delete('$_saveKeyPrefix$encoded');
+    await _delete('$_nameKeyPrefix$encoded');
+    web.window.localStorage.removeItem('$_legacySaveKeyPrefix$encoded');
+    web.window.localStorage.removeItem('$_legacySaveKeyPrefix$encoded.name');
+  }
 
   static Future<web.IDBDatabase> _openDatabase() async {
     final request = web.window.indexedDB.open(_databaseName, _databaseVersion);

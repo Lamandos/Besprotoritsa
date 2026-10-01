@@ -33,6 +33,23 @@ void main() {
   });
 
   test(
+    'renames and deletes one slot without changing neighboring saves',
+    () async {
+      final saves = SaveSystem(storage: InMemoryGameStorage());
+      await saves.saveManual('slot-1', _state(), name: 'Old name');
+      await saves.saveManual('slot-2', _state(round: 2), name: 'Keep me');
+
+      await saves.renameManual('slot-1', 'Renamed');
+      await saves.deleteManual('slot-1');
+
+      expect(await saves.load('slot-1'), isNull);
+      expect(await saves.loadName('slot-1'), isNull);
+      expect((await saves.load('slot-2'))!.round, 2);
+      expect(await saves.loadName('slot-2'), 'Keep me');
+    },
+  );
+
+  test(
     'exports and imports JSON files, migrating an old schema on import',
     () async {
       final directory = await Directory.systemTemp.createTemp(

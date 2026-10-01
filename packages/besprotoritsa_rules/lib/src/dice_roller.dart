@@ -9,24 +9,38 @@ abstract interface class DiceRoller {
   List<T> shuffle<T>(List<T> items);
 }
 
+/// A deterministic roller whose current generator state can be checkpointed.
+abstract interface class CheckpointableDiceRoller implements DiceRoller {
+  /// Unsigned 32-bit state to persist with the game snapshot.
+  int get checkpoint;
+}
+
 /// A deterministic [DiceRoller] backed by the xorshift32 pseudo-random
 /// number generator.
 ///
 /// Every state transition is constrained to an unsigned 32-bit integer. This
 /// makes the sequence stable on Dart VM and JavaScript, where JavaScript
 /// numbers otherwise have different integer representation limits.
-final class SeededDiceRoller implements DiceRoller {
+final class SeededDiceRoller implements CheckpointableDiceRoller {
   /// Creates a roller whose sequence is determined by [seed].
   ///
   /// xorshift32 has an all-zero absorbing state, so a zero seed is replaced
   /// with a fixed non-zero state.
-  SeededDiceRoller(int seed)
-    : _state = (seed & _uint32Mask) == 0 ? _zeroSeedState : seed & _uint32Mask;
+  SeededDiceRoller(int seed, {int? checkpoint})
+    : _state = _normalize(checkpoint ?? seed);
 
   static const int _uint32Mask = 0xFFFFFFFF;
   static const int _zeroSeedState = 0x6D2B79F5;
 
   int _state;
+
+  static int _normalize(int value) {
+    final normalized = value & _uint32Mask;
+    return normalized == 0 ? _zeroSeedState : normalized;
+  }
+
+  @override
+  int get checkpoint => _state;
 
   @override
   List<int> rollDice(int count) {

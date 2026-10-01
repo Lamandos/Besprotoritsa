@@ -38,7 +38,9 @@ class GameController extends GameSessionController {
   @override
   GameState build() {
     final initialState = _initialState ?? createMvpGameState();
-    _roller = _dice ?? SeededDiceRoller(initialState.seed);
+    _roller =
+        _dice ??
+        SeededDiceRoller(initialState.seed, checkpoint: initialState.prngState);
     return initialState;
   }
 
@@ -49,7 +51,10 @@ class GameController extends GameSessionController {
     if (queue.isPlaying || validate(state, command) != null) return false;
     final result = step(state, command, _roller);
     if (!result.isAccepted) return false;
-    state = result.state;
+    final next = result.state;
+    state = _roller is CheckpointableDiceRoller
+        ? next.withPrngState(_roller.checkpoint)
+        : next;
     queue.enqueue(result.events);
     return true;
   }

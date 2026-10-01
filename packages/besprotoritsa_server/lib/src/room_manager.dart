@@ -180,6 +180,14 @@ final class RoomManager {
     }
   }
 
+  /// Waits until all queued room snapshots have been written to disk.
+  ///
+  /// Call this during graceful shutdown before releasing the persistence
+  /// directory. The socket handlers enqueue a few lifecycle snapshots without
+  /// waiting for filesystem latency.
+  Future<void> flushPersistence() =>
+      _persistence?._flush() ?? Future<void>.value();
+
   /// Finds a room by its case-insensitive invite code.
   GameRoom? room(String code) => _rooms[code.toUpperCase()];
 
@@ -1126,6 +1134,8 @@ final class FileRoomPersistence {
   final GameStateJsonCodec _codec;
   Future<void> _writeQueue = Future<void>.value();
   final Map<String, int> _journalOffsets = <String, int>{};
+
+  Future<void> _flush() => _writeQueue;
 
   /// Enqueues an authoritative snapshot without blocking the room loop.
   Future<void> _save(_RoomSnapshot snapshot) {
