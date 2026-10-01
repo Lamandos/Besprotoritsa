@@ -388,14 +388,18 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
         minScale: 0.65,
         maxScale: 2.25,
         child: SizedBox(
-          width: 800,
-          height: 520,
+          width: math
+              .max(800, _boardCanvasSize(widget.state.board).width * 1.1)
+              .toDouble(),
+          height: math
+              .max(520, _boardCanvasSize(widget.state.board).height * 1.1)
+              .toDouble(),
           child: Center(
             child: Transform.scale(
               scale: 1.1,
               child: SizedBox(
-                width: 640,
-                height: 450,
+                width: _boardCanvasSize(widget.state.board).width,
+                height: _boardCanvasSize(widget.state.board).height,
                 child: Stack(
                   children: [
                     RepaintBoundary(

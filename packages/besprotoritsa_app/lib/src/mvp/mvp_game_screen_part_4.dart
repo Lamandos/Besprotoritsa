@@ -568,6 +568,23 @@ void _showInventorySheet(
                   subtitle: Text('₡${selectedPlayer.credits}'),
                 ),
                 const Divider(),
+                for (final (slot, item) in <(String, String)>[
+                  for (final (index, weapon)
+                      in selectedPlayer.equipped.weapons.indexed)
+                    ('Оружие ${index + 1}', weapon),
+                  if (selectedPlayer.equipped.armor case final item?)
+                    ('Броня', item),
+                  if (selectedPlayer.equipped.clothing case final item?)
+                    ('Одежда', item),
+                  if (selectedPlayer.equipped.robot case final item?)
+                    ('Робот', item),
+                ])
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.shield_outlined),
+                    title: Text(item),
+                    subtitle: Text(slot),
+                  ),
                 if (selectedPlayer.backpack.isEmpty)
                   const ListTile(
                     contentPadding: EdgeInsets.zero,
