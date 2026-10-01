@@ -169,9 +169,11 @@ final class AwaitingHeroReplacement extends PendingDecision {
   AwaitingHeroReplacement({
     required this.playerId,
     required Iterable<CharacterId> characterIds,
+    Iterable<PlayerId> remainingPlayerIds = const <PlayerId>[],
     this.counterAttackMonsterInstanceId,
     this.counterAttackPlayerId,
-  }) : characterIds = List.unmodifiable(characterIds) {
+  }) : characterIds = List.unmodifiable(characterIds),
+       remainingPlayerIds = List.unmodifiable(remainingPlayerIds) {
     _requireId(playerId, 'playerId');
     if (this.characterIds.isEmpty) {
       throw ArgumentError.value(
@@ -184,6 +186,7 @@ final class AwaitingHeroReplacement extends PendingDecision {
 
   final PlayerId playerId;
   final List<CharacterId> characterIds;
+  final List<PlayerId> remainingPlayerIds;
   final String? counterAttackMonsterInstanceId;
   final PlayerId? counterAttackPlayerId;
 }

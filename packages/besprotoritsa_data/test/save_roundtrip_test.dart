@@ -98,6 +98,7 @@ void main() {
     final pendingReplacement = AwaitingHeroReplacement(
       playerId: 'hero-2',
       characterIds: const ['scientist'],
+      remainingPlayerIds: const ['hero-3'],
       counterAttackMonsterInstanceId: 'event-ghoul',
       counterAttackPlayerId: 'ada',
     );
@@ -114,6 +115,7 @@ void main() {
       'event-ghoul',
     );
     expect(restoredReplacement.counterAttackPlayerId, 'ada');
+    expect(restoredReplacement.remainingPlayerIds, ['hero-3']);
     expect(
       (restoredAttack.context! as AttackRollContext).resumeAutomaticPhase,
       isTrue,

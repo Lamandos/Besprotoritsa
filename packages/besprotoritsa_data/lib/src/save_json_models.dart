@@ -332,6 +332,7 @@ abstract final class SaveJsonModels {
           'type': 'hero_replacement',
           'player_id': decision.playerId,
           'character_ids': decision.characterIds,
+          'remaining_player_ids': decision.remainingPlayerIds,
           'counter_attack_monster_instance_id':
               decision.counterAttackMonsterInstanceId,
           'counter_attack_player_id': decision.counterAttackPlayerId,
@@ -385,6 +386,9 @@ abstract final class SaveJsonModels {
       'hero_replacement' => AwaitingHeroReplacement(
         playerId: _string(json, 'player_id'),
         characterIds: _strings(json, 'character_ids'),
+        remainingPlayerIds: json['remaining_player_ids'] == null
+            ? const <String>[]
+            : _strings(json, 'remaining_player_ids'),
         counterAttackMonsterInstanceId: _nullableString(
           json['counter_attack_monster_instance_id'],
           'counter_attack_monster_instance_id',

@@ -1861,11 +1861,16 @@ Map<String, Object?>? _pendingDecisionToJson(
         'playerId': playerId,
         'offeredCards': offeredCards,
       },
-    AwaitingHeroReplacement(:final playerId, :final characterIds) =>
+    AwaitingHeroReplacement(
+      :final playerId,
+      :final characterIds,
+      :final remainingPlayerIds,
+    ) =>
       <String, Object?>{
         'type': 'heroReplacement',
         'playerId': playerId,
         'characterIds': characterIds,
+        'remainingPlayerIds': remainingPlayerIds,
         'counterAttackMonsterInstanceId':
             decision.counterAttackMonsterInstanceId,
         'counterAttackPlayerId': decision.counterAttackPlayerId,

@@ -89,6 +89,32 @@ GameStepResult _resolveHeroReplacement(
         'replacement-selected:'
         '${pending.playerId}:${selectedReserve.characterId}',
   );
+  if (pending.remainingPlayerIds.isNotEmpty) {
+    if (selected.reserveHeroes.isEmpty) {
+      return GameStepResult(
+        state: _copyState(
+          selected,
+          isComplete: true,
+          pendingDamage: const <IncomingDamage>[],
+          clearPendingDecision: true,
+          logEntry: 'replacement-reserves-exhausted',
+        ),
+      );
+    }
+    return GameStepResult(
+      state: _copyState(
+        selected,
+        pendingDecision: AwaitingHeroReplacement(
+          playerId: pending.remainingPlayerIds.first,
+          characterIds: selected.reserveHeroes.map((hero) => hero.characterId),
+          remainingPlayerIds: pending.remainingPlayerIds.skip(1),
+          counterAttackMonsterInstanceId:
+              pending.counterAttackMonsterInstanceId,
+          counterAttackPlayerId: pending.counterAttackPlayerId,
+        ),
+      ),
+    );
+  }
   // A death can interrupt a queue of monster/boil damage.  Choosing a reserve
   // must return to that queue before any new player command becomes legal.
   final queued = _startNextIncomingDamage(
@@ -310,6 +336,7 @@ GameStepResult _resolveDodge(
           pendingDecision: AwaitingHeroReplacement(
             playerId: awaitingReplacement.playerId,
             characterIds: awaitingReplacement.characterIds,
+            remainingPlayerIds: awaitingReplacement.remainingPlayerIds,
             counterAttackMonsterInstanceId: counterAttackId,
             counterAttackPlayerId: counterAttackPlayerId,
           ),

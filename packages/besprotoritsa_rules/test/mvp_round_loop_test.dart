@@ -367,6 +367,124 @@ void main() {
     expect(state.players.single.credits, 0);
   });
 
+  test('combat-strength event bonus adds a die to later attacks', () {
+    var state = _mvpState(
+      eventId: 'combat-strength-event',
+      playerStats: const PlayerStats(strength: 2, combatStrength: 2),
+      monsters: [
+        MonsterInstance(
+          instanceId: 'test-enemy',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 4,
+        ),
+      ],
+      eventDefinitions: {
+        'combat-strength-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {
+                  'type': 'stat_bonus',
+                  'stat': 'combatStrength',
+                  'amount': 1,
+                },
+              ],
+              'failureEffects': [
+                {
+                  'type': 'stat_bonus',
+                  'stat': 'combatStrength',
+                  'amount': 1,
+                },
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const AttackCommand('test-enemy'),
+      FixedDiceRoller([6, 6, 6]),
+    ).state;
+
+    expect(state.monsters.single.damage, 3);
+  });
+
+  test('meteor damage queues a replacement for every fallen hero', () {
+    final reserveHeroes = [
+      ReserveHero(
+        characterId: 'scientist',
+        health: 3,
+        stats: const PlayerStats(),
+      ),
+      ReserveHero(characterId: 'pilot', health: 3, stats: const PlayerStats()),
+    ];
+    var state = _mvpState(
+      eventId: 'mass-casualty',
+      heroCount: 2,
+      playerHealth: 1,
+      reserveHeroes: reserveHeroes,
+      eventDefinitions: {
+        'mass-casualty': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'damage_all_players', 'amount': 1},
+              ],
+              'failureEffects': [
+                {'type': 'damage_all_players', 'amount': 1},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    var replacement = state.pendingDecision! as AwaitingHeroReplacement;
+    expect(replacement.playerId, 'ada');
+    expect(replacement.remainingPlayerIds, ['hero-2']);
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        SelectReplacementHeroChoice('scientist'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+
+    replacement = state.pendingDecision! as AwaitingHeroReplacement;
+    expect(replacement.playerId, 'hero-2');
+    expect(replacement.characterIds, ['pilot']);
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(SelectReplacementHeroChoice('pilot')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(
+      state.players.map((hero) => hero.characterId),
+      containsAll(['scientist', 'pilot']),
+    );
+    expect(state.players.every((hero) => hero.alive), isTrue);
+    expect(state.isComplete, isFalse);
+  });
+
   test(
     'events without a printed check use their declared automatic outcome',
     () {
@@ -861,9 +979,14 @@ void main() {
   test('asteroid event damages and displaces corridor occupants', () {
     var state = _mvpState(
       eventId: 'asteroid-alert',
-      heroCount: 2,
       playerCoord: const HexCoord(0, 1),
       corridorOpened: true,
+      boils: [
+        const BoilToken(
+          instanceId: 'boil-at-start',
+          coord: HexCoord(0, 0),
+        ),
+      ],
       eventDefinitions: {
         'asteroid-alert': {
           'options': [
@@ -885,7 +1008,15 @@ void main() {
     state = step(
       state,
       const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
-      FixedDiceRoller([1, 2]),
+      FixedDiceRoller([1]),
+    ).state;
+
+    expect(state.pendingDecision, isA<AwaitingDodge>());
+    expect(state.boils, isEmpty);
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(DodgeChoice()),
+      FixedDiceRoller([6]),
     ).state;
 
     expect(
@@ -894,7 +1025,7 @@ void main() {
           .isBlocked,
       isTrue,
     );
-    expect(state.players.map((hero) => hero.damage), [1, 2]);
+    expect(state.players.map((hero) => hero.damage), [1]);
     expect(
       state.players.every((hero) => hero.coord != const HexCoord(0, 1)),
       isTrue,
@@ -2397,12 +2528,14 @@ GameState _mvpState({
   Map<CardId, CardDefinition> cardDefinitions = const {},
   Map<DeckId, DeckState> additionalDecks = const {},
   Iterable<MonsterInstance> monsters = const [],
+  Iterable<BoilToken> boils = const [],
   Map<String, Map<String, Object?>> monsterDefinitions = const {},
   int heroCount = 1,
   int secondHeroDamage = 0,
   Iterable<ReserveHero> reserveHeroes = const [],
   int initialCredits = 0,
   int playerHealth = 3,
+  PlayerStats playerStats = const PlayerStats(science: 1, agility: 1),
   VentColor corridorVentColor = VentColor.none,
   bool corridorOpened = false,
 }) => GameState(
@@ -2451,10 +2584,11 @@ GameState _mvpState({
         implanted: const [],
         conditions: const [],
         alive: true,
-        stats: const PlayerStats(science: 1, agility: 1),
+        stats: playerStats,
       ),
   ],
   monsters: monsters,
+  boils: boils,
   reserveHeroes: reserveHeroes,
   decks: {
     'events': DeckState(drawPile: [eventId]),

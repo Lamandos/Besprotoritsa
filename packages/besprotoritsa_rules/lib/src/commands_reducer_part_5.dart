@@ -17,8 +17,8 @@ GameState resolveHeroDeaths(GameState state) {
   final monsters = List<MonsterInstance>.of(state.monsters);
   final decks = Map<DeckId, DeckState>.of(state.decks);
   final events = List<GameEvent>.of(state.gameEvents);
-  AwaitingHeroReplacement? replacementDecision;
-  var noReserve = false;
+  final noReserve =
+      state.reserveHeroes.isEmpty && state.queuedReplacements.isEmpty;
 
   for (final deceased in newlyDead) {
     final carriedGear = _restlessGear(deceased, state.cardDefinitions);
@@ -59,15 +59,15 @@ GameState resolveHeroDeaths(GameState state) {
         coord: deceased.coord,
       ),
     );
-    if (state.reserveHeroes.isEmpty && state.queuedReplacements.isEmpty) {
-      noReserve = true;
-    } else if (state.reserveHeroes.isNotEmpty) {
-      replacementDecision ??= AwaitingHeroReplacement(
-        playerId: deceased.id,
-        characterIds: state.reserveHeroes.map((hero) => hero.characterId),
-      );
-    }
   }
+
+  final replacementDecision = state.reserveHeroes.isEmpty
+      ? null
+      : AwaitingHeroReplacement(
+          playerId: newlyDead.first.id,
+          characterIds: state.reserveHeroes.map((hero) => hero.characterId),
+          remainingPlayerIds: newlyDead.skip(1).map((hero) => hero.id),
+        );
 
   return _copyState(
     state,
@@ -170,7 +170,12 @@ String _attackLog(
     '${unclaimedLoot.isEmpty ? '' : ':unclaimed:${unclaimedLoot.join(',')}'}';
 
 int _heroAttackDice(PlayerState player, GameState state) =>
-    _statDice(player, state, StatType.strength) + player.weaponModifier;
+    (_statDice(player, state, StatType.strength) +
+            (player.stats.combatStrength == 0
+                ? 0
+                : player.stats.combatStrength - player.stats.strength))
+        .clamp(1, 999) +
+    player.weaponModifier;
 
 List<EffectHook> _activeEffectHooks(GameState state, PlayerState player) {
   final registry = EffectRegistry.standard();

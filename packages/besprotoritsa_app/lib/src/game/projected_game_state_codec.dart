@@ -162,6 +162,9 @@ final class ProjectedGameStateCodec {
       'heroReplacement' => AwaitingHeroReplacement(
         playerId: _string(json, 'playerId'),
         characterIds: _strings(json['characterIds']),
+        remainingPlayerIds: json['remainingPlayerIds'] == null
+            ? const <String>[]
+            : _strings(json['remainingPlayerIds']),
       ),
       _ => null,
     };

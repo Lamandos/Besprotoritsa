@@ -1147,6 +1147,7 @@ GameState _resolveEventOutcome(
           monsters: movedMonsters,
           logEntry: 'event-asteroid-corridors-closed',
         );
+        current = resolveColocation(current);
       case 'destroy_nest':
         final nests = current.monsters
             .where(
