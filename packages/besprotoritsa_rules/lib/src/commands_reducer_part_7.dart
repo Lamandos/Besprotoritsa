@@ -1410,12 +1410,30 @@ GameState _resolveEventOutcome(
         final statName = rawEffect['stat'];
         if (statName is! String) continue;
         final stat = StatType.values.byName(statName);
+        final retainEventCard = rawEffect['retainEventCard'] == true;
+        final retainedEventDecks = Map<DeckId, DeckState>.of(current.decks);
+        if (retainEventCard) {
+          final eventDeck = retainedEventDecks['events'];
+          if (eventDeck != null) {
+            final discardPile = List<CardId>.of(eventDeck.discardPile);
+            if (discardPile.remove(eventId)) {
+              retainedEventDecks['events'] = DeckState(
+                drawPile: eventDeck.drawPile,
+                discardPile: discardPile,
+              );
+            }
+          }
+        }
         current = _copyState(
           current,
+          decks: retainedEventDecks,
           players: _replacePlayer(current, playerId, (hero) {
             final stats = hero.stats;
             return _copyPlayer(
               hero,
+              retainedEventCards: retainEventCard
+                  ? [...hero.retainedEventCards, eventId]
+                  : null,
               stats: PlayerStats(
                 strength:
                     stats.strength + (stat == StatType.strength ? amount : 0),

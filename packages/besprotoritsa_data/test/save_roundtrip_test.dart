@@ -25,6 +25,7 @@ void main() {
       expect(restored.cardDefinitions['pistol']!.sourceDeck, 'items');
       expect(restored.players.first.monsterDamageImmuneThroughRound, 3);
       expect(restored.players.first.monsterDefenseBonusRound, 5);
+      expect(restored.players.first.retainedEventCards, ['scientist-report']);
       expect(restored.pendingDecision, isA<AwaitingRerollChoice>());
       final context =
           (restored.pendingDecision! as AwaitingRerollChoice).context!
@@ -192,6 +193,7 @@ GameState _interruptedState() => GameState(
       conditions: const ['malaise'],
       monsterDamageImmuneThroughRound: 3,
       monsterDefenseBonusRound: 5,
+      retainedEventCards: const ['scientist-report'],
     ),
     _player(
       id: 'boris',
@@ -297,6 +299,7 @@ PlayerState _player({
   bool alive = true,
   int? monsterDamageImmuneThroughRound,
   int? monsterDefenseBonusRound,
+  Iterable<String> retainedEventCards = const [],
 }) => PlayerState(
   id: id,
   characterId: characterId,
@@ -314,6 +317,7 @@ PlayerState _player({
   carriedMods: const ['mod-1'],
   implanted: const ['implant-1'],
   conditions: conditions,
+  retainedEventCards: retainedEventCards,
   alive: alive,
   stats: const PlayerStats(
     strength: 3,

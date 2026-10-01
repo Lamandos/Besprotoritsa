@@ -419,6 +419,82 @@ void main() {
     expect(state.monsters.single.damage, 3);
   });
 
+  test('kept event cards return to the event discard when their hero dies', () {
+    var state = _mvpState(
+      eventId: 'scientist-report',
+      eventDefinitions: {
+        'scientist-report': {
+          'id': 'scientist-report',
+          'behaviorIds': ['event.choice', 'event.successFailure'],
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'behaviorId': 'event.successFailure',
+              'successEffects': [
+                {
+                  'type': 'stat_bonus',
+                  'stat': 'science',
+                  'amount': 1,
+                  'retainEventCard': true,
+                },
+              ],
+              'failureEffects': [
+                {'type': 'no_effect'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.retainedEventCards, ['scientist-report']);
+    expect(state.decks['events']!.discardPile, isEmpty);
+
+    final hero = state.players.single;
+    final dyingHero = PlayerState(
+      id: hero.id,
+      characterId: hero.characterId,
+      coord: hero.coord,
+      damage: hero.health,
+      health: hero.health,
+      credits: hero.credits,
+      backpack: hero.backpack,
+      equipped: hero.equipped,
+      carriedMods: hero.carriedMods,
+      implanted: hero.implanted,
+      conditions: hero.conditions,
+      retainedEventCards: hero.retainedEventCards,
+      alive: true,
+      stats: hero.stats,
+    );
+    final deathState = GameState(
+      seed: state.seed,
+      round: state.round,
+      phase: GamePhase.playersTurn,
+      activePlayerId: hero.id,
+      actionsLeft: 0,
+      board: state.board,
+      players: [dyingHero],
+      monsters: const [],
+      decks: state.decks,
+      quests: state.quests,
+    );
+    final resolvedDeath = resolveHeroDeaths(deathState);
+
+    expect(resolvedDeath.players.single.retainedEventCards, isEmpty);
+    expect(
+      resolvedDeath.decks['events']!.discardPile,
+      ['scientist-report'],
+    );
+  });
+
   test('meteor damage queues a replacement for every fallen hero', () {
     final reserveHeroes = [
       ReserveHero(

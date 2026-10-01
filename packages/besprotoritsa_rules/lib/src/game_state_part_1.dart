@@ -211,6 +211,7 @@ final class PlayerState {
     required Iterable<CardId> carriedMods,
     required Iterable<CardId> implanted,
     required Iterable<CardId> conditions,
+    Iterable<CardId> retainedEventCards = const [],
     required this.alive,
     this.stats = const PlayerStats(),
     this.weaponModifier = 0,
@@ -221,7 +222,8 @@ final class PlayerState {
   }) : backpack = List.unmodifiable(backpack),
        carriedMods = List.unmodifiable(carriedMods),
        implanted = List.unmodifiable(implanted),
-       conditions = List.unmodifiable(conditions) {
+       conditions = List.unmodifiable(conditions),
+       retainedEventCards = List.unmodifiable(retainedEventCards) {
     _requireId(id, 'id');
     _requireId(characterId, 'characterId');
     _requireNonNegative(damage, 'damage');
@@ -263,6 +265,7 @@ final class PlayerState {
   final List<CardId> carriedMods;
   final List<CardId> implanted;
   final List<CardId> conditions;
+  final List<CardId> retainedEventCards;
   final bool alive;
   final PlayerStats stats;
 
@@ -295,6 +298,7 @@ final class PlayerState {
     carriedMods: carriedMods,
     implanted: implanted,
     conditions: conditions,
+    retainedEventCards: retainedEventCards,
     alive: alive,
     stats: stats,
     weaponModifier: weaponModifier,
@@ -316,6 +320,7 @@ final class PlayerState {
     carriedMods: carriedMods,
     implanted: implanted,
     conditions: conditions,
+    retainedEventCards: retainedEventCards,
     alive: alive,
     stats: stats,
     weaponModifier: weaponModifier,

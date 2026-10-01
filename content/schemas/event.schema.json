@@ -83,6 +83,7 @@
           "amount": { "type": "integer", "minimum": 0 },
           "delta": { "type": "integer", "minimum": -2, "maximum": 2 },
           "immediateCombat": { "type": "boolean" },
+          "retainEventCard": { "type": "boolean" },
           "defeatRewardDeckId": { "type": "string", "pattern": "^[a-z][A-Za-z0-9_-]*$" },
           "deckId": { "type": "string", "pattern": "^[a-z][A-Za-z0-9_-]*$" },
           "cardId": { "$ref": "#/$defs/id" },

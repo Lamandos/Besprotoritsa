@@ -42,6 +42,7 @@ GameState resolveHeroDeaths(GameState state) {
       carriedMods: const [],
       implanted: const [],
       conditions: const [],
+      retainedEventCards: const [],
       alive: false,
       weaponModifier: 0,
     );
@@ -50,6 +51,16 @@ GameState resolveHeroDeaths(GameState state) {
       decks['conditions'] = DeckState(
         drawPile: conditionDeck.drawPile,
         discardPile: [...conditionDeck.discardPile, ...deceased.conditions],
+      );
+    }
+    final eventDeck = decks['events'];
+    if (eventDeck != null && deceased.retainedEventCards.isNotEmpty) {
+      decks['events'] = DeckState(
+        drawPile: eventDeck.drawPile,
+        discardPile: [
+          ...eventDeck.discardPile,
+          ...deceased.retainedEventCards,
+        ],
       );
     }
     events.add(

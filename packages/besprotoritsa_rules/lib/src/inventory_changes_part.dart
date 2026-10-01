@@ -248,6 +248,7 @@ abstract final class _InventoryChanges {
     carriedMods: carriedMods ?? player.carriedMods,
     implanted: implanted ?? player.implanted,
     conditions: player.conditions,
+    retainedEventCards: player.retainedEventCards,
     alive: player.alive,
     stats: player.stats,
     weaponModifier: player.weaponModifier,

@@ -842,7 +842,8 @@
             {
               "type": "stat_bonus",
               "stat": "science",
-              "amount": 1
+              "amount": 1,
+              "retainEventCard": true
             }
           ],
           "failureEffects": [
@@ -878,7 +879,8 @@
             {
               "type": "stat_bonus",
               "stat": "combatStrength",
-              "amount": 1
+              "amount": 1,
+              "retainEventCard": true
             }
           ],
           "failureEffects": [

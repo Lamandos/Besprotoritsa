@@ -58,6 +58,7 @@ abstract final class SaveJsonModels {
     'carried_mods': player.carriedMods,
     'implanted': player.implanted,
     'conditions': player.conditions,
+    'retained_event_cards': player.retainedEventCards,
     'alive': player.alive,
     'stats': _statsToJson(player.stats),
     'weapon_modifier': player.weaponModifier,
@@ -90,6 +91,9 @@ abstract final class SaveJsonModels {
       carriedMods: _strings(json, 'carried_mods'),
       implanted: _strings(json, 'implanted'),
       conditions: _strings(json, 'conditions'),
+      retainedEventCards: json.containsKey('retained_event_cards')
+          ? _strings(json, 'retained_event_cards')
+          : const <String>[],
       alive: _bool(json, 'alive'),
       stats: _statsFromJson(_object(json, 'stats')),
       weaponModifier: _int(json, 'weapon_modifier'),
