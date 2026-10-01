@@ -6,7 +6,8 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// File-backed saves for Android and macOS application support directories.
-class FileGameStorage implements GameStorage, SaveSlotMetadataStorage {
+class FileGameStorage
+    implements GameStorage, SaveSlotMetadataStorage, SaveSlotManagementStorage {
   /// Creates file storage using the supplied [codec].
   FileGameStorage({
     GameStateJsonCodec? codec,
@@ -47,6 +48,14 @@ class FileGameStorage implements GameStorage, SaveSlotMetadataStorage {
   @override
   Future<String?> loadSlotName(String slotId) async =>
       (await _loadNames())[validateGameSlotId(slotId)];
+
+  @override
+  Future<void> deleteGame(String slotId) async {
+    final file = await _fileFor(slotId);
+    // ignore: avoid_slow_async_io
+    if (await file.exists()) await file.delete();
+    await saveSlotName(slotId, null);
+  }
 
   Future<File> _fileFor(String slotId) async {
     final safeSlot = base64Url.encode(utf8.encode(validateGameSlotId(slotId)));

@@ -152,6 +152,8 @@ GameState createFullGameState({
   final translations = _object(_content['contentTranslations']);
   return GameState(
     seed: seed,
+    contentSetId: 'full',
+    contentSetVersion: '1',
     round: 1,
     phase: GamePhase.playersTurn,
     activePlayerId: playerStates.first.id,

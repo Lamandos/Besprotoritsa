@@ -12,7 +12,7 @@ class GameStateJsonCodec {
 
   final SaveMigrator _migrator;
 
-  /// Encodes [state] to a complete JSON document with `schema_version: 1`.
+  /// Encodes [state] to a complete release-2 JSON document.
   String encode(GameState state) => jsonEncode(toJson(state));
 
   /// Decodes and migrates a JSON document into a complete [GameState].
@@ -28,6 +28,9 @@ class GameStateJsonCodec {
   Map<String, Object?> toJson(GameState state) => {
     'schema_version': currentSaveSchemaVersion,
     'seed': state.seed,
+    'prng_state': state.prngState ?? (state.seed & 0xFFFFFFFF),
+    'content_set_id': state.contentSetId,
+    'content_set_version': state.contentSetVersion,
     'difficulty': state.difficulty,
     'round': state.round,
     'phase': state.phase.name,
@@ -87,8 +90,12 @@ class GameStateJsonCodec {
       SaveJsonModels.decisionFromJson(json['pending_decision']),
     );
     return GameState(
-      schemaVersion: _int(json, 'schema_version'),
+      // GameState's schemaVersion describes the rules model, not the save file.
+      schemaVersion: 1,
       seed: _int(json, 'seed'),
+      prngState: _int(json, 'prng_state'),
+      contentSetId: _string(json, 'content_set_id'),
+      contentSetVersion: _string(json, 'content_set_version'),
       difficulty: _intOrDefault(json, 'difficulty', defaultValue: 1),
       round: _int(json, 'round'),
       phase: SaveJsonModels.gamePhaseFromJson(_string(json, 'phase')),

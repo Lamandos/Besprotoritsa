@@ -218,18 +218,25 @@ Future<void> _continueGame(
   AppStrings strings,
 ) async {
   GameState? state;
+  Object? loadError;
   try {
     state = await storage.loadGame('autosave');
-  } on Object {
-    state = null;
+  } on Object catch (error) {
+    loadError = error;
   }
   if (!context.mounted) {
     return;
   }
   if (state == null) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(strings.noAutosave)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          loadError == null
+              ? strings.noAutosave
+              : 'Сохранение повреждено или не поддерживается.',
+        ),
+      ),
+    );
     return;
   }
   _push(context, GameSessionScreen(initialState: state, storage: storage));
@@ -286,7 +293,7 @@ Future<List<_LoadedSlot>> _loadSlots(GameStorage storage) {
           name: await saves.loadName(slot.id),
         );
       } on Object {
-        return const _LoadedSlot();
+        return const _LoadedSlot(corrupted: true);
       }
     }),
   );
@@ -310,12 +317,29 @@ class _SaveSlotTile extends StatelessWidget {
     child: ListTile(
       title: Text(loaded.name ?? slot.label(strings)),
       subtitle: Text(
-        loaded.state == null
+        loaded.corrupted
+            ? 'Файл повреждён или создан неподдерживаемой версией.'
+            : loaded.state == null
             ? strings.emptySlot
             : '${strings.savedGame} · '
                   '${strings.saveRound(loaded.state!.round)}',
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing:
+          SaveSlots.isManual(slot.id) &&
+              (loaded.state != null || loaded.corrupted)
+          ? PopupMenuButton<String>(
+              tooltip: 'Управление сохранением',
+              onSelected: (action) => _manageSlot(context, action),
+              itemBuilder: (_) => [
+                if (loaded.state != null)
+                  const PopupMenuItem(
+                    value: 'rename',
+                    child: Text('Переименовать'),
+                  ),
+                const PopupMenuItem(value: 'delete', child: Text('Удалить')),
+              ],
+            )
+          : const Icon(Icons.chevron_right),
       enabled: loaded.state != null,
       onTap: loaded.state == null
           ? null
@@ -325,13 +349,73 @@ class _SaveSlotTile extends StatelessWidget {
             ),
     ),
   );
+
+  Future<void> _manageSlot(BuildContext context, String action) async {
+    final saves = SaveSystem(storage: storage);
+    if (action == 'rename') {
+      if (loaded.state == null) return;
+      final controller = TextEditingController(text: loaded.name ?? '');
+      final name = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Переименовать сохранение'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLength: 80,
+            decoration: const InputDecoration(labelText: 'Название'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, controller.text),
+              child: const Text('Сохранить'),
+            ),
+          ],
+        ),
+      );
+      controller.dispose();
+      if (name == null) return;
+      await saves.renameManual(slot.id, name);
+    } else {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Удалить сохранение?'),
+          content: const Text('Эту партию нельзя будет восстановить.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Удалить'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+      await saves.deleteManual(slot.id);
+    }
+    if (!context.mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => SaveSlotsScreen(storage: storage),
+      ),
+    );
+  }
 }
 
 class _LoadedSlot {
-  const _LoadedSlot({this.state, this.name});
+  const _LoadedSlot({this.state, this.name, this.corrupted = false});
 
   final GameState? state;
   final String? name;
+  final bool corrupted;
 }
 
 class _SaveSlot {

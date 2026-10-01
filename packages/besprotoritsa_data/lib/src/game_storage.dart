@@ -2,7 +2,8 @@ import 'package:besprotoritsa_data/src/game_state_json_codec.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 
 /// The current on-disk document schema version.
-const currentSaveSchemaVersion = 1;
+/// Release 2 adds a persisted PRNG checkpoint and content set identity.
+const currentSaveSchemaVersion = 2;
 
 /// Persists complete, authoritative game snapshots in named slots.
 abstract interface class GameStorage {
@@ -11,6 +12,12 @@ abstract interface class GameStorage {
 
   /// Returns the snapshot in [slotId], or null when the slot is empty.
   Future<GameState?> loadGame(String slotId);
+}
+
+/// Optional slot deletion supported by durable application backends.
+abstract interface class SaveSlotManagementStorage {
+  /// Deletes only [slotId]'s snapshot and associated player-facing metadata.
+  Future<void> deleteGame(String slotId);
 }
 
 /// Optional capability for storage backends that persist player-facing slot
@@ -40,10 +47,10 @@ class SaveMigrator {
     Map<int, SaveMigration> migrations = const {},
   }) : _migrations = Map.unmodifiable(migrations);
 
-  /// The migration registry for schema version 1.
+  /// Migrations for every released save schema.
   factory SaveMigrator.standard() => SaveMigrator(
     currentVersion: currentSaveSchemaVersion,
-    migrations: {0: _migrateVersionZero},
+    migrations: {0: _migrateVersionZero, 1: _migrateVersionOne},
   );
 
   /// Target schema version expected by the current client.
@@ -96,12 +103,24 @@ Map<String, Object?> _migrateVersionZero(Map<String, Object?> document) {
   if (legacyVersion != null && legacyVersion is! int) {
     throw const FormatException('Legacy schemaVersion must be an integer.');
   }
-  migrated['schema_version'] = currentSaveSchemaVersion;
+  migrated['schema_version'] = 1;
+  return migrated;
+}
+
+Map<String, Object?> _migrateVersionOne(Map<String, Object?> document) {
+  final migrated = Map<String, Object?>.of(document);
+  final seed = migrated['seed'];
+  if (seed is! int) throw const FormatException('seed must be an integer.');
+  migrated.putIfAbsent('prng_state', () => seed & 0xFFFFFFFF);
+  migrated.putIfAbsent('content_set_id', () => 'mvp');
+  migrated.putIfAbsent('content_set_version', () => '1');
+  migrated['schema_version'] = 2;
   return migrated;
 }
 
 /// A storage implementation useful for tests and hosts with their own backend.
-class InMemoryGameStorage implements GameStorage, SaveSlotMetadataStorage {
+class InMemoryGameStorage
+    implements GameStorage, SaveSlotMetadataStorage, SaveSlotManagementStorage {
   /// Creates an empty memory-backed storage using [codec].
   InMemoryGameStorage({GameStateJsonCodec? codec})
     : _codec = codec ?? GameStateJsonCodec();
@@ -134,6 +153,13 @@ class InMemoryGameStorage implements GameStorage, SaveSlotMetadataStorage {
   @override
   Future<String?> loadSlotName(String slotId) async =>
       _slotNames[_validateSlotId(slotId)];
+
+  @override
+  Future<void> deleteGame(String slotId) async {
+    final validatedSlotId = _validateSlotId(slotId);
+    _documents.remove(validatedSlotId);
+    _slotNames.remove(validatedSlotId);
+  }
 
   /// Exposes the exact JSON document for persistence adapter tests.
   String? encodedSlot(String slotId) => _documents[_validateSlotId(slotId)];
