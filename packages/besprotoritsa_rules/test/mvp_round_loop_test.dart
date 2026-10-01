@@ -280,6 +280,15 @@ void main() {
         additionalDecks: {
           'supplies': DeckState(drawPile: const ['ration']),
         },
+        cardDefinitions: {
+          'ration': CardDefinition(
+            id: 'ration',
+            type: ItemType.supply,
+            slots: const [],
+            cost: 0,
+            staticEffects: CardStaticEffects(const {}),
+          ),
+        },
         storyQuestIds: const ['quest-01'],
         questDefinitions: {
           'quest-01': {
@@ -970,6 +979,16 @@ void main() {
       eventId: 'selection-event',
       additionalDecks: {
         'items': DeckState(drawPile: const ['item-a', 'item-b', 'item-c']),
+      },
+      cardDefinitions: {
+        for (final id in ['item-a', 'item-b', 'item-c'])
+          id: CardDefinition(
+            id: id,
+            type: ItemType.weapon,
+            slots: const [ItemSlot.weapon],
+            cost: 1,
+            staticEffects: CardStaticEffects(const {}),
+          ),
       },
       eventDefinitions: {
         'selection-event': {
@@ -2263,6 +2282,15 @@ void main() {
     var state = _mvpState(
       additionalDecks: {
         'supplies': DeckState(drawPile: const ['ration']),
+      },
+      cardDefinitions: {
+        'ration': CardDefinition(
+          id: 'ration',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+        ),
       },
       eventDefinitions: {
         'cabin-noise': {

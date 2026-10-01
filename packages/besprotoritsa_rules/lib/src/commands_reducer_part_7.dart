@@ -320,13 +320,23 @@ GameStepResult _resolveEventOption(
         discardPile: [...monsterDeck.discardPile, monster.monsterId],
       );
     }
+    var killer = _playerById(selected, playerId)!;
+    var unclaimedLoot = const <CardId>[];
+    if (monster.monsterId == RestlessMonster.restlessMonsterId) {
+      final loot = _awardRestlessTrophies(killer, monster, selected);
+      killer = loot.player;
+      unclaimedLoot = loot.unclaimed;
+    }
+    final unclaimedCount = unclaimedLoot.length;
     var killed = _copyState(
       selected,
+      players: _replacePlayer(selected, playerId, (_) => killer),
       monsters: selected.monsters.where(
         (candidate) => candidate.instanceId != monster.instanceId,
       ),
       decks: decks,
-      logEntry: 'event-kill:$playerId:${monster.monsterId}:ignored-loot',
+      logEntry:
+          'event-kill:$playerId:${monster.monsterId}:unclaimed:$unclaimedCount',
     );
     if (killed.questDefinitions.isNotEmpty) {
       killed = _applyFullQuestEvent(
