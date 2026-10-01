@@ -2366,7 +2366,8 @@
               "type": "spawn_monster",
               "defeatRewardDeckId": "items"
             }
-          ]
+          ],
+          "autoOutcome": "success"
         }
       ],
       "behaviorIds": [

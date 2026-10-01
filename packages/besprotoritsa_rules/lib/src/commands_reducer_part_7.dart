@@ -1337,25 +1337,48 @@ GameState _resolveEventOutcome(
           );
         }
       case 'heal':
+        final conditionDeck = current.decks['conditions'];
+        final decks = Map<DeckId, DeckState>.of(current.decks);
+        if (conditionDeck != null && player.conditions.isNotEmpty) {
+          decks['conditions'] = DeckState(
+            drawPile: conditionDeck.drawPile,
+            discardPile: [...conditionDeck.discardPile, ...player.conditions],
+          );
+        }
         current = _copyState(
           current,
+          decks: decks,
           players: _replacePlayer(
             current,
             playerId,
             (hero) => _copyPlayer(
               hero,
               damage: (hero.damage - amount).clamp(0, hero.health),
+              conditions: const [],
             ),
           ),
           logEntry: 'event-heal:$playerId:$amount',
         );
       case 'heal_all':
+        final conditionDeck = current.decks['conditions'];
+        final decks = Map<DeckId, DeckState>.of(current.decks);
+        if (conditionDeck != null && player.conditions.isNotEmpty) {
+          decks['conditions'] = DeckState(
+            drawPile: conditionDeck.drawPile,
+            discardPile: [...conditionDeck.discardPile, ...player.conditions],
+          );
+        }
         current = _copyState(
           current,
+          decks: decks,
           players: _replacePlayer(
             current,
             playerId,
-            (hero) => _copyPlayer(hero, damage: 0),
+            (hero) => _copyPlayer(
+              hero,
+              damage: 0,
+              conditions: const [],
+            ),
           ),
           logEntry: 'event-heal-all:$playerId',
         );
