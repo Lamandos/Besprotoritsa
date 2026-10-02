@@ -13,6 +13,13 @@ final class MoveCommand extends GameCommand {
   final HexCoord target;
 }
 
+/// Opens an adjacent compartment or corridor without moving into it.
+final class RevealTileCommand extends GameCommand {
+  const RevealTileCommand(this.target);
+
+  final HexCoord target;
+}
+
 /// Moves between any two opened airlocks using the supplied movement aid.
 final class AirlockMoveCommand extends GameCommand {
   const AirlockMoveCommand(this.target, this.equipment);

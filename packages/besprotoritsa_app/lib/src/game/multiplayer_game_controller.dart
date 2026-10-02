@@ -193,6 +193,7 @@ class MultiplayerGameController extends GameSessionController {
 
 Map<String, Object?> _commandToJson(GameCommand command) => switch (command) {
   MoveCommand(:final target) => _coordCommand('move', target),
+  RevealTileCommand(:final target) => _coordCommand('revealTile', target),
   AirlockMoveCommand(:final target) => _coordCommand('airlockMove', target),
   CloseCorridorCommand(:final target) => _coordCommand('closeCorridor', target),
   OpenCorridorCommand(:final target) => _coordCommand('openCorridor', target),

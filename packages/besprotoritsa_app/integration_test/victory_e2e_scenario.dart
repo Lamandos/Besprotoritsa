@@ -197,13 +197,7 @@ void main() {
             );
             if (path.length > 1) {
               final next = state.tileAt(path[1])!;
-              final cost = active.coord.edgeTowardOrNull(next.coord) == null
-                  ? 1
-                  : next.isBlocked
-                  ? 1
-                  : next.opened
-                  ? 1
-                  : 2;
+              const cost = 1;
               if (state.actionsLeft >= cost) {
                 if (next.isBlocked) {
                   command(OpenCorridorCommand(next.coord));
@@ -214,6 +208,8 @@ void main() {
                       const AirlockEquipment(hasSpaceSuit: true),
                     ),
                   );
+                } else if (!next.opened) {
+                  command(RevealTileCommand(next.coord));
                 } else {
                   command(MoveCommand(next.coord));
                 }
@@ -278,13 +274,7 @@ void main() {
         );
         if (refreshedPath.length < 2) continue;
         final next = state.tileAt(refreshedPath[1])!;
-        final cost = currentHero.coord.edgeTowardOrNull(next.coord) == null
-            ? 1
-            : next.isBlocked
-            ? 1
-            : next.opened
-            ? 1
-            : 2;
+        const cost = 1;
         if (state.actionsLeft < cost) {
           command(const EndTurnCommand());
           continue;
@@ -300,6 +290,10 @@ void main() {
               const AirlockEquipment(hasSpaceSuit: true),
             ),
           );
+          continue;
+        }
+        if (!next.opened) {
+          command(RevealTileCommand(next.coord));
           continue;
         }
         command(MoveCommand(next.coord));
@@ -349,13 +343,7 @@ void main() {
           );
           if (refreshedPath.length < 2) continue;
           final next = state.tileAt(refreshedPath[1])!;
-          final cost = currentHero.coord.edgeTowardOrNull(next.coord) == null
-              ? 1
-              : next.isBlocked
-              ? 1
-              : next.opened
-              ? 1
-              : 2;
+          const cost = 1;
           if (state.actionsLeft < cost) {
             command(const EndTurnCommand());
           } else if (next.isBlocked) {
@@ -367,6 +355,8 @@ void main() {
                 const AirlockEquipment(hasSpaceSuit: true),
               ),
             );
+          } else if (!next.opened) {
+            command(RevealTileCommand(next.coord));
           } else {
             command(MoveCommand(next.coord));
           }
@@ -473,10 +463,16 @@ void main() {
               throw StateError('Cannot leave $locationId to register arrival.');
             }
             takeHeroTurn();
-            final exitCost = exit.opened ? 1 : 2;
-            if (state.actionsLeft < exitCost) {
+            if (state.actionsLeft == 0) {
               command(const EndTurnCommand());
               takeHeroTurn();
+            }
+            if (!exit.opened) {
+              command(RevealTileCommand(exit.coord));
+              if (state.actionsLeft == 0) {
+                command(const EndTurnCommand());
+                takeHeroTurn();
+              }
             }
             command(MoveCommand(exit.coord));
             travelTo(locationId);

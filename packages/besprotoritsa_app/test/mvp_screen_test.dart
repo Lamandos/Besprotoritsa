@@ -84,6 +84,11 @@ void main() {
         ),
       );
 
+      expect(find.text('СЮЖЕТ'), findsOneWidget);
+      expect(
+        find.textContaining('Доберитесь до КАЮТ-КОМПАНИИ'),
+        findsOneWidget,
+      );
       expect(
         find.byKey(const ValueKey<String>('hero-ada-at-0-0')),
         findsOneWidget,
@@ -103,6 +108,20 @@ void main() {
             .onPressed,
         isNotNull,
       );
+      await tester.tap(find.byKey(mvpMoveConfirmButtonKey));
+      await tester.pump();
+
+      expect(queue.current, isNull);
+      expect(
+        find.byKey(const ValueKey<String>('hero-ada-at-0-0')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('hex-0-1')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey<String>('hex-0-1')));
+      await tester.pump();
       await tester.tap(find.byKey(mvpMoveConfirmButtonKey));
       await tester.pump();
 

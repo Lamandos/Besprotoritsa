@@ -324,6 +324,8 @@ class HexBoardWidget extends StatefulWidget {
 class _HexBoardWidgetState extends State<HexBoardWidget> {
   final TransformationController _transformationController =
       TransformationController();
+  Size? _lastViewportSize;
+  Size? _lastBoardSize;
 
   @override
   void dispose() {
@@ -361,7 +363,7 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
     final current = _transformationController.value;
     final currentScale = current.getMaxScaleOnAxis();
     final scale = (currentScale * math.exp(-event.scrollDelta.dy * .001)).clamp(
-      .65,
+      .12,
       2.25,
     );
     final factor = scale / currentScale;
@@ -379,58 +381,68 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
     onKeyEvent: _handleKeyEvent,
     child: Listener(
       onPointerSignal: _handlePointerSignal,
-      child: InteractiveViewer(
-        key: mvpBoardInteractiveViewerKey,
-        transformationController: _transformationController,
-        constrained: false,
-        alignment: Alignment.center,
-        boundaryMargin: const EdgeInsets.all(160),
-        minScale: 0.65,
-        maxScale: 2.25,
-        child: SizedBox(
-          width: math
-              .max(800, _boardCanvasSize(widget.state.board).width * 1.1)
-              .toDouble(),
-          height: math
-              .max(520, _boardCanvasSize(widget.state.board).height * 1.1)
-              .toDouble(),
-          child: Center(
-            child: Transform.scale(
-              scale: 1.1,
-              child: SizedBox(
-                width: _boardCanvasSize(widget.state.board).width,
-                height: _boardCanvasSize(widget.state.board).height,
-                child: Stack(
-                  children: [
-                    RepaintBoundary(
-                      key: mvpBoardStaticRepaintBoundaryKey,
-                      child: _StaticBoardLayer(
-                        board: widget.state.board,
-                        contentTranslations: widget.state.contentTranslations,
-                        selectedDestination: widget.selectedDestination,
-                        onSelectDestination: widget.onSelectDestination,
-                      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final viewport = Size(constraints.maxWidth, constraints.maxHeight);
+          final boardSize = _boardCanvasSize(widget.state.board);
+          if (_lastViewportSize != viewport || _lastBoardSize != boardSize) {
+            _lastViewportSize = viewport;
+            _lastBoardSize = boardSize;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || viewport.isEmpty || boardSize.isEmpty) return;
+              final fitScale = math
+                  .min(
+                    (viewport.width - 24) / boardSize.width,
+                    (viewport.height - 24) / boardSize.height,
+                  )
+                  .clamp(.12, 1.0);
+              final dx = (viewport.width - boardSize.width * fitScale) / 2;
+              final dy = (viewport.height - boardSize.height * fitScale) / 2;
+              _transformationController.value = Matrix4.identity()
+                ..translateByDouble(dx, dy, 0, 1)
+                ..scaleByDouble(fitScale, fitScale, fitScale, 1);
+            });
+          }
+          return InteractiveViewer(
+            key: mvpBoardInteractiveViewerKey,
+            transformationController: _transformationController,
+            constrained: false,
+            boundaryMargin: const EdgeInsets.all(160),
+            minScale: 0.12,
+            maxScale: 2.25,
+            child: SizedBox(
+              width: boardSize.width,
+              height: boardSize.height,
+              child: Stack(
+                children: [
+                  RepaintBoundary(
+                    key: mvpBoardStaticRepaintBoundaryKey,
+                    child: _StaticBoardLayer(
+                      board: widget.state.board,
+                      contentTranslations: widget.state.contentTranslations,
+                      selectedDestination: widget.selectedDestination,
+                      onSelectDestination: widget.onSelectDestination,
                     ),
-                    RepaintBoundary(
-                      key: mvpBoardTokensRepaintBoundaryKey,
-                      child: _TokenLayer(
-                        players: widget.state.players,
-                        monsters: widget.state.monsters,
-                        board: widget.state.board,
-                        selectedPlayerId: widget.selectedPlayerId,
-                        activePlayerId:
-                            widget.state.phase == GamePhase.playersTurn
-                            ? widget.state.activePlayerId
-                            : null,
-                        onSelectPlayer: widget.onSelectPlayer,
-                      ),
+                  ),
+                  RepaintBoundary(
+                    key: mvpBoardTokensRepaintBoundaryKey,
+                    child: _TokenLayer(
+                      players: widget.state.players,
+                      monsters: widget.state.monsters,
+                      board: widget.state.board,
+                      selectedPlayerId: widget.selectedPlayerId,
+                      activePlayerId:
+                          widget.state.phase == GamePhase.playersTurn
+                          ? widget.state.activePlayerId
+                          : null,
+                      onSelectPlayer: widget.onSelectPlayer,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     ),
   );

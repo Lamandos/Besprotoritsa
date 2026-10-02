@@ -1625,6 +1625,7 @@ GameCommand _commandFromJson(
   final type = _requiredString(json, 'type');
   return switch (type) {
     'move' => MoveCommand(_coord(json)),
+    'revealTile' => RevealTileCommand(_coord(json)),
     'airlockMove' => AirlockMoveCommand(
       _coord(json),
       AirlockEquipment(

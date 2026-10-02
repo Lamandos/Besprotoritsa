@@ -19,7 +19,7 @@ class _CommandButton extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12),
             )
           : null,
-      onPressed: () => _dispatchWithFeedback(context, ref, command.command),
+      onPressed: () => _dispatchNamedCommand(context, ref, command),
       child: Text(command.label),
     ),
   );

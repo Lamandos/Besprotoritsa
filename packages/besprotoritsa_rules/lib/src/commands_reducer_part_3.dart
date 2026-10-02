@@ -11,6 +11,7 @@ bool _isInventoryCommand(GameCommand command) =>
 
 bool _isActionCommand(GameCommand command) =>
     command is MoveCommand ||
+    command is RevealTileCommand ||
     command is AirlockMoveCommand ||
     command is CloseCorridorCommand ||
     command is OpenCorridorCommand ||

@@ -123,14 +123,153 @@ final class ShipBoardGenerator {
       ..sort()
       ..shuffle(random);
     vents.shuffle(random);
-    return _generate(
+    return _generateCompactFullSet(
       locations,
       random: random,
       corridorVentColors: vents,
       terminalLocationIds: terminalLocationIds.toSet(),
-      addPhysicalCorridorCopies: true,
     );
   }
+
+  ShipBoard _generateCompactFullSet(
+    List<String> locations, {
+    required Random random,
+    required List<VentColor> corridorVentColors,
+    required Set<String> terminalLocationIds,
+  }) {
+    // Build a compact 17-compartment hex cluster. Scaling every room-space
+    // coordinate by two leaves one complete hex-grid step between rooms for
+    // a physical corridor tile.
+    final roomPositions = <HexCoord>{
+      for (var q = -2; q <= 2; q++)
+        for (var r = -2; r <= 2; r++)
+          if ((q + r).abs() <= 2 && !(q == -2 && r == 0) && !(q == 2 && r == 0))
+            HexCoord(q * 2, r * 2),
+    };
+    const start = HexCoord(0, 0);
+    if (roomPositions.length != locations.length + 1 ||
+        !roomPositions.contains(start)) {
+      throw StateError('The physical board requires exactly 17 room spaces.');
+    }
+
+    final locationAt = <HexCoord, String>{start: 'anabiosis'};
+    final remaining = roomPositions.difference({start});
+    final treeEdges = <({HexCoord from, HexEdge direction, HexCoord to})>[];
+    while (remaining.isNotEmpty) {
+      final candidates =
+          <({HexCoord from, HexEdge direction, HexCoord to, int spread})>[];
+      for (final from in locationAt.keys) {
+        for (final direction in HexEdge.values) {
+          final to = from.neighbor(direction).neighbor(direction);
+          if (!remaining.contains(to)) continue;
+          final spread = _roomClusterSpread([...locationAt.keys, to]);
+          candidates.add((
+            from: from,
+            direction: direction,
+            to: to,
+            spread: spread,
+          ));
+        }
+      }
+      if (candidates.isEmpty) {
+        throw StateError('The room cluster is not connected.');
+      }
+      final smallestSpread = candidates
+          .map((candidate) => candidate.spread)
+          .reduce((left, right) => left < right ? left : right);
+      final bestCandidates = candidates
+          .where((candidate) => candidate.spread == smallestSpread)
+          .toList();
+      final selected = bestCandidates[random.nextInt(bestCandidates.length)];
+      final locationId = locations[treeEdges.length];
+      locationAt[selected.to] = locationId;
+      remaining.remove(selected.to);
+      treeEdges.add((
+        from: selected.from,
+        direction: selected.direction,
+        to: selected.to,
+      ));
+    }
+
+    final exits = <HexCoord, Set<HexEdge>>{
+      for (final coord in roomPositions) coord: <HexEdge>{},
+    };
+    final occupied = <HexCoord>{...roomPositions};
+    final corridorTiles = <HexTile>[];
+    void addCorridor(HexCoord from, HexEdge direction, HexCoord to) {
+      final corridorCoord = from.neighbor(direction);
+      if (!occupied.add(corridorCoord)) {
+        throw StateError('Generated corridor coordinates overlap.');
+      }
+      exits[from]!.add(direction);
+      exits[to]!.add(direction.opposite);
+      final index = corridorTiles.length;
+      corridorTiles.add(
+        _corridor(
+          index,
+          corridorCoord,
+          incoming: direction.opposite,
+          outgoing: direction,
+          ventColor: corridorVentColors[index],
+        ),
+      );
+    }
+
+    for (final edge in treeEdges) {
+      addCorridor(edge.from, edge.direction, edge.to);
+    }
+
+    final extraEdges = <({HexCoord from, HexEdge direction, HexCoord to})>[];
+    for (final from in roomPositions) {
+      for (final direction in HexEdge.values) {
+        final to = from.neighbor(direction).neighbor(direction);
+        if (!locationAt.containsKey(to) ||
+            !_coordComesBefore(from, to) ||
+            occupied.contains(from.neighbor(direction))) {
+          continue;
+        }
+        extraEdges.add((from: from, direction: direction, to: to));
+      }
+    }
+    extraEdges.shuffle(random);
+    if (extraEdges.length < 2) {
+      throw StateError('The room cluster has fewer than two spare corridors.');
+    }
+    for (final edge in extraEdges.take(2)) {
+      addCorridor(edge.from, edge.direction, edge.to);
+    }
+
+    final rooms = <HexTile>[
+      for (final entry in locationAt.entries)
+        _room(
+          entry.value,
+          entry.key,
+          entry.value == 'anabiosis'
+              ? HexTileType.start
+              : entry.value.startsWith('airlock-')
+              ? HexTileType.airlock
+              : HexTileType.compartment,
+          exits[entry.key]!,
+          terminalLocationIds,
+        ),
+    ];
+    return ShipBoard([rooms.first, ...corridorTiles, ...rooms.skip(1)]);
+  }
+
+  int _roomClusterSpread(Iterable<HexCoord> coordinates) {
+    final q = coordinates.map((coord) => coord.q).toList();
+    final r = coordinates.map((coord) => coord.r).toList();
+    final s = coordinates.map((coord) => -coord.q - coord.r).toList();
+    int span(List<int> values) =>
+        values.reduce((left, right) => left > right ? left : right) -
+        values.reduce((left, right) => left < right ? left : right);
+    return [span(q), span(r), span(s)].reduce(
+      (left, right) => left > right ? left : right,
+    );
+  }
+
+  bool _coordComesBefore(HexCoord left, HexCoord right) =>
+      left.q < right.q || (left.q == right.q && left.r < right.r);
 
   ShipBoard _generate(
     List<String> locations, {
