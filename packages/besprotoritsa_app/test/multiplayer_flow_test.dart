@@ -51,15 +51,24 @@ void main() {
       expect(boris.read(gameControllerProvider).players, hasLength(2));
 
       expect(
-        adaController.dispatch(const MoveCommand(HexCoord(0, 1))),
+        adaController.dispatch(const RevealTileCommand(HexCoord(0, 1))),
         isTrue,
       );
       expect(adaController.isWaitingForConfirmation, isTrue);
 
+      await _until(() => ada.read(gameControllerProvider).actionsLeft == 1);
+      expect(
+        ada.read(gameControllerProvider).players.first.coord,
+        const HexCoord(0, 0),
+      );
+      expect(
+        adaController.dispatch(const MoveCommand(HexCoord(0, 1))),
+        isTrue,
+      );
       await _until(() => ada.read(gameControllerProvider).actionsLeft == 0);
       await _until(() => boris.read(gameControllerProvider).actionsLeft == 0);
 
-      expect(room.revision, 1);
+      expect(room.revision, 2);
       expect(
         ada.read(gameControllerProvider).players.first.coord,
         const HexCoord(0, 1),

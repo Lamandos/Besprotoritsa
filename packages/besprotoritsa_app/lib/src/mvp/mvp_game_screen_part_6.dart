@@ -9,10 +9,17 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
       .firstOrNull;
   final candidates = <_NamedCommand>[
     for (final tile in state.board)
-      _NamedCommand(
-        strings.moveCommand(tile.coord.q, tile.coord.r),
-        MoveCommand(tile.coord),
-      ),
+      if (tile.opened)
+        _NamedCommand(
+          strings.moveCommand(tile.coord.q, tile.coord.r),
+          MoveCommand(tile.coord),
+        )
+      else
+        _NamedCommand(
+          'Открыть ${tile.type == HexTileType.corridor ? 'коридор' : 'отсек'} '
+          '${tile.coord}',
+          RevealTileCommand(tile.coord),
+        ),
     for (final monster in state.monsters)
       _NamedCommand(
         strings.attackCommand(monster.monsterId),
@@ -96,9 +103,22 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
     ],
     _NamedCommand(strings.next, const EndTurnCommand()),
   ];
-  return [
+  final validCandidates = [
     for (final candidate in candidates)
       if (validate(state, candidate.command) == null) candidate,
+  ];
+  final closableCorridors = validCandidates
+      .where((candidate) => candidate.command is CloseCorridorCommand)
+      .toList(growable: false);
+  return [
+    for (final candidate in validCandidates)
+      if (candidate.command is! CloseCorridorCommand) candidate,
+    if (closableCorridors.isNotEmpty)
+      _NamedCommand(
+        'Закрыть коридор',
+        closableCorridors.first.command,
+        alternatives: closableCorridors,
+      ),
   ];
 }
 
@@ -112,23 +132,43 @@ String _statLabel(StatType stat) => switch (stat) {
 };
 
 class _NamedCommand {
-  const _NamedCommand(this.label, this.command);
+  const _NamedCommand(this.label, this.command, {this.alternatives});
 
   final String label;
   final GameCommand command;
+  final List<_NamedCommand>? alternatives;
+}
+
+void _dispatchNamedCommand(
+  BuildContext context,
+  WidgetRef ref,
+  _NamedCommand namedCommand,
+) {
+  final alternatives = namedCommand.alternatives;
+  if (alternatives == null) {
+    _dispatchWithFeedback(context, ref, namedCommand.command);
+    return;
+  }
+  showDialog<_NamedCommand>(
+    context: context,
+    builder: (dialogContext) => SimpleDialog(
+      title: const Text('Выберите коридор для закрытия'),
+      children: [
+        for (final option in alternatives)
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(dialogContext).pop(option),
+            child: Text(option.label),
+          ),
+      ],
+    ),
+  ).then((selected) {
+    if (selected != null && context.mounted) {
+      _dispatchWithFeedback(context, ref, selected.command);
+    }
+  });
 }
 
 Offset _layoutPosition(HexCoord coord, List<HexTile> board) {
-  final tile = board.where((candidate) => candidate.coord == coord).firstOrNull;
-  if (board.length == 3 && tile != null) {
-    final position = switch (tile.type) {
-      HexTileType.start => const Offset(208, 0),
-      HexTileType.corridor => const Offset(30, 220),
-      HexTileType.compartment => const Offset(386, 220),
-      HexTileType.airlock => null,
-    };
-    if (position != null) return position;
-  }
   final coordinates = board.map((tile) => tile.coord).toList();
   final minX = coordinates
       .map((point) => point.q * 168 + point.r * 84)
@@ -143,7 +183,6 @@ Offset _layoutPosition(HexCoord coord, List<HexTile> board) {
 }
 
 Size _boardCanvasSize(List<HexTile> board) {
-  if (board.length == 3) return const Size(640, 450);
   final positions = board.map((tile) {
     final coord = tile.coord;
     return Offset(coord.q * 168 + coord.r * 84, coord.r * 145);
@@ -191,12 +230,12 @@ class _HexClipper extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) => Path()
-    ..moveTo(size.width * .25, 2)
-    ..lineTo(size.width * .75, 2)
-    ..lineTo(size.width - 2, size.height * .5)
-    ..lineTo(size.width * .75, size.height - 2)
-    ..lineTo(size.width * .25, size.height - 2)
-    ..lineTo(2, size.height * .5)
+    ..moveTo(size.width * .5, 0)
+    ..lineTo(size.width, size.height * .25)
+    ..lineTo(size.width, size.height * .75)
+    ..lineTo(size.width * .5, size.height)
+    ..lineTo(0, size.height * .75)
+    ..lineTo(0, size.height * .25)
     ..close();
 
   @override

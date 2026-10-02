@@ -24,20 +24,27 @@ class _StaticBoardLayer extends StatelessWidget {
   Widget build(BuildContext context) => Stack(
     fit: StackFit.expand,
     children: [
-      CustomPaint(painter: _BoardConnectorPainter(board)),
-      for (final tile in board)
-        _HexTileView(
-          tile: tile,
-          contentTranslations: contentTranslations,
-          position: _layoutPosition(tile.coord, board),
-          selected:
-              selectedDestination?.q == tile.coord.q &&
-              selectedDestination?.r == tile.coord.r,
-          onTap: onSelectDestination == null
-              ? null
-              : () => onSelectDestination!(tile.coord),
-        ),
+      for (final tile in board.where(
+        (tile) => tile.type == HexTileType.corridor,
+      ))
+        _tileView(tile),
+      for (final tile in board.where(
+        (tile) => tile.type != HexTileType.corridor,
+      ))
+        _tileView(tile),
     ],
+  );
+
+  Widget _tileView(HexTile tile) => _HexTileView(
+    tile: tile,
+    contentTranslations: contentTranslations,
+    position: _layoutPosition(tile.coord, board),
+    selected:
+        selectedDestination?.q == tile.coord.q &&
+        selectedDestination?.r == tile.coord.r,
+    onTap: onSelectDestination == null
+        ? null
+        : () => onSelectDestination!(tile.coord),
   );
 }
 
@@ -98,17 +105,18 @@ class _HexTileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isKnown = tile.opened;
-    final genericTitle = !isKnown
-        ? 'НЕИЗВЕДАНО'
-        : switch (tile.type) {
-            HexTileType.start => 'АНАБИОЗ',
-            HexTileType.corridor => 'КОРИДОР',
-            HexTileType.compartment => 'КАЮТ-КОМПАНИЯ',
-            HexTileType.airlock => 'ШЛЮЗ',
-          };
+    final isCorridor = tile.type == HexTileType.corridor;
+    const tileWidth = 168.0;
+    const tileHeight = 194.0;
+    final isKnown = tile.opened && !tile.isBlocked;
+    final genericTitle = switch (tile.type) {
+      HexTileType.start => 'АНАБИОЗ',
+      HexTileType.corridor => 'КОРИДОР',
+      HexTileType.compartment => 'КАЮТ-КОМПАНИЯ',
+      HexTileType.airlock => 'ШЛЮЗ',
+    };
     final locationId = tile.locationId;
-    final title = !isKnown || locationId == null
+    final title = locationId == null
         ? genericTitle
         : contentTranslations['content.location.$locationId'] ?? genericTitle;
     return Positioned(
@@ -123,72 +131,82 @@ class _HexTileView extends StatelessWidget {
                 ? SystemMouseCursors.basic
                 : SystemMouseCursors.click,
             child: ClipPath(
-              clipper: const _HexClipper(),
+              clipper: isCorridor ? null : const _HexClipper(),
               child: SizedBox(
-                width: 224,
-                height: 192,
+                width: tileWidth,
+                height: tileHeight,
                 child: Stack(
                   key: ValueKey<String>('hex-${tile.coord.q}-${tile.coord.r}'),
                   fit: StackFit.expand,
                   children: [
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isKnown
-                              ? const [Color(0xFF67503A), Color(0xFF33271F)]
-                              : const [Color(0xFF39332A), Color(0xFF211D18)],
+                    if (isCorridor)
+                      CustomPaint(
+                        painter: _CorridorTilePainter(
+                          tile.exits,
+                          opened: isKnown,
                         ),
-                      ),
-                    ),
-                    CustomPaint(
-                      painter: _RoomTilePainter(
-                        type: tile.type,
-                        revealed: isKnown,
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 20),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 5,
-                        ),
+                      )
+                    else if (!isKnown)
+                      const ColoredBox(color: Colors.black)
+                    else ...[
+                      const DecoratedBox(
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFDCC79D), Color(0xFFB99A6A)],
-                          ),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: const Color(0xFF54402A),
-                            width: 1.2,
-                          ),
-                          boxShadow: const [
-                            BoxShadow(color: Colors.black54, blurRadius: 5),
-                          ],
-                        ),
-                        child: Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF34271B),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: .9,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF67503A),
+                              Color(0xFF33271F),
+                            ],
                           ),
                         ),
                       ),
-                    ),
-                    CustomPaint(
-                      painter: _HexRimPainter(
-                        active: isKnown,
-                        selected: selected,
+                      CustomPaint(painter: _RoomTilePainter(type: tile.type)),
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFFDCC79D),
+                                Color(0xFFB99A6A),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: const Color(0xFF54402A),
+                              width: 1.2,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black54, blurRadius: 5),
+                            ],
+                          ),
+                          child: Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF34271B),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: .9,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      CustomPaint(
+                        painter: _HexRimPainter(
+                          active: true,
+                          selected: selected,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -312,14 +330,24 @@ class _HexRimPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(size.width * .25, 2)
-      ..lineTo(size.width * .75, 2)
-      ..lineTo(size.width - 2, size.height * .5)
-      ..lineTo(size.width * .75, size.height - 2)
-      ..lineTo(size.width * .25, size.height - 2)
-      ..lineTo(2, size.height * .5)
-      ..close();
+    final path = Path();
+    if (size.width > size.height) {
+      path.addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(1, 1, size.width - 2, size.height - 2),
+          const Radius.circular(8),
+        ),
+      );
+    } else {
+      path
+        ..moveTo(size.width * .5, 2)
+        ..lineTo(size.width - 2, size.height * .25)
+        ..lineTo(size.width - 2, size.height * .75)
+        ..lineTo(size.width * .5, size.height - 2)
+        ..lineTo(2, size.height * .75)
+        ..lineTo(2, size.height * .25)
+        ..close();
+    }
     canvas.drawPath(
       path,
       Paint()
@@ -343,10 +371,9 @@ class _HexRimPainter extends CustomPainter {
 }
 
 class _RoomTilePainter extends CustomPainter {
-  const _RoomTilePainter({required this.type, required this.revealed});
+  const _RoomTilePainter({required this.type});
 
   final HexTileType type;
-  final bool revealed;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -405,29 +432,7 @@ class _RoomTilePainter extends CustomPainter {
           light,
         );
       case HexTileType.corridor:
-        canvas.drawLine(
-          const Offset(24, 46),
-          Offset(size.width - 24, 46),
-          light,
-        );
-        canvas.drawLine(
-          const Offset(24, 57),
-          Offset(size.width - 24, 57),
-          metal,
-        );
-        for (var i = 0; i < 7; i++) {
-          final y = 76 + i * 13.0;
-          canvas.drawLine(Offset(50, y), Offset(size.width - 50, y), seam);
-        }
-        final rail = Paint()
-          ..color = const Color(0xFFBA935B)
-          ..strokeWidth = 3;
-        canvas.drawLine(const Offset(38, 70), const Offset(38, 139), rail);
-        canvas.drawLine(
-          Offset(size.width - 38, 70),
-          Offset(size.width - 38, 139),
-          rail,
-        );
+        break;
       case HexTileType.compartment:
         final table = Rect.fromLTWH(size.width * .34, 69, 72, 38);
         canvas.drawRRect(
@@ -478,173 +483,77 @@ class _RoomTilePainter extends CustomPainter {
           light,
         );
     }
-
-    if (!revealed) {
-      canvas.drawRect(
-        Offset.zero & size,
-        Paint()..color = const Color(0xC9151514),
-      );
-      final hatch = Paint()
-        ..color = const Color(0x40C6A16D)
-        ..strokeWidth = 1.2;
-      for (var i = -4; i < 10; i++) {
-        canvas.drawLine(
-          Offset(i * 30, size.height * .28),
-          Offset(i * 30 + 62, size.height * .58),
-          hatch,
-        );
-      }
-      if (type == HexTileType.compartment) {
-        _paintCompartmentShadow(canvas, size);
-      }
-      canvas.drawCircle(
-        Offset(size.width * .5, 56),
-        3,
-        Paint()..color = const Color(0xFF8C4B32),
-      );
-    }
-  }
-
-  void _paintCompartmentShadow(Canvas canvas, Size size) {
-    final center = Offset(size.width * .53, size.height * .48);
-    final halo = Paint()
-      ..color = const Color(0x55B02E21)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
-    canvas.drawCircle(center.translate(0, 44), 28, halo);
-    final marker = Paint()
-      ..color = const Color(0xCCB62E27)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawOval(
-      Rect.fromCenter(center: center.translate(0, 47), width: 66, height: 21),
-      marker,
-    );
-    final shadow = Paint()..color = const Color(0xFF100E0D);
-    final silhouette = Path()
-      ..moveTo(center.dx - 34, center.dy + 40)
-      ..lineTo(center.dx - 20, center.dy + 7)
-      ..lineTo(center.dx - 24, center.dy - 8)
-      ..lineTo(center.dx - 13, center.dy - 28)
-      ..lineTo(center.dx - 5, center.dy - 15)
-      ..lineTo(center.dx + 2, center.dy - 37)
-      ..lineTo(center.dx + 10, center.dy - 14)
-      ..lineTo(center.dx + 24, center.dy - 26)
-      ..lineTo(center.dx + 22, center.dy - 5)
-      ..lineTo(center.dx + 35, center.dy + 26)
-      ..lineTo(center.dx + 18, center.dy + 18)
-      ..lineTo(center.dx + 19, center.dy + 42)
-      ..close();
-    canvas.drawPath(silhouette, shadow);
-    canvas.drawCircle(
-      center.translate(-5, -13),
-      3,
-      Paint()..color = const Color(0xFFE34D32),
-    );
   }
 
   @override
-  bool shouldRepaint(_RoomTilePainter oldDelegate) =>
-      type != oldDelegate.type || revealed != oldDelegate.revealed;
+  bool shouldRepaint(_RoomTilePainter oldDelegate) => type != oldDelegate.type;
 }
 
-class _BoardConnectorPainter extends CustomPainter {
-  const _BoardConnectorPainter(this.board);
+class _CorridorTilePainter extends CustomPainter {
+  const _CorridorTilePainter(this.exits, {required this.opened});
 
-  final List<HexTile> board;
+  final Set<HexEdge> exits;
+  final bool opened;
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (board.length != 3 ||
-        !board.any((tile) => tile.type == HexTileType.start)) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final frame = Paint()
+      ..color = opened ? const Color(0xFF151719) : Colors.black
+      ..strokeWidth = 60
+      ..strokeCap = StrokeCap.butt;
+    if (!opened) {
+      for (final edge in exits) {
+        final vector = _corridorVector(edge);
+        final endpoint = center + vector / vector.distance * 84;
+        canvas.drawLine(center, endpoint, frame);
+      }
       return;
     }
-    final start = _layoutPosition(
-      board.firstWhere((tile) => tile.type == HexTileType.start).coord,
-      board,
-    );
-    final corridorTile = board
-        .where((tile) => tile.type == HexTileType.corridor)
-        .firstOrNull;
-    final roomTile = board
-        .where((tile) => tile.type == HexTileType.compartment)
-        .firstOrNull;
-    if (corridorTile == null || roomTile == null) return;
-    final corridor = _layoutPosition(corridorTile.coord, board);
-    final room = _layoutPosition(roomTile.coord, board);
-    final points = <(Offset, Offset)>[
-      (
-        Offset(start.dx + 75, start.dy + 158),
-        Offset(corridor.dx + 168, corridor.dy + 34),
-      ),
-      (
-        Offset(corridor.dx + 165, corridor.dy + 96),
-        Offset(room.dx + 58, room.dy + 96),
-      ),
-    ];
-    for (final (from, to) in points) {
-      _paintCorridor(from, to, canvas);
-    }
-  }
-
-  void _paintCorridor(Offset from, Offset to, Canvas canvas) {
-    final delta = to - from;
-    final length = delta.distance;
-    if (length == 0) return;
-    final normal = Offset(-delta.dy / length, delta.dx / length);
-    Path corridorPath(double halfWidth) => Path()
-      ..moveTo(from.dx + normal.dx * halfWidth, from.dy + normal.dy * halfWidth)
-      ..lineTo(to.dx + normal.dx * halfWidth, to.dy + normal.dy * halfWidth)
-      ..lineTo(to.dx - normal.dx * halfWidth, to.dy - normal.dy * halfWidth)
-      ..lineTo(from.dx - normal.dx * halfWidth, from.dy - normal.dy * halfWidth)
-      ..close();
-
-    canvas.drawPath(
-      corridorPath(23),
-      Paint()..color = const Color(0xFF161614),
-    );
-    canvas.drawPath(
-      corridorPath(19),
-      Paint()..color = const Color(0xFF917044),
-    );
-    canvas.drawPath(
-      corridorPath(15),
-      Paint()..color = const Color(0xFF263036),
-    );
-    for (final side in <double>[-9, 9]) {
-      canvas.drawLine(
-        from.translate(normal.dx * side, normal.dy * side),
-        to.translate(normal.dx * side, normal.dy * side),
-        Paint()
-          ..color = const Color(0xFFD1A565)
-          ..strokeWidth = 1.4,
-      );
-    }
-    for (final ratio in <double>[.3, .7]) {
-      final center = from + delta * ratio;
-      canvas.drawLine(
-        center.translate(normal.dx * -14, normal.dy * -14),
-        center.translate(normal.dx * 14, normal.dy * 14),
-        Paint()
-          ..color = const Color(0xFF0F1517)
-          ..strokeWidth = 2,
-      );
-      canvas.drawCircle(
-        center.translate(normal.dx * -12, normal.dy * -12),
-        2,
-        Paint()..color = const Color(0xFFE5A85C),
-      );
-      canvas.drawCircle(
-        center.translate(normal.dx * 12, normal.dy * 12),
-        2,
-        Paint()..color = const Color(0xFFE5A85C),
-      );
+    final trim = Paint()
+      ..color = const Color(0xFF8D704D)
+      ..strokeWidth = 52
+      ..strokeCap = StrokeCap.butt;
+    final floor = Paint()
+      ..color = const Color(0xFF303A3E)
+      ..strokeWidth = 46
+      ..strokeCap = StrokeCap.butt;
+    final rail = Paint()
+      ..color = const Color(0xFFB99A6A)
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.butt;
+    for (final edge in exits) {
+      final vector = _corridorVector(edge);
+      final endpoint = center + vector / vector.distance * 84;
+      final normal = Offset(-vector.dy, vector.dx) / vector.distance;
+      canvas.drawLine(center, endpoint, frame);
+      canvas.drawLine(center, endpoint, trim);
+      canvas.drawLine(center, endpoint, floor);
+      for (final side in const [-21.0, 21.0]) {
+        canvas.drawLine(
+          center.translate(normal.dx * side, normal.dy * side),
+          endpoint.translate(normal.dx * side, normal.dy * side),
+          rail,
+        );
+      }
     }
   }
 
   @override
-  bool shouldRepaint(_BoardConnectorPainter oldDelegate) =>
-      !identical(board, oldDelegate.board);
+  bool shouldRepaint(_CorridorTilePainter oldDelegate) =>
+      opened != oldDelegate.opened ||
+      exits.length != oldDelegate.exits.length ||
+      !exits.containsAll(oldDelegate.exits);
 }
+
+Offset _corridorVector(HexEdge edge) => switch (edge) {
+  HexEdge.north => const Offset(-84, -145),
+  HexEdge.northEast => const Offset(84, -145),
+  HexEdge.southEast => const Offset(168, 0),
+  HexEdge.south => const Offset(84, 145),
+  HexEdge.southWest => const Offset(-84, 145),
+  HexEdge.northWest => const Offset(-168, 0),
+};
 
 class _MobileActionDock extends StatelessWidget {
   const _MobileActionDock({required this.state, required this.onOpenLog});

@@ -5,11 +5,9 @@ part of 'commands_reducer.dart';
 
 GameStepResult _move(GameState state, HexCoord target, int cost) {
   final destination = state.tileAt(target)!;
-  final opensSector = !destination.opened;
   final moved = _copyState(
     state,
     actionsLeft: state.actionsLeft - cost,
-    board: opensSector ? _openTile(state.board, destination) : null,
     players: _replaceActivePlayer(
       state,
       (player) => _copyPlayer(player, coord: target),
@@ -27,6 +25,18 @@ GameStepResult _move(GameState state, HexCoord target, int cost) {
             QuestArrived(locationId),
             playerId: player.id,
           ),
+  );
+}
+
+GameStepResult _revealTile(GameState state, HexCoord target) {
+  final tile = state.tileAt(target)!;
+  return GameStepResult(
+    state: _copyState(
+      state,
+      actionsLeft: state.actionsLeft - 1,
+      board: _openTile(state.board, tile),
+      logEntry: 'tile-revealed:${state.activePlayerId}:$target',
+    ),
   );
 }
 
@@ -294,8 +304,6 @@ GameState spawnMonster(GameState state, MonsterInstance monster) =>
         logEntry: 'monster-spawn:${monster.instanceId}:${monster.coord}',
       ),
     );
-
-int _movementCost(HexTile destination) => destination.opened ? 1 : 2;
 
 GameStepResult _attack(
   GameState state,

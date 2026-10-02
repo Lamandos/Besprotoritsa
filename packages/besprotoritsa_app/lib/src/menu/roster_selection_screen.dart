@@ -1,6 +1,8 @@
 // The route has a single, self-describing construction dependency.
 // ignore_for_file: public_member_api_docs
 
+import 'dart:math';
+
 import 'package:besprotoritsa_app/src/game/full_game_state.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/game_session_screen.dart';
@@ -138,7 +140,10 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
         .where((hero) => selected.contains(hero.id))
         .map((hero) => hero.id)
         .toList(growable: false);
-    final initialState = createFullGameState(characterIds: roster);
+    final initialState = createFullGameState(
+      characterIds: roster,
+      seed: Random.secure().nextInt(0x7fffffff),
+    );
     Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => FullPartyReviewScreen(

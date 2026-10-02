@@ -230,29 +230,42 @@ class _EventCardPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
     final activeQuests = _activeQuests(state);
-    final eventId = switch (state.pendingDecision) {
+    final activeEventId = switch (state.pendingDecision) {
       AwaitingEventOption(:final eventId) => eventId,
       _ => null,
     };
+    final openingQuestId =
+        activeEventId == null &&
+            state.round == 1 &&
+            state.phase == GamePhase.playersTurn
+        ? activeQuests.firstOrNull
+        : null;
+    final eventId = activeEventId;
     final runtimeDescription = eventId == null
         ? null
         : _runtimeEventText(state, eventId, 'descKey');
+    final questDescription = openingQuestId == null
+        ? null
+        : _questCardDescription(state, openingQuestId);
+    final cardDescription = runtimeDescription ?? questDescription;
     final cardTitle = eventId != null
         ? _runtimeEventText(state, eventId, 'nameKey') ??
               _eventCardTitle(eventId)
+        : openingQuestId != null
+        ? _questCardLabel(state, openingQuestId)
         : state.pendingDecision == null
         ? 'ОЖИДАНИЕ СОБЫТИЯ'
         : strings.decisionRequired.toUpperCase();
-    final cardCopy = switch (eventId) {
-      'cabin-noise' =>
-        'Из кают-компании доносится глухой скрежет. В полумраке мелькает тень. Возможно, вас уже заметили.',
-      null when state.pendingDecision != null => _decisionPrompt(
-        state.pendingDecision!,
-        strings,
-      ),
-      null => 'Новые сведения появятся, когда событие будет открыто.',
-      _ => _decisionPrompt(state.pendingDecision!, strings),
-    };
+    final cardCopy = eventId == 'cabin-noise'
+        ? 'Из кают-компании доносится глухой скрежет. В полумраке мелькает тень. Возможно, вас уже заметили.'
+        : activeEventId != null
+        ? _decisionPrompt(state.pendingDecision!, strings)
+        : openingQuestId != null
+        ? 'СЮЖЕТНОЕ ЗАДАНИЕ ГЛАВЫ 1'
+        : state.pendingDecision != null
+        ? _decisionPrompt(state.pendingDecision!, strings)
+        : 'Новые сведения появятся, когда событие будет открыто.';
+    final isOpeningStoryCard = openingQuestId != null;
 
     return Container(
       decoration: BoxDecoration(
@@ -272,14 +285,18 @@ class _EventCardPanel extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.auto_stories, size: 17, color: Color(0xFF60472C)),
-                  SizedBox(width: 7),
+                  const Icon(
+                    Icons.auto_stories,
+                    size: 17,
+                    color: Color(0xFF60472C),
+                  ),
+                  const SizedBox(width: 7),
                   Text(
-                    'СОБЫТИЕ',
-                    style: TextStyle(
+                    isOpeningStoryCard ? 'СЮЖЕТ' : 'СОБЫТИЕ',
+                    style: const TextStyle(
                       color: Color(0xFF493621),
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.4,
@@ -298,8 +315,7 @@ class _EventCardPanel extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    if (eventId == 'cabin-noise' &&
-                        state.eventDefinitions.isEmpty)
+                    if (eventId == 'cabin-noise')
                       Image.asset(
                         'assets/images/cabin_noise_scene.png',
                         fit: BoxFit.cover,
@@ -384,7 +400,7 @@ class _EventCardPanel extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        runtimeDescription ?? cardCopy,
+                        cardDescription ?? cardCopy,
                         maxLines: 5,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -394,6 +410,30 @@ class _EventCardPanel extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (isOpeningStoryCard) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF61482D),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: const Text(
+                          'ЧТО ДЕЛАТЬ ДАЛЬШЕ\nДоберитесь до КАЮТ-КОМПАНИИ и выполните проверку науки.',
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Color(0xFFFFE8BC),
+                            fontSize: 12,
+                            height: 1.25,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
@@ -407,7 +447,7 @@ class _EventCardPanel extends StatelessWidget {
                           builder: (dialogContext) => AlertDialog(
                             title: Text(cardTitle),
                             content: SingleChildScrollView(
-                              child: Text(runtimeDescription ?? cardCopy),
+                              child: Text(cardDescription ?? cardCopy),
                             ),
                             actions: [
                               TextButton(
@@ -730,7 +770,9 @@ class _WideActionDock extends StatelessWidget {
     final endTurnCommand = endTurn.firstOrNull;
     final actions = commands.where(
       (command) =>
-          command.command is! EndTurnCommand && command.command is! MoveCommand,
+          command.command is! EndTurnCommand &&
+          command.command is! MoveCommand &&
+          command.command is! RevealTileCommand,
     );
     return Container(
       height: 146,
@@ -851,16 +893,22 @@ class _MoveConfirmButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final target = selectedDestination;
     final targetTile = target == null ? null : state.tileAt(target);
-    final cost = targetTile?.opened ?? false ? 1 : 2;
+    final isReveal = targetTile != null && !targetTile.opened;
     final selectedIsActive = selectedPlayerId == state.activePlayerId;
-    final command = target == null ? null : MoveCommand(target);
+    final command = target == null
+        ? null
+        : isReveal
+        ? RevealTileCommand(target)
+        : MoveCommand(target);
     final canMove =
         command != null && selectedIsActive && validate(state, command) == null;
     final label = !selectedIsActive
         ? 'ЧУЖОЙ ХОД'
         : target == null
         ? 'ВЫБРАТЬ СЕКТОР'
-        : 'ДВИЖЕНИЕ\n$cost ОД';
+        : isReveal
+        ? 'ОТКРЫТЬ ${targetTile.type == HexTileType.corridor ? 'КОРИДОР' : 'ОТСЕК'}\n1 ОД'
+        : 'ДВИЖЕНИЕ\n1 ОД';
     return SizedBox(
       width: 98,
       height: 112,
@@ -886,14 +934,17 @@ class _MoveConfirmButton extends ConsumerWidget {
         ),
         onPressed: canMove
             ? () {
-                _dispatchWithFeedback(context, ref, MoveCommand(target!));
+                _dispatchWithFeedback(context, ref, command);
                 onClearDestination();
               }
             : null,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.directions_walk, size: 27),
+            Icon(
+              isReveal ? Icons.visibility_outlined : Icons.directions_walk,
+              size: 27,
+            ),
             const SizedBox(height: 7),
             Text(
               label,
@@ -991,7 +1042,7 @@ class _WideCommandButton extends ConsumerWidget {
                 side: const BorderSide(color: Color(0xFFE0A364), width: 1.4),
               ),
               onPressed: () => enabled
-                  ? _dispatchWithFeedback(context, ref, command.command)
+                  ? _dispatchNamedCommand(context, ref, command)
                   : ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Завершить ход сейчас недоступно.'),

@@ -4,29 +4,44 @@ import 'package:test/test.dart';
 void main() {
   group('hex movement', () {
     test(
-      'opens the MVP corridor and crew mess at two movement points each',
+      'reveals sectors and moves into them as separate one point actions',
       () {
         final start = _mvpState(actionsLeft: 4);
 
         final corridor = step(
           start,
+          const RevealTileCommand(HexCoord(0, 1)),
+          FixedDiceRoller([]),
+        );
+        final enterCorridor = step(
+          corridor.state,
           const MoveCommand(HexCoord(0, 1)),
           FixedDiceRoller([]),
         );
         final crewMess = step(
-          corridor.state,
+          enterCorridor.state,
+          const RevealTileCommand(HexCoord(0, 2)),
+          FixedDiceRoller([]),
+        );
+        final enterCrewMess = step(
+          crewMess.state,
           const MoveCommand(HexCoord(0, 2)),
           FixedDiceRoller([]),
         );
 
         expect(corridor.isAccepted, isTrue);
-        expect(corridor.state.actionsLeft, 2);
-        expect(corridor.state.players.single.coord, const HexCoord(0, 1));
+        expect(corridor.state.actionsLeft, 3);
+        expect(corridor.state.players.single.coord, const HexCoord(0, 0));
         expect(corridor.state.tileAt(const HexCoord(0, 1))!.opened, isTrue);
+        expect(enterCorridor.isAccepted, isTrue);
+        expect(enterCorridor.state.actionsLeft, 2);
         expect(crewMess.isAccepted, isTrue);
-        expect(crewMess.state.actionsLeft, 0);
-        expect(crewMess.state.players.single.coord, const HexCoord(0, 2));
+        expect(crewMess.state.actionsLeft, 1);
+        expect(crewMess.state.players.single.coord, const HexCoord(0, 1));
         expect(crewMess.state.tileAt(const HexCoord(0, 2))!.opened, isTrue);
+        expect(enterCrewMess.isAccepted, isTrue);
+        expect(enterCrewMess.state.actionsLeft, 0);
+        expect(enterCrewMess.state.players.single.coord, const HexCoord(0, 2));
       },
     );
 
@@ -48,14 +63,28 @@ void main() {
       expect(result.state.players.single.coord, const HexCoord(0, 1));
     });
 
-    test('rejects opening a sector without two movement points', () {
+    test('can reveal a sector without moving into it', () {
       final result = step(
         _mvpState(actionsLeft: 1),
+        const RevealTileCommand(HexCoord(0, 1)),
+        FixedDiceRoller([]),
+      );
+
+      expect(result.isAccepted, isTrue);
+      expect(result.state.players.single.coord, const HexCoord(0, 0));
+      expect(result.state.actionsLeft, 0);
+      expect(result.state.tileAt(const HexCoord(0, 1))!.opened, isTrue);
+    });
+
+    test('cannot move into a closed sector', () {
+      final result = step(
+        _mvpState(),
         const MoveCommand(HexCoord(0, 1)),
         FixedDiceRoller([]),
       );
 
-      expect(result.rejection, isA<NotEnoughActions>());
+      expect(result.rejection, isA<PathBlocked>());
+      expect(result.state.players.single.coord, const HexCoord(0, 0));
       expect(result.state.tileAt(const HexCoord(0, 1))!.opened, isFalse);
     });
 
@@ -91,6 +120,19 @@ void main() {
       expect(blockedMove.rejection, isNotNull);
     });
 
+    test('cannot close a corridor while another player stands there', () {
+      final state = _mvpState(extraPlayerInCorridor: true);
+
+      final result = step(
+        state,
+        const CloseCorridorCommand(HexCoord(0, 1)),
+        FixedDiceRoller([]),
+      );
+
+      expect(result.rejection, isA<CorridorCannotBeClosed>());
+      expect(result.state.tileAt(const HexCoord(0, 1))!.isBlocked, isFalse);
+    });
+
     test('does not allow two tiles to occupy an opened sector coordinate', () {
       expect(
         () => _mvpState(
@@ -112,6 +154,7 @@ GameState _mvpState({
   int actionsLeft = 2,
   bool corridorOpened = false,
   bool crewMessOpened = false,
+  bool extraPlayerInCorridor = false,
   HexCoord playerCoord = const HexCoord(0, 0),
   Set<HexEdge> corridorExits = const {HexEdge.north, HexEdge.south},
   HexTile? extraTile,
@@ -159,6 +202,20 @@ GameState _mvpState({
       conditions: const [],
       alive: true,
     ),
+    if (extraPlayerInCorridor)
+      PlayerState(
+        id: 'boris',
+        characterId: 'engineer',
+        coord: const HexCoord(0, 1),
+        damage: 0,
+        credits: 0,
+        backpack: const [],
+        equipped: const EquippedGear(),
+        carriedMods: const [],
+        implanted: const [],
+        conditions: const [],
+        alive: true,
+      ),
   ],
   monsters: const [],
   decks: const {},

@@ -2802,6 +2802,11 @@ void main() {
 
     state = step(
       state,
+      const RevealTileCommand(HexCoord(0, 1)),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
       const MoveCommand(HexCoord(0, 1)),
       FixedDiceRoller([]),
     ).state;
@@ -2829,6 +2834,11 @@ void main() {
     expect(state.round, 2);
     expect(state.players.single.backpack, contains('ration'));
 
+    state = step(
+      state,
+      const RevealTileCommand(HexCoord(0, 2)),
+      FixedDiceRoller([]),
+    ).state;
     state = step(
       state,
       const MoveCommand(HexCoord(0, 2)),

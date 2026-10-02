@@ -62,7 +62,7 @@ void main() {
     expect(find.byKey(mvpWideLayoutKey), findsOneWidget);
     expect(find.byKey(mvpCompactLayoutKey), findsNothing);
     expect(find.text('СОСТАВ ЭКИПАЖА'), findsOneWidget);
-    expect(find.text('СОБЫТИЕ'), findsOneWidget);
+    expect(find.text('СЮЖЕТ'), findsOneWidget);
     expect(find.byKey(mvpBoardInteractiveViewerKey), findsOneWidget);
   });
 }

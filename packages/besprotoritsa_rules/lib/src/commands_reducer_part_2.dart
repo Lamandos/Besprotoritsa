@@ -149,11 +149,28 @@ CommandRejection? validate(GameState state, GameCommand command) {
     if (!source.hasExit(edge) || !destination.hasExit(edge.opposite)) {
       return const PortMismatch();
     }
-    if (source.isBlocked || destination.isBlocked) {
+    if (source.isBlocked || destination.isBlocked || !destination.opened) {
       return const PathBlocked();
     }
-    if (state.actionsLeft < _movementCost(destination)) {
+    if (state.actionsLeft < 1) {
       return const NotEnoughActions();
+    }
+  }
+
+  if (command case RevealTileCommand(:final target)) {
+    final player = _activePlayer(state)!;
+    final source = state.tileAt(player.coord);
+    final destination = state.tileAt(target);
+    if (source == null || !source.opened || destination == null) {
+      return const InvalidTargetCoord();
+    }
+    final edge = player.coord.edgeTowardOrNull(target);
+    if (edge == null) return const TargetOutOfRange();
+    if (!source.hasExit(edge) || !destination.hasExit(edge.opposite)) {
+      return const PortMismatch();
+    }
+    if (source.isBlocked || destination.isBlocked || destination.opened) {
+      return const PathBlocked();
     }
   }
 
@@ -231,11 +248,8 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
   }
 
   final result = switch (command) {
-    MoveCommand(:final target) => _move(
-      state,
-      target,
-      _movementCost(state.tileAt(target)!),
-    ),
+    MoveCommand(:final target) => _move(state, target, 1),
+    RevealTileCommand(:final target) => _revealTile(state, target),
     AirlockMoveCommand(:final target, :final equipment) => _move(
       state,
       target,
