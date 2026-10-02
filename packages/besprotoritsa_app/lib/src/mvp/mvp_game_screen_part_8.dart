@@ -21,67 +21,51 @@ class _SleepingCatBackdrop extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Positioned(
-              left: 104,
-              right: 92,
-              bottom: 2,
-              height: 30,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: const Color(0x44070402),
-                  borderRadius: BorderRadius.circular(100),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x55070402),
-                      blurRadius: 22,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-              ),
-            ),
             RepaintBoundary(
-              child: ShaderMask(
-                blendMode: BlendMode.srcATop,
-                shaderCallback: (bounds) {
-                  final candlePulse = _candleFlicker(progress);
-                  final warmGlow = Color.fromRGBO(
-                    255,
-                    162,
-                    82,
-                    .08 + candlePulse * .2,
-                  );
-                  return RadialGradient(
-                    center: const Alignment(.92, .05),
-                    radius: 1.1,
-                    colors: [
-                      warmGlow,
-                      warmGlow.withValues(alpha: .035),
-                      warmGlow.withValues(alpha: 0),
-                    ],
-                    stops: const [0, .52, 1],
-                  ).createShader(bounds);
-                },
-                child: ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: .55, sigmaY: .55),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
-                        'assets/images/sleeping_black_cat_dark_room/cat_darkroom_04_burgundy_blanket.png',
-                        fit: BoxFit.fill,
-                      ),
-                      ClipPath(
-                        clipper: const _SleepingCatBackClipper(),
-                        child: Transform.translate(
-                          offset: Offset(0, -breath * 3),
-                          child: Image.asset(
-                            'assets/images/sleeping_black_cat_dark_room/cat_darkroom_04_burgundy_blanket.png',
-                            fit: BoxFit.fill,
+              child: Opacity(
+                opacity: .82,
+                child: ShaderMask(
+                  blendMode: BlendMode.srcATop,
+                  shaderCallback: (bounds) {
+                    final candlePulse = _candleFlicker(progress);
+                    final warmGlow = Color.fromRGBO(
+                      255,
+                      162,
+                      82,
+                      (.08 + candlePulse * .2) * .8,
+                    );
+                    return RadialGradient(
+                      center: const Alignment(.92, .05),
+                      radius: 1.1,
+                      colors: [
+                        warmGlow,
+                        warmGlow.withValues(alpha: .035 * .8),
+                        warmGlow.withValues(alpha: 0),
+                      ],
+                      stops: const [0, .52, 1],
+                    ).createShader(bounds);
+                  },
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: .55, sigmaY: .55),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          'assets/images/sleeping_black_cat_dark_room/cat_darkroom_04_burgundy_blanket.png',
+                          fit: BoxFit.fill,
+                        ),
+                        ClipPath(
+                          clipper: const _SleepingCatBackClipper(),
+                          child: Transform.translate(
+                            offset: Offset(0, -breath * 3),
+                            child: Image.asset(
+                              'assets/images/sleeping_black_cat_dark_room/cat_darkroom_04_burgundy_blanket.png',
+                              fit: BoxFit.fill,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -135,6 +119,39 @@ class _SleepingCatBackClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(_SleepingCatBackClipper oldClipper) => false;
+}
+
+/// Lets the synchronized table glow spill visibly over the cat/board edge.
+class _TablePulseSpillPainter extends CustomPainter {
+  const _TablePulseSpillPainter({required this.progress});
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pulse = _candleFlicker(progress);
+    final opacity = .09 + pulse * .11;
+    final rect = Rect.fromCenter(
+      center: Offset(size.width * .712, size.height * .405),
+      width: size.width * .8,
+      height: size.height * 1.6,
+    );
+    final glow = const Color(0xFFFFA64D).withValues(alpha: opacity);
+    final shader = RadialGradient(
+      colors: [
+        glow,
+        glow.withValues(alpha: opacity * .35),
+        glow.withValues(alpha: 0),
+      ],
+      stops: const [0, .42, 1],
+    ).createShader(rect);
+
+    canvas.drawOval(rect, Paint()..shader = shader);
+  }
+
+  @override
+  bool shouldRepaint(_TablePulseSpillPainter oldDelegate) =>
+      progress != oldDelegate.progress;
 }
 
 /// Low intensity radial light moving across the window and candle on the ship.

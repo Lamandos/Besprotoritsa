@@ -45,6 +45,15 @@ class AppStrings {
   String get science => _value('science');
   String get strength => _value('strength');
   String get repair => _value('repair');
+  String get endurance => _value('endurance');
+  String get agility => _value('agility');
+  String get health => _value('health');
+  String get startingEquipment => _value('startingEquipment');
+  String get highestStats => _value('highestStats');
+  String get credits => _value('credits');
+  String get portraitUnavailable => _value('portraitUnavailable');
+  String get characterDescription => _value('characterDescription');
+  String get readEntry => _value('readEntry');
   String get medicine => _value('medicine');
   String get selected => _value('selected');
   String get selectionLimit => _value('selectionLimit');
@@ -121,6 +130,18 @@ class AppStrings {
   String tutorialRound(int round) => '${_value('tutorialRoundPrefix')}$round/3';
   String saveRound(int round) => '${_value('saveRoundPrefix')}$round';
   String saveSlot(int number) => '${_value('saveSlotPrefix')}$number';
+  String starterItemCount(int count) {
+    final mod100 = count % 100;
+    final mod10 = count % 10;
+    final word = mod100 >= 11 && mod100 <= 14
+        ? 'предметов'
+        : switch (mod10) {
+            1 => 'предмет',
+            2 || 3 || 4 => 'предмета',
+            _ => 'предметов',
+          };
+    return '$count стартовых $word';
+  }
 
   String _value(String key) => _values[key]!;
 }
@@ -166,6 +187,15 @@ const Map<String, String> _ruValues = <String, String>{
   'science': 'Наука',
   'strength': 'Сила',
   'repair': 'Ремонт',
+  'endurance': 'Выносливость',
+  'agility': 'Ловкость',
+  'health': 'Здоровье',
+  'startingEquipment': 'Стартовое имущество',
+  'highestStats': 'Наивысшие характеристики',
+  'credits': 'кр.',
+  'portraitUnavailable': 'Портрет недоступен',
+  'characterDescription': 'Запись персонажа',
+  'readEntry': 'ПРОЧИТАТЬ ЗАПИСЬ',
   'medicine': 'Медицина',
   'selected': 'Выбран',
   'selectionLimit': 'В отряде должно быть от 2 до 4 героев.',

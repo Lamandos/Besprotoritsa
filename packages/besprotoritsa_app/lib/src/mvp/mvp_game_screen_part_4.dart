@@ -95,40 +95,12 @@ class _HeroRosterPanel extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 62,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFFC6AB7A), Color(0xFF695039)],
-                          ),
-                          borderRadius: BorderRadius.circular(5),
-                          border: Border.all(
-                            color: activeTurn
-                                ? const Color(0xFFB9E88A)
-                                : const Color(0xFFD6B47E),
-                            width: activeTurn ? 2.2 : 1,
-                          ),
-                          boxShadow: [
-                            if (activeTurn)
-                              const BoxShadow(
-                                color: Color(0xAA71C64E),
-                                blurRadius: 12,
-                              ),
-                          ],
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Image.asset(
-                          _heroPortraitPath(player.characterId),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            _heroIcon(player.characterId),
-                            size: 30,
-                            color: const Color(0xFF38271A),
-                          ),
-                        ),
+                      CharacterPortrait(
+                        characterId: player.characterId,
+                        size: const Size(62, 64),
+                        borderColor: activeTurn
+                            ? const Color(0xFFB9E88A)
+                            : const Color(0xFFD6B47E),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -136,7 +108,7 @@ class _HeroRosterPanel extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _heroName(player.characterId),
+                              fullRuntimeCharacterName(player.characterId),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -146,14 +118,6 @@ class _HeroRosterPanel extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 3),
-                            Text(
-                              _heroRole(player.characterId),
-                              style: const TextStyle(
-                                color: Color(0xFFD0B990),
-                                fontSize: 10,
-                                letterSpacing: .8,
-                              ),
-                            ),
                             const SizedBox(height: 5),
                             ClipRRect(
                               borderRadius: BorderRadius.circular(3),
@@ -277,38 +241,6 @@ class _EmptyCrewSlot extends StatelessWidget {
     ),
   );
 }
-
-String _heroName(String id) => switch (id) {
-  'scientist' => 'УЧЁНЫЙ',
-  'guard' => 'ОХРАННИК',
-  'mechanic' || 'engineer' => 'ИНЖЕНЕР',
-  'healer' => 'МЕДИК',
-  _ => id.toUpperCase(),
-};
-
-String _heroRole(String id) => switch (id) {
-  'scientist' => 'НАУКА • АНАЛИЗ',
-  'guard' => 'БЕЗОПАСНОСТЬ',
-  'mechanic' || 'engineer' => 'РЕМОНТ • СИСТЕМЫ',
-  'healer' => 'МЕДИЦИНА',
-  _ => 'ЧЛЕН ЭКИПАЖА',
-};
-
-IconData _heroIcon(String id) => switch (id) {
-  'scientist' => Icons.science_outlined,
-  'guard' => Icons.shield_outlined,
-  'mechanic' || 'engineer' => Icons.build_outlined,
-  'healer' => Icons.medical_services_outlined,
-  _ => Icons.person_outline,
-};
-
-String _heroPortraitPath(String id) => switch (id) {
-  'scientist' => 'assets/images/crew_scientist.png',
-  'guard' => 'assets/images/crew_guard.png',
-  'mechanic' || 'engineer' => 'assets/images/crew_mechanic.png',
-  'healer' => 'assets/images/crew_healer.png',
-  _ => 'assets/images/crew_scientist.png',
-};
 
 class _JournalPanel extends StatelessWidget {
   const _JournalPanel({required this.state, required this.queue});
@@ -564,7 +496,9 @@ void _showInventorySheet(
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.person_outline),
-                  title: Text(_heroName(selectedPlayer.characterId)),
+                  title: Text(
+                    fullRuntimeCharacterName(selectedPlayer.characterId),
+                  ),
                   subtitle: Text('₡${selectedPlayer.credits}'),
                 ),
                 const Divider(),

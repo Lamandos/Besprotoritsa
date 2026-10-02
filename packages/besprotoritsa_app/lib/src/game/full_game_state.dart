@@ -18,6 +18,37 @@ String fullRuntimeCharacterName(String id) {
   return id;
 }
 
+/// Returns the character description included in the checked runtime set.
+String fullRuntimeCharacterDescription(String id) {
+  final names = _object(_content['characterNames']);
+  final character = names[id];
+  if (character is Map<String, dynamic> && character['diary'] is String) {
+    return character['diary'] as String;
+  }
+  return '';
+}
+
+/// Returns the Russian display name for an item in the checked runtime set.
+String fullRuntimeItemName(String id) {
+  for (final catalogName in ['items', 'special_items', 'supplies']) {
+    final catalog = _content[catalogName];
+    if (catalog is! Map<String, dynamic> || catalog['cards'] is! List) {
+      continue;
+    }
+    final rows = _list(catalog['cards']).map(_object);
+    for (final row in rows) {
+      if (row['id'] != id) continue;
+      final nameKey = row['nameKey'];
+      final translations = _content['contentTranslations'];
+      if (nameKey is String && translations is Map<String, dynamic>) {
+        final translated = translations[nameKey];
+        if (translated is String && translated.isNotEmpty) return translated;
+      }
+    }
+  }
+  return id;
+}
+
 /// Builds a deterministic new game using card and character facts from the
 /// checked full runtime snapshot. The seed controls deck order and board.
 GameState createFullGameState({

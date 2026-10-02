@@ -287,11 +287,15 @@ class _HeroToken extends StatelessWidget {
                     ),
                 ],
               ),
-              child: CircleAvatar(
-                backgroundColor: const Color(0xFFB8894D),
-                backgroundImage: AssetImage(
-                  _heroPortraitPath(player.characterId),
-                ),
+              child: CharacterPortrait(
+                characterId: player.characterId,
+                size: Size(selected ? 44 : 36, selected ? 44 : 36),
+                circle: true,
+                borderColor: activeTurn
+                    ? const Color(0xFFB5E28C)
+                    : selected
+                    ? const Color(0xFFFFD58E)
+                    : const Color(0xFFC6A574),
               ),
             ),
           ),
