@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:besprotoritsa_app/src/game/full_game_state.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
+import 'package:besprotoritsa_app/src/menu/character_portrait.dart';
 import 'package:besprotoritsa_app/src/menu/game_session_screen.dart';
 import 'package:besprotoritsa_app/src/theme/besprotoritsa_theme.dart';
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
@@ -158,16 +159,7 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
 
 List<_HeroOption> _availableHeroes() => [
   for (final character in fullRuntimeCharacters)
-    _HeroOption(
-      id: character['id']! as String,
-      name: (_) => fullRuntimeCharacterName(character['id']! as String),
-      stats: (strings) =>
-          '${strings.science}: ${character['science']} · '
-          '${strings.strength}: ${character['strength']} · '
-          '${strings.repair}: ${character['repair']} · '
-          'Выносливость: ${character['endurance']} · '
-          'Ловкость: ${character['agility']}',
-    ),
+    _HeroOption(id: character['id']! as String, character: character),
 ];
 
 /// Shows the generated full party and asks for an explicit start confirmation.
@@ -211,13 +203,13 @@ class FullPartyReviewScreen extends StatelessWidget {
             for (var index = 0; index < characterIds.length; index++)
               Card(
                 child: ListTile(
-                  leading: CircleAvatar(child: Text('${index + 1}')),
+                  leading: CharacterPortrait(
+                    characterId: characterIds[index],
+                    size: const Size(54, 54),
+                  ),
                   title: Text(fullRuntimeCharacterName(characterIds[index])),
                   subtitle: Text(
-                    'Здоровье ${initialState.players[index].health} · '
-                    'Кредиты ${initialState.players[index].credits} · '
-                    '${_starterItemCount(initialState.players[index])} '
-                    'стартовых предмета',
+                    _partyRosterSubtitle(strings, initialState.players[index]),
                   ),
                 ),
               ),
@@ -235,11 +227,11 @@ class FullPartyReviewScreen extends StatelessWidget {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(dialogContext, false),
-                        child: const Text('Вернуться'),
+                        child: Text(strings.back),
                       ),
                       FilledButton(
                         onPressed: () => Navigator.pop(dialogContext, true),
-                        child: const Text('Начать'),
+                        child: Text(strings.startGame),
                       ),
                     ],
                   ),
@@ -271,6 +263,12 @@ int _starterItemCount(PlayerState player) =>
       player.equipped.robot,
     ].where((item) => item != null).length;
 
+String _partyRosterSubtitle(AppStrings strings, PlayerState player) => [
+  '${strings.health} ${player.health}',
+  '${player.credits} ${strings.credits}',
+  strings.starterItemCount(_starterItemCount(player)),
+].join(' · ');
+
 class _RosterList extends StatelessWidget {
   const _RosterList({
     required this.selected,
@@ -283,41 +281,250 @@ class _RosterList extends StatelessWidget {
   final List<_HeroOption> heroes;
 
   @override
+  Widget build(BuildContext context) => GridView.builder(
+    key: const ValueKey<String>('roster-hero-grid'),
+    itemCount: heroes.length,
+    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      crossAxisSpacing: 8,
+      mainAxisSpacing: 8,
+      mainAxisExtent: 390,
+    ),
+    itemBuilder: (context, index) {
+      final hero = heroes[index];
+      return _HeroCard(
+        key: ValueKey<String>('hero-${hero.id}'),
+        hero: hero,
+        selected: selected.contains(hero.id),
+        onTap: () => onChanged(hero.id),
+        onReadEntry: () => _showCharacterEntry(context, hero),
+      );
+    },
+  );
+}
+
+class _HeroOption {
+  const _HeroOption({required this.id, required this.character});
+
+  final String id;
+  final Map<String, Object?> character;
+
+  int value(String key) => character[key]! as int;
+
+  List<(String, int)> stats(AppStrings strings) => [
+    (strings.strength, value('strength')),
+    (strings.science, value('science')),
+    (strings.repair, value('repair')),
+    (strings.endurance, value('endurance')),
+    (strings.agility, value('agility')),
+  ];
+
+  List<String> highestStats(AppStrings strings) {
+    final rows = stats(strings);
+    final maxValue = rows.map((row) => row.$2).reduce(max);
+    return [
+      for (final row in rows)
+        if (row.$2 == maxValue) row.$1,
+    ];
+  }
+
+  List<String> get startingItems =>
+      (character['startItems']! as List<Object?>).cast<String>();
+}
+
+class _HeroCard extends StatelessWidget {
+  const _HeroCard({
+    required this.hero,
+    required this.selected,
+    required this.onTap,
+    required this.onReadEntry,
+    super.key,
+  });
+
+  final _HeroOption hero;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback onReadEntry;
+
+  @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
-    return ListView.separated(
-      itemCount: heroes.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final hero = heroes[index];
-        final isSelected = selected.contains(hero.id);
-        return Card(
-          child: CheckboxListTile(
-            key: ValueKey<String>('hero-${hero.id}'),
-            value: isSelected,
-            activeColor: BesprotoritsaTheme.bronze,
-            checkColor: BesprotoritsaTheme.ink,
-            onChanged: (_) => onChanged(hero.id),
-            title: Text(hero.name(strings)),
-            subtitle: Text(hero.stats(strings)),
-            secondary: isSelected
-                ? const Icon(Icons.verified, color: BesprotoritsaTheme.bronze)
-                : const Icon(Icons.person_outline, color: Color(0xFFB6A68B)),
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      color: selected ? const Color(0xFF463421) : const Color(0xFF2D241C),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: selected ? BesprotoritsaTheme.bronze : const Color(0xFF765A3C),
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(9),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  CharacterPortrait(
+                    characterId: hero.id,
+                    size: const Size(66, 66),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      fullRuntimeCharacterName(hero.id),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: BesprotoritsaTheme.bone,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    selected ? Icons.check_circle : Icons.circle_outlined,
+                    color: selected
+                        ? BesprotoritsaTheme.bronze
+                        : const Color(0xFFB6A68B),
+                    size: 22,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${strings.health}: ${hero.value('health')}',
+                style: const TextStyle(
+                  color: BesprotoritsaTheme.bone,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                '${strings.highestStats}: '
+                '${hero.highestStats(strings).join(', ')}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFFD4C6AB),
+                  fontSize: 10,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                strings.characterDescription,
+                style: const TextStyle(
+                  color: BesprotoritsaTheme.bone,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 5),
+              SizedBox(
+                height: 42,
+                child: TextButton(
+                  onPressed: onReadEntry,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    minimumSize: const Size.fromHeight(42),
+                  ),
+                  child: Text(
+                    strings.readEntry,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 5),
+              for (final (label, value) in hero.stats(strings))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFFD4C6AB),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '$value',
+                        style: const TextStyle(
+                          color: BesprotoritsaTheme.bone,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              const Divider(height: 10, color: Color(0xFF765A3C)),
+              Text(
+                '${strings.startingEquipment}: '
+                '${hero.startingItems.map(fullRuntimeItemName).join(', ')}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Color(0xFFD4C6AB), fontSize: 11),
+              ),
+              const Spacer(),
+              Text(
+                '${hero.value('startCredits')} ${strings.credits}',
+                style: const TextStyle(
+                  color: BesprotoritsaTheme.bone,
+                  fontSize: 11,
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
 
-class _HeroOption {
-  const _HeroOption({
-    required this.id,
-    required this.name,
-    required this.stats,
-  });
-
-  final String id;
-  final String Function(AppStrings strings) name;
-  final String Function(AppStrings strings) stats;
+Future<void> _showCharacterEntry(BuildContext context, _HeroOption hero) async {
+  final strings = AppStrings.of(context);
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (context) => SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Center(
+            child: CharacterPortrait(
+              characterId: hero.id,
+              size: const Size(148, 148),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            fullRuntimeCharacterName(hero.id),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            strings.characterDescription,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 4),
+          Text(fullRuntimeCharacterDescription(hero.id)),
+        ],
+      ),
+    ),
+  );
 }

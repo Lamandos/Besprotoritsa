@@ -113,6 +113,31 @@ class _WideGameLayoutState extends State<_WideGameLayout>
                         _SleepingCatBackdrop(
                           progress: _ambienceController.value,
                         ),
+                        Positioned(
+                          left: 356,
+                          top: 146,
+                          width: 816,
+                          height: 564,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(
+                                sigmaX: 1.25,
+                                sigmaY: 1.25,
+                              ),
+                              child: const ColoredBox(
+                                color: Color(0x09100D09),
+                              ),
+                            ),
+                          ),
+                        ),
+                        IgnorePointer(
+                          child: CustomPaint(
+                            painter: _TablePulseSpillPainter(
+                              progress: _ambienceController.value,
+                            ),
+                          ),
+                        ),
                         if (foreground != null) foreground,
                       ],
                     ),
