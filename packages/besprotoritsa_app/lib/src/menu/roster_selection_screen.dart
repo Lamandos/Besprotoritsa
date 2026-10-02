@@ -281,23 +281,30 @@ class _RosterList extends StatelessWidget {
   final List<_HeroOption> heroes;
 
   @override
-  Widget build(BuildContext context) => GridView.builder(
-    key: const ValueKey<String>('roster-hero-grid'),
-    itemCount: heroes.length,
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 2,
-      crossAxisSpacing: 8,
-      mainAxisSpacing: 8,
-      mainAxisExtent: 390,
-    ),
-    itemBuilder: (context, index) {
-      final hero = heroes[index];
-      return _HeroCard(
-        key: ValueKey<String>('hero-${hero.id}'),
-        hero: hero,
-        selected: selected.contains(hero.id),
-        onTap: () => onChanged(hero.id),
-        onReadEntry: () => _showCharacterEntry(context, hero),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      const spacing = 8.0;
+      final cardWidth = (constraints.maxWidth - spacing) / 2;
+      return SingleChildScrollView(
+        key: const ValueKey<String>('roster-hero-grid'),
+        child: Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final hero in heroes)
+              SizedBox(
+                width: cardWidth,
+                height: 390,
+                child: _HeroCard(
+                  key: ValueKey<String>('hero-${hero.id}'),
+                  hero: hero,
+                  selected: selected.contains(hero.id),
+                  onTap: () => onChanged(hero.id),
+                  onReadEntry: () => _showCharacterEntry(context, hero),
+                ),
+              ),
+          ],
+        ),
       );
     },
   );
