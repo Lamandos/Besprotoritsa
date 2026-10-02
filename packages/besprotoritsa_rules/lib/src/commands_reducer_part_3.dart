@@ -103,7 +103,11 @@ GameState _discardCard(GameState state, PlayerState player, CardId cardId) {
     players: _replacePlayer(
       state,
       player.id,
-      (current) => InventoryRules.discard(current, cardId),
+      (current) => InventoryRules.discard(
+        current,
+        cardId,
+        state.cardDefinitions,
+      ),
     ),
     decks: updatedDecks,
     logEntry: 'discard:${player.id}:$cardId',
@@ -169,7 +173,11 @@ GameState _applyChestCommand(GameState state, GameCommand command) {
       players: _replacePlayer(
         state,
         player.id,
-        (current) => InventoryRules.discard(current, cardId),
+        (current) => InventoryRules.discard(
+          current,
+          cardId,
+          state.cardDefinitions,
+        ),
       ),
       chestCards: [...state.chestCards, cardId],
       logEntry: 'chest-deposit:${player.id}:$cardId',
@@ -208,7 +216,11 @@ GameState _applyChestTransfer(
   var updatedPlayer = player;
   final chestCards = List<CardId>.of(state.chestCards);
   for (final cardId in depositCardIds) {
-    updatedPlayer = InventoryRules.discard(updatedPlayer, cardId);
+    updatedPlayer = InventoryRules.discard(
+      updatedPlayer,
+      cardId,
+      state.cardDefinitions,
+    );
     chestCards.add(cardId);
   }
   for (final cardId in withdrawCardIds) {

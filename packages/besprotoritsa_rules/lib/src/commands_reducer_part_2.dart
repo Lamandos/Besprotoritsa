@@ -66,7 +66,7 @@ CommandRejection? validate(GameState state, GameCommand command) {
     }
     try {
       if (command case DepositIntoChestCommand(:final cardId)) {
-        InventoryRules.discard(player, cardId);
+        InventoryRules.discard(player, cardId, state.cardDefinitions);
       } else if (command case WithdrawFromChestCommand(:final cardId)) {
         if (!state.chestCards.contains(cardId)) {
           throw const InventoryRuleViolation('The card is not in the chest.');
@@ -82,7 +82,11 @@ CommandRejection? validate(GameState state, GameCommand command) {
         var updatedPlayer = player;
         final chestCards = List<CardId>.of(state.chestCards);
         for (final cardId in depositCardIds) {
-          updatedPlayer = InventoryRules.discard(updatedPlayer, cardId);
+          updatedPlayer = InventoryRules.discard(
+            updatedPlayer,
+            cardId,
+            state.cardDefinitions,
+          );
           chestCards.add(cardId);
         }
         for (final cardId in withdrawCardIds) {

@@ -135,7 +135,7 @@ void main() {
       throwsA(isA<InventoryRuleViolation>()),
     );
     expect(
-      () => InventoryRules.discard(player, 'implant-r'),
+      () => InventoryRules.discard(player, 'implant-r', cards),
       throwsA(isA<InventoryRuleViolation>()),
     );
     expect(

@@ -129,8 +129,11 @@ abstract final class InventoryRules {
     weaponSlot: weaponSlot,
   );
 
-  static PlayerState discard(PlayerState player, CardId cardId) =>
-      _InventoryChanges.discard(player, cardId);
+  static PlayerState discard(
+    PlayerState player,
+    CardId cardId,
+    Map<CardId, CardDefinition> definitions,
+  ) => _InventoryChanges.discard(player, cardId, definitions);
 
   static InventoryTransfer transfer(
     PlayerState from,

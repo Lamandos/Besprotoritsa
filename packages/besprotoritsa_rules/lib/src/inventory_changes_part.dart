@@ -216,19 +216,32 @@ abstract final class _InventoryChanges {
     return updated;
   }
 
-  static PlayerState discard(PlayerState player, CardId cardId) {
+  static PlayerState discard(
+    PlayerState player,
+    CardId cardId,
+    Map<CardId, CardDefinition> definitions,
+  ) {
     if (player.implanted.contains(cardId)) {
       throw const InventoryRuleViolation(
         'An implanted modification cannot be discarded.',
       );
     }
     final backpack = List<CardId>.of(player.backpack);
-    if (backpack.remove(cardId)) return _copy(player, backpack: backpack);
+    PlayerState updated;
+    if (backpack.remove(cardId)) {
+      updated = _copy(player, backpack: backpack);
+      _requireBackpackFits(updated, definitions);
+      return updated;
+    }
     final carried = List<CardId>.of(player.carriedMods);
-    if (carried.remove(cardId)) return _copy(player, carriedMods: carried);
+    if (carried.remove(cardId)) {
+      updated = _copy(player, carriedMods: carried);
+      _requireBackpackFits(updated, definitions);
+      return updated;
+    }
     final gear = player.equipped;
     if (gear.weapons.contains(cardId)) {
-      return _copy(
+      updated = _copy(
         player,
         equipped: EquippedGear.withWeapons(
           weapons: gear.weapons.where((id) => id != cardId),
@@ -237,11 +250,10 @@ abstract final class _InventoryChanges {
           robot: gear.robot,
         ),
       );
-    }
-    if (gear.armor == cardId ||
+    } else if (gear.armor == cardId ||
         gear.clothing == cardId ||
         gear.robot == cardId) {
-      return _copy(
+      updated = _copy(
         player,
         equipped: EquippedGear.withWeapons(
           weapons: gear.weapons,
@@ -250,10 +262,13 @@ abstract final class _InventoryChanges {
           robot: gear.robot == cardId ? null : gear.robot,
         ),
       );
+    } else {
+      throw const InventoryRuleViolation(
+        'The card is not carried by this player.',
+      );
     }
-    throw const InventoryRuleViolation(
-      'The card is not carried by this player.',
-    );
+    _requireBackpackFits(updated, definitions);
+    return updated;
   }
 
   static InventoryTransfer transfer(
@@ -268,7 +283,7 @@ abstract final class _InventoryChanges {
       );
     }
     return InventoryTransfer(
-      from: discard(from, cardId),
+      from: discard(from, cardId, definitions),
       to: receive(to, cardId, definitions),
     );
   }
