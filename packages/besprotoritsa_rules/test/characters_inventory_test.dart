@@ -3,7 +3,17 @@ import 'package:test/test.dart';
 
 void main() {
   final cards = <CardId, CardDefinition>{
-    'knife': _card('knife', ItemType.weapon, stats: const {'strength': 1}),
+    'knife': _card(
+      'knife',
+      ItemType.weapon,
+      stats: const {'strength': 1},
+      sourceDeck: 'items',
+    ),
+    'starter-pistol': _card(
+      'starter-pistol',
+      ItemType.weapon,
+      sourceDeck: 'starterItems',
+    ),
     'pistol': _card('pistol', ItemType.weapon, stats: const {'strength': 2}),
     'lab-coat': _card(
       'lab-coat',
@@ -155,6 +165,160 @@ void main() {
     expect(received.rejection, isNull);
     expect(received.state.players.single.implanted, ['implant-l']);
   });
+
+  test('can equip an item on receipt when the backpack is full', () {
+    final state = _state(
+      cards,
+      player: _player(backpack: const ['supply-1', 'supply-2', 'supply-3']),
+      actionsTakenThisTurn: 0,
+    );
+
+    final received = step(
+      state,
+      const ReceiveCardCommand('knife', equipImmediately: true),
+      FixedDiceRoller([]),
+    );
+
+    expect(received.rejection, isNull);
+    expect(received.state.players.single.equipped.weapon, 'knife');
+    expect(received.state.players.single.backpack, [
+      'supply-1',
+      'supply-2',
+      'supply-3',
+    ]);
+  });
+
+  test(
+    'on receipt uses a free extra weapon slot before replacing a weapon',
+    () {
+      final state = _state(
+        cards,
+        player: PlayerState(
+          id: 'ada',
+          characterId: 'scientist',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 8,
+          credits: 0,
+          backpack: const ['supply-1', 'supply-2', 'supply-3'],
+          equipped: const EquippedGear(
+            weapon: 'knife',
+            armor: 'load-bearing-vest',
+          ),
+          carriedMods: const [],
+          implanted: const [],
+          conditions: const [],
+          alive: true,
+          stats: const PlayerStats(strength: 2, science: 2, repair: 2),
+        ),
+        actionsTakenThisTurn: 0,
+      );
+
+      final received = step(
+        state,
+        const ReceiveCardCommand('pistol', equipImmediately: true),
+        FixedDiceRoller([]),
+      );
+
+      expect(received.rejection, isNull);
+      expect(received.state.players.single.equipped.weapons, [
+        'knife',
+        'pistol',
+      ]);
+      expect(received.state.players.single.backpack, hasLength(3));
+    },
+  );
+
+  test('discards equipped gear to its deck without spending an action', () {
+    final state = GameState(
+      seed: 1,
+      round: 1,
+      phase: GamePhase.playersTurn,
+      activePlayerId: 'ada',
+      actionsLeft: 1,
+      actionsTakenThisTurn: 1,
+      board: const [],
+      players: [
+        PlayerState(
+          id: 'ada',
+          characterId: 'scientist',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 8,
+          credits: 0,
+          backpack: const [],
+          equipped: const EquippedGear(weapon: 'knife'),
+          carriedMods: const [],
+          implanted: const [],
+          conditions: const [],
+          alive: true,
+          stats: const PlayerStats(strength: 2, science: 2, repair: 2),
+        ),
+      ],
+      monsters: const [],
+      decks: {
+        'items': DeckState(drawPile: const ['pistol']),
+      },
+      quests: QuestState(),
+      cardDefinitions: cards,
+    );
+
+    final discarded = step(
+      state,
+      const DiscardCardCommand('knife'),
+      FixedDiceRoller([]),
+    );
+
+    expect(discarded.rejection, isNull);
+    expect(discarded.state.players.single.equipped.weapon, isNull);
+    expect(discarded.state.decks['items']!.discardPile, ['knife']);
+    expect(discarded.state.actionsLeft, 1);
+    expect(discarded.state.actionsTakenThisTurn, 1);
+  });
+
+  test('discards starter gear without a discard deck', () {
+    final state = GameState(
+      seed: 1,
+      round: 1,
+      phase: GamePhase.playersTurn,
+      activePlayerId: 'ada',
+      actionsLeft: 1,
+      actionsTakenThisTurn: 1,
+      board: const [],
+      players: [
+        PlayerState(
+          id: 'ada',
+          characterId: 'guard',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 11,
+          credits: 0,
+          backpack: const ['starter-pistol'],
+          equipped: const EquippedGear(),
+          carriedMods: const [],
+          implanted: const [],
+          conditions: const [],
+          alive: true,
+          stats: const PlayerStats(strength: 3, science: 1, repair: 1),
+        ),
+      ],
+      monsters: const [],
+      decks: const {},
+      quests: QuestState(),
+      cardDefinitions: cards,
+    );
+
+    final discarded = step(
+      state,
+      const DiscardCardCommand('starter-pistol'),
+      FixedDiceRoller([]),
+    );
+
+    expect(discarded.rejection, isNull);
+    expect(discarded.state.players.single.backpack, isEmpty);
+    expect(discarded.state.decks, isEmpty);
+    expect(discarded.state.actionsLeft, 1);
+  });
 }
 
 CardDefinition _card(
@@ -162,6 +326,7 @@ CardDefinition _card(
   ItemType type, {
   Map<String, int> stats = const {},
   List<String> behaviorIds = const [],
+  String? sourceDeck,
 }) => CardDefinition(
   id: id,
   type: type,
@@ -177,6 +342,7 @@ CardDefinition _card(
   ],
   cost: 0,
   staticEffects: CardStaticEffects.fromJson({'stats': stats}),
+  sourceDeck: sourceDeck,
   behaviorIds: behaviorIds,
 );
 

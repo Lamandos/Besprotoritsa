@@ -10,6 +10,7 @@ void main() {
       'phase': 'playersTurn',
       'activePlayerId': 'ada',
       'actionsLeft': 2,
+      'chestCards': <Object?>['shared-tool'],
       'board': <Object?>[],
       'players': <Object?>[
         <String, Object?>{
@@ -38,6 +39,7 @@ void main() {
     });
 
     expect(state.pendingDecision, isA<AwaitingOtherPlayerDecision>());
+    expect(state.chestCards, ['shared-tool']);
     expect(
       (state.pendingDecision! as AwaitingOtherPlayerDecision).awaitingPlayerId,
       'boris',

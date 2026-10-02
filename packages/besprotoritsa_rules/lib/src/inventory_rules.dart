@@ -105,6 +105,18 @@ abstract final class InventoryRules {
     weaponSlot: weaponSlot,
   );
 
+  static PlayerState equipOnReceive(
+    PlayerState player,
+    CardId cardId,
+    Map<CardId, CardDefinition> definitions, {
+    int? weaponSlot,
+  }) => _InventoryChanges.equipOnReceive(
+    player,
+    cardId,
+    definitions,
+    weaponSlot: weaponSlot,
+  );
+
   static PlayerState unequip(
     PlayerState player,
     ItemSlot slot,

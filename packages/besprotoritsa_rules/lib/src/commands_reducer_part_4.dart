@@ -428,14 +428,27 @@ GameState _resolveAttackRoll(
           );
           decks[rewardDeckId] = draw.deck;
         } on BackpackCapacityExceeded {
-          decks[rewardDeckId] = DeckRules.returnAndShuffle(
-            draw.deck,
-            [rewardCard],
-            seed: _deckSeed(
-              state,
-              'defeat-reward-return:${monster.instanceId}',
-            ),
-          );
+          try {
+            awardedPlayer = InventoryRules.equipOnReceive(
+              awardedPlayer,
+              rewardCard,
+              state.cardDefinitions,
+            );
+            decks[rewardDeckId] = draw.deck;
+          } on Object catch (error) {
+            if (error is! BackpackCapacityExceeded &&
+                error is! InventoryRuleViolation) {
+              rethrow;
+            }
+            decks[rewardDeckId] = DeckRules.returnAndShuffle(
+              draw.deck,
+              [rewardCard],
+              seed: _deckSeed(
+                state,
+                'defeat-reward-return:${monster.instanceId}',
+              ),
+            );
+          }
         } on InventoryRuleViolation {
           decks[rewardDeckId] = DeckRules.returnAndShuffle(
             draw.deck,

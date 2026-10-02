@@ -47,11 +47,49 @@ abstract final class _InventoryChanges {
     CardId cardId,
     Map<CardId, CardDefinition> definitions, {
     int weaponSlot = 0,
+  }) => _equip(
+    player,
+    cardId,
+    definitions,
+    weaponSlot: weaponSlot,
+    requireBackpack: true,
+  );
+
+  static PlayerState equipOnReceive(
+    PlayerState player,
+    CardId cardId,
+    Map<CardId, CardDefinition> definitions, {
+    int? weaponSlot,
+  }) => _equip(
+    player,
+    cardId,
+    definitions,
+    weaponSlot:
+        weaponSlot ??
+        (player.equipped.weapons.length <
+                _InventoryStats.weaponCapacity(player, definitions)
+            ? player.equipped.weapons.length
+            : 0),
+    requireBackpack: false,
+  );
+
+  static PlayerState _equip(
+    PlayerState player,
+    CardId cardId,
+    Map<CardId, CardDefinition> definitions, {
+    required int weaponSlot,
+    required bool requireBackpack,
   }) {
     final definition = _definition(cardId, definitions);
-    if (!player.backpack.contains(cardId)) {
+    final inBackpack = player.backpack.contains(cardId);
+    if (requireBackpack && !inBackpack) {
       throw const InventoryRuleViolation(
         'Only a backpack card may be equipped.',
+      );
+    }
+    if (!requireBackpack && inBackpack) {
+      throw const InventoryRuleViolation(
+        'A received equipment card is already in the backpack.',
       );
     }
     if (definition.type == ItemType.modification) {
@@ -59,7 +97,8 @@ abstract final class _InventoryChanges {
         'Modifications are carried or implanted, not equipped.',
       );
     }
-    final backpack = List<CardId>.of(player.backpack)..remove(cardId);
+    final backpack = List<CardId>.of(player.backpack);
+    if (inBackpack) backpack.remove(cardId);
     final gear = player.equipped;
     late EquippedGear nextGear;
     CardId? replaced;
@@ -187,6 +226,31 @@ abstract final class _InventoryChanges {
     if (backpack.remove(cardId)) return _copy(player, backpack: backpack);
     final carried = List<CardId>.of(player.carriedMods);
     if (carried.remove(cardId)) return _copy(player, carriedMods: carried);
+    final gear = player.equipped;
+    if (gear.weapons.contains(cardId)) {
+      return _copy(
+        player,
+        equipped: EquippedGear.withWeapons(
+          weapons: gear.weapons.where((id) => id != cardId),
+          armor: gear.armor,
+          clothing: gear.clothing,
+          robot: gear.robot,
+        ),
+      );
+    }
+    if (gear.armor == cardId ||
+        gear.clothing == cardId ||
+        gear.robot == cardId) {
+      return _copy(
+        player,
+        equipped: EquippedGear.withWeapons(
+          weapons: gear.weapons,
+          armor: gear.armor == cardId ? null : gear.armor,
+          clothing: gear.clothing == cardId ? null : gear.clothing,
+          robot: gear.robot == cardId ? null : gear.robot,
+        ),
+      );
+    }
     throw const InventoryRuleViolation(
       'The card is not carried by this player.',
     );

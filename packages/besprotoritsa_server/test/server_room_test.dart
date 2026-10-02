@@ -43,6 +43,52 @@ void main() {
     expect(await response.transform(utf8.decoder).join(), 'ok\n');
   });
 
+  test('applies a chest batch once when two requests race', () async {
+    room = manager.createRoom(
+      state: _twoHeroState(
+        players: [
+          _player('ada', card: 'ada-private-card'),
+          _player('boris', card: 'boris-secret-card'),
+        ],
+      ),
+      started: true,
+    );
+    final ada = await _connect(server, room.code, 'ada-participant');
+    addTearDown(ada.sink.close);
+    final inbox = _Inbox(ada);
+    addTearDown(inbox.close);
+    await inbox.next();
+    await inbox.next();
+
+    Map<String, Object?> request(String commandId) => {
+      'type': 'command',
+      'commandId': commandId,
+      'expectedRevision': 0,
+      'command': {
+        'type': 'transferChestCards',
+        'depositCardIds': ['ada-private-card'],
+        'withdrawCardIds': <String>[],
+      },
+    };
+
+    ada.sink.add(jsonEncode(request('chest-transfer-1')));
+    ada.sink.add(jsonEncode(request('chest-transfer-2')));
+    final accepted = await inbox.next();
+    final rejected = await inbox.next();
+    expect(accepted['type'], 'state');
+    expect(accepted['revision'], 1);
+    expect(
+      Map<String, Object?>.from(accepted['state']! as Map)['chestCards'],
+      ['ada-private-card'],
+    );
+    expect(rejected['type'], 'error');
+    expect(rejected['reason'], 'State revision is stale.');
+    expect(room.revision, 1);
+    expect(room.state.actionsLeft, 1);
+    expect(room.state.chestCards, ['ada-private-card']);
+    expect(room.state.players.first.backpack, isEmpty);
+  });
+
   test('creates a room only from trusted content parameters', () async {
     final client = HttpClient();
     addTearDown(client.close);

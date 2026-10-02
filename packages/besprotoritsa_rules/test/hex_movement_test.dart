@@ -120,6 +120,21 @@ void main() {
       expect(blockedMove.rejection, isNotNull);
     });
 
+    test('cannot close an adjacent corridor without an action', () {
+      final state = _mvpState(actionsLeft: 0, corridorOpened: true);
+
+      final result = step(
+        state,
+        const CloseCorridorCommand(HexCoord(0, 1)),
+        FixedDiceRoller([]),
+      );
+
+      expect(result.rejection, isA<NotEnoughActions>());
+      expect(result.state, same(state));
+      expect(result.state.actionsLeft, 0);
+      expect(result.state.tileAt(const HexCoord(0, 1))!.isBlocked, isFalse);
+    });
+
     test('cannot close a corridor while another player stands there', () {
       final state = _mvpState(extraPlayerInCorridor: true);
 

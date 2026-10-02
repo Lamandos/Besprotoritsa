@@ -157,6 +157,7 @@ JSON-RPC ошибкой `unsupported_protocol_version`.
 `command` — tagged union, точно отображающий публичные варианты `GameCommand`:
 `move`, `airlockMove`, `closeCorridor`, `attack`, `skillCheck`,
 `resolvePendingDecision`, `endTurn`, `equip`, `unequip`,
+`discardCard`,
 `implantModification`, `useTerminal`, `depositIntoChest`, `withdrawFromChest` и
 `exchange`. Поля вариантов повторяют поля соответствующего типа ядра:
 например, `move.target` — `HexCoord`, `attack.targetInstanceId` — идентификатор

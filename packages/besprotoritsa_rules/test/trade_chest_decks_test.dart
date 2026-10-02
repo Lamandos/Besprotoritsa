@@ -73,7 +73,7 @@ void main() {
   });
 
   test(
-    'the start-sector chest transfers cards for free and rejects credits',
+    'the start-sector chest transfers cards for one action and rejects credits',
     () {
       final state = _state(
         cards: cards,
@@ -89,7 +89,7 @@ void main() {
         FixedDiceRoller([]),
       );
       expect(deposited.rejection, isNull);
-      expect(deposited.state.actionsLeft, state.actionsLeft);
+      expect(deposited.state.actionsLeft, state.actionsLeft - 1);
       expect(deposited.state.chestCards, ['stored-item']);
       expect(deposited.state.players.single.backpack, isEmpty);
 
@@ -99,8 +99,16 @@ void main() {
         FixedDiceRoller([]),
       );
       expect(withdrawn.rejection, isNull);
+      expect(withdrawn.state.actionsLeft, state.actionsLeft - 2);
       expect(withdrawn.state.chestCards, isEmpty);
       expect(withdrawn.state.players.single.backpack, ['stored-item']);
+      final repeated = step(
+        withdrawn.state,
+        const DepositIntoChestCommand('stored-item'),
+        FixedDiceRoller([]),
+      );
+      expect(repeated.rejection, isA<NotEnoughActions>());
+      expect(repeated.state, same(withdrawn.state));
       expect(
         step(
           withdrawn.state,
@@ -111,6 +119,89 @@ void main() {
       );
     },
   );
+
+  test('the start-sector chest rejects transfers without an action', () {
+    final state = _state(
+      cards: cards,
+      board: [_startTile()],
+      players: [
+        _player('ada', backpack: const ['stored-item'], actionPoints: 0),
+      ],
+      actionsLeft: 0,
+      chestCards: const ['withdrawn-item'],
+    );
+
+    final deposit = step(
+      state,
+      const DepositIntoChestCommand('stored-item'),
+      FixedDiceRoller([]),
+    );
+    final withdraw = step(
+      state,
+      const WithdrawFromChestCommand('withdrawn-item'),
+      FixedDiceRoller([]),
+    );
+
+    expect(deposit.rejection, isA<NotEnoughActions>());
+    expect(withdraw.rejection, isA<NotEnoughActions>());
+    expect(deposit.state, same(state));
+    expect(withdraw.state, same(state));
+  });
+
+  test('a chest batch deposits and withdraws any number for one action', () {
+    final state = _state(
+      cards: cards,
+      board: [_startTile()],
+      players: [
+        _player('ada', backpack: const ['stored-item', 'ada-item']),
+      ],
+      chestCards: const ['boris-item'],
+    );
+
+    final result = step(
+      state,
+      TransferChestCardsCommand(
+        depositCardIds: const ['stored-item', 'ada-item'],
+        withdrawCardIds: const ['boris-item'],
+      ),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.actionsLeft, state.actionsLeft - 1);
+    expect(result.state.players.single.backpack, ['boris-item']);
+    expect(result.state.chestCards, ['stored-item', 'ada-item']);
+  });
+
+  test('a rejected chest batch leaves cards and action points unchanged', () {
+    final state = _state(
+      cards: cards,
+      board: [_startTile()],
+      players: [
+        _player(
+          'ada',
+          backpack: const ['stored-item', 'ada-item', 'boris-item'],
+        ),
+      ],
+      chestCards: const ['supply-a'],
+    );
+
+    final fullBackpack = step(
+      state,
+      TransferChestCardsCommand(withdrawCardIds: const ['supply-a']),
+      FixedDiceRoller([]),
+    );
+    final emptyTransfer = step(
+      state,
+      TransferChestCardsCommand(),
+      FixedDiceRoller([]),
+    );
+
+    expect(fullBackpack.rejection, isA<InventoryCommandRejected>());
+    expect(fullBackpack.state, same(state));
+    expect(emptyTransfer.rejection, isA<InvalidCommandArguments>());
+    expect(emptyTransfer.state, same(state));
+  });
 
   test('co-located players exchange cards and credits for one action', () {
     final state = _state(
@@ -184,16 +275,19 @@ GameState _state({
   required Iterable<PlayerState> players,
   Iterable<MonsterInstance> monsters = const [],
   Map<DeckId, DeckState> decks = const {},
+  int actionsLeft = 2,
+  Iterable<CardId> chestCards = const [],
 }) => GameState(
   seed: 13,
   round: 1,
   phase: GamePhase.playersTurn,
   activePlayerId: 'ada',
-  actionsLeft: 2,
+  actionsLeft: actionsLeft,
   board: board,
   players: players,
   monsters: monsters,
   decks: decks,
+  chestCards: chestCards,
   quests: QuestState(),
   cardDefinitions: cards,
 );
@@ -222,6 +316,7 @@ PlayerState _player(
   String id, {
   Iterable<CardId> backpack = const [],
   int credits = 0,
+  int actionPoints = 2,
 }) => PlayerState(
   id: id,
   characterId: '$id-character',
@@ -234,6 +329,7 @@ PlayerState _player(
   implanted: const [],
   conditions: const [],
   alive: true,
+  actionPoints: actionPoints,
 );
 
 MonsterInstance _monster(HexCoord coord) => MonsterInstance(

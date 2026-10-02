@@ -88,13 +88,27 @@ final class UnequipCommand extends GameCommand {
   final int weaponSlot;
 }
 
+/// Discards an ordinary carried or equipped card without spending an action.
+final class DiscardCardCommand extends GameCommand {
+  const DiscardCardCommand(this.cardId);
+
+  final CardId cardId;
+}
+
 /// Gives the active player a card. A received modification may be implanted
 /// immediately, including after the player has already taken an action.
 final class ReceiveCardCommand extends GameCommand {
-  const ReceiveCardCommand(this.cardId, {this.implantImmediately = false});
+  const ReceiveCardCommand(
+    this.cardId, {
+    this.implantImmediately = false,
+    this.equipImmediately = false,
+    this.weaponSlot,
+  });
 
   final CardId cardId;
   final bool implantImmediately;
+  final bool equipImmediately;
+  final int? weaponSlot;
 }
 
 /// Permanently implants an already carried modification before the active
@@ -122,6 +136,19 @@ final class WithdrawFromChestCommand extends GameCommand {
   const WithdrawFromChestCommand(this.cardId);
 
   final CardId cardId;
+}
+
+/// Transfers any number of cards between the active hero and the shared chest
+/// for one action. Cards are deposited before cards are withdrawn.
+final class TransferChestCardsCommand extends GameCommand {
+  TransferChestCardsCommand({
+    Iterable<CardId> depositCardIds = const [],
+    Iterable<CardId> withdrawCardIds = const [],
+  }) : depositCardIds = List.unmodifiable(depositCardIds),
+       withdrawCardIds = List.unmodifiable(withdrawCardIds);
+
+  final List<CardId> depositCardIds;
+  final List<CardId> withdrawCardIds;
 }
 
 /// Credits are currency, not chest contents. This explicit command exists so
