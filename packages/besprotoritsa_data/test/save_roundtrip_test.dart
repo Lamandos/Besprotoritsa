@@ -27,6 +27,7 @@ void main() {
       expect(restored.players.first.monsterDamageImmuneThroughRound, 3);
       expect(restored.players.first.monsterDefenseBonusRound, 5);
       expect(restored.players.first.retainedEventCards, ['scientist-report']);
+      expect(restored.chestCards, ['shared-tool']);
       expect(restored.pendingDecision, isA<AwaitingRerollChoice>());
       final context =
           (restored.pendingDecision! as AwaitingRerollChoice).context!
@@ -313,6 +314,7 @@ GameState _interruptedState() => GameState(
       source: DamageSource.monster,
     ),
   ],
+  chestCards: const ['shared-tool'],
   decks: {
     'events': DeckState(
       drawPile: const ['cabin-noise', 'darkness'],

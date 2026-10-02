@@ -224,6 +224,10 @@ Map<String, Object?> _commandToJson(GameCommand command) => switch (command) {
     'slot': slot.name,
     'weaponSlot': weaponSlot,
   },
+  DiscardCardCommand(:final cardId) => <String, Object?>{
+    'type': 'discardCard',
+    'cardId': cardId,
+  },
   ReceiveCardCommand() => throw UnsupportedError(
     'Card rewards are resolved by an authoritative deck or effect, '
     'not a client command.',
@@ -241,6 +245,12 @@ Map<String, Object?> _commandToJson(GameCommand command) => switch (command) {
     'type': 'withdrawFromChest',
     'cardId': cardId,
   },
+  TransferChestCardsCommand(:final depositCardIds, :final withdrawCardIds) =>
+    <String, Object?>{
+      'type': 'transferChestCards',
+      'depositCardIds': depositCardIds,
+      'withdrawCardIds': withdrawCardIds,
+    },
   DepositCreditsIntoChestCommand(:final amount) => <String, Object?>{
     'type': 'depositCreditsIntoChest',
     'amount': amount,

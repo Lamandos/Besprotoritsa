@@ -6,6 +6,7 @@ part of 'commands_reducer.dart';
 bool _isInventoryCommand(GameCommand command) =>
     command is EquipCommand ||
     command is UnequipCommand ||
+    command is DiscardCardCommand ||
     command is ReceiveCardCommand ||
     command is ImplantModificationCommand;
 
@@ -19,12 +20,18 @@ bool _isActionCommand(GameCommand command) =>
     command is SkillCheckCommand ||
     command is HealCommand ||
     command is UseTerminalCommand ||
+    command is DepositIntoChestCommand ||
+    command is WithdrawFromChestCommand ||
+    command is TransferChestCardsCommand ||
     command is ExchangeCommand;
 
 GameState _applyInventoryCommand(GameState state, GameCommand command) {
   final player = _activePlayer(state);
   if (player == null) {
     throw const InventoryRuleViolation('There is no active player.');
+  }
+  if (command case DiscardCardCommand(:final cardId)) {
+    return _discardCard(state, player, cardId);
   }
   final definitions = state.cardDefinitions;
   final updated = switch (command) {
@@ -40,8 +47,20 @@ GameState _applyInventoryCommand(GameState state, GameCommand command) {
       definitions,
       weaponSlot: weaponSlot,
     ),
-    ReceiveCardCommand(:final cardId, :final implantImmediately) =>
-      _receiveCard(player, cardId, definitions, implantImmediately),
+    ReceiveCardCommand(
+      :final cardId,
+      :final implantImmediately,
+      :final equipImmediately,
+      :final weaponSlot,
+    ) =>
+      _receiveCard(
+        player,
+        cardId,
+        definitions,
+        implantImmediately,
+        equipImmediately,
+        weaponSlot,
+      ),
     ImplantModificationCommand(:final cardId) => InventoryRules.implant(
       player,
       cardId,
@@ -60,12 +79,62 @@ GameState _applyInventoryCommand(GameState state, GameCommand command) {
   );
 }
 
+GameState _discardCard(GameState state, PlayerState player, CardId cardId) {
+  final definition = state.cardDefinitions[cardId];
+  if (definition == null || definition.type == ItemType.modification) {
+    throw const InventoryRuleViolation(
+      'Only ordinary items and supplies may be discarded.',
+    );
+  }
+  final deckId = _cardSourceDeck(state, definition);
+  final deck = deckId == null ? null : state.decks[deckId];
+  if (deckId != null && deck == null) {
+    throw const InventoryRuleViolation('The card has no discard deck.');
+  }
+  final updatedDecks = Map<DeckId, DeckState>.of(state.decks);
+  if (deckId != null && deck != null) {
+    updatedDecks[deckId] = DeckState(
+      drawPile: deck.drawPile,
+      discardPile: [...deck.discardPile, cardId],
+    );
+  }
+  return _copyState(
+    state,
+    players: _replacePlayer(
+      state,
+      player.id,
+      (current) => InventoryRules.discard(
+        current,
+        cardId,
+        state.cardDefinitions,
+      ),
+    ),
+    decks: updatedDecks,
+    logEntry: 'discard:${player.id}:$cardId',
+  );
+}
+
 PlayerState _receiveCard(
   PlayerState player,
   CardId cardId,
   Map<CardId, CardDefinition> definitions,
   bool implantImmediately,
+  bool equipImmediately,
+  int? weaponSlot,
 ) {
+  if (implantImmediately && equipImmediately) {
+    throw const InventoryRuleViolation(
+      'A received card cannot be implanted and equipped at once.',
+    );
+  }
+  if (equipImmediately) {
+    return InventoryRules.equipOnReceive(
+      player,
+      cardId,
+      definitions,
+      weaponSlot: weaponSlot,
+    );
+  }
   final received = InventoryRules.receive(player, cardId, definitions);
   return implantImmediately
       ? InventoryRules.implant(received, cardId, definitions)
@@ -100,16 +169,22 @@ GameState _applyChestCommand(GameState state, GameCommand command) {
   return switch (command) {
     DepositIntoChestCommand(:final cardId) => _copyState(
       state,
+      actionsLeft: state.actionsLeft - 1,
       players: _replacePlayer(
         state,
         player.id,
-        (current) => InventoryRules.discard(current, cardId),
+        (current) => InventoryRules.discard(
+          current,
+          cardId,
+          state.cardDefinitions,
+        ),
       ),
       chestCards: [...state.chestCards, cardId],
       logEntry: 'chest-deposit:${player.id}:$cardId',
     ),
     WithdrawFromChestCommand(:final cardId) => _copyState(
       state,
+      actionsLeft: state.actionsLeft - 1,
       players: _replacePlayer(
         state,
         player.id,
@@ -122,12 +197,48 @@ GameState _applyChestCommand(GameState state, GameCommand command) {
       chestCards: _removeOne(state.chestCards, cardId),
       logEntry: 'chest-withdraw:${player.id}:$cardId',
     ),
+    TransferChestCardsCommand(:final depositCardIds, :final withdrawCardIds) =>
+      _applyChestTransfer(state, player, depositCardIds, withdrawCardIds),
     _ => throw ArgumentError.value(
       command,
       'command',
       'Not a chest command.',
     ),
   };
+}
+
+GameState _applyChestTransfer(
+  GameState state,
+  PlayerState player,
+  List<CardId> depositCardIds,
+  List<CardId> withdrawCardIds,
+) {
+  var updatedPlayer = player;
+  final chestCards = List<CardId>.of(state.chestCards);
+  for (final cardId in depositCardIds) {
+    updatedPlayer = InventoryRules.discard(
+      updatedPlayer,
+      cardId,
+      state.cardDefinitions,
+    );
+    chestCards.add(cardId);
+  }
+  for (final cardId in withdrawCardIds) {
+    final chestIndex = chestCards.indexOf(cardId);
+    updatedPlayer = InventoryRules.receive(
+      updatedPlayer,
+      cardId,
+      state.cardDefinitions,
+    );
+    chestCards.removeAt(chestIndex);
+  }
+  return _copyState(
+    state,
+    actionsLeft: state.actionsLeft - 1,
+    players: _replacePlayer(state, player.id, (_) => updatedPlayer),
+    chestCards: chestCards,
+    logEntry: 'chest-transfer:${player.id}',
+  );
 }
 
 GameState _exchange(GameState state, ExchangeCommand command) {

@@ -54,7 +54,11 @@ CommandRejection? validate(GameState state, GameCommand command) {
   }
 
   if (command is DepositIntoChestCommand ||
-      command is WithdrawFromChestCommand) {
+      command is WithdrawFromChestCommand ||
+      command is TransferChestCardsCommand) {
+    if (state.actionsLeft < 1) {
+      return const NotEnoughActions();
+    }
     final player = _activePlayer(state);
     if (player == null ||
         state.tileAt(player.coord)?.type != HexTileType.start) {
@@ -62,12 +66,41 @@ CommandRejection? validate(GameState state, GameCommand command) {
     }
     try {
       if (command case DepositIntoChestCommand(:final cardId)) {
-        InventoryRules.discard(player, cardId);
+        InventoryRules.discard(player, cardId, state.cardDefinitions);
       } else if (command case WithdrawFromChestCommand(:final cardId)) {
         if (!state.chestCards.contains(cardId)) {
           throw const InventoryRuleViolation('The card is not in the chest.');
         }
         InventoryRules.receive(player, cardId, state.cardDefinitions);
+      } else if (command case TransferChestCardsCommand(
+        :final depositCardIds,
+        :final withdrawCardIds,
+      )) {
+        if (depositCardIds.isEmpty && withdrawCardIds.isEmpty) {
+          return const InvalidCommandArguments();
+        }
+        var updatedPlayer = player;
+        final chestCards = List<CardId>.of(state.chestCards);
+        for (final cardId in depositCardIds) {
+          updatedPlayer = InventoryRules.discard(
+            updatedPlayer,
+            cardId,
+            state.cardDefinitions,
+          );
+          chestCards.add(cardId);
+        }
+        for (final cardId in withdrawCardIds) {
+          final chestIndex = chestCards.indexOf(cardId);
+          if (chestIndex < 0) {
+            throw const InventoryRuleViolation('The card is not in the chest.');
+          }
+          updatedPlayer = InventoryRules.receive(
+            updatedPlayer,
+            cardId,
+            state.cardDefinitions,
+          );
+          chestCards.removeAt(chestIndex);
+        }
       }
     } on BackpackCapacityExceeded catch (error) {
       return InventoryCommandRejected(
@@ -209,6 +242,7 @@ CommandRejection? validate(GameState state, GameCommand command) {
         !corridor.hasExit(edge.opposite)) {
       return const CorridorCannotBeClosed();
     }
+    if (state.actionsLeft < 1) return const NotEnoughActions();
   }
 
   if (command case OpenCorridorCommand(:final target)) {
@@ -276,12 +310,15 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
     HealCommand(:final amount) => GameStepResult(state: _heal(state, amount)),
     EquipCommand() ||
     UnequipCommand() ||
+    DiscardCardCommand() ||
     ReceiveCardCommand() ||
     ImplantModificationCommand() => GameStepResult(
       state: _applyInventoryCommand(state, command),
     ),
     UseTerminalCommand() => _useTerminal(state),
-    DepositIntoChestCommand() || WithdrawFromChestCommand() => GameStepResult(
+    DepositIntoChestCommand() ||
+    WithdrawFromChestCommand() ||
+    TransferChestCardsCommand() => GameStepResult(
       state: _applyChestCommand(state, command),
     ),
     DepositCreditsIntoChestCommand() => throw StateError(

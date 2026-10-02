@@ -138,6 +138,7 @@ final class PlayerGameState {
     required this.phase,
     required this.activePlayerId,
     required this.actionsLeft,
+    required Iterable<CardId> chestCards,
     required Iterable<ProjectedHexTile> board,
     required Iterable<ProjectedPlayerState> players,
     required Iterable<MonsterInstance> monsters,
@@ -145,7 +146,8 @@ final class PlayerGameState {
     required this.quests,
     required Iterable<String> log,
     required this.pendingDecision,
-  }) : board = List.unmodifiable(board),
+  }) : chestCards = List.unmodifiable(chestCards),
+       board = List.unmodifiable(board),
        players = List.unmodifiable(players),
        monsters = List.unmodifiable(monsters),
        decks = UnmodifiableMapView(Map.of(decks)),
@@ -157,6 +159,7 @@ final class PlayerGameState {
   final GamePhase phase;
   final PlayerId? activePlayerId;
   final int actionsLeft;
+  final List<CardId> chestCards;
   final List<ProjectedHexTile> board;
   final List<ProjectedPlayerState> players;
   final List<MonsterInstance> monsters;
@@ -190,6 +193,7 @@ PlayerGameState projectFor(GameState fullState, PlayerId viewerId) {
     phase: fullState.phase,
     activePlayerId: fullState.activePlayerId,
     actionsLeft: fullState.actionsLeft,
+    chestCards: fullState.chestCards,
     board: fullState.board.map(
       (tile) => tile.opened
           ? ProjectedHexTile._visible(tile)

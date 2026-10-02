@@ -19,6 +19,7 @@ final class ProjectedGameStateCodec {
     phase: _enum(GamePhase.values, _string(json, 'phase')),
     activePlayerId: json['activePlayerId'] as String?,
     actionsLeft: _int(json, 'actionsLeft'),
+    chestCards: _strings(json['chestCards']),
     board: _list(json, 'board').map(_tile),
     players: _list(json, 'players').map(_player),
     monsters: _list(json, 'monsters').map(_monster),

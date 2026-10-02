@@ -1618,6 +1618,14 @@ List<Object?> _optionalList(Map<String, Object?> json, String key) {
   return value;
 }
 
+List<String> _stringList(Map<String, Object?> json, String key) =>
+    _optionalList(json, key).map((value) {
+      if (value is! String || value.isEmpty) {
+        throw FormatException('"$key" must contain non-empty strings.');
+      }
+      return value;
+    }).toList();
+
 GameCommand _commandFromJson(
   Map<String, Object?> json,
   PlayerState player,
@@ -1651,6 +1659,9 @@ GameCommand _commandFromJson(
       _enumByName(ItemSlot.values, json, 'slot'),
       weaponSlot: _optionalInt(json, 'weaponSlot') ?? 0,
     ),
+    'discardCard' => DiscardCardCommand(
+      _requiredString(json, 'cardId'),
+    ),
     'implantModification' => ImplantModificationCommand(
       _requiredString(json, 'cardId'),
     ),
@@ -1660,6 +1671,10 @@ GameCommand _commandFromJson(
     ),
     'withdrawFromChest' => WithdrawFromChestCommand(
       _requiredString(json, 'cardId'),
+    ),
+    'transferChestCards' => TransferChestCardsCommand(
+      depositCardIds: _stringList(json, 'depositCardIds'),
+      withdrawCardIds: _stringList(json, 'withdrawCardIds'),
     ),
     'depositCreditsIntoChest' => DepositCreditsIntoChestCommand(
       _requiredInt(json, 'amount'),
@@ -1737,6 +1752,7 @@ Map<String, Object?> _projectedStateToJson(
   'phase': state.phase.name,
   'activePlayerId': state.activePlayerId,
   'actionsLeft': state.actionsLeft,
+  'chestCards': state.chestCards,
   'isComplete': fullState.isComplete,
   'board': state.board.map(_projectedTileToJson).toList(),
   'players': state.players.map(_projectedPlayerToJson).toList(),

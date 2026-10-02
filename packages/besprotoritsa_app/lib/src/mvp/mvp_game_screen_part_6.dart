@@ -44,6 +44,16 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
       for (final cardId in activePlayer.backpack)
         if (state.cardDefinitions[cardId]?.slots.isNotEmpty ?? false)
           _NamedCommand('Экипировать: $cardId', EquipCommand(cardId)),
+      for (final cardId in activePlayer.backpack)
+        _NamedCommand('Сбросить: $cardId', DiscardCardCommand(cardId)),
+      for (final cardId in activePlayer.equipped.weapons)
+        _NamedCommand('Сбросить оружие: $cardId', DiscardCardCommand(cardId)),
+      if (activePlayer.equipped.armor case final cardId?)
+        _NamedCommand('Сбросить броню: $cardId', DiscardCardCommand(cardId)),
+      if (activePlayer.equipped.clothing case final cardId?)
+        _NamedCommand('Сбросить одежду: $cardId', DiscardCardCommand(cardId)),
+      if (activePlayer.equipped.robot case final cardId?)
+        _NamedCommand('Сбросить робота: $cardId', DiscardCardCommand(cardId)),
       for (final cardId in activePlayer.carriedMods)
         _NamedCommand('Вживить: $cardId', ImplantModificationCommand(cardId)),
       for (final (index, cardId) in activePlayer.equipped.weapons.indexed)
@@ -58,16 +68,11 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
       if (activePlayer.equipped.robot != null)
         const _NamedCommand('Снять робота', UnequipCommand(ItemSlot.robot)),
       if (activePlayer.coord == const HexCoord(0, 0)) ...[
-        for (final cardId in activePlayer.backpack)
-          _NamedCommand(
-            'Положить в сундук: $cardId',
-            DepositIntoChestCommand(cardId),
-          ),
-        for (final cardId in state.chestCards)
-          _NamedCommand(
-            'Взять из сундука: $cardId',
-            WithdrawFromChestCommand(cardId),
-          ),
+        _NamedCommand(
+          'Переложить карты в общий сундук',
+          TransferChestCardsCommand(),
+          isChestTransfer: true,
+        ),
       ],
       for (final partner in state.players)
         if (partner.alive &&
@@ -105,7 +110,12 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
   ];
   final validCandidates = [
     for (final candidate in candidates)
-      if (validate(state, candidate.command) == null) candidate,
+      if (validate(state, candidate.command) == null ||
+          (candidate.isChestTransfer &&
+              activePlayer != null &&
+              activePlayer.coord == const HexCoord(0, 0) &&
+              state.actionsLeft > 0))
+        candidate,
   ];
   final closableCorridors = validCandidates
       .where((candidate) => candidate.command is CloseCorridorCommand)
@@ -132,11 +142,17 @@ String _statLabel(StatType stat) => switch (stat) {
 };
 
 class _NamedCommand {
-  const _NamedCommand(this.label, this.command, {this.alternatives});
+  const _NamedCommand(
+    this.label,
+    this.command, {
+    this.alternatives,
+    this.isChestTransfer = false,
+  });
 
   final String label;
   final GameCommand command;
   final List<_NamedCommand>? alternatives;
+  final bool isChestTransfer;
 }
 
 void _dispatchNamedCommand(
@@ -144,6 +160,23 @@ void _dispatchNamedCommand(
   WidgetRef ref,
   _NamedCommand namedCommand,
 ) {
+  if (namedCommand.isChestTransfer) {
+    final state = ref.read(gameControllerProvider);
+    final activePlayer = state.players
+        .where((player) => player.id == state.activePlayerId)
+        .firstOrNull;
+    if (activePlayer == null) return;
+    _showChestTransferDialog(
+      context,
+      activePlayer.backpack,
+      state.chestCards,
+    ).then((command) {
+      if (command != null && context.mounted) {
+        _dispatchWithFeedback(context, ref, command);
+      }
+    });
+    return;
+  }
   final alternatives = namedCommand.alternatives;
   if (alternatives == null) {
     _dispatchWithFeedback(context, ref, namedCommand.command);
@@ -167,6 +200,86 @@ void _dispatchNamedCommand(
     }
   });
 }
+
+Future<TransferChestCardsCommand?> _showChestTransferDialog(
+  BuildContext context,
+  List<CardId> backpack,
+  List<CardId> chest,
+) => showDialog<TransferChestCardsCommand>(
+  context: context,
+  builder: (dialogContext) {
+    final selectedBackpack = <int>{};
+    final selectedChest = <int>{};
+    return StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Общий сундук'),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Положить из рюкзака'),
+                for (final (index, cardId) in backpack.indexed)
+                  CheckboxListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(cardId),
+                    value: selectedBackpack.contains(index),
+                    onChanged: (checked) => setState(() {
+                      if (checked ?? false) {
+                        selectedBackpack.add(index);
+                      } else {
+                        selectedBackpack.remove(index);
+                      }
+                    }),
+                  ),
+                const SizedBox(height: 8),
+                const Text('Взять из сундука'),
+                for (final (index, cardId) in chest.indexed)
+                  CheckboxListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(cardId),
+                    value: selectedChest.contains(index),
+                    onChanged: (checked) => setState(() {
+                      if (checked ?? false) {
+                        selectedChest.add(index);
+                      } else {
+                        selectedChest.remove(index);
+                      }
+                    }),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: selectedBackpack.isEmpty && selectedChest.isEmpty
+                ? null
+                : () => Navigator.of(dialogContext).pop(
+                    TransferChestCardsCommand(
+                      depositCardIds: selectedBackpack.map(
+                        (index) => backpack[index],
+                      ),
+                      withdrawCardIds: selectedChest.map(
+                        (index) => chest[index],
+                      ),
+                    ),
+                  ),
+            child: const Text('Переложить за одно действие'),
+          ),
+        ],
+      ),
+    );
+  },
+);
 
 Offset _layoutPosition(HexCoord coord, List<HexTile> board) {
   final coordinates = board.map((tile) => tile.coord).toList();
