@@ -98,6 +98,13 @@ def crop_card(image: Image.Image, cell: int, columns: int, rows: int) -> Image.I
     return image.crop((x0, y0, x1, y1))
 
 
+def quest_position(number: int) -> tuple[int, int]:
+    # The fourth sheet has an empty fifth cell before quests 28 and 29.
+    if number >= 28:
+        return (4, number - 22)
+    return (number // 8 + 1, number % 8 + 1)
+
+
 def extract(deck: str, pdf_name: str, mapping: dict[str, tuple[int, int]], grid: tuple[int, int]) -> None:
     pdf = MATERIALS / pdf_name
     columns, rows = grid
@@ -184,10 +191,7 @@ def main() -> None:
         "quest",
         "задания сюжет.pdf",
         {
-            quest["id"]: (
-                quest["number"] // 8 + 1,
-                quest["number"] % 8 + 1,
-            )
+            quest["id"]: quest_position(quest["number"])
             for quest in quests
         },
         (4, 2),

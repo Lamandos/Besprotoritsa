@@ -316,8 +316,6 @@ InventoryTransfer _exchangePlayers(
       state.cardDefinitions,
     );
   }
-  InventoryRules.requireWeaponCapacity(from, state.cardDefinitions);
-  InventoryRules.requireWeaponCapacity(to, state.cardDefinitions);
   final legacyGivenCards = [
     if (command.giveCardId case final cardId?) cardId,
     ...command.giveCardIds,
@@ -332,6 +330,8 @@ InventoryTransfer _exchangePlayers(
   for (final cardId in legacyReceivedCards) {
     to = InventoryRules.discard(to, cardId, state.cardDefinitions);
   }
+  InventoryRules.requireWeaponCapacity(from, state.cardDefinitions);
+  InventoryRules.requireWeaponCapacity(to, state.cardDefinitions);
   InventoryRules.requireBackpackFits(from, state.cardDefinitions);
   InventoryRules.requireBackpackFits(to, state.cardDefinitions);
   for (final cardId in givenCards) {

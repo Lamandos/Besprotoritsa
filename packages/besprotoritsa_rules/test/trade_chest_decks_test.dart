@@ -304,6 +304,47 @@ void main() {
     expect(result.state.chestCards, ['load-bearing-vest', 'pistol']);
   });
 
+  test('legacy exchange cannot leave excess equipped weapons', () {
+    final state = _state(
+      cards: cards,
+      board: [_startTile()],
+      players: [
+        PlayerState(
+          id: 'ada',
+          characterId: 'ada-character',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 8,
+          credits: 0,
+          backpack: const [],
+          equipped: const EquippedGear(
+            weapon: 'knife',
+            secondWeapon: 'pistol',
+            armor: 'load-bearing-vest',
+          ),
+          carriedMods: const [],
+          implanted: const [],
+          conditions: const [],
+          alive: true,
+          stats: const PlayerStats(strength: 2, science: 2, repair: 2),
+        ),
+        _player('boris'),
+      ],
+    );
+
+    final result = step(
+      state,
+      const ExchangeCommand(
+        partnerId: 'boris',
+        giveCardIds: ['load-bearing-vest'],
+      ),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isA<InventoryCommandRejected>());
+    expect(result.state, same(state));
+  });
+
   test('co-located players exchange cards and credits for one action', () {
     final state = _state(
       cards: cards,
