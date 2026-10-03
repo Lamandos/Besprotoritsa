@@ -8,7 +8,6 @@ import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/character_portrait.dart';
 import 'package:besprotoritsa_app/src/menu/tutorial_and_rules_screens.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

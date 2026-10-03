@@ -176,8 +176,7 @@ List<StatType> _meaningfulSkillChecks(
         }
       } else if (type == 'counter' || type == 'count') {
         if (condition['metric'] == 'agility_check_in_ventilation' &&
-            tile?.ventColor != null &&
-            tile!.ventColor != VentColor.none) {
+            tile.ventColor != VentColor.none) {
           relevant.add(StatType.agility);
         }
       }
@@ -186,15 +185,15 @@ List<StatType> _meaningfulSkillChecks(
 
   // The legacy MVP quest stores condition names instead of structured
   // condition objects, so preserve its single supported science check.
+  final mvpQuest = state.questDefinitions['chapter-1-awakening'];
+  final mvpConditions = mvpQuest?['conditions'];
+  final hasLegacyMvpScienceCheck =
+      mvpQuest == null ||
+      (mvpConditions is List && mvpConditions.contains('science-check'));
   if (locationId == 'crew-mess' &&
       state.quests.storyQuestIds.contains('chapter-1-awakening') &&
       state.quests.statusOf('chapter-1-awakening') == QuestStatus.active &&
-      (state.questDefinitions['chapter-1-awakening'] == null ||
-          (state.questDefinitions['chapter-1-awakening']!['conditions']
-                  is List &&
-              (state.questDefinitions['chapter-1-awakening']!['conditions']
-                      as List)
-                  .contains('science-check')))) {
+      hasLegacyMvpScienceCheck) {
     relevant.add(StatType.science);
   }
 
