@@ -361,6 +361,18 @@ abstract final class _InventoryChanges {
     Map<CardId, CardDefinition> definitions,
   ) => _requireBackpackFits(player, definitions);
 
+  static void requireWeaponCapacity(
+    PlayerState player,
+    Map<CardId, CardDefinition> definitions,
+  ) {
+    final capacity = _InventoryStats.weaponCapacity(player, definitions);
+    if (player.equipped.weapons.length > capacity) {
+      throw InventoryRuleViolation(
+        'Weapon capacity is $capacity after the selected transfer.',
+      );
+    }
+  }
+
   static InventoryTransfer transfer(
     PlayerState from,
     PlayerState to,

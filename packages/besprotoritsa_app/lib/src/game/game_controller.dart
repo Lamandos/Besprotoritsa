@@ -18,6 +18,10 @@ final gameControllerProvider =
 
 /// Common command surface for local and authoritative network sessions.
 abstract class GameSessionController extends Notifier<GameState> {
+  /// Whether the UI should validate commands against its local state before
+  /// dispatch. Authoritative network sessions validate on the server instead.
+  bool get validatesCommandsLocally => true;
+
   /// Submits a player action. A network controller returns true once queued;
   /// its state changes only after the server confirms the command.
   bool dispatch(GameCommand command);

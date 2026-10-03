@@ -52,6 +52,9 @@ class MultiplayerGameController extends GameSessionController {
   /// Whether a command has been sent but has not yet been confirmed.
   bool get isWaitingForConfirmation => _waitingForConfirmation;
 
+  @override
+  bool get validatesCommandsLocally => false;
+
   /// Last rejection or transport error reported by the server.
   String? get lastError => _lastError;
 

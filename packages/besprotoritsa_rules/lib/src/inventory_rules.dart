@@ -155,6 +155,11 @@ abstract final class InventoryRules {
     Map<CardId, CardDefinition> definitions,
   ) => _InventoryChanges.requireBackpackFits(player, definitions);
 
+  static void requireWeaponCapacity(
+    PlayerState player,
+    Map<CardId, CardDefinition> definitions,
+  ) => _InventoryChanges.requireWeaponCapacity(player, definitions);
+
   static InventoryTransfer transfer(
     PlayerState from,
     PlayerState to,

@@ -9,6 +9,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 
 void main() {
+  test('multiplayer commands are validated by the authoritative server', () {
+    final controller = MultiplayerGameController(
+      serverUri: Uri.parse('ws://127.0.0.1:1'),
+      roomCode: 'room',
+      participantId: 'ada-client',
+    );
+
+    expect(controller.validatesCommandsLocally, isFalse);
+  });
+
   test(
     'two multiplayer clients receive the confirmed authoritative transition',
     () async {

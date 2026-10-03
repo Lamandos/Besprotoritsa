@@ -251,6 +251,7 @@ GameState _applyChestTransfer(
     );
     chestCards.removeAt(chestIndex);
   }
+  InventoryRules.requireWeaponCapacity(updatedPlayer, state.cardDefinitions);
   InventoryRules.requireBackpackFits(updatedPlayer, state.cardDefinitions);
   return _copyState(
     state,
@@ -315,6 +316,8 @@ InventoryTransfer _exchangePlayers(
       state.cardDefinitions,
     );
   }
+  InventoryRules.requireWeaponCapacity(from, state.cardDefinitions);
+  InventoryRules.requireWeaponCapacity(to, state.cardDefinitions);
   final legacyGivenCards = [
     if (command.giveCardId case final cardId?) cardId,
     ...command.giveCardIds,

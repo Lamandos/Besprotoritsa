@@ -66,7 +66,15 @@ CommandRejection? validate(GameState state, GameCommand command) {
     }
     try {
       if (command case DepositIntoChestCommand(:final cardId)) {
-        InventoryRules.discard(player, cardId, state.cardDefinitions);
+        final updatedPlayer = InventoryRules.discard(
+          player,
+          cardId,
+          state.cardDefinitions,
+        );
+        InventoryRules.requireWeaponCapacity(
+          updatedPlayer,
+          state.cardDefinitions,
+        );
       } else if (command case WithdrawFromChestCommand(:final cardId)) {
         if (!state.chestCards.contains(cardId)) {
           throw const InventoryRuleViolation('The card is not in the chest.');
@@ -112,6 +120,10 @@ CommandRejection? validate(GameState state, GameCommand command) {
           );
           chestCards.removeAt(chestIndex);
         }
+        InventoryRules.requireWeaponCapacity(
+          updatedPlayer,
+          state.cardDefinitions,
+        );
         InventoryRules.requireBackpackFits(
           updatedPlayer,
           state.cardDefinitions,

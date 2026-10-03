@@ -9,6 +9,14 @@ void main() {
     'stored-item': _card('stored-item'),
     'ada-item': _card('ada-item'),
     'boris-item': _card('boris-item'),
+    'knife': _gear('knife', ItemType.weapon, ItemSlot.weapon),
+    'pistol': _gear('pistol', ItemType.weapon, ItemSlot.weapon),
+    'load-bearing-vest': _gear(
+      'load-bearing-vest',
+      ItemType.armor,
+      ItemSlot.armor,
+      behaviorIds: const ['equipment.extraWeaponSlot'],
+    ),
   };
 
   test(
@@ -203,6 +211,99 @@ void main() {
     expect(emptyTransfer.state, same(state));
   });
 
+  test('transferring slot-granting armor requires removing excess weapons', () {
+    final state = _state(
+      cards: cards,
+      board: [_startTile()],
+      players: [
+        PlayerState(
+          id: 'ada',
+          characterId: 'ada-character',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 8,
+          credits: 0,
+          backpack: const [],
+          equipped: const EquippedGear(
+            weapon: 'knife',
+            secondWeapon: 'pistol',
+            armor: 'load-bearing-vest',
+          ),
+          carriedMods: const [],
+          implanted: const [],
+          conditions: const [],
+          alive: true,
+          stats: const PlayerStats(strength: 2, science: 2, repair: 2),
+        ),
+      ],
+    );
+
+    final result = step(
+      state,
+      TransferChestCardsCommand(
+        depositCards: [
+          const InventoryCardSelection(
+            cardId: 'load-bearing-vest',
+            area: InventoryCardArea.armor,
+          ),
+        ],
+      ),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isA<InventoryCommandRejected>());
+    expect(result.state, same(state));
+  });
+
+  test('a chest batch can remove the vest and excess weapon together', () {
+    final state = _state(
+      cards: cards,
+      board: [_startTile()],
+      players: [
+        PlayerState(
+          id: 'ada',
+          characterId: 'ada-character',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 8,
+          credits: 0,
+          backpack: const [],
+          equipped: const EquippedGear(
+            weapon: 'knife',
+            secondWeapon: 'pistol',
+            armor: 'load-bearing-vest',
+          ),
+          carriedMods: const [],
+          implanted: const [],
+          conditions: const [],
+          alive: true,
+          stats: const PlayerStats(strength: 2, science: 2, repair: 2),
+        ),
+      ],
+    );
+
+    final result = step(
+      state,
+      TransferChestCardsCommand(
+        depositCards: [
+          const InventoryCardSelection(
+            cardId: 'load-bearing-vest',
+            area: InventoryCardArea.armor,
+          ),
+          const InventoryCardSelection(
+            cardId: 'pistol',
+            area: InventoryCardArea.weapon,
+          ),
+        ],
+      ),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.single.equipped.weapons, ['knife']);
+    expect(result.state.chestCards, ['load-bearing-vest', 'pistol']);
+  });
+
   test('co-located players exchange cards and credits for one action', () {
     final state = _state(
       cards: cards,
@@ -346,4 +447,18 @@ CardDefinition _card(String id, {int cost = 0}) => CardDefinition(
   slots: const [ItemSlot.modification],
   cost: cost,
   staticEffects: CardStaticEffects(const {}),
+);
+
+CardDefinition _gear(
+  String id,
+  ItemType type,
+  ItemSlot slot, {
+  List<String> behaviorIds = const [],
+}) => CardDefinition(
+  id: id,
+  type: type,
+  slots: [slot],
+  cost: 0,
+  staticEffects: CardStaticEffects(const {}),
+  behaviorIds: behaviorIds,
 );

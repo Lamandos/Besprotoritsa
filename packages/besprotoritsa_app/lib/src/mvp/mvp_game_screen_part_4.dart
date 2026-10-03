@@ -1084,7 +1084,10 @@ void _showExchangeDialog(
             giveCredits: giveCredits,
             receiveCredits: receiveCredits,
           );
-          final canExchange = validate(state, command) == null;
+          final controller = ref.read(gameControllerProvider.notifier);
+          final canExchange =
+              !controller.validatesCommandsLocally ||
+              validate(state, command) == null;
           final fromWindow = _transferWindow(
             state: state,
             player: activePlayer,
@@ -1212,7 +1215,10 @@ void _showChestTransferDialog(
               for (final index in chestSelected) chestCards[index].cardId,
             ],
           );
-          final canTransfer = validate(state, command) == null;
+          final controller = ref.read(gameControllerProvider.notifier);
+          final canTransfer =
+              !controller.validatesCommandsLocally ||
+              validate(state, command) == null;
           final playerWindow = _inventoryTransferWindow(
             state: state,
             title: activePlayer == null
