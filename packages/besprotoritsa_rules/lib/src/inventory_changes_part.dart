@@ -271,6 +271,108 @@ abstract final class _InventoryChanges {
     return updated;
   }
 
+  static PlayerState removeForTransfer(
+    PlayerState player,
+    InventoryCardSelection selection,
+    Map<CardId, CardDefinition> definitions,
+  ) {
+    _definition(selection.cardId, definitions);
+    final cardId = selection.cardId;
+    switch (selection.area) {
+      case InventoryCardArea.backpack:
+        final backpack = List<CardId>.of(player.backpack);
+        if (!backpack.remove(cardId)) {
+          throw const InventoryRuleViolation(
+            'The selected card is not in the backpack.',
+          );
+        }
+        return _copy(player, backpack: backpack);
+      case InventoryCardArea.carriedMod:
+        final carriedMods = List<CardId>.of(player.carriedMods);
+        if (!carriedMods.remove(cardId)) {
+          throw const InventoryRuleViolation(
+            'The selected modification is not carried.',
+          );
+        }
+        return _copy(player, carriedMods: carriedMods);
+      case InventoryCardArea.weapon:
+        final weapons = List<CardId>.of(player.equipped.weapons);
+        if (!weapons.remove(cardId)) {
+          throw const InventoryRuleViolation(
+            'The selected weapon is not equipped.',
+          );
+        }
+        return _copy(
+          player,
+          equipped: EquippedGear.withWeapons(
+            weapons: weapons,
+            armor: player.equipped.armor,
+            clothing: player.equipped.clothing,
+            robot: player.equipped.robot,
+          ),
+        );
+      case InventoryCardArea.armor:
+        if (player.equipped.armor != cardId) {
+          throw const InventoryRuleViolation(
+            'The selected armor is not equipped.',
+          );
+        }
+        return _copy(
+          player,
+          equipped: EquippedGear.withWeapons(
+            weapons: player.equipped.weapons,
+            clothing: player.equipped.clothing,
+            robot: player.equipped.robot,
+          ),
+        );
+      case InventoryCardArea.clothing:
+        if (player.equipped.clothing != cardId) {
+          throw const InventoryRuleViolation(
+            'The selected clothing is not equipped.',
+          );
+        }
+        return _copy(
+          player,
+          equipped: EquippedGear.withWeapons(
+            weapons: player.equipped.weapons,
+            armor: player.equipped.armor,
+            robot: player.equipped.robot,
+          ),
+        );
+      case InventoryCardArea.robot:
+        if (player.equipped.robot != cardId) {
+          throw const InventoryRuleViolation(
+            'The selected robot is not equipped.',
+          );
+        }
+        return _copy(
+          player,
+          equipped: EquippedGear.withWeapons(
+            weapons: player.equipped.weapons,
+            armor: player.equipped.armor,
+            clothing: player.equipped.clothing,
+          ),
+        );
+    }
+  }
+
+  static void requireBackpackFits(
+    PlayerState player,
+    Map<CardId, CardDefinition> definitions,
+  ) => _requireBackpackFits(player, definitions);
+
+  static void requireWeaponCapacity(
+    PlayerState player,
+    Map<CardId, CardDefinition> definitions,
+  ) {
+    final capacity = _InventoryStats.weaponCapacity(player, definitions);
+    if (player.equipped.weapons.length > capacity) {
+      throw InventoryRuleViolation(
+        'Weapon capacity is $capacity after the selected transfer.',
+      );
+    }
+  }
+
   static InventoryTransfer transfer(
     PlayerState from,
     PlayerState to,

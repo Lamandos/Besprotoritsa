@@ -52,6 +52,9 @@ class MultiplayerGameController extends GameSessionController {
   /// Whether a command has been sent but has not yet been confirmed.
   bool get isWaitingForConfirmation => _waitingForConfirmation;
 
+  @override
+  bool get validatesCommandsLocally => false;
+
   /// Last rejection or transport error reported by the server.
   String? get lastError => _lastError;
 
@@ -245,11 +248,19 @@ Map<String, Object?> _commandToJson(GameCommand command) => switch (command) {
     'type': 'withdrawFromChest',
     'cardId': cardId,
   },
-  TransferChestCardsCommand(:final depositCardIds, :final withdrawCardIds) =>
+  TransferChestCardsCommand(
+    :final depositCardIds,
+    :final withdrawCardIds,
+    :final depositCards,
+  ) =>
     <String, Object?>{
       'type': 'transferChestCards',
       'depositCardIds': depositCardIds,
       'withdrawCardIds': withdrawCardIds,
+      'depositCards': [
+        for (final selection in depositCards)
+          {'cardId': selection.cardId, 'area': selection.area.name},
+      ],
     },
   DepositCreditsIntoChestCommand(:final amount) => <String, Object?>{
     'type': 'depositCreditsIntoChest',
@@ -257,16 +268,26 @@ Map<String, Object?> _commandToJson(GameCommand command) => switch (command) {
   },
   ExchangeCommand(
     :final partnerId,
-    :final giveCardId,
-    :final receiveCardId,
+    :final giveCardIds,
+    :final receiveCardIds,
+    :final giveCards,
+    :final receiveCards,
     :final giveCredits,
     :final receiveCredits,
   ) =>
     <String, Object?>{
       'type': 'exchange',
       'partnerId': partnerId,
-      'giveCardId': giveCardId,
-      'receiveCardId': receiveCardId,
+      'giveCardIds': giveCardIds,
+      'receiveCardIds': receiveCardIds,
+      'giveCards': [
+        for (final selection in giveCards)
+          {'cardId': selection.cardId, 'area': selection.area.name},
+      ],
+      'receiveCards': [
+        for (final selection in receiveCards)
+          {'cardId': selection.cardId, 'area': selection.area.name},
+      ],
       'giveCredits': giveCredits,
       'receiveCredits': receiveCredits,
     },

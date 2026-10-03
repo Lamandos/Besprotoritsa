@@ -58,43 +58,94 @@ class _PendingDecisionModal extends ConsumerWidget {
     final eventDescription = eventId == null
         ? null
         : _runtimeEventText(state, eventId, 'descKey');
+    final eventTargetPlayerId = switch (decision) {
+      AwaitingEventOption(:final playerId) => playerId,
+      _ => null,
+    };
+    final targetPlayerId = eventId == null
+        ? null
+        : eventTargetPlayerId ?? state.activePlayerId;
+    final targetPlayer = targetPlayerId == null
+        ? null
+        : state.players
+              .where((player) => player.id == targetPlayerId)
+              .firstOrNull;
+    final targetPlayerName = targetPlayer == null
+        ? null
+        : fullRuntimeCharacterName(targetPlayer.characterId);
     return Positioned.fill(
       child: ColoredBox(
         color: Colors.black54,
         child: Center(
           child: AlertDialog(
-            title: Text(
-              eventTitle ?? strings.decisionRequired,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+            title: eventId != null && targetPlayer != null
+                ? Row(
+                    children: [
+                      CharacterPortrait(
+                        characterId: targetPlayer.characterId,
+                        size: const Size(48, 56),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              eventTitle ?? strings.decisionRequired,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Для $targetPlayerName',
+                              style: Theme.of(context).textTheme.labelMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    eventTitle ?? strings.decisionRequired,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
             content: eventId == null
                 ? Text(_decisionPrompt(decision, strings))
                 : SingleChildScrollView(
-                    child: Container(
+                    child: GameCardSurface(
+                      material: GameCardMaterial.event,
+                      overlayColor: const Color(0xD91B1510),
                       padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFD6BF95),
-                            Color(0xFFC6AA7D),
-                            Color(0xFFD9C398),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: const Color(0xFF8B683B),
-                          width: 2,
-                        ),
-                      ),
-                      child: Text(
-                        eventDescription ?? _decisionPrompt(decision, strings),
-                        style: const TextStyle(
-                          color: Color(0xFF493A2A),
-                          height: 1.4,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            eventDescription ??
+                                _decisionPrompt(decision, strings),
+                            style: const TextStyle(
+                              color: Color(0xFFFFF0D1),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () => showGameCardScan(
+                                context,
+                                cardId: eventId,
+                                title: eventTitle ?? eventId,
+                                kind: GameCardArtworkKind.event,
+                              ),
+                              icon: const Icon(Icons.open_in_full, size: 16),
+                              label: const Text('Вся карта'),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

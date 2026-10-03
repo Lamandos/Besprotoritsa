@@ -197,8 +197,18 @@ GameState _applyChestCommand(GameState state, GameCommand command) {
       chestCards: _removeOne(state.chestCards, cardId),
       logEntry: 'chest-withdraw:${player.id}:$cardId',
     ),
-    TransferChestCardsCommand(:final depositCardIds, :final withdrawCardIds) =>
-      _applyChestTransfer(state, player, depositCardIds, withdrawCardIds),
+    TransferChestCardsCommand(
+      :final depositCards,
+      :final depositCardIds,
+      :final withdrawCardIds,
+    ) =>
+      _applyChestTransfer(
+        state,
+        player,
+        depositCards,
+        depositCardIds,
+        withdrawCardIds,
+      ),
     _ => throw ArgumentError.value(
       command,
       'command',
@@ -210,11 +220,20 @@ GameState _applyChestCommand(GameState state, GameCommand command) {
 GameState _applyChestTransfer(
   GameState state,
   PlayerState player,
+  List<InventoryCardSelection> depositCards,
   List<CardId> depositCardIds,
   List<CardId> withdrawCardIds,
 ) {
   var updatedPlayer = player;
   final chestCards = List<CardId>.of(state.chestCards);
+  for (final selection in depositCards) {
+    updatedPlayer = InventoryRules.removeForTransfer(
+      updatedPlayer,
+      selection,
+      state.cardDefinitions,
+    );
+    chestCards.add(selection.cardId);
+  }
   for (final cardId in depositCardIds) {
     updatedPlayer = InventoryRules.discard(
       updatedPlayer,
@@ -232,6 +251,8 @@ GameState _applyChestTransfer(
     );
     chestCards.removeAt(chestIndex);
   }
+  InventoryRules.requireWeaponCapacity(updatedPlayer, state.cardDefinitions);
+  InventoryRules.requireBackpackFits(updatedPlayer, state.cardDefinitions);
   return _copyState(
     state,
     actionsLeft: state.actionsLeft - 1,
@@ -269,25 +290,55 @@ InventoryTransfer _exchangePlayers(
 ) {
   var from = player;
   var to = partner;
-  if (command.giveCardId case final cardId?) {
-    final transfer = InventoryRules.transfer(
+  final givenCards = [
+    if (command.giveCardId case final cardId?) cardId,
+    ...command.giveCardIds,
+    ...command.giveCards.map((selection) => selection.cardId),
+  ];
+  final receivedCards = [
+    if (command.receiveCardId case final cardId?) cardId,
+    ...command.receiveCardIds,
+    ...command.receiveCards.map((selection) => selection.cardId),
+  ];
+  // Remove all selected cards first so a simultaneous swap still fits when
+  // either backpack starts at capacity.
+  for (final selection in command.giveCards) {
+    from = InventoryRules.removeForTransfer(
       from,
-      to,
-      cardId,
+      selection,
       state.cardDefinitions,
     );
-    from = transfer.from;
-    to = transfer.to;
   }
-  if (command.receiveCardId case final cardId?) {
-    final transfer = InventoryRules.transfer(
+  for (final selection in command.receiveCards) {
+    to = InventoryRules.removeForTransfer(
       to,
-      from,
-      cardId,
+      selection,
       state.cardDefinitions,
     );
-    from = transfer.to;
-    to = transfer.from;
+  }
+  final legacyGivenCards = [
+    if (command.giveCardId case final cardId?) cardId,
+    ...command.giveCardIds,
+  ];
+  final legacyReceivedCards = [
+    if (command.receiveCardId case final cardId?) cardId,
+    ...command.receiveCardIds,
+  ];
+  for (final cardId in legacyGivenCards) {
+    from = InventoryRules.discard(from, cardId, state.cardDefinitions);
+  }
+  for (final cardId in legacyReceivedCards) {
+    to = InventoryRules.discard(to, cardId, state.cardDefinitions);
+  }
+  InventoryRules.requireWeaponCapacity(from, state.cardDefinitions);
+  InventoryRules.requireWeaponCapacity(to, state.cardDefinitions);
+  InventoryRules.requireBackpackFits(from, state.cardDefinitions);
+  InventoryRules.requireBackpackFits(to, state.cardDefinitions);
+  for (final cardId in givenCards) {
+    to = InventoryRules.receive(to, cardId, state.cardDefinitions);
+  }
+  for (final cardId in receivedCards) {
+    from = InventoryRules.receive(from, cardId, state.cardDefinitions);
   }
   return InventoryTransfer(
     from: _copyPlayer(

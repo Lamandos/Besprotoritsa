@@ -52,6 +52,7 @@ class _TokenLayer extends StatelessWidget {
   const _TokenLayer({
     required this.players,
     required this.monsters,
+    required this.state,
     required this.board,
     required this.selectedPlayerId,
     required this.activePlayerId,
@@ -60,6 +61,7 @@ class _TokenLayer extends StatelessWidget {
 
   final List<PlayerState> players;
   final List<MonsterInstance> monsters;
+  final GameState state;
   final List<HexTile> board;
   final String? selectedPlayerId;
   final String? activePlayerId;
@@ -82,6 +84,7 @@ class _TokenLayer extends StatelessWidget {
       for (final monster in monsters)
         _MonsterToken(
           monster: monster,
+          state: state,
           position: _layoutPosition(monster.coord, board),
         ),
     ],
@@ -407,25 +410,153 @@ class _HeroToken extends StatelessWidget {
 }
 
 class _MonsterToken extends StatelessWidget {
-  const _MonsterToken({required this.monster, required this.position});
+  const _MonsterToken({
+    required this.monster,
+    required this.state,
+    required this.position,
+  });
 
   final MonsterInstance monster;
+  final GameState state;
   final Offset position;
 
   @override
   Widget build(BuildContext context) {
+    final definition = state.monsterDefinitions[monster.monsterId];
+    final nameKey = definition?['nameKey'];
+    final monsterName = nameKey is String
+        ? state.contentTranslations[nameKey] ?? monster.monsterId
+        : monster.monsterId;
     return Positioned(
       left: position.dx + 99,
       top: position.dy + 82,
       child: Semantics(
+        button: true,
         label: AppStrings.of(
           context,
         ).monsterLabel(monster.monsterId, monster.coord.q, monster.coord.r),
-        child: const Icon(Icons.bug_report, color: Color(0xFFC75B32), size: 28),
+        child: Tooltip(
+          message: 'Карточка монстра: $monsterName',
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => _showMonsterCard(context, state, monster, monsterName),
+            child: SizedBox(
+              width: 108,
+              height: 82,
+              child: GameCardArtwork(
+                cardId: monster.monsterId,
+                assetPath:
+                    gameMonsterTokenArtworkAsset(monster.monsterId) ??
+                    gameCardArtworkAsset(monster.monsterId),
+                width: 108,
+                height: 82,
+                borderRadius: BorderRadius.zero,
+                fit: BoxFit.contain,
+                fallbackIcon: Icons.bug_report,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
+
+void _showMonsterCard(
+  BuildContext context,
+  GameState state,
+  MonsterInstance monster,
+  String monsterName,
+) {
+  final definition = state.monsterDefinitions[monster.monsterId];
+  final descriptionKey = definition?['descKey'];
+  final description = descriptionKey is String
+      ? state.contentTranslations[descriptionKey]
+      : null;
+  final currentHealth = (monster.health - monster.damage).clamp(
+    0,
+    monster.health,
+  );
+  showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(monsterName),
+      content: SizedBox(
+        width: 360,
+        child: SingleChildScrollView(
+          child: GameCardSurface(
+            material: GameCardMaterial.monster,
+            borderColor: const Color(0xFF8D6D46),
+            overlayColor: const Color(0x990C0B0A),
+            padding: const EdgeInsets.all(16),
+            child: DefaultTextStyle.merge(
+              style: const TextStyle(color: Color(0xFFF1E5CA), height: 1.4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (gameMonsterTokenArtworkAsset(monster.monsterId)
+                      case final art?)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Center(
+                        child: Image.asset(
+                          art,
+                          width: 320,
+                          height: 210,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  const Text(
+                    'МОНСТР',
+                    style: TextStyle(
+                      color: Color(0xFFD0A66D),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(description ?? 'Идентификатор: ${monster.monsterId}'),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _monsterStat(
+                        'Здоровье',
+                        '$currentHealth/${monster.health}',
+                      ),
+                      _monsterStat('Защита', '${monster.defense}'),
+                      _monsterStat('Атака', '${monster.attack}'),
+                      _monsterStat('Движение', '${monster.movement}'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: const Text('Закрыть'),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _monsterStat(String label, String value) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+  decoration: BoxDecoration(
+    color: const Color(0xAA28221D),
+    borderRadius: BorderRadius.circular(6),
+    border: Border.all(color: const Color(0xFF8D6D46)),
+  ),
+  child: Text('$label: $value'),
+);
 
 class _HexRimPainter extends CustomPainter {
   const _HexRimPainter({
@@ -511,8 +642,9 @@ class _MobileActionDock extends StatelessWidget {
                   buttonKey: mvpInventoryButtonKey,
                   tooltip: 'Инвентарь',
                   icon: const Icon(Icons.backpack_outlined),
-                  onPressed: () => _showInventorySheet(context, state),
+                  onPressed: () => _showInventorySheet(context),
                 ),
+                _CompactChestButton(state: state),
                 const VerticalDivider(indent: 10, endIndent: 10),
                 Expanded(
                   child: ListView.separated(

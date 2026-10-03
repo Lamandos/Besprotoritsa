@@ -441,6 +441,7 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
                   child: _TokenLayer(
                     players: widget.state.players,
                     monsters: widget.state.monsters,
+                    state: widget.state,
                     board: widget.state.board,
                     selectedPlayerId: widget.selectedPlayerId,
                     activePlayerId: widget.state.phase == GamePhase.playersTurn
