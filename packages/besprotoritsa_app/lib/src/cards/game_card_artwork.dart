@@ -2,13 +2,28 @@ import 'package:flutter/material.dart';
 
 /// Artwork types extracted from the printable card sheets in `materials/`.
 enum GameCardArtworkKind {
+  /// A regular equipment card.
   item,
+
+  /// A unique or campaign equipment card.
   special,
+
+  /// A consumable supply card.
   supply,
+
+  /// A monster card.
   monster,
+
+  /// A condition card.
   condition,
+
+  /// An event card.
   event,
+
+  /// A chapter quest card.
   quest,
+
+  /// A personal task card.
   task,
 }
 
@@ -29,9 +44,17 @@ String? gameCardArtworkAsset(
     GameCardArtworkKind.quest => 'quest',
     GameCardArtworkKind.task => 'task',
   };
+  if (resolvedKind == GameCardArtworkKind.quest &&
+      !_questIds.contains(cardId)) {
+    return null;
+  }
+  if (resolvedKind == GameCardArtworkKind.task && !_taskIds.contains(cardId)) {
+    return null;
+  }
   return 'assets/images/card-art/$prefix-$cardId.webp';
 }
 
+/// Infers the artwork kind for a supported card ID, if it has one.
 GameCardArtworkKind? gameCardArtworkKindForId(String cardId) {
   if (_itemIds.contains(cardId)) return GameCardArtworkKind.item;
   if (_specialItemIds.contains(cardId)) return GameCardArtworkKind.special;
@@ -94,6 +117,7 @@ Future<void> showGameCardScan(
 
 /// Displays a matching card scan or a themed icon when a scan is unavailable.
 class GameCardArtwork extends StatelessWidget {
+  /// Creates artwork for [cardId], using a fallback icon when absent.
   const GameCardArtwork({
     required this.cardId,
     this.kind,
@@ -106,13 +130,28 @@ class GameCardArtwork extends StatelessWidget {
     super.key,
   });
 
+  /// ID used to look up the card face.
   final String cardId;
+
+  /// Optional explicit artwork kind when it cannot be inferred from the ID.
   final GameCardArtworkKind? kind;
+
+  /// Width of the clipped artwork.
   final double width;
+
+  /// Height of the clipped artwork.
   final double height;
+
+  /// Corner shape applied to the artwork.
   final BorderRadius borderRadius;
+
+  /// Icon shown when no image is available.
   final IconData fallbackIcon;
+
+  /// Optional explicit asset path, such as a full artwork crop.
   final String? assetPath;
+
+  /// How the image is fitted inside its bounds.
   final BoxFit fit;
 
   @override
@@ -254,4 +293,55 @@ const _conditionIds = <String>{
   'fracture',
   'shortness-of-breath',
   'adrenaline',
+};
+
+const _questIds = <String>{
+  'quest-01',
+  'quest-02',
+  'quest-03',
+  'quest-04',
+  'quest-05',
+  'quest-06',
+  'quest-07',
+  'quest-08',
+  'quest-09',
+  'quest-10',
+  'quest-11',
+  'quest-12',
+  'quest-13',
+  'quest-14',
+  'quest-15',
+  'quest-16',
+  'quest-17',
+  'quest-18',
+  'quest-19',
+  'quest-20',
+  'quest-21',
+  'quest-22',
+  'quest-23',
+  'quest-24',
+  'quest-25',
+  'quest-26',
+  'quest-27',
+  'quest-28',
+  'quest-29',
+};
+
+const _taskIds = <String>{
+  'abscessive',
+  'agile',
+  'cripple',
+  'exterminator',
+  'fashionable',
+  'hunter',
+  'lively',
+  'lucky',
+  'merchant',
+  'modernizer',
+  'quartermaster',
+  'researcher',
+  'robot-owner',
+  'special',
+  'strongman',
+  'wealthy',
 };
