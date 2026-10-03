@@ -145,7 +145,7 @@ List<StatType> _meaningfulSkillChecks(
   if (activePlayer == null) return const [];
   final tile = state.tileAt(activePlayer.coord);
   final locationId = tile?.locationId;
-  if (locationId == null) return const [];
+  if (tile == null) return const [];
 
   final relevant = <StatType>{};
   for (final questId in state.quests.storyQuestIds) {
@@ -165,7 +165,9 @@ List<StatType> _meaningfulSkillChecks(
 
       final type = condition['type'];
       if (type == 'skill_check' || type == 'skillCheck' || type == 'skill') {
-        if (condition['locationId'] != locationId) continue;
+        if (locationId == null || condition['locationId'] != locationId) {
+          continue;
+        }
         final skill = condition['skill'];
         if (skill is String) {
           for (final stat in StatType.values) {
@@ -184,16 +186,22 @@ List<StatType> _meaningfulSkillChecks(
 
   // The legacy MVP quest stores condition names instead of structured
   // condition objects, so preserve its single supported science check.
-  final mvpQuest = state.questDefinitions['chapter-1-awakening'];
-  final mvpConditions = mvpQuest?['conditions'];
   if (locationId == 'crew-mess' &&
+      state.quests.storyQuestIds.contains('chapter-1-awakening') &&
       state.quests.statusOf('chapter-1-awakening') == QuestStatus.active &&
-      mvpConditions is List &&
-      mvpConditions.contains('science-check')) {
+      (state.questDefinitions['chapter-1-awakening'] == null ||
+          (state.questDefinitions['chapter-1-awakening']!['conditions']
+                  is List &&
+              (state.questDefinitions['chapter-1-awakening']!['conditions']
+                      as List)
+                  .contains('science-check')))) {
     relevant.add(StatType.science);
   }
 
-  return [for (final stat in StatType.values) if (relevant.contains(stat)) stat];
+  return [
+    for (final stat in StatType.values)
+      if (relevant.contains(stat)) stat,
+  ];
 }
 
 String _statLabel(StatType stat) => switch (stat) {
