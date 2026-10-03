@@ -8,6 +8,15 @@ import 'package:besprotoritsa_rules/src/game_state.dart';
 part 'inventory_stats_part.dart';
 part 'inventory_changes_part.dart';
 
+enum InventoryCardArea { backpack, weapon, armor, clothing, robot, carriedMod }
+
+final class InventoryCardSelection {
+  const InventoryCardSelection({required this.cardId, required this.area});
+
+  final CardId cardId;
+  final InventoryCardArea area;
+}
+
 /// The result of applying all equipped and implanted static modifiers.
 final class EffectivePlayerStats {
   const EffectivePlayerStats({
@@ -134,6 +143,17 @@ abstract final class InventoryRules {
     CardId cardId,
     Map<CardId, CardDefinition> definitions,
   ) => _InventoryChanges.discard(player, cardId, definitions);
+
+  static PlayerState removeForTransfer(
+    PlayerState player,
+    InventoryCardSelection selection,
+    Map<CardId, CardDefinition> definitions,
+  ) => _InventoryChanges.removeForTransfer(player, selection, definitions);
+
+  static void requireBackpackFits(
+    PlayerState player,
+    Map<CardId, CardDefinition> definitions,
+  ) => _InventoryChanges.requireBackpackFits(player, definitions);
 
   static InventoryTransfer transfer(
     PlayerState from,

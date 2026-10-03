@@ -3,6 +3,7 @@
 
 import 'dart:math';
 
+import 'package:besprotoritsa_app/src/cards/game_card_surface.dart';
 import 'package:besprotoritsa_app/src/game/full_game_state.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/character_portrait.dart';
@@ -475,12 +476,24 @@ class _HeroCard extends StatelessWidget {
                   ),
                 ),
               const Divider(height: 10, color: Color(0xFF765A3C)),
-              Text(
-                '${strings.startingEquipment}: '
-                '${hero.startingItems.map(fullRuntimeItemName).join(', ')}',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFFD4C6AB), fontSize: 11),
+              GameCardSurface(
+                material: GameCardMaterial.item,
+                borderColor: const Color(0xFF7F7769),
+                borderWidth: 1,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 5,
+                ),
+                child: Text(
+                  '${strings.startingEquipment}: '
+                  '${hero.startingItems.map(fullRuntimeItemName).join(', ')}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF332D26),
+                    fontSize: 11,
+                  ),
+                ),
               ),
               const Spacer(),
               Text(

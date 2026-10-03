@@ -1626,6 +1626,26 @@ List<String> _stringList(Map<String, Object?> json, String key) =>
       return value;
     }).toList();
 
+List<InventoryCardSelection> _inventorySelections(
+  Map<String, Object?> json,
+  String key,
+) => _optionalList(json, key).map((value) {
+  if (value is! Map<String, Object?>) {
+    throw FormatException('"$key" must contain objects.');
+  }
+  final areaName = _requiredString(value, 'area');
+  final matchingAreas = InventoryCardArea.values.where(
+    (area) => area.name == areaName,
+  );
+  if (matchingAreas.isEmpty) {
+    throw FormatException('"$key" contains an unknown area.');
+  }
+  return InventoryCardSelection(
+    cardId: _requiredString(value, 'cardId'),
+    area: matchingAreas.first,
+  );
+}).toList();
+
 GameCommand _commandFromJson(
   Map<String, Object?> json,
   PlayerState player,
@@ -1675,6 +1695,7 @@ GameCommand _commandFromJson(
     'transferChestCards' => TransferChestCardsCommand(
       depositCardIds: _stringList(json, 'depositCardIds'),
       withdrawCardIds: _stringList(json, 'withdrawCardIds'),
+      depositCards: _inventorySelections(json, 'depositCards'),
     ),
     'depositCreditsIntoChest' => DepositCreditsIntoChestCommand(
       _requiredInt(json, 'amount'),
@@ -1683,6 +1704,10 @@ GameCommand _commandFromJson(
       partnerId: _requiredString(json, 'partnerId'),
       giveCardId: _optionalString(json, 'giveCardId'),
       receiveCardId: _optionalString(json, 'receiveCardId'),
+      giveCardIds: _stringList(json, 'giveCardIds'),
+      receiveCardIds: _stringList(json, 'receiveCardIds'),
+      giveCards: _inventorySelections(json, 'giveCards'),
+      receiveCards: _inventorySelections(json, 'receiveCards'),
       giveCredits: _optionalInt(json, 'giveCredits') ?? 0,
       receiveCredits: _optionalInt(json, 'receiveCredits') ?? 0,
     ),

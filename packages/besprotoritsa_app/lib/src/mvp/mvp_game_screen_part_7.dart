@@ -221,26 +221,47 @@ class _ShipPorthole extends StatelessWidget {
   );
 }
 
-class _EventCardPanel extends StatelessWidget {
+class _EventCardPanel extends StatefulWidget {
   const _EventCardPanel({required this.state});
 
   final GameState state;
 
   @override
+  State<_EventCardPanel> createState() => _EventCardPanelState();
+}
+
+class _EventCardPanelState extends State<_EventCardPanel> {
+  String? _selectedEventId;
+
+  @override
+  void didUpdateWidget(covariant _EventCardPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldPending = _pendingEventId(oldWidget.state);
+    final newPending = _pendingEventId(widget.state);
+    if (newPending != null && newPending != oldPending) {
+      _selectedEventId = newPending;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
     final strings = AppStrings.of(context);
     final activeQuests = _activeQuests(state);
-    final activeEventId = switch (state.pendingDecision) {
-      AwaitingEventOption(:final eventId) => eventId,
-      _ => null,
-    };
+    final pendingEventId = _pendingEventId(state);
+    final activeEvents = _visibleActiveEventIds(state);
+    final selectedEventId = activeEvents.contains(_selectedEventId)
+        ? _selectedEventId
+        : pendingEventId ?? activeEvents.firstOrNull;
+    _selectedEventId ??= selectedEventId;
     final openingQuestId =
-        activeEventId == null &&
+        activeEvents.isEmpty &&
             state.round == 1 &&
             state.phase == GamePhase.playersTurn
         ? activeQuests.firstOrNull
         : null;
-    final eventId = activeEventId;
+    final eventId = selectedEventId;
+    final isPendingEvent = eventId != null && eventId == pendingEventId;
     final runtimeDescription = eventId == null
         ? null
         : _runtimeEventText(state, eventId, 'descKey');
@@ -258,7 +279,7 @@ class _EventCardPanel extends StatelessWidget {
         : strings.decisionRequired.toUpperCase();
     final cardCopy = eventId == 'cabin-noise'
         ? 'Из кают-компании доносится глухой скрежет. В полумраке мелькает тень. Возможно, вас уже заметили.'
-        : activeEventId != null
+        : isPendingEvent
         ? _decisionPrompt(state.pendingDecision!, strings)
         : openingQuestId != null
         ? 'СЮЖЕТНОЕ ЗАДАНИЕ ГЛАВЫ 1'
@@ -267,12 +288,16 @@ class _EventCardPanel extends StatelessWidget {
         : 'Новые сведения появятся, когда событие будет открыто.';
     final isOpeningStoryCard = openingQuestId != null;
 
-    return Container(
+    final card = Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFD6BF95), Color(0xFFC6AA7D), Color(0xFFD9C398)],
+        image: DecorationImage(
+          image: AssetImage(
+            (isOpeningStoryCard
+                    ? GameCardMaterial.story
+                    : GameCardMaterial.event)
+                .assetPath,
+          ),
+          fit: BoxFit.cover,
         ),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFF8B683B), width: 2),
@@ -280,222 +305,319 @@ class _EventCardPanel extends StatelessWidget {
       ),
       child: CustomPaint(
         painter: const _PaperStainPainter(),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.auto_stories,
-                    size: 17,
-                    color: Color(0xFF60472C),
-                  ),
-                  const SizedBox(width: 7),
-                  Text(
-                    isOpeningStoryCard ? 'СЮЖЕТ' : 'СОБЫТИЕ',
-                    style: const TextStyle(
-                      color: Color(0xFF493621),
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Container(
-                height: 176,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(7),
-                  border: Border.all(color: const Color(0xFF684A2E), width: 2),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Stack(
-                  fit: StackFit.expand,
+        child: ColoredBox(
+          color: const Color(0xB91B1510),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (eventId == 'cabin-noise')
-                      Image.asset(
-                        'assets/images/cabin_noise_scene.png',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const ColoredBox(
-                              color: Color(0xFF30241B),
-                              child: Icon(
-                                Icons.bug_report,
-                                size: 72,
-                                color: Color(0xFFC75B32),
-                              ),
-                            ),
-                      )
-                    else
-                      const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Color(0xFF354049),
-                              Color(0xFF171A1B),
-                              Color(0xFF28231D),
-                            ],
-                          ),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.auto_stories_outlined,
-                            size: 58,
-                            color: Color(0xFFB99A6A),
-                          ),
-                        ),
-                      ),
-                    const DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Color(0x33201811)],
-                        ),
-                      ),
+                    const Icon(
+                      Icons.auto_stories,
+                      size: 17,
+                      color: Color(0xFFE9C78E),
                     ),
-                    const CustomPaint(painter: _CardRunePainter()),
-                    const Positioned(
-                      left: 8,
-                      top: 8,
-                      child: Icon(
-                        Icons.flare,
-                        size: 15,
-                        color: Color(0xFFE3CC9F),
-                      ),
-                    ),
-                    const Positioned(
-                      right: 8,
-                      bottom: 8,
-                      child: Icon(
-                        Icons.flare,
-                        size: 15,
-                        color: Color(0xFFE3CC9F),
+                    const SizedBox(width: 7),
+                    Text(
+                      isOpeningStoryCard ? 'СЮЖЕТ' : 'СОБЫТИЕ',
+                      style: const TextStyle(
+                        color: Color(0xFFFFEBC7),
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.4,
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                cardTitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF392819),
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: .7,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        cardDescription ?? cardCopy,
-                        maxLines: 5,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF493A2A),
-                          fontSize: 13,
-                          height: 1.35,
-                        ),
+                if (!isOpeningStoryCard) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 176,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(
+                        color: const Color(0xFF684A2E),
+                        width: 2,
                       ),
                     ),
-                    if (isOpeningStoryCard) ...[
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF61482D),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: const Text(
-                          'ЧТО ДЕЛАТЬ ДАЛЬШЕ\nДоберитесь до КАЮТ-КОМПАНИИ и выполните проверку науки.',
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Color(0xFFFFE8BC),
-                            fontSize: 12,
-                            height: 1.25,
-                            fontWeight: FontWeight.w800,
+                    clipBehavior: Clip.antiAlias,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (eventId == 'cabin-noise')
+                          Image.asset(
+                            'assets/images/cabin_noise_scene.png',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const ColoredBox(
+                                  color: Color(0xFF30241B),
+                                  child: Icon(
+                                    Icons.bug_report,
+                                    size: 72,
+                                    color: Color(0xFFC75B32),
+                                  ),
+                                ),
+                          )
+                        else
+                          const DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF354049),
+                                  Color(0xFF171A1B),
+                                  Color(0xFF28231D),
+                                ],
+                              ),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.auto_stories_outlined,
+                                size: 58,
+                                color: Color(0xFFB99A6A),
+                              ),
+                            ),
                           ),
+                        const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Colors.transparent, Color(0x33201811)],
+                            ),
+                          ),
+                        ),
+                        const CustomPaint(painter: _CardRunePainter()),
+                        const Positioned(
+                          left: 8,
+                          top: 8,
+                          child: Icon(
+                            Icons.flare,
+                            size: 15,
+                            color: Color(0xFFE3CC9F),
+                          ),
+                        ),
+                        const Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: Icon(
+                            Icons.flare,
+                            size: 15,
+                            color: Color(0xFFE3CC9F),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                Text(
+                  cardTitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFFFFEBC7),
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: .7,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          cardDescription ?? cardCopy,
+                          maxLines: 5,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFFFFF0D1),
+                            fontSize: 15,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                      if (isOpeningStoryCard) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF61482D),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: const Text(
+                            'ЧТО ДЕЛАТЬ ДАЛЬШЕ\nДоберитесь до КАЮТ-КОМПАНИИ и выполните проверку науки.',
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Color(0xFFFFE8BC),
+                              fontSize: 12,
+                              height: 1.25,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(48, 36),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            foregroundColor: const Color(0xFFFFD996),
+                          ),
+                          onPressed: () {
+                            if (eventId != null) {
+                              showGameCardScan(
+                                context,
+                                cardId: eventId,
+                                title: cardTitle,
+                                kind: GameCardArtworkKind.event,
+                              );
+                            } else if (openingQuestId != null) {
+                              showGameCardScan(
+                                context,
+                                cardId: openingQuestId,
+                                title: cardTitle,
+                                kind: GameCardArtworkKind.quest,
+                              );
+                            } else {
+                              showDialog<void>(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  title: Text(cardTitle),
+                                  content: SingleChildScrollView(
+                                    child: Text(cardDescription ?? cardCopy),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(dialogContext).pop(),
+                                      child: const Text('Закрыть'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text('Читать полностью'),
                         ),
                       ),
                     ],
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        style: TextButton.styleFrom(
-                          minimumSize: const Size(48, 36),
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          foregroundColor: const Color(0xFF493A2A),
+                  ),
+                ),
+                const Divider(color: Color(0xFFB18A58)),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.flag_outlined,
+                      size: 17,
+                      color: Color(0xFFE9C78E),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        activeQuests.isEmpty
+                            ? 'ЗАДАНИЕ НЕ ПОЛУЧЕНО'
+                            : _questCardLabel(state, activeQuests.first),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFFFFEBC7),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: .35,
                         ),
-                        onPressed: () => showDialog<void>(
-                          context: context,
-                          builder: (dialogContext) => AlertDialog(
-                            title: Text(cardTitle),
-                            content: SingleChildScrollView(
-                              child: Text(cardDescription ?? cardCopy),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(dialogContext).pop(),
-                                child: const Text('Закрыть'),
-                              ),
-                            ],
-                          ),
-                        ),
-                        child: const Text('Читать полностью'),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const Divider(color: Color(0xFF9B8057)),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.flag_outlined,
-                    size: 17,
-                    color: Color(0xFF694B2F),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      activeQuests.isEmpty
-                          ? 'ЗАДАНИЕ НЕ ПОЛУЧЕНО'
-                          : _questCardLabel(state, activeQuests.first),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF513B27),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: .35,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
+    if (activeEvents.length < 2) return card;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: card),
+        const SizedBox(width: 6),
+        SizedBox(
+          width: 42,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: activeEvents.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 6),
+            itemBuilder: (context, index) {
+              final id = activeEvents[index];
+              final selected = id == eventId;
+              final title =
+                  _runtimeEventText(state, id, 'nameKey') ??
+                  _eventCardTitle(id);
+              return Tooltip(
+                message: title,
+                child: Material(
+                  color: selected
+                      ? const Color(0xFFB8874E)
+                      : const Color(0xFF34291F),
+                  borderRadius: const BorderRadius.horizontal(
+                    right: Radius.circular(9),
+                  ),
+                  child: InkWell(
+                    key: ValueKey<String>('active-event-tab-$id'),
+                    borderRadius: const BorderRadius.horizontal(
+                      right: Radius.circular(9),
+                    ),
+                    onTap: () => setState(() => _selectedEventId = id),
+                    child: SizedBox(
+                      height: 44,
+                      child: Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            color: selected
+                                ? const Color(0xFF201711)
+                                : const Color(0xFFFFEBC7),
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
+}
+
+String? _pendingEventId(GameState state) => switch (state.pendingDecision) {
+  AwaitingEventOption(:final eventId) => eventId,
+  _ => null,
+};
+
+List<String> _visibleActiveEventIds(GameState state) {
+  final pendingEventId = _pendingEventId(state);
+  final discardPile = state.decks['events']?.discardPile.toSet() ?? const {};
+  return {
+    if (pendingEventId != null) pendingEventId,
+    for (final player in state.players)
+      for (final eventId in player.retainedEventCards)
+        if (!discardPile.contains(eventId)) eventId,
+  }.toList();
 }
 
 String _eventCardTitle(String eventId) => switch (eventId) {
@@ -677,13 +799,21 @@ Widget _questProgressSummary(GameState state, String id) {
   final conditions = definition?['conditions'];
   final description = _questCardDescription(state, id);
   if (conditions is! List<Object?> || conditions.isEmpty) {
-    return Text(description ?? 'Цель завершена автоматически.');
+    return Text(
+      description ?? 'Цель завершена автоматически.',
+      style: const TextStyle(color: Color(0xFF493A2A)),
+    );
   }
   final progress = state.quests.conditionProgress[id] ?? const {};
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      if (description != null) Text(description, maxLines: 3),
+      if (description != null)
+        Text(
+          description,
+          maxLines: 3,
+          style: const TextStyle(color: Color(0xFF493A2A)),
+        ),
       for (final rawCondition in conditions)
         if (rawCondition is Map<String, dynamic>)
           Builder(
@@ -704,14 +834,17 @@ Widget _questProgressSummary(GameState state, String id) {
                           : Icons.radio_button_unchecked,
                       size: 15,
                       color: complete
-                          ? const Color(0xFF9AC879)
-                          : const Color(0xFFD3AD75),
+                          ? const Color(0xFF51723A)
+                          : const Color(0xFF694B2F),
                     ),
                     const SizedBox(width: 5),
                     Expanded(
                       child: Text(
                         '${_questConditionLabel(state, condition)} · $value/$target',
-                        style: const TextStyle(fontSize: 12),
+                        style: const TextStyle(
+                          color: Color(0xFF493A2A),
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
@@ -861,7 +994,6 @@ class _DockInventoryButton extends StatelessWidget {
       key: mvpInventoryButtonKey,
       onPressed: () => _showInventorySheet(
         context,
-        state,
         selectedPlayerId: selectedPlayerId,
       ),
       child: const Column(

@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
+import 'package:besprotoritsa_app/src/cards/game_card_artwork.dart';
+import 'package:besprotoritsa_app/src/cards/game_card_surface.dart';
 import 'package:besprotoritsa_app/src/game/event_queue.dart';
 import 'package:besprotoritsa_app/src/game/full_game_state.dart';
 import 'package:besprotoritsa_app/src/game/game_controller.dart';

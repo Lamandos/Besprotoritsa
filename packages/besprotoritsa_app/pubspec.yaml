@@ -1,6 +1,6 @@
 name: besprotoritsa_app
 description: Flutter user interface for Besprotoritsa.
-version: 0.1.0-dev
+version: 0.2.0-alpha+1
 publish_to: none
 
 environment:
@@ -39,5 +39,6 @@ flutter:
     - assets/images/card-backgrounds/
     - assets/images/character-portraits/
     - assets/images/card-icons/
+    - assets/images/card-art/
     - assets/images/field-tiles/
     - assets/images/sleeping_black_cat_dark_room/

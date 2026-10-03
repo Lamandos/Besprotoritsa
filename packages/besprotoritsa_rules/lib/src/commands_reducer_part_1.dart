@@ -144,11 +144,14 @@ final class TransferChestCardsCommand extends GameCommand {
   TransferChestCardsCommand({
     Iterable<CardId> depositCardIds = const [],
     Iterable<CardId> withdrawCardIds = const [],
+    Iterable<InventoryCardSelection> depositCards = const [],
   }) : depositCardIds = List.unmodifiable(depositCardIds),
-       withdrawCardIds = List.unmodifiable(withdrawCardIds);
+       withdrawCardIds = List.unmodifiable(withdrawCardIds),
+       depositCards = List.unmodifiable(depositCards);
 
   final List<CardId> depositCardIds;
   final List<CardId> withdrawCardIds;
+  final List<InventoryCardSelection> depositCards;
 }
 
 /// Credits are currency, not chest contents. This explicit command exists so
@@ -167,16 +170,40 @@ final class ExchangeCommand extends GameCommand {
     required this.partnerId,
     this.giveCardId,
     this.receiveCardId,
+    this.giveCardIds = const [],
+    this.receiveCardIds = const [],
+    this.giveCards = const [],
+    this.receiveCards = const [],
     this.giveCredits = 0,
     this.receiveCredits = 0,
   }) : assert(giveCredits >= 0, 'giveCredits must not be negative'),
        assert(receiveCredits >= 0, 'receiveCredits must not be negative');
 
   final PlayerId partnerId;
+
+  /// Legacy single-card field, kept for clients that still send old commands.
   final CardId? giveCardId;
+
+  /// Legacy single-card field, kept for clients that still send old commands.
   final CardId? receiveCardId;
+  final List<CardId> giveCardIds;
+  final List<CardId> receiveCardIds;
+  final List<InventoryCardSelection> giveCards;
+  final List<InventoryCardSelection> receiveCards;
   final int giveCredits;
   final int receiveCredits;
+
+  List<CardId> get allGiveCardIds => [
+    if (giveCardId case final cardId?) cardId,
+    ...giveCardIds,
+    ...giveCards.map((selection) => selection.cardId),
+  ];
+
+  List<CardId> get allReceiveCardIds => [
+    if (receiveCardId case final cardId?) cardId,
+    ...receiveCardIds,
+    ...receiveCards.map((selection) => selection.cardId),
+  ];
 }
 
 sealed class CommandRejection {

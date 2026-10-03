@@ -73,14 +73,25 @@ CommandRejection? validate(GameState state, GameCommand command) {
         }
         InventoryRules.receive(player, cardId, state.cardDefinitions);
       } else if (command case TransferChestCardsCommand(
+        :final depositCards,
         :final depositCardIds,
         :final withdrawCardIds,
       )) {
-        if (depositCardIds.isEmpty && withdrawCardIds.isEmpty) {
+        if (depositCards.isEmpty &&
+            depositCardIds.isEmpty &&
+            withdrawCardIds.isEmpty) {
           return const InvalidCommandArguments();
         }
         var updatedPlayer = player;
         final chestCards = List<CardId>.of(state.chestCards);
+        for (final selection in depositCards) {
+          updatedPlayer = InventoryRules.removeForTransfer(
+            updatedPlayer,
+            selection,
+            state.cardDefinitions,
+          );
+          chestCards.add(selection.cardId);
+        }
         for (final cardId in depositCardIds) {
           updatedPlayer = InventoryRules.discard(
             updatedPlayer,
@@ -101,6 +112,10 @@ CommandRejection? validate(GameState state, GameCommand command) {
           );
           chestCards.removeAt(chestIndex);
         }
+        InventoryRules.requireBackpackFits(
+          updatedPlayer,
+          state.cardDefinitions,
+        );
       }
     } on BackpackCapacityExceeded catch (error) {
       return InventoryCommandRejected(
@@ -149,8 +164,8 @@ CommandRejection? validate(GameState state, GameCommand command) {
     if (partner == null ||
         partner.id == player.id ||
         partner.coord != player.coord ||
-        (command.giveCardId == null &&
-            command.receiveCardId == null &&
+        (command.allGiveCardIds.isEmpty &&
+            command.allReceiveCardIds.isEmpty &&
             command.giveCredits == 0 &&
             command.receiveCredits == 0) ||
         command.giveCredits > player.credits ||
