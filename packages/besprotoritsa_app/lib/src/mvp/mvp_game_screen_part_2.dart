@@ -45,6 +45,15 @@ class _WideGameLayoutState extends State<_WideGameLayout>
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant _WideGameLayout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.activePlayerId != widget.state.activePlayerId) {
+      _selectedPlayerId = widget.state.activePlayerId;
+      _selectedDestination = null;
+    }
+  }
+
   String _selectedPlayer(GameState state) {
     if (_selectedPlayerId != null &&
         state.players.any((player) => player.id == _selectedPlayerId)) {
@@ -349,8 +358,7 @@ class HexBoardWidget extends StatefulWidget {
 class _HexBoardWidgetState extends State<HexBoardWidget> {
   final TransformationController _transformationController =
       TransformationController();
-  Size? _lastViewportSize;
-  Size? _lastBoardSize;
+  bool _didInitialFit = false;
 
   @override
   void dispose() {
@@ -381,94 +389,71 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
     return KeyEventResult.handled;
   }
 
-  void _handlePointerSignal(PointerSignalEvent event) {
-    if (event is! PointerScrollEvent) {
-      return;
-    }
-    final current = _transformationController.value;
-    final currentScale = current.getMaxScaleOnAxis();
-    final scale = (currentScale * math.exp(-event.scrollDelta.dy * .001)).clamp(
-      .12,
-      2.25,
-    );
-    final factor = scale / currentScale;
-    final focalPoint = event.localPosition;
-    _transformationController.value = Matrix4.identity()
-      ..translateByDouble(focalPoint.dx, focalPoint.dy, 0, 1)
-      ..scaleByDouble(factor, factor, factor, 1)
-      ..translateByDouble(-focalPoint.dx, -focalPoint.dy, 0, 1)
-      ..multiply(current);
-  }
-
   @override
   Widget build(BuildContext context) => Focus(
     autofocus: true,
     onKeyEvent: _handleKeyEvent,
-    child: Listener(
-      onPointerSignal: _handlePointerSignal,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final viewport = Size(constraints.maxWidth, constraints.maxHeight);
-          final boardSize = _boardCanvasSize(widget.state.board);
-          if (_lastViewportSize != viewport || _lastBoardSize != boardSize) {
-            _lastViewportSize = viewport;
-            _lastBoardSize = boardSize;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted || viewport.isEmpty || boardSize.isEmpty) return;
-              final fitScale = math
-                  .min(
-                    (viewport.width - 24) / boardSize.width,
-                    (viewport.height - 24) / boardSize.height,
-                  )
-                  .clamp(.12, 1.0);
-              final dx = (viewport.width - boardSize.width * fitScale) / 2;
-              final dy = (viewport.height - boardSize.height * fitScale) / 2;
-              _transformationController.value = Matrix4.identity()
-                ..translateByDouble(dx, dy, 0, 1)
-                ..scaleByDouble(fitScale, fitScale, fitScale, 1);
-            });
-          }
-          return InteractiveViewer(
-            key: mvpBoardInteractiveViewerKey,
-            transformationController: _transformationController,
-            constrained: false,
-            boundaryMargin: const EdgeInsets.all(160),
-            minScale: 0.12,
-            maxScale: 2.25,
-            child: SizedBox(
-              width: boardSize.width,
-              height: boardSize.height,
-              child: Stack(
-                children: [
-                  RepaintBoundary(
-                    key: mvpBoardStaticRepaintBoundaryKey,
-                    child: _StaticBoardLayer(
-                      board: widget.state.board,
-                      contentTranslations: widget.state.contentTranslations,
-                      selectedDestination: widget.selectedDestination,
-                      onSelectDestination: widget.onSelectDestination,
-                    ),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final viewport = Size(constraints.maxWidth, constraints.maxHeight);
+        final boardSize = _boardCanvasSize(widget.state.board);
+        if (!_didInitialFit && !viewport.isEmpty && !boardSize.isEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || _didInitialFit) return;
+            final fitScale = math
+                .min(
+                  (viewport.width - 24) / boardSize.width,
+                  (viewport.height - 24) / boardSize.height,
+                )
+                .clamp(.12, 1.0);
+            final dx = (viewport.width - boardSize.width * fitScale) / 2;
+            final dy = (viewport.height - boardSize.height * fitScale) / 2;
+            _transformationController.value = Matrix4.identity()
+              ..translateByDouble(dx, dy, 0, 1)
+              ..scaleByDouble(fitScale, fitScale, fitScale, 1);
+            _didInitialFit = true;
+          });
+        }
+        return InteractiveViewer(
+          key: mvpBoardInteractiveViewerKey,
+          transformationController: _transformationController,
+          constrained: false,
+          boundaryMargin: const EdgeInsets.all(160),
+          minScale: 0.12,
+          maxScale: 2.25,
+          scaleFactor: 560,
+          child: SizedBox(
+            width: boardSize.width,
+            height: boardSize.height,
+            child: Stack(
+              children: [
+                RepaintBoundary(
+                  key: mvpBoardStaticRepaintBoundaryKey,
+                  child: _StaticBoardLayer(
+                    board: widget.state.board,
+                    contentTranslations: widget.state.contentTranslations,
+                    selectedDestination: widget.selectedDestination,
+                    onSelectDestination: widget.onSelectDestination,
                   ),
-                  RepaintBoundary(
-                    key: mvpBoardTokensRepaintBoundaryKey,
-                    child: _TokenLayer(
-                      players: widget.state.players,
-                      monsters: widget.state.monsters,
-                      board: widget.state.board,
-                      selectedPlayerId: widget.selectedPlayerId,
-                      activePlayerId:
-                          widget.state.phase == GamePhase.playersTurn
-                          ? widget.state.activePlayerId
-                          : null,
-                      onSelectPlayer: widget.onSelectPlayer,
-                    ),
+                ),
+                RepaintBoundary(
+                  key: mvpBoardTokensRepaintBoundaryKey,
+                  child: _TokenLayer(
+                    players: widget.state.players,
+                    monsters: widget.state.monsters,
+                    board: widget.state.board,
+                    selectedPlayerId: widget.selectedPlayerId,
+                    activePlayerId: widget.state.phase == GamePhase.playersTurn
+                        ? widget.state.activePlayerId
+                        : null,
+                    onSelectPlayer: widget.onSelectPlayer,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     ),
   );
 }

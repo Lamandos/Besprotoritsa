@@ -37,7 +37,7 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
           'Открыть коридор ${tile.coord}',
           OpenCorridorCommand(tile.coord),
         ),
-    for (final stat in StatType.values)
+    for (final stat in _meaningfulSkillChecks(state, activePlayer))
       _NamedCommand('Проверка: ${_statLabel(stat)}', SkillCheckCommand(stat)),
     const _NamedCommand('Использовать терминал', UseTerminalCommand()),
     if (activePlayer != null) ...[
@@ -120,15 +120,86 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
   final closableCorridors = validCandidates
       .where((candidate) => candidate.command is CloseCorridorCommand)
       .toList(growable: false);
+  final moves = validCandidates
+      .where((candidate) => candidate.command is MoveCommand)
+      .toList(growable: false);
   return [
-    for (final candidate in validCandidates)
-      if (candidate.command is! CloseCorridorCommand) candidate,
+    ...moves,
     if (closableCorridors.isNotEmpty)
       _NamedCommand(
         'Закрыть коридор',
         closableCorridors.first.command,
         alternatives: closableCorridors,
       ),
+    for (final candidate in validCandidates)
+      if (candidate.command is! CloseCorridorCommand &&
+          candidate.command is! MoveCommand)
+        candidate,
+  ];
+}
+
+List<StatType> _meaningfulSkillChecks(
+  GameState state,
+  PlayerState? activePlayer,
+) {
+  if (activePlayer == null) return const [];
+  final tile = state.tileAt(activePlayer.coord);
+  final locationId = tile?.locationId;
+  if (tile == null) return const [];
+
+  final relevant = <StatType>{};
+  for (final questId in state.quests.storyQuestIds) {
+    if (state.quests.statusOf(questId) != QuestStatus.active) continue;
+    final definition = state.questDefinitions[questId];
+    final conditions = definition?['conditions'];
+    if (conditions is! List) continue;
+    for (final rawCondition in conditions) {
+      if (rawCondition is! Map) continue;
+      final condition = Map<String, Object?>.from(rawCondition);
+      final conditionId = condition['id'];
+      final progress = conditionId is String
+          ? (state.quests.conditionProgress[questId]?[conditionId] ?? 0)
+          : 0;
+      final target = condition['targetValue'];
+      if (progress >= (target is int ? target : 1)) continue;
+
+      final type = condition['type'];
+      if (type == 'skill_check' || type == 'skillCheck' || type == 'skill') {
+        if (locationId == null || condition['locationId'] != locationId) {
+          continue;
+        }
+        final skill = condition['skill'];
+        if (skill is String) {
+          for (final stat in StatType.values) {
+            if (stat.name == skill) relevant.add(stat);
+          }
+        }
+      } else if (type == 'counter' || type == 'count') {
+        if (condition['metric'] == 'agility_check_in_ventilation' &&
+            tile.ventColor != VentColor.none) {
+          relevant.add(StatType.agility);
+        }
+      }
+    }
+  }
+
+  // The legacy MVP quest stores condition names instead of structured
+  // condition objects, so preserve its single supported science check.
+  final mvpQuest = state.questDefinitions['chapter-1-awakening'];
+  final mvpConditions = mvpQuest?['conditions'];
+  final hasLegacyMvpScienceCheck =
+      mvpQuest == null ||
+      (mvpConditions is List && mvpConditions.contains('science-check'));
+  if (locationId == 'crew-mess' &&
+      state.quests.storyQuestIds.contains('chapter-1-awakening') &&
+      state.quests.statusOf('chapter-1-awakening') == QuestStatus.active &&
+      hasLegacyMvpScienceCheck) {
+    relevant.add(StatType.science);
+  }
+
+  return [
+    for (final stat in StatType.values)
+      if (relevant.contains(stat)) stat,
   ];
 }
 
