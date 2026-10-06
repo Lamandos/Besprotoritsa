@@ -235,6 +235,46 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Начать полную партию?'), findsOneWidget);
   });
+
+  testWidgets(
+    'maximized roster keeps character cards within a readable width',
+    (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1600, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RosterSelectionScreen(storage: InMemoryGameStorage()),
+        ),
+      );
+
+      final firstCard = find.byKey(const ValueKey<String>('hero-scientist'));
+      expect(tester.getSize(firstCard).width, lessThanOrEqualTo(520));
+    },
+  );
+
+  testWidgets('roster starting item opens its full card scan', (tester) async {
+    tester.view.physicalSize = const Size(1000, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: RosterSelectionScreen(storage: InMemoryGameStorage()),
+      ),
+    );
+
+    final itemLink = find.byKey(
+      const ValueKey<String>('starter-item-card-lucky-socks'),
+    );
+    expect(itemLink, findsOneWidget);
+    await tester.tap(itemLink);
+    await tester.pumpAndSettle();
+    expect(find.byType(Dialog), findsOneWidget);
+  });
 }
 
 String _tileSignature(HexTile tile) {

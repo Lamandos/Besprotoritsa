@@ -6,6 +6,143 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('monster placement decision shows a board projection', (
+    tester,
+  ) async {
+    final source = createFullGameState(
+      characterIds: const ['scientist', 'guard'],
+      seed: 41,
+    );
+    final hero = source.players.first;
+    final start = source.tileAt(hero.coord)!;
+    final targetTile = source.board.firstWhere((tile) {
+      if (hero.coord.distanceTo(tile.coord) != 1) return false;
+      final edge = hero.coord.edgeToward(tile.coord);
+      return start.hasExit(edge);
+    });
+    final target = targetTile.coord;
+    final board = source.board
+        .map(
+          (tile) => tile.id != targetTile.id
+              ? tile
+              : HexTile(
+                  id: tile.id,
+                  coord: tile.coord,
+                  type: tile.type,
+                  opened: true,
+                  exits: tile.exits,
+                  locationId: tile.locationId,
+                  hasTerminal: tile.hasTerminal,
+                  ventColor: tile.ventColor,
+                  isBlocked: tile.isBlocked,
+                  monsterAccessBlocked: tile.monsterAccessBlocked,
+                ),
+        )
+        .toList(growable: false);
+    final monsterId = source.decks['monsters']!.drawPile.first;
+    final monsterDefinition = source.monsterDefinitions[monsterId]!;
+    final monster = MonsterInstance(
+      instanceId: 'monster-target',
+      monsterId: monsterId,
+      coord: hero.coord,
+      damage: 0,
+      health: monsterDefinition['health']! as int,
+      defense: monsterDefinition['defense']! as int,
+      attack: monsterDefinition['attack']! as int,
+      movement: monsterDefinition['movement']! as int,
+    );
+    final initialState = GameState(
+      seed: source.seed,
+      contentSetId: source.contentSetId,
+      contentSetVersion: source.contentSetVersion,
+      difficulty: source.difficulty,
+      round: source.round,
+      phase: source.phase,
+      activePlayerId: source.activePlayerId,
+      actionsLeft: source.actionsLeft,
+      board: board,
+      players: source.players,
+      monsters: [monster],
+      decks: source.decks,
+      quests: source.quests,
+      cardDefinitions: source.cardDefinitions,
+      eventDefinitions: source.eventDefinitions,
+      questDefinitions: source.questDefinitions,
+      taskDefinitions: source.taskDefinitions,
+      monsterDefinitions: source.monsterDefinitions,
+      contentTranslations: source.contentTranslations,
+      pendingDecision: AwaitingEventOption(
+        options: ['place:${monster.instanceId}:${target.q}:${target.r}'],
+        playerId: source.activePlayerId,
+        eventId: source.eventDefinitions.keys.first,
+      ),
+    );
+    final queue = EventQueue(eventDuration: Duration.zero);
+    final container = ProviderContainer(
+      overrides: [
+        eventQueueProvider.overrideWithValue(queue),
+        gameControllerProvider.overrideWith(
+          () => GameController(initialState: initialState),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(queue.dispose);
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: MvpGameScreen()),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+      find.byKey(const ValueKey<String>('event-target-board-map')),
+      findsOneWidget,
+    );
+    final boardProjection = find.byKey(
+      const ValueKey<String>('event-target-board-widget'),
+    );
+    expect(
+      find.descendant(
+        of: boardProjection,
+        matching: find.byKey(
+          ValueKey<String>(
+            'hero-${hero.id}-at-${hero.coord.q}-${hero.coord.r}',
+          ),
+        ),
+      ),
+      findsOneWidget,
+    );
+    final monsterNameKey = monsterDefinition['nameKey']! as String;
+    final monsterName = source.contentTranslations[monsterNameKey]!;
+    expect(
+      find.descendant(
+        of: boardProjection,
+        matching: find.byTooltip('Карточка монстра: $monsterName'),
+      ),
+      findsOneWidget,
+    );
+    final targetTileInDialog = find.descendant(
+      of: boardProjection,
+      matching: find.byKey(
+        ValueKey<String>('hex-${target.q}-${target.r}'),
+      ),
+    );
+    expect(targetTileInDialog, findsOneWidget);
+    await tester.tap(targetTileInDialog);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final resolved = container.read(gameControllerProvider);
+    expect(resolved.pendingDecision, isNull);
+    expect(resolved.monsters.single.coord, target);
+  });
+
   testWidgets('shared journal does not reveal personal task cards', (
     tester,
   ) async {

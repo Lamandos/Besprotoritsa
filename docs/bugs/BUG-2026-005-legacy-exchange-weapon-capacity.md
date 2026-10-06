@@ -1,7 +1,7 @@
 ---
 id: BUG-2026-005
 title: Legacy exchange fields bypass weapon capacity after vest removal
-status: reported
+status: fixed
 severity: high
 area: rules
 reported: 2026-10-03
@@ -55,7 +55,7 @@ reported: 2026-10-03
 - Команда запуска: `cd packages/besprotoritsa_rules && dart test test/trade_chest_decks_test.dart`.
 - **До исправления (красный):** `dart test test/trade_chest_decks_test.dart`.
 - Результат и причина падения: `legacy exchange cannot leave excess equipped weapons` получил `null` вместо `InventoryCommandRejected`; обмен снял жилет после уже пройденной проверки.
-- **После исправления (зелёный):** `dart test test/trade_chest_decks_test.dart` — все тесты прошли.
+- **После исправления (зелёный):** `dart test test/trade_chest_decks_test.dart` — повторно выполнено 2026-10-06 вместе с `characters_inventory_test.dart`; 20 тестов прошли.
 - Результат связанных проверок: `./tool/run_checks.sh` завершился с кодом 0; analyzer, content validation и все rule/app tests прошли.
 
 ## Исправление

@@ -1,7 +1,7 @@
 ---
 id: BUG-2026-006
 title: Quest artwork mapping ignores the blank cell before quests 28 and 29
-status: reported
+status: fixed
 severity: high
 area: data
 reported: 2026-10-03
@@ -55,7 +55,7 @@ reported: 2026-10-03
 - Команда запуска: `python3 -m unittest tool.test_extract_card_art`.
 - **До исправления (красный):** `python3 -m unittest tool.test_extract_card_art`.
 - Результат и причина падения: оба subtest провалились при сравнении с ячейками источника: среднее pixel difference составило 51.02 для задания 28 и 34.46 для задания 29 (порог 8).
-- **После исправления (зелёный):** `python3 -m unittest tool.test_extract_card_art` — прошёл; среднее расхождение обоих артов с соответствующими ячейками PDF ниже порога.
+- **После исправления (зелёный):** `python3 -m unittest tool.test_extract_card_art` — повторно выполнено 2026-10-06; тест прошёл, среднее расхождение обоих артов с соответствующими ячейками PDF ниже порога.
 - Результат связанных проверок: `./tool/run_checks.sh` завершился с кодом 0; analyzer, content validation и все rule/app tests прошли.
 
 ## Исправление

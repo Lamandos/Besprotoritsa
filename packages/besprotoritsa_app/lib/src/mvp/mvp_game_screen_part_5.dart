@@ -58,6 +58,13 @@ class _PendingDecisionModal extends ConsumerWidget {
     final eventDescription = eventId == null
         ? null
         : _runtimeEventText(state, eventId, 'descKey');
+    final coordinateOptions = switch (decision) {
+      AwaitingEventOption(:final options) => _eventCoordinateOptions(
+        state,
+        options,
+      ),
+      _ => const <HexCoord, String>{},
+    };
     final eventTargetPlayerId = switch (decision) {
       AwaitingEventOption(:final playerId) => playerId,
       _ => null,
@@ -114,39 +121,80 @@ class _PendingDecisionModal extends ConsumerWidget {
             content: eventId == null
                 ? Text(_decisionPrompt(decision, strings))
                 : SingleChildScrollView(
-                    child: GameCardSurface(
-                      material: GameCardMaterial.event,
-                      overlayColor: const Color(0xD91B1510),
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            eventDescription ??
-                                _decisionPrompt(decision, strings),
-                            style: const TextStyle(
-                              color: Color(0xFFFFF0D1),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              height: 1.4,
-                            ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (coordinateOptions.isNotEmpty) ...[
+                          const Text(
+                            'Выберите подсвеченное поле на карте',
+                            textAlign: TextAlign.center,
                           ),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton.icon(
-                              onPressed: () => showGameCardScan(
-                                context,
-                                cardId: eventId,
-                                title: eventTitle ?? eventId,
-                                kind: GameCardArtworkKind.event,
+                          SizedBox(
+                            key: const ValueKey<String>(
+                              'event-target-board-map',
+                            ),
+                            height: 200,
+                            width: 500,
+                            child: HexBoardWidget(
+                              key: const ValueKey<String>(
+                                'event-target-board-widget',
                               ),
-                              icon: const Icon(Icons.open_in_full, size: 16),
-                              label: const Text('Вся карта'),
+                              state: state,
+                              selectableDestinations: coordinateOptions.keys
+                                  .toSet(),
+                              onSelectDestination: (coord) {
+                                final option = coordinateOptions[coord];
+                                if (option == null) return;
+                                ref
+                                    .read(gameControllerProvider.notifier)
+                                    .dispatch(
+                                      ResolvePendingDecisionCommand(
+                                        EventOptionChoice(option),
+                                      ),
+                                    );
+                              },
                             ),
                           ),
+                          const SizedBox(height: 8),
                         ],
-                      ),
+                        GameCardSurface(
+                          material: GameCardMaterial.event,
+                          overlayColor: const Color(0xD91B1510),
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                eventDescription ??
+                                    _decisionPrompt(decision, strings),
+                                style: const TextStyle(
+                                  color: Color(0xFFFFF0D1),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.4,
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: () => showGameCardScan(
+                                    context,
+                                    cardId: eventId,
+                                    title: eventTitle ?? eventId,
+                                    kind: GameCardArtworkKind.event,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.open_in_full,
+                                    size: 16,
+                                  ),
+                                  label: const Text('Вся карта'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
             actions: _decisionActions(ref, decision, strings, state),
@@ -205,14 +253,15 @@ List<Widget> _decisionActions(
   ],
   AwaitingEventOption(:final options) => [
     for (final option in options)
-      FilledButton(
-        onPressed: () => ref
-            .read(gameControllerProvider.notifier)
-            .dispatch(
-              ResolvePendingDecisionCommand(EventOptionChoice(option)),
-            ),
-        child: Text(_eventOptionLabel(state, decision.eventId, option)),
-      ),
+      if (!_eventCoordinateOptions(state, options).containsValue(option))
+        FilledButton(
+          onPressed: () => ref
+              .read(gameControllerProvider.notifier)
+              .dispatch(
+                ResolvePendingDecisionCommand(EventOptionChoice(option)),
+              ),
+          child: Text(_eventOptionLabel(state, decision.eventId, option)),
+        ),
   ],
   AwaitingTerminalPick(:final offeredCards) => [
     for (final cardId in offeredCards)
@@ -248,3 +297,26 @@ List<Widget> _decisionActions(
   ],
   AwaitingOtherPlayerDecision() => const [],
 };
+
+Map<HexCoord, String> _eventCoordinateOptions(
+  GameState state,
+  Iterable<String> options,
+) => {
+  for (final option in options)
+    if (_eventOptionCoord(option) case final coord?
+        when state.tileAt(coord) != null)
+      coord: option,
+};
+
+HexCoord? _eventOptionCoord(String option) {
+  final parts = option.split(':');
+  final indexes = switch ((parts.first, parts.length)) {
+    ('sector' || 'move' || 'reveal', 3) => (1, 2),
+    ('place' || 'move_spawn', 4) => (2, 3),
+    _ => null,
+  };
+  if (indexes == null) return null;
+  final q = int.tryParse(parts[indexes.$1]);
+  final r = int.tryParse(parts[indexes.$2]);
+  return q == null || r == null ? null : HexCoord(q, r);
+}

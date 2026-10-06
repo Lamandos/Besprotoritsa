@@ -3,7 +3,7 @@
 
 import 'dart:math';
 
-import 'package:besprotoritsa_app/src/cards/game_card_surface.dart';
+import 'package:besprotoritsa_app/src/cards/game_card_artwork.dart';
 import 'package:besprotoritsa_app/src/game/full_game_state.dart';
 import 'package:besprotoritsa_app/src/l10n/app_strings.dart';
 import 'package:besprotoritsa_app/src/menu/character_portrait.dart';
@@ -282,32 +282,37 @@ class _RosterList extends StatelessWidget {
   final List<_HeroOption> heroes;
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      const spacing = 8.0;
-      final cardWidth = (constraints.maxWidth - spacing) / 2;
-      return SingleChildScrollView(
-        key: const ValueKey<String>('roster-hero-grid'),
-        child: Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: [
-            for (final hero in heroes)
-              SizedBox(
-                width: cardWidth,
-                height: 390,
-                child: _HeroCard(
-                  key: ValueKey<String>('hero-${hero.id}'),
-                  hero: hero,
-                  selected: selected.contains(hero.id),
-                  onTap: () => onChanged(hero.id),
-                  onReadEntry: () => _showCharacterEntry(context, hero),
-                ),
-              ),
-          ],
-        ),
-      );
-    },
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 1040),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const spacing = 8.0;
+          final cardWidth = (constraints.maxWidth - spacing) / 2;
+          return SingleChildScrollView(
+            key: const ValueKey<String>('roster-hero-grid'),
+            child: Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: [
+                for (final hero in heroes)
+                  SizedBox(
+                    width: cardWidth,
+                    height: 390,
+                    child: _HeroCard(
+                      key: ValueKey<String>('hero-${hero.id}'),
+                      hero: hero,
+                      selected: selected.contains(hero.id),
+                      onTap: () => onChanged(hero.id),
+                      onReadEntry: () => _showCharacterEntry(context, hero),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    ),
   );
 }
 
@@ -476,24 +481,44 @@ class _HeroCard extends StatelessWidget {
                   ),
                 ),
               const Divider(height: 10, color: Color(0xFF765A3C)),
-              GameCardSurface(
-                material: GameCardMaterial.item,
-                borderColor: const Color(0xFF7F7769),
-                borderWidth: 1,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 5,
-                ),
+              Align(
+                alignment: Alignment.centerLeft,
                 child: Text(
-                  '${strings.startingEquipment}: '
-                  '${hero.startingItems.map(fullRuntimeItemName).join(', ')}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  strings.startingEquipment,
                   style: const TextStyle(
-                    color: Color(0xFF332D26),
+                    color: Color(0xFFD4C6AB),
                     fontSize: 11,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+              ),
+              Wrap(
+                spacing: 2,
+                children: [
+                  for (final itemId in hero.startingItems)
+                    TextButton.icon(
+                      key: ValueKey<String>('starter-item-card-$itemId'),
+                      onPressed: () => showGameCardScan(
+                        context,
+                        cardId: itemId,
+                        title: fullRuntimeItemName(itemId),
+                        kind: GameCardArtworkKind.item,
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        minimumSize: const Size(0, 32),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: BesprotoritsaTheme.bone,
+                      ),
+                      icon: const Icon(Icons.open_in_new, size: 13),
+                      label: Text(
+                        fullRuntimeItemName(itemId),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                ],
               ),
               const Spacer(),
               Text(

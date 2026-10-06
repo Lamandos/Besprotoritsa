@@ -48,12 +48,14 @@
     }
     #offline-status[hidden] { display: none; }
     #offline-install { margin-left: 10px; }
+    #offline-dismiss { margin-left: 8px; }
   </style>
 </head>
 <body>
   <div id="offline-status" role="status" aria-live="polite" hidden>
     <span id="offline-status-text"></span>
     <button id="offline-install" type="button" hidden>Установить</button>
+    <button id="offline-dismiss" type="button" aria-label="Закрыть" title="Закрыть">×</button>
   </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
@@ -69,12 +71,15 @@
       const status = document.getElementById('offline-status');
       const label = document.getElementById('offline-status-text');
       const install = document.getElementById('offline-install');
+      const dismiss = document.getElementById('offline-dismiss');
       let installPrompt;
       let offlineReady = false;
+      let dismissed = false;
       let installed = window.matchMedia('(display-mode: standalone)').matches ||
         window.navigator.standalone === true;
 
       const show = () => {
+        if (dismissed) return;
         status.hidden = false;
         label.textContent = offlineReady
           ? (installed ? 'Приложение установлено и готово к офлайн-игре.' : 'Офлайн-запуск готов. Приложение можно установить для быстрого запуска.')
@@ -94,6 +99,10 @@
         await installPrompt.userChoice;
         installPrompt = undefined;
         show();
+      });
+      dismiss.addEventListener('click', () => {
+        dismissed = true;
+        status.hidden = true;
       });
       window.addEventListener('appinstalled', () => {
         installed = true;

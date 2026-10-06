@@ -4,3 +4,4 @@ build/
 tmp/
 materials/
 **/build/
+**/node_modules/
