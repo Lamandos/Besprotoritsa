@@ -1025,10 +1025,15 @@ class _MoveConfirmButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final target = selectedDestination;
     final targetTile = target == null ? null : state.tileAt(target);
-    final isReveal = targetTile != null && !targetTile.opened;
+    final isOpeningBlockedCorridor =
+        targetTile?.type == HexTileType.corridor && targetTile!.isBlocked;
+    final isReveal =
+        targetTile != null && (!targetTile.opened || isOpeningBlockedCorridor);
     final selectedIsActive = selectedPlayerId == state.activePlayerId;
     final command = target == null
         ? null
+        : isOpeningBlockedCorridor
+        ? OpenCorridorCommand(target)
         : isReveal
         ? RevealTileCommand(target)
         : MoveCommand(target);

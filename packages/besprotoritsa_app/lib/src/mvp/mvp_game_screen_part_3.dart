@@ -132,13 +132,17 @@ class _HexTileView extends StatelessWidget {
         key: ValueKey<String>('hex-${tile.coord.q}-${tile.coord.r}'),
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            isKnown
-                ? _fieldTileArt(tile)
-                : isCorridor
-                ? 'assets/images/field-tiles/corridor-back.webp'
-                : 'assets/images/field-tiles/tile-back.webp',
-            fit: BoxFit.cover,
+          Transform.scale(
+            scaleX: isCorridor ? 1.2 : 1,
+            alignment: Alignment.centerRight,
+            child: Image.asset(
+              isKnown
+                  ? _fieldTileArt(tile)
+                  : isCorridor
+                  ? 'assets/images/field-tiles/corridor-back.webp'
+                  : 'assets/images/field-tiles/tile-back.webp',
+              fit: isCorridor ? BoxFit.fill : BoxFit.cover,
+            ),
           ),
           if (isKnown) ...[
             const DecoratedBox(
@@ -480,6 +484,15 @@ void _showMonsterCard(
     0,
     monster.health,
   );
+  final activePlayer = state.players
+      .where((player) => player.id == state.activePlayerId)
+      .firstOrNull;
+  final mayAttack =
+      activePlayer?.coord == monster.coord &&
+      validate(state, AttackCommand(monster.instanceId)) == null;
+  final combatDice = activePlayer == null
+      ? 0
+      : _heroCombatDiceCount(state, activePlayer);
   showDialog<void>(
     context: context,
     builder: (dialogContext) => AlertDialog(
@@ -526,6 +539,8 @@ void _showMonsterCard(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
+                      if (activePlayer != null)
+                        _monsterStat('Сила боя', '$combatDice'),
                       _monsterStat(
                         'Здоровье',
                         '$currentHealth/${monster.health}',
@@ -542,12 +557,74 @@ void _showMonsterCard(
         ),
       ),
       actions: [
+        if (activePlayer != null)
+          Consumer(
+            builder: (context, ref, _) => TextButton(
+              onPressed: mayAttack
+                  ? () {
+                      final beforeMonster = ref
+                          .read(gameControllerProvider)
+                          .monsters
+                          .where(
+                            (entry) => entry.instanceId == monster.instanceId,
+                          )
+                          .firstOrNull;
+                      if (beforeMonster == null ||
+                          !ref
+                              .read(gameControllerProvider.notifier)
+                              .dispatch(AttackCommand(monster.instanceId))) {
+                        return;
+                      }
+                      final afterState = ref.read(gameControllerProvider);
+                      final afterMonster = afterState.monsters
+                          .where(
+                            (entry) => entry.instanceId == monster.instanceId,
+                          )
+                          .firstOrNull;
+                      final damage = afterMonster == null
+                          ? beforeMonster.health - beforeMonster.damage
+                          : afterMonster.damage - beforeMonster.damage;
+                      Navigator.of(dialogContext).pop();
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              afterMonster == null
+                                  ? 'Монстр уничтожен.'
+                                  : afterState.pendingDecision != null
+                                  ? 'Выберите результат переброса.'
+                                  : damage > 0
+                                  ? 'Атака нанесла $damage урона.'
+                                  : 'Атака не нанесла урона.',
+                            ),
+                          ),
+                        );
+                    }
+                  : null,
+              child: const Text('Атаковать'),
+            ),
+          ),
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
           child: const Text('Закрыть'),
         ),
       ],
     ),
+  );
+}
+
+int _heroCombatDiceCount(GameState state, PlayerState player) {
+  final strengthModifier = player.conditions.fold<int>(
+    0,
+    (total, conditionId) =>
+        total +
+        (state.conditionCards[conditionId]?.statModifiers[StatType.strength] ??
+            0),
+  );
+  return math.max(
+    1,
+    player.stats.combatStrength + strengthModifier + player.weaponModifier,
   );
 }
 
@@ -575,7 +652,9 @@ class _HexRimPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final path = Path();
-    if (rectangular || size.width > size.height) {
+    if (rectangular) {
+      path.addRect(Rect.fromLTWH(1, 1, size.width - 2, size.height - 2));
+    } else if (size.width > size.height) {
       path.addRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(1, 1, size.width - 2, size.height - 2),
