@@ -12,12 +12,14 @@ class _StaticBoardLayer extends StatelessWidget {
     required this.board,
     required this.contentTranslations,
     required this.selectedDestination,
+    required this.selectableDestinations,
     required this.onSelectDestination,
   });
 
   final List<HexTile> board;
   final Map<String, String> contentTranslations;
   final HexCoord? selectedDestination;
+  final Set<HexCoord> selectableDestinations;
   final ValueChanged<HexCoord>? onSelectDestination;
 
   @override
@@ -40,8 +42,9 @@ class _StaticBoardLayer extends StatelessWidget {
     contentTranslations: contentTranslations,
     position: _layoutPosition(tile.coord, board),
     selected:
-        selectedDestination?.q == tile.coord.q &&
-        selectedDestination?.r == tile.coord.r,
+        (selectedDestination?.q == tile.coord.q &&
+            selectedDestination?.r == tile.coord.r) ||
+        selectableDestinations.contains(tile.coord),
     onTap: onSelectDestination == null
         ? null
         : () => onSelectDestination!(tile.coord),

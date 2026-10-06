@@ -1,7 +1,7 @@
 ---
 id: BUG-2026-003
 title: Multiplayer blocks chest and exchange transfers before server validation
-status: reported
+status: fixed
 severity: high
 area: app
 reported: 2026-10-03
@@ -51,15 +51,15 @@ The multiplayer projection omits card definitions. The shared inventory dialog v
 
 ## Регрессионный тест
 
-- Тестовый файл и имя теста: `multiplayer_flow_test.dart`, multiplayer command validation policy.
-- Команда запуска: `cd packages/besprotoritsa_app && flutter test test/multiplayer_flow_test.dart`
-- **До исправления (красный):** `flutter test test/multiplayer_flow_test.dart`.
-- Результат и причина падения: тест не компилировался, так как у общего контроллера отсутствовала политика `validatesCommandsLocally`; в коде UI использовалась безусловная локальная `validate` по неполной проекции.
-- **После исправления (зелёный):** `flutter test test/multiplayer_flow_test.dart` — все тесты прошли, включая политику server-authoritative проверки.
+- Тестовый файл и имя теста: `packages/besprotoritsa_app/test/multiplayer_transfer_validation_widget_test.dart`, тесты передачи через сундук и обмена.
+- Команда запуска: `cd packages/besprotoritsa_app && flutter test test/multiplayer_transfer_validation_widget_test.dart`
+- **До исправления (красный):** та же команда на родительской ревизии `1b59595` (`f23ae80^`) в отдельном временном worktree.
+- Результат и причина падения: оба assertion завершились `Expected: not null; Actual: null` — кнопки подтверждения были отключены локальной проверкой неполной проекции.
+- **После исправления (зелёный):** та же команда на текущей ревизии — 2 теста прошли.
 - Результат связанных проверок: `./tool/run_checks.sh` — завершился с кодом 0; formatter, analyzer, content validation и все rule/app tests прошли.
 
 ## Исправление
 
-- Изменённые файлы: `packages/besprotoritsa_app/lib/src/game/game_controller.dart`, `multiplayer_game_controller.dart`, `mvp_game_screen_part_4.dart`, `test/multiplayer_flow_test.dart`.
+- Изменённые файлы: `packages/besprotoritsa_app/lib/src/game/game_controller.dart`, `multiplayer_game_controller.dart`, `mvp_game_screen_part_4.dart`, `test/multiplayer_flow_test.dart`, `test/multiplayer_transfer_validation_widget_test.dart`.
 - Краткое описание исправления: UI сохраняет локальную проверку в одиночной игре и отдаёт команду на серверную проверку в multiplayer.
 - Остаточные ограничения или связанные баги: сервер остаётся единственным источником принятия multiplayer-команды.

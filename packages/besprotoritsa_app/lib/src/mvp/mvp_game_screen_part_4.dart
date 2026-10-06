@@ -140,12 +140,13 @@ class _HeroRosterPanel extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
-                                    'СИЛ ${player.stats.strength}   '
-                                    'БОЙ ${player.stats.combatStrength}   '
-                                    'НАУКА ${player.stats.science}   '
-                                    'РЕМ ${player.stats.repair}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.clip,
+                                    'СИЛ ${player.stats.strength}  '
+                                    'НАУ ${player.stats.science}  '
+                                    'РЕМ ${player.stats.repair}  '
+                                    'ВЫН ${player.stats.endurance}  '
+                                    'ЛОВ ${player.stats.agility}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       color: Color(0xFFCDBA96),
                                       fontSize: 8,

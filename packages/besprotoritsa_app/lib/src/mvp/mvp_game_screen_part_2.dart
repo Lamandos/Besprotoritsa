@@ -339,6 +339,7 @@ class HexBoardWidget extends StatefulWidget {
     required this.state,
     this.selectedPlayerId,
     this.selectedDestination,
+    this.selectableDestinations = const <HexCoord>{},
     this.onSelectPlayer,
     this.onSelectDestination,
     super.key,
@@ -348,6 +349,7 @@ class HexBoardWidget extends StatefulWidget {
   final GameState state;
   final String? selectedPlayerId;
   final HexCoord? selectedDestination;
+  final Set<HexCoord> selectableDestinations;
   final ValueChanged<String>? onSelectPlayer;
   final ValueChanged<HexCoord>? onSelectDestination;
 
@@ -433,6 +435,7 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
                     board: widget.state.board,
                     contentTranslations: widget.state.contentTranslations,
                     selectedDestination: widget.selectedDestination,
+                    selectableDestinations: widget.selectableDestinations,
                     onSelectDestination: widget.onSelectDestination,
                   ),
                 ),

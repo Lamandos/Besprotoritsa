@@ -1,7 +1,7 @@
 ---
 id: BUG-2026-004
 title: Transferring a load-bearing vest can leave too many equipped weapons
-status: reported
+status: fixed
 severity: high
 area: rules
 reported: 2026-10-03
@@ -55,7 +55,7 @@ reported: 2026-10-03
 - Команда запуска: `cd packages/besprotoritsa_rules && dart test test/characters_inventory_test.dart`
 - **До исправления (красный):** `dart test test/trade_chest_decks_test.dart`.
 - Результат и причина падения: тест `transferring slot-granting armor requires removing excess weapons` получил `null` вместо `InventoryCommandRejected`; transfer был принят.
-- **После исправления (зелёный):** `dart test test/trade_chest_decks_test.dart test/characters_inventory_test.dart` — все тесты прошли; transfer жилета отклоняется, пакет жилет+оружие проходит.
+- **После исправления (зелёный):** `dart test test/characters_inventory_test.dart test/trade_chest_decks_test.dart` — повторно выполнено 2026-10-06; 20 тестов прошли, transfer жилета отклоняется, пакет жилет+оружие проходит.
 - Результат связанных проверок: `./tool/run_checks.sh` — завершился с кодом 0; formatter, analyzer, content validation и все rule/app tests прошли.
 
 ## Исправление
