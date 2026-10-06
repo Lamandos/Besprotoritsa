@@ -155,6 +155,8 @@ class _HexTileView extends StatelessWidget {
     final isCorridor = tile.type == HexTileType.corridor;
     const tileWidth = 168.0;
     const tileHeight = 194.0;
+    const corridorHeight = tileWidth * .58;
+    const corridorLength = corridorHeight * 4 / 3;
     final isKnown = tile.opened && !tile.isBlocked;
     final genericTitle = switch (tile.type) {
       HexTileType.start => 'АНАБИОЗ',
@@ -167,23 +169,19 @@ class _HexTileView extends StatelessWidget {
         ? genericTitle
         : contentTranslations['content.location.$locationId'] ?? genericTitle;
     final tileFace = SizedBox(
-      width: tileWidth,
-      height: isCorridor ? tileWidth * .58 : tileHeight,
+      width: isCorridor ? corridorLength : tileWidth,
+      height: isCorridor ? corridorHeight : tileHeight,
       child: Stack(
         key: ValueKey<String>('hex-${tile.coord.q}-${tile.coord.r}'),
         fit: StackFit.expand,
         children: [
-          Transform.scale(
-            scaleX: isCorridor ? 1.2 : 1,
-            alignment: Alignment.centerRight,
-            child: Image.asset(
-              isKnown
-                  ? _fieldTileArt(tile)
-                  : isCorridor
-                  ? 'assets/images/field-tiles/corridor-back.webp'
-                  : 'assets/images/field-tiles/tile-back.webp',
-              fit: isCorridor ? BoxFit.fill : BoxFit.cover,
-            ),
+          Image.asset(
+            isKnown
+                ? _fieldTileArt(tile)
+                : isCorridor
+                ? 'assets/images/field-tiles/corridor-back.webp'
+                : 'assets/images/field-tiles/tile-back.webp',
+            fit: BoxFit.cover,
           ),
           if (isKnown) ...[
             const DecoratedBox(
@@ -737,15 +735,23 @@ class _HexRimPainter extends CustomPainter {
 }
 
 class _MobileActionDock extends StatelessWidget {
-  const _MobileActionDock({required this.state, required this.onOpenLog});
+  const _MobileActionDock({
+    required this.state,
+    required this.onOpenLog,
+    required this.selectedDestination,
+  });
 
   final GameState state;
   final VoidCallback onOpenLog;
+  final HexCoord? selectedDestination;
 
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
-    final commands = _availableCommands(state, strings);
+    final commands = [
+      ..._availableTileCommands(state, strings, selectedDestination),
+      ..._availableCommands(state, strings),
+    ];
     return SafeArea(
       top: false,
       child: Padding(

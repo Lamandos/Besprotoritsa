@@ -63,19 +63,16 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 300));
+    expect(find.textContaining('ОТКРЫТЬ КОРИДОР'), findsNothing);
     await tester.tap(
       find.byKey(
         ValueKey<String>('hex-${corridor.coord.q}-${corridor.coord.r}'),
       ),
     );
     await tester.pump();
-    expect(
-      find.descendant(
-        of: find.byKey(mvpMoveConfirmButtonKey),
-        matching: find.textContaining('ОТКРЫТЬ КОРИДОР'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.textContaining('ОТКРЫТЬ КОРИДОР'), findsOneWidget);
+    expect(find.textContaining('ДВИЖЕНИЕ'), findsNothing);
+    expect(find.textContaining('ЗАКРЫТЬ КОРИДОР'), findsNothing);
   });
 
   testWidgets('corridor art fills its rectangular tile without rounded frame', (
@@ -130,17 +127,239 @@ void main() {
           (widget.image as AssetImage).assetName.endsWith('/corridor.webp'),
     );
     expect(corridorArt, findsWidgets);
-    expect(tester.widget<Image>(corridorArt.first).fit, BoxFit.fill);
-    final expandedArt = find.ancestor(
-      of: corridorArt.first,
-      matching: find.byWidgetPredicate(
-        (widget) =>
-            widget is Transform &&
-            (widget.transform.storage[0] - 1.2).abs() < 0.001,
-      ),
-    );
-    expect(expandedArt, findsOneWidget);
+    expect(tester.widget<Image>(corridorArt.first).fit, BoxFit.cover);
+    final size = tester.getSize(corridorArt.first);
+    expect(size.width / size.height, closeTo(4 / 3, .01));
   });
+
+  testWidgets(
+    'field action buttons appear only for a selected target and valid actions',
+    (tester) async {
+      final source = createFullGameState(
+        characterIds: const ['scientist', 'guard'],
+        seed: 15,
+      );
+      final hero = source.players.first;
+      final corridor = source.board.firstWhere((tile) {
+        if (tile.type != HexTileType.corridor ||
+            hero.coord.distanceTo(tile.coord) != 1) {
+          return false;
+        }
+        return source
+            .tileAt(hero.coord)!
+            .hasExit(hero.coord.edgeToward(tile.coord));
+      });
+      final state = _copyState(
+        source,
+        board: [
+          for (final tile in source.board)
+            if (tile.id == corridor.id)
+              HexTile(
+                id: tile.id,
+                coord: tile.coord,
+                type: tile.type,
+                opened: true,
+                exits: tile.exits,
+                locationId: tile.locationId,
+                hasTerminal: tile.hasTerminal,
+                ventColor: tile.ventColor,
+                isBlocked: true,
+                monsterAccessBlocked: tile.monsterAccessBlocked,
+              )
+            else
+              tile,
+        ],
+      );
+      final queue = EventQueue(eventDuration: Duration.zero);
+      final container = ProviderContainer(
+        overrides: [
+          eventQueueProvider.overrideWithValue(queue),
+          gameControllerProvider.overrideWith(
+            () => GameController(initialState: state),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      addTearDown(queue.dispose);
+      _setWideViewport(tester);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: MvpGameScreen()),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.textContaining('ОТКРЫТЬ КОРИДОР'), findsNothing);
+      expect(find.textContaining('ЗАКРЫТЬ КОРИДОР'), findsNothing);
+      expect(find.textContaining('ДВИЖЕНИЕ'), findsNothing);
+
+      await tester.tap(
+        find.byKey(
+          ValueKey<String>('hex-${corridor.coord.q}-${corridor.coord.r}'),
+        ),
+      );
+      await tester.pump();
+      expect(find.textContaining('ОТКРЫТЬ КОРИДОР'), findsOneWidget);
+      expect(find.textContaining('ЗАКРЫТЬ КОРИДОР'), findsNothing);
+      expect(find.textContaining('ДВИЖЕНИЕ'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'selected open corridor exposes only its valid move and close actions',
+    (tester) async {
+      final source = createFullGameState(
+        characterIds: const ['scientist', 'guard'],
+        seed: 16,
+      );
+      final hero = source.players.first;
+      final corridor = source.board.firstWhere((tile) {
+        if (tile.type != HexTileType.corridor ||
+            hero.coord.distanceTo(tile.coord) != 1) {
+          return false;
+        }
+        return source
+            .tileAt(hero.coord)!
+            .hasExit(hero.coord.edgeToward(tile.coord));
+      });
+      final state = _copyState(
+        source,
+        board: [
+          for (final tile in source.board)
+            if (tile.id == corridor.id)
+              HexTile(
+                id: tile.id,
+                coord: tile.coord,
+                type: tile.type,
+                opened: true,
+                exits: tile.exits,
+                locationId: tile.locationId,
+                hasTerminal: tile.hasTerminal,
+                ventColor: tile.ventColor,
+                monsterAccessBlocked: tile.monsterAccessBlocked,
+              )
+            else
+              tile,
+        ],
+      );
+      final canMove = validate(state, MoveCommand(corridor.coord)) == null;
+      final canClose =
+          validate(state, CloseCorridorCommand(corridor.coord)) == null;
+      expect(canMove || canClose, isTrue);
+
+      final queue = EventQueue(eventDuration: Duration.zero);
+      final container = ProviderContainer(
+        overrides: [
+          eventQueueProvider.overrideWithValue(queue),
+          gameControllerProvider.overrideWith(
+            () => GameController(initialState: state),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      addTearDown(queue.dispose);
+      _setWideViewport(tester);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: MvpGameScreen()),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.textContaining('ДВИЖЕНИЕ'), findsNothing);
+      expect(find.textContaining('ЗАКРЫТЬ КОРИДОР'), findsNothing);
+
+      await tester.tap(
+        find.byKey(
+          ValueKey<String>('hex-${corridor.coord.q}-${corridor.coord.r}'),
+        ),
+      );
+      await tester.pump();
+      expect(
+        find.textContaining('ДВИЖЕНИЕ'),
+        canMove ? findsOneWidget : findsNothing,
+      );
+      expect(
+        find.textContaining('ЗАКРЫТЬ КОРИДОР'),
+        canClose ? findsOneWidget : findsNothing,
+      );
+      expect(find.textContaining('ОТКРЫТЬ КОРИДОР'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'compact action dock also waits for a selected corridor',
+    (tester) async {
+      final source = createFullGameState(
+        characterIds: const ['scientist', 'guard'],
+        seed: 17,
+      );
+      final hero = source.players.first;
+      final corridor = source.board.firstWhere((tile) {
+        if (tile.type != HexTileType.corridor ||
+            hero.coord.distanceTo(tile.coord) != 1) {
+          return false;
+        }
+        return source
+            .tileAt(hero.coord)!
+            .hasExit(hero.coord.edgeToward(tile.coord));
+      });
+      final state = _copyState(
+        source,
+        board: [
+          for (final tile in source.board)
+            if (tile.id == corridor.id)
+              HexTile(
+                id: tile.id,
+                coord: tile.coord,
+                type: tile.type,
+                opened: true,
+                exits: tile.exits,
+                locationId: tile.locationId,
+                hasTerminal: tile.hasTerminal,
+                ventColor: tile.ventColor,
+                isBlocked: true,
+                monsterAccessBlocked: tile.monsterAccessBlocked,
+              )
+            else
+              tile,
+        ],
+      );
+      final queue = EventQueue(eventDuration: Duration.zero);
+      final container = ProviderContainer(
+        overrides: [
+          eventQueueProvider.overrideWithValue(queue),
+          gameControllerProvider.overrideWith(
+            () => GameController(initialState: state),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      addTearDown(queue.dispose);
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: MvpGameScreen()),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.textContaining('Открыть коридор'), findsNothing);
+      await tester.tap(
+        find.byKey(
+          ValueKey<String>('hex-${corridor.coord.q}-${corridor.coord.r}'),
+        ),
+      );
+      await tester.pump();
+      expect(find.textContaining('Открыть коридор'), findsOneWidget);
+      expect(find.textContaining('Закрыть коридор'), findsNothing);
+    },
+  );
 
   testWidgets(
     'monster card shows active hero combat strength and attack action',

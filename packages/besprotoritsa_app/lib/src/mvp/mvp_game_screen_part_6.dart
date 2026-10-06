@@ -8,30 +8,6 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
       .where((player) => player.id == state.activePlayerId)
       .firstOrNull;
   final candidates = <_NamedCommand>[
-    for (final tile in state.board)
-      if (tile.opened)
-        _NamedCommand(
-          strings.moveCommand(tile.coord.q, tile.coord.r),
-          MoveCommand(tile.coord),
-        )
-      else
-        _NamedCommand(
-          'Открыть ${tile.type == HexTileType.corridor ? 'коридор' : 'отсек'} '
-          '${tile.coord}',
-          RevealTileCommand(tile.coord),
-        ),
-    for (final tile in state.board)
-      if (tile.type == HexTileType.corridor)
-        _NamedCommand(
-          'Закрыть коридор ${tile.coord}',
-          CloseCorridorCommand(tile.coord),
-        ),
-    for (final tile in state.board)
-      if (tile.type == HexTileType.corridor && tile.isBlocked)
-        _NamedCommand(
-          'Открыть коридор ${tile.coord}',
-          OpenCorridorCommand(tile.coord),
-        ),
     for (final stat in _meaningfulSkillChecks(state, activePlayer))
       _NamedCommand('Проверка: ${_statLabel(stat)}', SkillCheckCommand(stat)),
     const _NamedCommand('Использовать терминал', UseTerminalCommand()),
@@ -41,34 +17,41 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
     for (final candidate in candidates)
       if (validate(state, candidate.command) == null) candidate,
   ];
-  final closableCorridors = validCandidates
-      .where((candidate) => candidate.command is CloseCorridorCommand)
-      .toList(growable: false);
-  final openableCorridors = validCandidates
-      .where((candidate) => candidate.command is OpenCorridorCommand)
-      .toList(growable: false);
-  final moves = validCandidates
-      .where((candidate) => candidate.command is MoveCommand)
-      .toList(growable: false);
+  return validCandidates;
+}
+
+List<_NamedCommand> _availableTileCommands(
+  GameState state,
+  AppStrings strings,
+  HexCoord? target,
+) {
+  if (target == null || state.phase != GamePhase.playersTurn) {
+    return const [];
+  }
+  final tile = state.tileAt(target);
+  if (tile == null) return const [];
+
+  final candidates = <_NamedCommand>[
+    if (tile.opened && !tile.isBlocked)
+      _NamedCommand(
+        strings.moveCommand(target.q, target.r),
+        MoveCommand(target),
+      ),
+    if (!tile.opened)
+      _NamedCommand(
+        'Открыть '
+        '${tile.type == HexTileType.corridor ? 'коридор' : 'отсек'} '
+        '$target',
+        RevealTileCommand(target),
+      ),
+    if (tile.type == HexTileType.corridor && tile.opened && tile.isBlocked)
+      _NamedCommand('Открыть коридор $target', OpenCorridorCommand(target)),
+    if (tile.type == HexTileType.corridor && tile.opened && !tile.isBlocked)
+      _NamedCommand('Закрыть коридор $target', CloseCorridorCommand(target)),
+  ];
   return [
-    ...moves,
-    if (closableCorridors.isNotEmpty)
-      _NamedCommand(
-        'Закрыть коридор',
-        closableCorridors.first.command,
-        alternatives: closableCorridors,
-      ),
-    if (openableCorridors.isNotEmpty)
-      _NamedCommand(
-        'Открыть коридор',
-        openableCorridors.first.command,
-        alternatives: openableCorridors,
-      ),
-    for (final candidate in validCandidates)
-      if (candidate.command is! CloseCorridorCommand &&
-          candidate.command is! MoveCommand &&
-          candidate.command is! OpenCorridorCommand)
-        candidate,
+    for (final candidate in candidates)
+      if (validate(state, candidate.command) == null) candidate,
   ];
 }
 
@@ -147,15 +130,10 @@ String _statLabel(StatType stat) => switch (stat) {
 };
 
 class _NamedCommand {
-  const _NamedCommand(
-    this.label,
-    this.command, {
-    this.alternatives,
-  });
+  const _NamedCommand(this.label, this.command);
 
   final String label;
   final GameCommand command;
-  final List<_NamedCommand>? alternatives;
 }
 
 void _dispatchNamedCommand(
@@ -163,32 +141,7 @@ void _dispatchNamedCommand(
   WidgetRef ref,
   _NamedCommand namedCommand,
 ) {
-  final alternatives = namedCommand.alternatives;
-  if (alternatives == null) {
-    _dispatchWithFeedback(context, ref, namedCommand.command);
-    return;
-  }
-  showDialog<_NamedCommand>(
-    context: context,
-    builder: (dialogContext) => SimpleDialog(
-      title: Text(
-        namedCommand.command is OpenCorridorCommand
-            ? 'Выберите коридор для открытия'
-            : 'Выберите коридор для закрытия',
-      ),
-      children: [
-        for (final option in alternatives)
-          SimpleDialogOption(
-            onPressed: () => Navigator.of(dialogContext).pop(option),
-            child: Text(option.label),
-          ),
-      ],
-    ),
-  ).then((selected) {
-    if (selected != null && context.mounted) {
-      _dispatchWithFeedback(context, ref, selected.command);
-    }
-  });
+  _dispatchWithFeedback(context, ref, namedCommand.command);
 }
 
 Offset _layoutPosition(HexCoord coord, List<HexTile> board) {

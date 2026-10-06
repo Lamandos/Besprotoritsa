@@ -53,12 +53,12 @@ reported: 2026-10-06
 
 - Тестовый файл и имя теста: `packages/besprotoritsa_app/test/bug_2026_012_013_ui_test.dart` — `reclosed corridor selection offers opening action`.
 - Команда запуска: `cd packages/besprotoritsa_app && flutter test test/bug_2026_012_013_ui_test.dart --plain-name 'reclosed corridor selection offers opening action'`.
-- **До исправления (красный):** `red_verified`
-- Результат и причина падения: assertion не находит текст «ОТКРЫТЬ КОРИДОР» внутри кнопки подтверждения выбранной клетки; фактическая надпись кнопки — `ДВИЖЕНИЕ\n1 ОД`. Отдельные кнопки открытия коридора видны, но не решают выбор цели через карту.
-- **После исправления (зелёный):** `flutter test test/bug_2026_012_013_ui_test.dart` — все 3 регрессионных теста прошли.
-- Результат связанных проверок: `flutter test test/mvp_screen_test.dart` — все 3 существующих экранных теста прошли; `dart analyze lib/src/mvp/mvp_game_screen_part_3.dart lib/src/mvp/mvp_game_screen_part_6.dart lib/src/mvp/mvp_game_screen_part_7.dart test/bug_2026_012_013_ui_test.dart` — замечаний нет.
+- **До исправления (красный):** `red_verified`.
+- Результат и причина падения: assertion до выбора клетки находит глобальную кнопку «ОТКРЫТЬ КОРИДОР»; выбранный коридор не управляет единственным адресным действием.
+- **После исправления (зелёный):** `flutter test test/bug_2026_012_013_ui_test.dart` — все 6 тестов пройдены; для выбранного закрытого коридора видна только кнопка открытия.
+- Результат связанных проверок: `flutter test test/mvp_screen_test.dart test/responsive_layout_test.dart` — пройдены; `dart analyze` изменённых UI и тестовых файлов — замечаний нет.
 ## Исправление
 
-- Изменённые файлы: `packages/besprotoritsa_app/lib/src/mvp/mvp_game_screen_part_7.dart`, `packages/besprotoritsa_app/lib/src/mvp/mvp_game_screen_part_6.dart`, `packages/besprotoritsa_app/test/bug_2026_012_013_ui_test.dart`.
-- Краткое описание исправления: повторное открытие коридора отражается на кнопке выбранной клетки и коридоры группируются с выбором конкретных координат; атака перенесена в карту монстра с отображением боевого пула и результата; изображение коридора растягивается на прямоугольную область, а рамка рисуется с острыми углами.
-- Остаточные ограничения или связанные баги: скругление рамки подтверждено кодом, pixel/golden-тест для формы рамки отдельно не добавлялся.
+- Изменённые файлы: `packages/besprotoritsa_app/lib/src/mvp/mvp_game_screen_part_6.dart`, `packages/besprotoritsa_app/lib/src/mvp/mvp_game_screen_part_7.dart`, `packages/besprotoritsa_app/lib/src/mvp/mvp_game_screen_part_2.dart`, `packages/besprotoritsa_app/test/bug_2026_012_013_ui_test.dart`.
+- Краткое описание исправления: действие открытия теперь вычисляется для выбранной клетки, а повторное открытие закрытого коридора доступно тем же валидным действием.
+- Остаточные ограничения или связанные баги: нет данных.

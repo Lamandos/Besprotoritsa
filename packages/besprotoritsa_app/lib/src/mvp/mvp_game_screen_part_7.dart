@@ -884,28 +884,31 @@ class _WideActionDock extends StatelessWidget {
     required this.onOpenLog,
     required this.selectedDestination,
     required this.selectedPlayerId,
-    required this.onClearDestination,
   });
 
   final GameState state;
   final VoidCallback onOpenLog;
   final HexCoord? selectedDestination;
   final String selectedPlayerId;
-  final VoidCallback onClearDestination;
 
   @override
   Widget build(BuildContext context) {
     final strings = AppStrings.of(context);
-    final commands = _availableCommands(state, strings);
-    final endTurn = commands.where(
+    final globalCommands = _availableCommands(state, strings);
+    final tileCommands = selectedPlayerId == state.activePlayerId
+        ? _availableTileCommands(state, strings, selectedDestination)
+        : const <_NamedCommand>[];
+    final endTurn = globalCommands.where(
       (command) => command.command is EndTurnCommand,
     );
     final endTurnCommand = endTurn.firstOrNull;
-    final actions = commands.where(
+    final actions = globalCommands.where(
       (command) =>
           command.command is! EndTurnCommand &&
           command.command is! MoveCommand &&
-          command.command is! RevealTileCommand,
+          command.command is! RevealTileCommand &&
+          command.command is! OpenCorridorCommand &&
+          command.command is! CloseCorridorCommand,
     );
     return Container(
       height: 146,
@@ -927,19 +930,14 @@ class _WideActionDock extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: actions.length + 1,
+              itemCount: tileCommands.length + actions.length,
               separatorBuilder: (_, _) => const SizedBox(width: 6),
               itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _MoveConfirmButton(
-                    state: state,
-                    selectedDestination: selectedDestination,
-                    selectedPlayerId: selectedPlayerId,
-                    onClearDestination: onClearDestination,
-                  );
+                if (index < tileCommands.length) {
+                  return _WideCommandButton(command: tileCommands[index]);
                 }
                 return _WideCommandButton(
-                  command: actions.elementAt(index - 1),
+                  command: actions.elementAt(index - tileCommands.length),
                 );
               },
             ),
@@ -1008,100 +1006,6 @@ class _DockInventoryButton extends StatelessWidget {
   );
 }
 
-class _MoveConfirmButton extends ConsumerWidget {
-  const _MoveConfirmButton({
-    required this.state,
-    required this.selectedDestination,
-    required this.selectedPlayerId,
-    required this.onClearDestination,
-  });
-
-  final GameState state;
-  final HexCoord? selectedDestination;
-  final String selectedPlayerId;
-  final VoidCallback onClearDestination;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final target = selectedDestination;
-    final targetTile = target == null ? null : state.tileAt(target);
-    final isOpeningBlockedCorridor =
-        targetTile?.type == HexTileType.corridor && targetTile!.isBlocked;
-    final isReveal =
-        targetTile != null && (!targetTile.opened || isOpeningBlockedCorridor);
-    final selectedIsActive = selectedPlayerId == state.activePlayerId;
-    final command = target == null
-        ? null
-        : isOpeningBlockedCorridor
-        ? OpenCorridorCommand(target)
-        : isReveal
-        ? RevealTileCommand(target)
-        : MoveCommand(target);
-    final canMove =
-        command != null && selectedIsActive && validate(state, command) == null;
-    final label = !selectedIsActive
-        ? 'ЧУЖОЙ ХОД'
-        : target == null
-        ? 'ВЫБРАТЬ СЕКТОР'
-        : isReveal
-        ? 'ОТКРЫТЬ ${targetTile.type == HexTileType.corridor ? 'КОРИДОР' : 'ОТСЕК'}\n1 ОД'
-        : 'ДВИЖЕНИЕ\n1 ОД';
-    return SizedBox(
-      width: 98,
-      height: 112,
-      child: FilledButton(
-        key: mvpMoveConfirmButtonKey,
-        style: FilledButton.styleFrom(
-          backgroundColor: canMove
-              ? const Color(0xFF81582F)
-              : const Color(0xFF30271E),
-          foregroundColor: canMove
-              ? const Color(0xFFFFE3AC)
-              : const Color(0xFF9D8A6E),
-          disabledBackgroundColor: const Color(0xFF28211A),
-          disabledForegroundColor: const Color(0xFF88765E),
-          side: BorderSide(
-            color: canMove ? const Color(0xFFF1BB68) : const Color(0xFF725537),
-            width: canMove ? 2 : 1,
-          ),
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(3)),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        ),
-        onPressed: canMove
-            ? () {
-                _dispatchWithFeedback(context, ref, command);
-                onClearDestination();
-              }
-            : null,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isReveal ? Icons.visibility_outlined : Icons.directions_walk,
-              size: 27,
-            ),
-            const SizedBox(height: 7),
-            Text(
-              label,
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 9,
-                height: 1.1,
-                fontWeight: FontWeight.w900,
-                letterSpacing: .3,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _WideCommandButton extends ConsumerWidget {
   const _WideCommandButton({required this.command, this.enabled = true});
 
@@ -1110,11 +1014,17 @@ class _WideCommandButton extends ConsumerWidget {
 
   bool get _isEndTurn => command.command is EndTurnCommand;
   bool get _isMove => command.command is MoveCommand;
+  bool get _isOpen =>
+      command.command is RevealTileCommand ||
+      command.command is OpenCorridorCommand;
+  bool get _isClose => command.command is CloseCorridorCommand;
 
   IconData get _icon {
     if (_isEndTurn) return Icons.hourglass_bottom;
     if (command.command is MoveCommand) return Icons.directions_walk;
     if (command.command is AttackCommand) return Icons.gavel_outlined;
+    if (_isOpen) return Icons.visibility_outlined;
+    if (_isClose) return Icons.lock_outline;
     if (command.command is SkillCheckCommand) return Icons.visibility_outlined;
     return Icons.settings_outlined;
   }
