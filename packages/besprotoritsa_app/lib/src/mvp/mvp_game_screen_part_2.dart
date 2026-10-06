@@ -216,9 +216,6 @@ class _WideGameLayoutState extends State<_WideGameLayout>
                               onOpenLog: widget.onOpenLog,
                               selectedDestination: _selectedDestination,
                               selectedPlayerId: selectedPlayerId,
-                              onClearDestination: () => setState(
-                                () => _selectedDestination = null,
-                              ),
                             ),
                           ),
                         ),
@@ -237,7 +234,7 @@ class _WideGameLayoutState extends State<_WideGameLayout>
 
 /// Portrait screens reserve the board for play and reveal supporting content
 /// in bottom sheets instead of squeezing it into permanent columns.
-class _CompactGameLayout extends StatelessWidget {
+class _CompactGameLayout extends StatefulWidget {
   const _CompactGameLayout({
     required this.state,
     required this.queue,
@@ -252,15 +249,35 @@ class _CompactGameLayout extends StatelessWidget {
   final VoidCallback onOpenLog;
 
   @override
+  State<_CompactGameLayout> createState() => _CompactGameLayoutState();
+}
+
+class _CompactGameLayoutState extends State<_CompactGameLayout> {
+  HexCoord? _selectedDestination;
+
+  @override
+  void didUpdateWidget(covariant _CompactGameLayout oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.activePlayerId != widget.state.activePlayerId) {
+      _selectedDestination = null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) => Stack(
     children: [
       Column(
         children: [
-          _GameStatus(state: state, queue: queue),
+          _GameStatus(state: widget.state, queue: widget.queue),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 84),
-              child: HexBoardWidget(state: state),
+              child: HexBoardWidget(
+                state: widget.state,
+                selectedDestination: _selectedDestination,
+                onSelectDestination: (coord) =>
+                    setState(() => _selectedDestination = coord),
+              ),
             ),
           ),
         ],
@@ -268,8 +285,12 @@ class _CompactGameLayout extends StatelessWidget {
       Align(
         alignment: Alignment.bottomCenter,
         child: AbsorbPointer(
-          absorbing: blocked,
-          child: _MobileActionDock(state: state, onOpenLog: onOpenLog),
+          absorbing: widget.blocked,
+          child: _MobileActionDock(
+            state: widget.state,
+            onOpenLog: widget.onOpenLog,
+            selectedDestination: _selectedDestination,
+          ),
         ),
       ),
     ],

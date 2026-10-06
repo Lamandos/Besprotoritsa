@@ -269,6 +269,10 @@ void main() {
     (tester) async {
       final queue = EventQueue(eventDuration: const Duration(seconds: 1));
       final initialState = _stateWithoutMonsters();
+      final targetTile = initialState.tileAt(const HexCoord(0, 1))!;
+      final actionLabel = !targetTile.opened || targetTile.isBlocked
+          ? 'ОТКРЫТЬ'
+          : 'ДВИЖЕНИЕ';
       final container = ProviderContainer(
         overrides: [
           eventQueueProvider.overrideWithValue(queue),
@@ -302,21 +306,13 @@ void main() {
         findsOneWidget,
       );
       expect(queue.isPlaying, isFalse);
-      expect(
-        find.byKey(mvpMoveConfirmButtonKey),
-        findsOneWidget,
-      );
+      expect(find.textContaining('ДВИЖЕНИЕ'), findsNothing);
 
       await tester.tap(find.byKey(const ValueKey<String>('hero-ada-at-0-0')));
       await tester.tap(find.byKey(const ValueKey<String>('hex-0-1')));
       await tester.pump();
-      expect(
-        tester
-            .widget<FilledButton>(find.byKey(mvpMoveConfirmButtonKey))
-            .onPressed,
-        isNotNull,
-      );
-      await tester.tap(find.byKey(mvpMoveConfirmButtonKey));
+      expect(find.textContaining(actionLabel), findsOneWidget);
+      await tester.tap(find.textContaining(actionLabel));
       await tester.pump();
 
       expect(queue.current, isNull);
@@ -330,7 +326,7 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey<String>('hex-0-1')));
       await tester.pump();
-      await tester.tap(find.byKey(mvpMoveConfirmButtonKey));
+      await tester.tap(find.textContaining('ДВИЖЕНИЕ'));
       await tester.pump();
 
       expect(queue.current, isA<HexEntered>());
