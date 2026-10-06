@@ -17,9 +17,7 @@ void main() {
       coord: coord,
       damage: 0,
       health: 2,
-      defense: 0,
       attack: 1,
-      movement: 1,
     );
     final state = GameState(
       seed: source.seed,
