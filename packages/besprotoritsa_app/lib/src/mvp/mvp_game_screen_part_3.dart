@@ -71,26 +71,67 @@ class _TokenLayer extends StatelessWidget {
   final ValueChanged<String>? onSelectPlayer;
 
   @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      for (final (index, player) in players.indexed)
-        _HeroToken(
-          player: player,
-          tokenIndex: index,
-          position: _layoutPosition(player.coord, board),
-          selected: player.id == selectedPlayerId,
-          activeTurn: player.id == activePlayerId,
-          onTap: onSelectPlayer == null
-              ? null
-              : () => onSelectPlayer!(player.id),
-        ),
-      for (final monster in monsters)
-        _MonsterToken(
-          monster: monster,
-          state: state,
-          position: _layoutPosition(monster.coord, board),
-        ),
-    ],
+  Widget build(BuildContext context) {
+    final monstersByCoord = <String, List<MonsterInstance>>{};
+    for (final monster in monsters) {
+      monstersByCoord
+          .putIfAbsent('${monster.coord.q},${monster.coord.r}', () => [])
+          .add(monster);
+    }
+    return Stack(
+      children: [
+        for (final (index, player) in players.indexed)
+          _HeroToken(
+            player: player,
+            tokenIndex: index,
+            position: _layoutPosition(player.coord, board),
+            selected: player.id == selectedPlayerId,
+            activeTurn: player.id == activePlayerId,
+            onTap: onSelectPlayer == null
+                ? null
+                : () => onSelectPlayer!(player.id),
+          ),
+        for (final group in monstersByCoord.values)
+          for (final (index, monster) in group.indexed)
+            _MonsterToken(
+              monster: monster,
+              state: state,
+              position: _monsterTokenPosition(
+                _layoutPosition(monster.coord, board),
+                index: index,
+                count: group.length,
+              ),
+            ),
+      ],
+    );
+  }
+}
+
+Offset _monsterTokenPosition(
+  Offset position, {
+  required int index,
+  required int count,
+}) {
+  const tokenWidth = 108.0;
+  const tokenHeight = 82.0;
+  const spacing = 4.0;
+  final columns = math.sqrt(count).ceil();
+  final rows = (count / columns).ceil();
+  final column = index % columns;
+  final row = index ~/ columns;
+  final width = columns * (tokenWidth + spacing) - spacing;
+  final height = rows * (tokenHeight + spacing) - spacing;
+  return Offset(
+    position.dx +
+        99 +
+        column * (tokenWidth + spacing) -
+        width / 2 +
+        tokenWidth / 2,
+    position.dy +
+        82 +
+        row * (tokenHeight + spacing) -
+        height / 2 +
+        tokenHeight / 2,
   );
 }
 
@@ -435,8 +476,8 @@ class _MonsterToken extends StatelessWidget {
         ? state.contentTranslations[nameKey] ?? monster.monsterId
         : monster.monsterId;
     return Positioned(
-      left: position.dx + 99,
-      top: position.dy + 82,
+      left: position.dx,
+      top: position.dy,
       child: Semantics(
         button: true,
         label: AppStrings.of(
