@@ -6,6 +6,77 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('co-located monster cards remain individually reachable', (
+    tester,
+  ) async {
+    final source = createMvpGameState();
+    final coord = source.players.first.coord;
+    MonsterInstance monster(String id) => MonsterInstance(
+      instanceId: id,
+      monsterId: id,
+      coord: coord,
+      damage: 0,
+      health: 2,
+      attack: 1,
+    );
+    final state = GameState(
+      seed: source.seed,
+      difficulty: source.difficulty,
+      round: source.round,
+      phase: source.phase,
+      activePlayerId: source.activePlayerId,
+      actionsLeft: source.actionsLeft,
+      board: source.board,
+      players: source.players,
+      monsters: [monster('underlying-monster'), monster('top-monster')],
+      decks: source.decks,
+      quests: source.quests,
+      conditionCards: source.conditionCards,
+      cardDefinitions: source.cardDefinitions,
+      log: source.log,
+    );
+    final queue = EventQueue(eventDuration: Duration.zero);
+    final container = ProviderContainer(
+      overrides: [
+        eventQueueProvider.overrideWithValue(queue),
+        gameControllerProvider.overrideWith(
+          () => GameController(initialState: state),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(queue.dispose);
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: MvpGameScreen()),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    await tester.tap(
+      find.byTooltip('Карточка монстра: top-monster'),
+      warnIfMissed: false,
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('top-monster'), findsOneWidget);
+    await tester.tap(find.text('Закрыть'));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(
+      find.byTooltip('Карточка монстра: underlying-monster'),
+      warnIfMissed: false,
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('underlying-monster'), findsOneWidget);
+  });
+
   testWidgets('monster placement decision shows a board projection', (
     tester,
   ) async {

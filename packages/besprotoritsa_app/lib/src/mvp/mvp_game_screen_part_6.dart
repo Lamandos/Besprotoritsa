@@ -20,11 +20,6 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
           '${tile.coord}',
           RevealTileCommand(tile.coord),
         ),
-    for (final monster in state.monsters)
-      _NamedCommand(
-        strings.attackCommand(monster.monsterId),
-        AttackCommand(monster.instanceId),
-      ),
     for (final tile in state.board)
       if (tile.type == HexTileType.corridor)
         _NamedCommand(
@@ -49,6 +44,9 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
   final closableCorridors = validCandidates
       .where((candidate) => candidate.command is CloseCorridorCommand)
       .toList(growable: false);
+  final openableCorridors = validCandidates
+      .where((candidate) => candidate.command is OpenCorridorCommand)
+      .toList(growable: false);
   final moves = validCandidates
       .where((candidate) => candidate.command is MoveCommand)
       .toList(growable: false);
@@ -60,9 +58,16 @@ List<_NamedCommand> _availableCommands(GameState state, AppStrings strings) {
         closableCorridors.first.command,
         alternatives: closableCorridors,
       ),
+    if (openableCorridors.isNotEmpty)
+      _NamedCommand(
+        'Открыть коридор',
+        openableCorridors.first.command,
+        alternatives: openableCorridors,
+      ),
     for (final candidate in validCandidates)
       if (candidate.command is! CloseCorridorCommand &&
-          candidate.command is! MoveCommand)
+          candidate.command is! MoveCommand &&
+          candidate.command is! OpenCorridorCommand)
         candidate,
   ];
 }
@@ -166,7 +171,11 @@ void _dispatchNamedCommand(
   showDialog<_NamedCommand>(
     context: context,
     builder: (dialogContext) => SimpleDialog(
-      title: const Text('Выберите коридор для закрытия'),
+      title: Text(
+        namedCommand.command is OpenCorridorCommand
+            ? 'Выберите коридор для открытия'
+            : 'Выберите коридор для закрытия',
+      ),
       children: [
         for (final option in alternatives)
           SimpleDialogOption(

@@ -71,26 +71,67 @@ class _TokenLayer extends StatelessWidget {
   final ValueChanged<String>? onSelectPlayer;
 
   @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      for (final (index, player) in players.indexed)
-        _HeroToken(
-          player: player,
-          tokenIndex: index,
-          position: _layoutPosition(player.coord, board),
-          selected: player.id == selectedPlayerId,
-          activeTurn: player.id == activePlayerId,
-          onTap: onSelectPlayer == null
-              ? null
-              : () => onSelectPlayer!(player.id),
-        ),
-      for (final monster in monsters)
-        _MonsterToken(
-          monster: monster,
-          state: state,
-          position: _layoutPosition(monster.coord, board),
-        ),
-    ],
+  Widget build(BuildContext context) {
+    final monstersByCoord = <String, List<MonsterInstance>>{};
+    for (final monster in monsters) {
+      monstersByCoord
+          .putIfAbsent('${monster.coord.q},${monster.coord.r}', () => [])
+          .add(monster);
+    }
+    return Stack(
+      children: [
+        for (final (index, player) in players.indexed)
+          _HeroToken(
+            player: player,
+            tokenIndex: index,
+            position: _layoutPosition(player.coord, board),
+            selected: player.id == selectedPlayerId,
+            activeTurn: player.id == activePlayerId,
+            onTap: onSelectPlayer == null
+                ? null
+                : () => onSelectPlayer!(player.id),
+          ),
+        for (final group in monstersByCoord.values)
+          for (final (index, monster) in group.indexed)
+            _MonsterToken(
+              monster: monster,
+              state: state,
+              position: _monsterTokenPosition(
+                _layoutPosition(monster.coord, board),
+                index: index,
+                count: group.length,
+              ),
+            ),
+      ],
+    );
+  }
+}
+
+Offset _monsterTokenPosition(
+  Offset position, {
+  required int index,
+  required int count,
+}) {
+  const tokenWidth = 108.0;
+  const tokenHeight = 82.0;
+  const spacing = 4.0;
+  final columns = math.sqrt(count).ceil();
+  final rows = (count / columns).ceil();
+  final column = index % columns;
+  final row = index ~/ columns;
+  final width = columns * (tokenWidth + spacing) - spacing;
+  final height = rows * (tokenHeight + spacing) - spacing;
+  return Offset(
+    position.dx +
+        99 +
+        column * (tokenWidth + spacing) -
+        width / 2 +
+        tokenWidth / 2,
+    position.dy +
+        82 +
+        row * (tokenHeight + spacing) -
+        height / 2 +
+        tokenHeight / 2,
   );
 }
 
@@ -132,13 +173,17 @@ class _HexTileView extends StatelessWidget {
         key: ValueKey<String>('hex-${tile.coord.q}-${tile.coord.r}'),
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            isKnown
-                ? _fieldTileArt(tile)
-                : isCorridor
-                ? 'assets/images/field-tiles/corridor-back.webp'
-                : 'assets/images/field-tiles/tile-back.webp',
-            fit: BoxFit.cover,
+          Transform.scale(
+            scaleX: isCorridor ? 1.2 : 1,
+            alignment: Alignment.centerRight,
+            child: Image.asset(
+              isKnown
+                  ? _fieldTileArt(tile)
+                  : isCorridor
+                  ? 'assets/images/field-tiles/corridor-back.webp'
+                  : 'assets/images/field-tiles/tile-back.webp',
+              fit: isCorridor ? BoxFit.fill : BoxFit.cover,
+            ),
           ),
           if (isKnown) ...[
             const DecoratedBox(
@@ -431,8 +476,8 @@ class _MonsterToken extends StatelessWidget {
         ? state.contentTranslations[nameKey] ?? monster.monsterId
         : monster.monsterId;
     return Positioned(
-      left: position.dx + 99,
-      top: position.dy + 82,
+      left: position.dx,
+      top: position.dy,
       child: Semantics(
         button: true,
         label: AppStrings.of(
@@ -480,6 +525,15 @@ void _showMonsterCard(
     0,
     monster.health,
   );
+  final activePlayer = state.players
+      .where((player) => player.id == state.activePlayerId)
+      .firstOrNull;
+  final mayAttack =
+      activePlayer?.coord == monster.coord &&
+      validate(state, AttackCommand(monster.instanceId)) == null;
+  final combatDice = activePlayer == null
+      ? 0
+      : _heroCombatDiceCount(state, activePlayer);
   showDialog<void>(
     context: context,
     builder: (dialogContext) => AlertDialog(
@@ -526,6 +580,8 @@ void _showMonsterCard(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
+                      if (activePlayer != null)
+                        _monsterStat('Сила боя', '$combatDice'),
                       _monsterStat(
                         'Здоровье',
                         '$currentHealth/${monster.health}',
@@ -542,12 +598,74 @@ void _showMonsterCard(
         ),
       ),
       actions: [
+        if (activePlayer != null)
+          Consumer(
+            builder: (context, ref, _) => TextButton(
+              onPressed: mayAttack
+                  ? () {
+                      final beforeMonster = ref
+                          .read(gameControllerProvider)
+                          .monsters
+                          .where(
+                            (entry) => entry.instanceId == monster.instanceId,
+                          )
+                          .firstOrNull;
+                      if (beforeMonster == null ||
+                          !ref
+                              .read(gameControllerProvider.notifier)
+                              .dispatch(AttackCommand(monster.instanceId))) {
+                        return;
+                      }
+                      final afterState = ref.read(gameControllerProvider);
+                      final afterMonster = afterState.monsters
+                          .where(
+                            (entry) => entry.instanceId == monster.instanceId,
+                          )
+                          .firstOrNull;
+                      final damage = afterMonster == null
+                          ? beforeMonster.health - beforeMonster.damage
+                          : afterMonster.damage - beforeMonster.damage;
+                      Navigator.of(dialogContext).pop();
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              afterMonster == null
+                                  ? 'Монстр уничтожен.'
+                                  : afterState.pendingDecision != null
+                                  ? 'Выберите результат переброса.'
+                                  : damage > 0
+                                  ? 'Атака нанесла $damage урона.'
+                                  : 'Атака не нанесла урона.',
+                            ),
+                          ),
+                        );
+                    }
+                  : null,
+              child: const Text('Атаковать'),
+            ),
+          ),
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
           child: const Text('Закрыть'),
         ),
       ],
     ),
+  );
+}
+
+int _heroCombatDiceCount(GameState state, PlayerState player) {
+  final strengthModifier = player.conditions.fold<int>(
+    0,
+    (total, conditionId) =>
+        total +
+        (state.conditionCards[conditionId]?.statModifiers[StatType.strength] ??
+            0),
+  );
+  return math.max(
+    1,
+    player.stats.combatStrength + strengthModifier + player.weaponModifier,
   );
 }
 
@@ -575,7 +693,9 @@ class _HexRimPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final path = Path();
-    if (rectangular || size.width > size.height) {
+    if (rectangular) {
+      path.addRect(Rect.fromLTWH(1, 1, size.width - 2, size.height - 2));
+    } else if (size.width > size.height) {
       path.addRRect(
         RRect.fromRectAndRadius(
           Rect.fromLTWH(1, 1, size.width - 2, size.height - 2),
