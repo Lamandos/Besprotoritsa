@@ -52,6 +52,7 @@ class _HeroRosterPanel extends StatelessWidget {
                 return const _EmptyCrewSlot();
               }
               final player = state.players[index];
+              int stat(StatType stat) => playerStatValue(state, player, stat);
               final selected = player.id == selectedPlayerId;
               final activeTurn =
                   state.phase == GamePhase.playersTurn &&
@@ -140,13 +141,14 @@ class _HeroRosterPanel extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
-                                    'СИЛ ${player.stats.strength}  '
-                                    'НАУ ${player.stats.science}  '
-                                    'РЕМ ${player.stats.repair}  '
-                                    'ВЫН ${player.stats.endurance}  '
-                                    'ЛОВ ${player.stats.agility}',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                    'СИЛ ${stat(StatType.strength)}  '
+                                    'НАУ ${stat(StatType.science)}  '
+                                    'РЕМ ${stat(StatType.repair)}  '
+                                    'ВЫН ${stat(StatType.endurance)}  '
+                                    'ЛОВ ${stat(StatType.agility)}  '
+                                    'БОЙ '
+                                    '${heroCombatDiceCount(state, player)}  '
+                                    'ЗЩ ${heroDefense(state, player)}',
                                     style: const TextStyle(
                                       color: Color(0xFFCDBA96),
                                       fontSize: 8,
@@ -172,6 +174,19 @@ class _HeroRosterPanel extends StatelessWidget {
                             ),
                           ],
                         ),
+                        if (player.monsterDamageImmuneThroughRound != null &&
+                            state.round <=
+                                player.monsterDamageImmuneThroughRound!)
+                          Text(
+                            'Иммунитет к урону монстров до раунда '
+                            '${player.monsterDamageImmuneThroughRound}',
+                            style: const TextStyle(fontSize: 8),
+                          ),
+                        if (player.monsterDefenseBonusRound == state.round)
+                          const Text(
+                            'Защита +1 до конца раунда',
+                            style: TextStyle(fontSize: 8),
+                          ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
@@ -356,13 +371,15 @@ class _PanelFrame extends StatelessWidget {
                   child: icon,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  title.toUpperCase(),
-                  style: const TextStyle(
-                    color: Color(0xFFE7D5B5),
-                    fontWeight: FontWeight.w800,
-                    fontFamily: 'serif',
-                    letterSpacing: 2,
+                Expanded(
+                  child: Text(
+                    title.toUpperCase(),
+                    style: const TextStyle(
+                      color: Color(0xFFE7D5B5),
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'serif',
+                      letterSpacing: 2,
+                    ),
                   ),
                 ),
               ],

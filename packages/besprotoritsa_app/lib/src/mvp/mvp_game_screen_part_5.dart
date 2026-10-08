@@ -49,6 +49,8 @@ class _PendingDecisionModal extends ConsumerWidget {
     final strings = AppStrings.of(context);
     final eventId = switch (decision) {
       AwaitingEventOption(:final eventId) => eventId,
+      AwaitingRerollChoice(context: SkillCheckContext(:final eventId)) =>
+        eventId,
       _ => null,
     };
     final eventTitle = eventId == null
@@ -67,11 +69,14 @@ class _PendingDecisionModal extends ConsumerWidget {
     };
     final eventTargetPlayerId = switch (decision) {
       AwaitingEventOption(:final playerId) => playerId,
+      AwaitingDodge(:final targetPlayerId) => targetPlayerId,
+      AwaitingRerollChoice(context: SkillCheckContext(:final playerId)) =>
+        playerId,
+      AwaitingRerollChoice(context: AttackRollContext(:final playerId)) =>
+        playerId,
       _ => null,
     };
-    final targetPlayerId = eventId == null
-        ? null
-        : eventTargetPlayerId ?? state.activePlayerId;
+    final targetPlayerId = eventTargetPlayerId ?? state.activePlayerId;
     final targetPlayer = targetPlayerId == null
         ? null
         : state.players
@@ -80,12 +85,18 @@ class _PendingDecisionModal extends ConsumerWidget {
     final targetPlayerName = targetPlayer == null
         ? null
         : fullRuntimeCharacterName(targetPlayer.characterId);
+    final rerollSources = _decisionRerollSources(state, decision);
+    final prompt = _decisionPrompt(decision, strings);
+    final sourceNames = rerollSources
+        .map((id) => _inventoryCardName(state, id))
+        .join(', ');
+    final sourceCopy = 'Переброс даёт: $sourceNames';
     return Positioned.fill(
       child: ColoredBox(
         color: Colors.black54,
         child: Center(
           child: AlertDialog(
-            title: eventId != null && targetPlayer != null
+            title: targetPlayer != null
                 ? Row(
                     children: [
                       CharacterPortrait(
@@ -99,7 +110,10 @@ class _PendingDecisionModal extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              eventTitle ?? strings.decisionRequired,
+                              eventTitle ??
+                                  (decision is AwaitingDodge
+                                      ? 'Уклонение'
+                                      : strings.decisionRequired),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -114,16 +128,35 @@ class _PendingDecisionModal extends ConsumerWidget {
                     ],
                   )
                 : Text(
-                    eventTitle ?? strings.decisionRequired,
+                    eventTitle ??
+                        (decision is AwaitingDodge
+                            ? 'Уклонение'
+                            : strings.decisionRequired),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
             content: eventId == null
-                ? Text(_decisionPrompt(decision, strings))
+                ? SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(prompt),
+                        if (rerollSources.isNotEmpty)
+                          Text(
+                            sourceCopy,
+                          ),
+                      ],
+                    ),
+                  )
                 : SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Text(prompt),
+                        if (rerollSources.isNotEmpty)
+                          Text(
+                            sourceCopy,
+                          ),
                         if (coordinateOptions.isNotEmpty) ...[
                           const Text(
                             'Выберите подсвеченное поле на карте',
@@ -319,4 +352,34 @@ HexCoord? _eventOptionCoord(String option) {
   final q = int.tryParse(parts[indexes.$1]);
   final r = int.tryParse(parts[indexes.$2]);
   return q == null || r == null ? null : HexCoord(q, r);
+}
+
+List<CardId> _decisionRerollSources(GameState state, PendingDecision decision) {
+  if (decision is! AwaitingRerollChoice || decision.availableRerolls == 0) {
+    return const [];
+  }
+  final context = decision.context;
+  final playerId = switch (context) {
+    SkillCheckContext(:final playerId) => playerId,
+    AttackRollContext(:final playerId) => playerId,
+    _ => state.activePlayerId,
+  };
+  final player = state.players.where((hero) => hero.id == playerId).firstOrNull;
+  if (player == null) return const [];
+  if (context is SkillCheckContext) {
+    return skillRerollSources(state, player, context.stat);
+  }
+  if (context is! AttackRollContext) return const [];
+  final registry = EffectRegistry.standard();
+  return [
+    for (final id in InventoryRules.activeCardIds(player))
+      if (state.cardDefinitions[id]?.behaviorIds.any(
+            (behavior) => switch (registry[behavior]) {
+              ModifyRollHook(:final rerollsPerAttack) => rerollsPerAttack > 0,
+              _ => false,
+            },
+          ) ??
+          false)
+        id,
+  ];
 }

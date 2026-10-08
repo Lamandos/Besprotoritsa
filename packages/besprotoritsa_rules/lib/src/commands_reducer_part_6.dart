@@ -16,7 +16,13 @@ GameStepResult _startRoll(
     actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
     pendingDecision: AwaitingRerollChoice(
       dice: dice.rollDice(diceCount),
-      availableRerolls: 1,
+      availableRerolls: context is SkillCheckContext
+          ? skillRerollSources(
+              state,
+              _playerById(state, context.playerId)!,
+              context.stat,
+            ).length
+          : 0,
       window: const DecisionWindow(remainingTicks: 1),
       context: context,
     ),
@@ -313,7 +319,8 @@ GameStepResult _resolveDodge(
       rejection: const ActionBlockedByPendingDecision(),
     );
   }
-  final hits = countHits(dice.rollDice(pending.requiredAgilitySuccesses));
+  final rolledDice = dice.rollDice(pending.requiredAgilitySuccesses);
+  final hits = countHits(rolledDice);
   final remainingDamage = (pending.monsterDamage - hits).clamp(
     0,
     pending.monsterDamage,
@@ -330,6 +337,9 @@ GameStepResult _resolveDodge(
             _copyPlayer(player, damage: player.damage + remainingDamage),
       ),
       clearPendingDecision: true,
+      logEntry:
+          'combat-roll:dodge:$targetId:${rolledDice.join(',')}:'
+          '$hits:$remainingDamage',
     ),
   );
   final targetStillLives = _playerById(withDamage, targetId!)?.alive ?? false;
