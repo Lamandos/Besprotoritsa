@@ -234,10 +234,11 @@ List<CardId> skillRerollSources(
 ) => [
   for (final id in _activeCardIds(player))
     if ((state.cardDefinitions[id]?.behaviorIds.contains(
-              'dice.reroll.allForSkill',
+              id == 'drg-4u' ? 'dice.reroll.all' : 'dice.reroll.allForSkill',
             ) ??
             false) &&
         switch (id) {
+          'drg-4u' => stat == StatType.strength,
           'pipe-wrench' => stat == StatType.repair,
           'sc13-nc3' => stat == StatType.science || stat == StatType.repair,
           'f1t-b07' => stat == StatType.endurance || stat == StatType.agility,

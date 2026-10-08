@@ -300,6 +300,91 @@ void main() {
     }
   });
 
+  test('BUG024 DRG rerolls strength only while equipped', () {
+    final state = _scenario((doc) {
+      (_player(doc)['equipped']! as Map<String, dynamic>)['robot'] = 'drg-4u';
+    });
+    expect(
+      state.cardDefinitions['drg-4u']!.behaviorIds,
+      contains('dice.reroll.all'),
+    );
+    for (final stat in StatType.values) {
+      final checked = step(
+        state,
+        SkillCheckCommand(stat),
+        FixedDiceRoller(List.filled(20, 1)),
+      );
+      expect(checked.isAccepted, isTrue);
+      final pending = checked.state.pendingDecision! as AwaitingRerollChoice;
+      expect(pending.availableRerolls, stat == StatType.strength ? 1 : 0);
+      if (stat == StatType.strength) {
+        expect(skillRerollSources(state, state.players.first, stat), [
+          'drg-4u',
+        ]);
+        final rerolled = step(
+          checked.state,
+          ResolvePendingDecisionCommand(RerollChoice()),
+          FixedDiceRoller(List.filled(20, 6)),
+        );
+        expect(rerolled.isAccepted, isTrue);
+        final result = rerolled.state.pendingDecision! as AwaitingRerollChoice;
+        expect(result.dice, List.filled(pending.dice.length, 6));
+        expect(result.availableRerolls, 0);
+        expect(
+          step(
+            rerolled.state,
+            ResolvePendingDecisionCommand(RerollChoice()),
+            FixedDiceRoller(List.filled(20, 6)),
+          ).isAccepted,
+          isFalse,
+        );
+      }
+    }
+    final unequipped = step(
+      state,
+      const UnequipCommand(ItemSlot.robot),
+      FixedDiceRoller([]),
+    );
+    expect(unequipped.isAccepted, isTrue);
+    expect(unequipped.state.players.first.backpack, contains('drg-4u'));
+    final checked = step(
+      unequipped.state,
+      const SkillCheckCommand(StatType.strength),
+      FixedDiceRoller(List.filled(20, 1)),
+    );
+    expect(checked.isAccepted, isTrue);
+    expect(
+      (checked.state.pendingDecision! as AwaitingRerollChoice).availableRerolls,
+      0,
+    );
+  });
+
+  testWidgets('BUG024 DRG source is shown for a strength reroll', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      (_player(doc)['equipped']! as Map<String, dynamic>)['robot'] = 'drg-4u';
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller(List.filled(20, 1)),
+    );
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const SkillCheckCommand(StatType.strength)),
+      isTrue,
+    );
+    await tester.pump();
+    expect(find.text('Переброс даёт: DRG-4U'), findsOneWidget);
+    expect(find.text('Перебросить'), findsOneWidget);
+    await tester.tap(find.text('Перебросить'));
+    await tester.pump();
+    expect(find.text('Перебросить'), findsNothing);
+    expect(find.textContaining('Переброс даёт:'), findsNothing);
+  });
+
   testWidgets('BUG021 legal reroll explains its item source', (tester) async {
     final state = _scenario((doc) {
       (_player(doc)['equipped']! as Map<String, dynamic>)['weapon'] =
