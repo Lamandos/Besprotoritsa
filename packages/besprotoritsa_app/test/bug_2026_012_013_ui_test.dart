@@ -408,7 +408,7 @@ void main() {
       expect(find.text('Атаковать'), findsOneWidget);
       await tester.tap(find.text('Атаковать'));
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.text('Результат атаки'), findsOneWidget);
       expect(
         container.read(gameControllerProvider).actionsLeft,
         lessThan(state.actionsLeft),

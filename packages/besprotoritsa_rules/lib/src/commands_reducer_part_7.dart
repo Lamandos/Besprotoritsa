@@ -236,7 +236,13 @@ GameStepResult _resolveEventOption(
       logEntry: 'event-monster-place:${monster.instanceId}:${target.coord}',
     );
     return GameStepResult(
-      state: _resumeAutomaticPhase(resolveColocation(placed)),
+      state: _resumeAutomaticPhase(
+        resolveColocation(
+          placed,
+          coord: target.coord,
+          monsterInstanceId: monster.instanceId,
+        ),
+      ),
     );
   }
   if (choice.option.startsWith('pick:')) {
@@ -376,7 +382,11 @@ GameStepResult _resolveEventOption(
       ),
       logEntry: 'event-move:$playerId:${target.coord}',
     );
-    final arrived = resolveColocation(moved);
+    final arrived = resolveColocation(
+      moved,
+      coord: target.coord,
+      playerId: playerId,
+    );
     final locationId = target.locationId;
     final withQuestEvent = locationId == null
         ? arrived
@@ -423,7 +433,11 @@ GameStepResult _resolveEventOption(
       ),
       logEntry: 'event-move:$playerId:${target.coord}',
     );
-    final afterColocation = resolveColocation(moved);
+    final afterColocation = resolveColocation(
+      moved,
+      coord: target.coord,
+      playerId: playerId,
+    );
     if (afterColocation.pendingDecision != null ||
         afterColocation.pendingDamage.isNotEmpty) {
       return GameStepResult(

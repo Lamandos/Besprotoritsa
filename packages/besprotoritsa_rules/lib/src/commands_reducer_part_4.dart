@@ -14,7 +14,11 @@ GameStepResult _move(GameState state, HexCoord target, int cost) {
     ),
     logEntry: 'move:${state.activePlayerId}:$target',
   );
-  final resolved = resolveColocation(moved);
+  final resolved = resolveColocation(
+    moved,
+    coord: target,
+    playerId: state.activePlayerId,
+  );
   final player = _activePlayer(state)!;
   final locationId = destination.locationId;
   return GameStepResult(
@@ -76,14 +80,27 @@ GameStepResult _openCorridor(GameState state, HexCoord target) =>
 ///
 /// Calls made while another dodge is open append their damage after the current
 /// decision, preserving a deterministic order of monsters, then Boils.
-GameState resolveColocation(GameState state) {
+/// Movement and spawning pass the arrival cell and participant so stationary
+/// encounters elsewhere are not resolved again. Boils hit every occupant of
+/// their explosion cell.
+GameState resolveColocation(
+  GameState state, {
+  HexCoord? coord,
+  String? monsterInstanceId,
+  PlayerId? playerId,
+}) {
   final damage = <IncomingDamage>[];
   for (final monster in state.monsters) {
-    if (monster.attack == 0) {
+    if (monster.attack == 0 ||
+        (coord != null && monster.coord != coord) ||
+        (monsterInstanceId != null &&
+            monster.instanceId != monsterInstanceId)) {
       continue;
     }
     for (final player in state.players) {
-      if (player.alive && player.coord == monster.coord) {
+      if (player.alive &&
+          player.coord == monster.coord &&
+          (playerId == null || player.id == playerId)) {
         final defense = _monsterIgnoresDefense(state, monster)
             ? 0
             : _playerDefense(state, player);
@@ -102,9 +119,11 @@ GameState resolveColocation(GameState state) {
   }
   final exploding = state.boils
       .where(
-        (boil) => state.players.any(
-          (player) => player.alive && player.coord == boil.coord,
-        ),
+        (boil) =>
+            (coord == null || boil.coord == coord) &&
+            state.players.any(
+              (player) => player.alive && player.coord == boil.coord,
+            ),
       )
       .toList();
   for (final boil in exploding) {
@@ -217,6 +236,8 @@ GameState moveMonsterOneStep(
       ],
       logEntry: 'monster-move:$instanceId:$target',
     ),
+    coord: target,
+    monsterInstanceId: instanceId,
   );
 }
 
@@ -303,6 +324,8 @@ GameState spawnMonster(GameState state, MonsterInstance monster) =>
         monsters: [...state.monsters, monster],
         logEntry: 'monster-spawn:${monster.instanceId}:${monster.coord}',
       ),
+      coord: monster.coord,
+      monsterInstanceId: monster.instanceId,
     );
 
 GameStepResult _attack(
@@ -467,9 +490,14 @@ GameState _resolveAttackRoll(
     awardedPlayer = loot.player;
     unclaimedLoot = loot.unclaimed;
   }
+  final rolledState = _copyState(
+    state,
+    logEntry:
+        'combat-roll:attack:$playerId:${dice.join(',')}:${roll.hits}:$damage',
+  );
   final resolved = resolveHeroDeaths(
     _copyState(
-      state,
+      rolledState,
       actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
       players: _replacePlayer(
         state,

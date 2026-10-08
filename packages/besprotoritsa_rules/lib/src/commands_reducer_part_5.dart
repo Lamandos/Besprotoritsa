@@ -198,21 +198,54 @@ List<EffectHook> _activeEffectHooks(GameState state, PlayerState player) {
   ];
 }
 
-int _statDice(PlayerState player, GameState state, StatType stat) {
+/// Current characteristic, including equipped cards and attached conditions.
+/// A minimum dice pool is applied separately when a check is rolled.
+int playerStatValue(GameState state, PlayerState player, StatType stat) {
   final modifier = player.conditions.fold<int>(
     0,
     (total, conditionId) =>
         total + (state.conditionCards[conditionId]?.statModifiers[stat] ?? 0),
   );
-  return (player.stats.valueFor(stat) +
-          modifier +
-          _cardStatModifier(
-            state,
-            player,
-            stat,
-          ))
-      .clamp(1, 999);
+  return player.stats.valueFor(stat) +
+      modifier +
+      _cardStatModifier(
+        state,
+        player,
+        stat,
+      );
 }
+
+int _statDice(PlayerState player, GameState state, StatType stat) =>
+    playerStatValue(state, player, stat).clamp(1, 999);
+
+/// The exact pool used by the attack reducer.
+int heroCombatDiceCount(GameState state, PlayerState player) =>
+    _heroAttackDice(player, state);
+
+/// Active monster defense, including a temporary bonus for this round.
+int heroDefense(GameState state, PlayerState player) =>
+    _playerDefense(state, player);
+
+/// Equipped sources whose printed scope grants a skill-check reroll.
+List<CardId> skillRerollSources(
+  GameState state,
+  PlayerState player,
+  StatType stat,
+) => [
+  for (final id in _activeCardIds(player))
+    if ((state.cardDefinitions[id]?.behaviorIds.contains(
+              id == 'drg-4u' ? 'dice.reroll.all' : 'dice.reroll.allForSkill',
+            ) ??
+            false) &&
+        switch (id) {
+          'drg-4u' => stat == StatType.strength,
+          'pipe-wrench' => stat == StatType.repair,
+          'sc13-nc3' => stat == StatType.science || stat == StatType.repair,
+          'f1t-b07' => stat == StatType.endurance || stat == StatType.agility,
+          _ => false,
+        })
+      id,
+];
 
 int _cardStatModifier(GameState state, PlayerState player, StatType stat) {
   final cardStat = switch (stat) {

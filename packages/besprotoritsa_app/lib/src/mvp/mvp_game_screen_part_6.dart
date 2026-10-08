@@ -34,20 +34,19 @@ List<_NamedCommand> _availableTileCommands(
   final candidates = <_NamedCommand>[
     if (tile.opened && !tile.isBlocked)
       _NamedCommand(
-        strings.moveCommand(target.q, target.r),
+        'Движение',
         MoveCommand(target),
       ),
     if (!tile.opened)
       _NamedCommand(
         'Открыть '
-        '${tile.type == HexTileType.corridor ? 'коридор' : 'отсек'} '
-        '$target',
+        '${tile.type == HexTileType.corridor ? 'коридор' : 'отсек'}',
         RevealTileCommand(target),
       ),
     if (tile.type == HexTileType.corridor && tile.opened && tile.isBlocked)
-      _NamedCommand('Открыть коридор $target', OpenCorridorCommand(target)),
+      _NamedCommand('Открыть коридор', OpenCorridorCommand(target)),
     if (tile.type == HexTileType.corridor && tile.opened && !tile.isBlocked)
-      _NamedCommand('Закрыть коридор $target', CloseCorridorCommand(target)),
+      _NamedCommand('Закрыть коридор', CloseCorridorCommand(target)),
   ];
   return [
     for (final candidate in candidates)
@@ -189,17 +188,20 @@ String _eventLabel(GameEvent event, AppStrings strings) => switch (event) {
   MvpDemonstrationCompleted(:final questId) => strings.questEvent(questId),
 };
 
-String _decisionPrompt(PendingDecision decision, AppStrings strings) =>
-    switch (decision) {
-      AwaitingRerollChoice(:final dice) => strings.dicePrompt(dice.join(', ')),
-      AwaitingDodge(:final requiredSuccesses) => strings.dodgePrompt(
-        requiredSuccesses,
-      ),
-      AwaitingEventOption() => strings.eventOptionPrompt,
-      AwaitingTerminalPick() => strings.terminalPickPrompt,
-      AwaitingHeroReplacement() => strings.replacementHeroPrompt,
-      AwaitingOtherPlayerDecision() => strings.waitingForOtherPlayer,
-    };
+String _decisionPrompt(
+  PendingDecision decision,
+  AppStrings strings,
+) => switch (decision) {
+  AwaitingRerollChoice(:final dice) => strings.dicePrompt(dice.join(', ')),
+  AwaitingDodge(:final monsterDamage, :final requiredAgilitySuccesses) =>
+    'Входящий урон: $monsterDamage\n'
+        'Кубиков ловкости: $requiredAgilitySuccesses\n'
+        'Каждый успех уменьшает урон на 1.',
+  AwaitingEventOption() => strings.eventOptionPrompt,
+  AwaitingTerminalPick() => strings.terminalPickPrompt,
+  AwaitingHeroReplacement() => strings.replacementHeroPrompt,
+  AwaitingOtherPlayerDecision() => strings.waitingForOtherPlayer,
+};
 
 class _HexClipper extends CustomClipper<Path> {
   const _HexClipper();

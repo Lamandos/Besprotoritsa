@@ -514,156 +514,125 @@ void _showMonsterCard(
   MonsterInstance monster,
   String monsterName,
 ) {
-  final definition = state.monsterDefinitions[monster.monsterId];
-  final descriptionKey = definition?['descKey'];
-  final description = descriptionKey is String
-      ? state.contentTranslations[descriptionKey]
-      : null;
-  final currentHealth = (monster.health - monster.damage).clamp(
-    0,
-    monster.health,
-  );
-  final activePlayer = state.players
-      .where((player) => player.id == state.activePlayerId)
-      .firstOrNull;
-  final mayAttack =
-      activePlayer?.coord == monster.coord &&
-      validate(state, AttackCommand(monster.instanceId)) == null;
-  final combatDice = activePlayer == null
-      ? 0
-      : _heroCombatDiceCount(state, activePlayer);
   showDialog<void>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: Text(monsterName),
-      content: SizedBox(
-        width: 360,
-        child: SingleChildScrollView(
-          child: GameCardSurface(
-            material: GameCardMaterial.monster,
-            borderColor: const Color(0xFF8D6D46),
-            overlayColor: const Color(0x990C0B0A),
-            padding: const EdgeInsets.all(16),
-            child: DefaultTextStyle.merge(
-              style: const TextStyle(color: Color(0xFFF1E5CA), height: 1.4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (gameMonsterTokenArtworkAsset(monster.monsterId)
-                      case final art?)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Center(
-                        child: Image.asset(
-                          art,
-                          width: 320,
-                          height: 210,
-                          fit: BoxFit.contain,
-                        ),
+    builder: (dialogContext) => Consumer(
+      builder: (context, ref, _) {
+        final current = ref.watch(gameControllerProvider);
+        final target = current.monsters
+            .where((entry) => entry.instanceId == monster.instanceId)
+            .firstOrNull;
+        final hero = current.players
+            .where((player) => player.id == current.activePlayerId)
+            .firstOrNull;
+        final definition = current.monsterDefinitions[target?.monsterId];
+        final descriptionKey = definition?['descKey'];
+        final description = descriptionKey is String
+            ? current.contentTranslations[descriptionKey]
+            : null;
+        final queue = ref.read(eventQueueProvider);
+        return ListenableBuilder(
+          listenable: queue,
+          builder: (context, _) {
+            final controller = ref.read(gameControllerProvider.notifier);
+            final command = AttackCommand(monster.instanceId);
+            final mayAttack =
+                target != null &&
+                hero?.coord == target.coord &&
+                !queue.isPlaying &&
+                current.pendingDecision == null &&
+                (!controller.validatesCommandsLocally ||
+                    validate(current, command) == null);
+            return AlertDialog(
+              title: Text(monsterName),
+              content: SizedBox(
+                width: 360,
+                child: SingleChildScrollView(
+                  child: GameCardSurface(
+                    material: GameCardMaterial.monster,
+                    overlayColor: const Color(0x990C0B0A),
+                    padding: const EdgeInsets.all(16),
+                    child: DefaultTextStyle.merge(
+                      style: const TextStyle(
+                        color: Color(0xFFF1E5CA),
+                        height: 1.4,
                       ),
-                    ),
-                  const Text(
-                    'МОНСТР',
-                    style: TextStyle(
-                      color: Color(0xFFD0A66D),
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.6,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(description ?? 'Идентификатор: ${monster.monsterId}'),
-                  const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (activePlayer != null)
-                        _monsterStat('Сила боя', '$combatDice'),
-                      _monsterStat(
-                        'Здоровье',
-                        '$currentHealth/${monster.health}',
-                      ),
-                      _monsterStat('Защита', '${monster.defense}'),
-                      _monsterStat('Атака', '${monster.attack}'),
-                      _monsterStat('Движение', '${monster.movement}'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        if (activePlayer != null)
-          Consumer(
-            builder: (context, ref, _) => TextButton(
-              onPressed: mayAttack
-                  ? () {
-                      final beforeMonster = ref
-                          .read(gameControllerProvider)
-                          .monsters
-                          .where(
-                            (entry) => entry.instanceId == monster.instanceId,
-                          )
-                          .firstOrNull;
-                      if (beforeMonster == null ||
-                          !ref
-                              .read(gameControllerProvider.notifier)
-                              .dispatch(AttackCommand(monster.instanceId))) {
-                        return;
-                      }
-                      final afterState = ref.read(gameControllerProvider);
-                      final afterMonster = afterState.monsters
-                          .where(
-                            (entry) => entry.instanceId == monster.instanceId,
-                          )
-                          .firstOrNull;
-                      final damage = afterMonster == null
-                          ? beforeMonster.health - beforeMonster.damage
-                          : afterMonster.damage - beforeMonster.damage;
-                      Navigator.of(dialogContext).pop();
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              afterMonster == null
-                                  ? 'Монстр уничтожен.'
-                                  : afterState.pendingDecision != null
-                                  ? 'Выберите результат переброса.'
-                                  : damage > 0
-                                  ? 'Атака нанесла $damage урона.'
-                                  : 'Атака не нанесла урона.',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (gameMonsterTokenArtworkAsset(monster.monsterId)
+                              case final art?)
+                            Image.asset(
+                              art,
+                              width: 320,
+                              height: 210,
+                              fit: BoxFit.contain,
                             ),
+                          const SizedBox(height: 10),
+                          Text(description ?? 'МОНСТР'),
+                          const SizedBox(height: 14),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              if (hero != null)
+                                _monsterStat(
+                                  'Сила боя',
+                                  '${heroCombatDiceCount(current, hero)}',
+                                ),
+                              if (target != null) ...[
+                                _monsterStat(
+                                  'Здоровье',
+                                  '${(target.health - target.damage).clamp(0, target.health)}/${target.health}',
+                                ),
+                                _monsterStat('Защита', '${target.defense}'),
+                                _monsterStat('Атака', '${target.attack}'),
+                                _monsterStat('Движение', '${target.movement}'),
+                              ],
+                            ],
                           ),
-                        );
-                    }
-                  : null,
-              child: const Text('Атаковать'),
-            ),
-          ),
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(),
-          child: const Text('Закрыть'),
-        ),
-      ],
+                          if (queue.isPlaying)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 12),
+                              child: Text('Дождитесь завершения анимации.'),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                if (hero != null)
+                  TextButton(
+                    onPressed: mayAttack
+                        ? () {
+                            if (controller.dispatch(command)) {
+                              Navigator.of(dialogContext).pop();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Атака сейчас недоступна. Завершите ожидающее решение.',
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                        : null,
+                    child: const Text('Атаковать'),
+                  ),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Закрыть'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     ),
-  );
-}
-
-int _heroCombatDiceCount(GameState state, PlayerState player) {
-  final strengthModifier = player.conditions.fold<int>(
-    0,
-    (total, conditionId) =>
-        total +
-        (state.conditionCards[conditionId]?.statModifiers[StatType.strength] ??
-            0),
-  );
-  return math.max(
-    1,
-    player.stats.combatStrength + strengthModifier + player.weaponModifier,
   );
 }
 

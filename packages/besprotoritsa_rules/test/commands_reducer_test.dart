@@ -102,7 +102,7 @@ void main() {
     });
 
     test(
-      'skill check creates a reroll decision and resolution unblocks actions',
+      'skill check awaits confirmation without granting a free reroll',
       () {
         final afterRoll = step(
           _state(),
@@ -114,7 +114,7 @@ void main() {
 
         expect(afterRoll.state.actionsLeft, 1);
         expect(pending.dice, [2]);
-        expect(pending.availableRerolls, 1);
+        expect(pending.availableRerolls, 0);
         expect(pending.window.remainingTicks, 1);
 
         final resolved = step(

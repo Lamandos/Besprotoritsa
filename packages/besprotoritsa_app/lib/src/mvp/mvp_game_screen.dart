@@ -22,3 +22,4 @@ part 'mvp_game_screen_part_5.dart';
 part 'mvp_game_screen_part_6.dart';
 part 'mvp_game_screen_part_7.dart';
 part 'mvp_game_screen_part_8.dart';
+part 'mvp_game_feedback.dart';

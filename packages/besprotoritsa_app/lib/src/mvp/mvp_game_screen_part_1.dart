@@ -119,42 +119,42 @@ class _MvpGameScreenState extends ConsumerState<MvpGameScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(gameControllerProvider);
     final outcome = _gameOutcome(state);
-    if (outcome != null) {
-      return _GameOutcomeScreen(outcome: outcome, state: state);
-    }
     final queue = ref.read(eventQueueProvider);
-    return ListenableBuilder(
-      listenable: queue,
-      builder: (context, _) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(_textScales[_textScaleIndex]),
-        ),
-        child: _MvpGameLayout(
-          state: state,
-          queue: queue,
-          onManualSaveRequested: widget.onManualSaveRequested,
-          onExitRequested: widget.onExitRequested,
-          onScaleText: () {
-            setState(
-              () =>
-                  _textScaleIndex = (_textScaleIndex + 1) % _textScales.length,
-            );
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Размер текста: '
-                    '${(_textScales[_textScaleIndex] * 100).round()}%',
-                  ),
-                  duration: const Duration(seconds: 1),
-                ),
-              );
-          },
-          textScale: _textScales[_textScaleIndex],
-        ),
-      ),
-    );
+    final screen = outcome != null
+        ? _GameOutcomeScreen(outcome: outcome, state: state)
+        : ListenableBuilder(
+            listenable: queue,
+            builder: (context, _) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(_textScales[_textScaleIndex]),
+              ),
+              child: _MvpGameLayout(
+                state: state,
+                queue: queue,
+                onManualSaveRequested: widget.onManualSaveRequested,
+                onExitRequested: widget.onExitRequested,
+                onScaleText: () {
+                  setState(
+                    () => _textScaleIndex =
+                        (_textScaleIndex + 1) % _textScales.length,
+                  );
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Размер текста: '
+                          '${(_textScales[_textScaleIndex] * 100).round()}%',
+                        ),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                },
+                textScale: _textScales[_textScaleIndex],
+              ),
+            ),
+          );
+    return Stack(children: [screen, const _GameFeedbackOverlay()]);
   }
 }
 
@@ -263,21 +263,29 @@ class _MvpGameLayout extends ConsumerWidget {
                 IconButton(
                   key: const ValueKey<String>('event-card-button'),
                   tooltip: 'Карта события',
-                  onPressed: () => showModalBottomSheet<void>(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (sheetContext) => SafeArea(
-                      top: false,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                        child: SizedBox(
-                          height: MediaQuery.sizeOf(sheetContext).height * .78,
-                          child: _EventCardPanel(state: state),
+                  onPressed: blocked
+                      ? null
+                      : () => showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (sheetContext) => SafeArea(
+                            top: false,
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                              child: SizedBox(
+                                height:
+                                    MediaQuery.sizeOf(sheetContext).height *
+                                    .78,
+                                child: Consumer(
+                                  builder: (context, ref, _) => _EventCardPanel(
+                                    state: ref.watch(gameControllerProvider),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
                   icon: const Icon(Icons.auto_stories_outlined),
                 ),
                 if (onExitRequested != null)
