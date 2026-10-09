@@ -51,6 +51,68 @@ void main() {
     expect(entered.decks['supplies']!.discardPile, contains('tripwire'));
   });
 
+  test('BUG042 placing one tripwire consumes only one duplicate', () {
+    final state = _state(backpack: const ['tripwire', 'tripwire']);
+    final result = step(
+      state,
+      const UseCardAbilityCommand('tripwire'),
+      SeededDiceRoller(120),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.first.backpack, ['tripwire']);
+    expect(result.state.tripwires, hasLength(1));
+  });
+
+  test('BUG043 gas cylinder kill awards Restless gear to the killer', () {
+    final state = _state(
+      backpack: const ['gas-cylinder'],
+      monsters: [
+        RestlessMonster(
+          instanceId: 'restless-gas',
+          coord: const HexCoord(0, 0),
+          attack: 1,
+          defense: 0,
+          carriedGear: const ['medkit'],
+        ),
+      ],
+    );
+    final result = step(
+      state,
+      const UseCardAbilityCommand(
+        'gas-cylinder',
+        targetMonsterInstanceId: 'restless-gas',
+      ),
+      SeededDiceRoller(121),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.monsters, isEmpty);
+    expect(result.state.players.first.backpack, contains('medkit'));
+  });
+
+  test('BUG043 tripwire kill awards Restless gear to its owner', () {
+    final tripwireState = _state(backpack: const ['tripwire']);
+    final placed = step(
+      tripwireState,
+      const UseCardAbilityCommand('tripwire'),
+      SeededDiceRoller(122),
+    );
+    final tripwireResult = spawnMonster(
+      placed.state,
+      RestlessMonster(
+        instanceId: 'restless-tripwire',
+        coord: const HexCoord(0, 0),
+        attack: 1,
+        defense: 0,
+        carriedGear: const ['medkit'],
+      ),
+    );
+
+    expect(tripwireResult.monsters, isEmpty);
+    expect(tripwireResult.players.first.backpack, contains('medkit'));
+  });
+
   test('BUG032 a consumable medicine is removed and restores health', () {
     final state = _state(backpack: const ['medkit'], damage: 3);
     final result = step(
@@ -212,6 +274,33 @@ void main() {
     expect(result.state.actionsLeft, 1);
     expect(result.state.tileAt(const HexCoord(2, 0))!.isBlocked, isTrue);
     expect(result.state.players.first.backpack, contains('door-remote'));
+  });
+
+  test('BUG045 door remote rejects a fogged corridor', () {
+    final state = _state(
+      backpack: const ['door-remote'],
+      credits: 4,
+      board: [
+        _tile('start', const HexCoord(0, 0), HexTileType.start),
+        _tile(
+          'fogged-hall',
+          const HexCoord(2, 0),
+          HexTileType.corridor,
+          opened: false,
+        ),
+      ],
+    );
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand(
+        'door-remote',
+        targetCoord: HexCoord(2, 0),
+      ),
+      SeededDiceRoller(123),
+    );
+
+    expect(result.rejection, isA<InventoryCommandRejected>());
   });
 
   test(
@@ -764,6 +853,15 @@ GameState _state({
       sourceDeck: 'supplies',
       behaviorIds: const ['action.spend', 'monster.trapOnEnter'],
     ),
+    'gas-cylinder': CardDefinition(
+      id: 'gas-cylinder',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 6,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['action.spend', 'monster.killNonBoss'],
+    ),
     'medkit': CardDefinition(
       id: 'medkit',
       type: ItemType.supply,
@@ -892,11 +990,16 @@ GameState _state({
   },
 );
 
-HexTile _tile(String id, HexCoord coord, HexTileType type) => HexTile(
+HexTile _tile(
+  String id,
+  HexCoord coord,
+  HexTileType type, {
+  bool opened = true,
+}) => HexTile(
   id: id,
   coord: coord,
   type: type,
-  opened: true,
+  opened: opened,
   exits: HexEdge.values,
   hasTerminal: false,
   ventColor: VentColor.none,

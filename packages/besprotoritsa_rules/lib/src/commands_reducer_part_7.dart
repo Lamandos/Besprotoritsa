@@ -155,7 +155,11 @@ GameStepResult _resolveEventOption(
             playerId,
             (current) => _copyPlayer(
               current,
-              damage: current.damage + hero.backpack.length * 2,
+              damage:
+                  current.damage +
+                  (_ignoresAnyDamage(selected, current)
+                      ? 0
+                      : hero.backpack.length * 2),
             ),
           );
     if (choice.option == 'horde|discard') {
@@ -1143,6 +1147,7 @@ GameState _resolveEventOutcome(
             .toList();
         for (final hero in corridorHeroes) {
           final rolled = dice.rollDice(1).single;
+          final ignoresDamage = _ignoresAnyDamage(damaged, hero);
           damaged = _copyState(
             damaged,
             players: _replacePlayer(
@@ -1150,10 +1155,12 @@ GameState _resolveEventOutcome(
               hero.id,
               (currentHero) => _copyPlayer(
                 currentHero,
-                damage: currentHero.damage + rolled,
+                damage: currentHero.damage + (ignoresDamage ? 0 : rolled),
               ),
             ),
-            logEntry: 'event-asteroid-damage:${hero.id}:$rolled',
+            logEntry: ignoresDamage
+                ? 'event-asteroid-damage-ignored:${hero.id}:$rolled'
+                : 'event-asteroid-damage:${hero.id}:$rolled',
           );
         }
         damaged = resolveHeroDeaths(damaged);

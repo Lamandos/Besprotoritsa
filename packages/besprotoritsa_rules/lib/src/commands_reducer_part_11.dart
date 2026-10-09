@@ -65,6 +65,7 @@ CommandRejection? _validateCardAbility(
     if (!player.backpack.contains(command.cardId) ||
         target == null ||
         target.type != HexTileType.corridor ||
+        !target.opened ||
         player.credits < 2 ||
         state.actionsLeft < 1) {
       return const InventoryCommandRejected(
@@ -311,7 +312,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
         state,
         (current) => _copyPlayer(
           current,
-          backpack: current.backpack.where((id) => id != command.cardId),
+          backpack: _removeOne(current.backpack, command.cardId),
         ),
       ),
       tripwires: [...state.tripwires, trap],
@@ -496,6 +497,18 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
       decks: decks,
       logEntry: 'card-ability:gas-cylinder:${player.id}:${monster.monsterId}',
     );
+    if (monster.monsterId == RestlessMonster.restlessMonsterId) {
+      final killer = _playerById(killed, player.id)!;
+      final loot = _awardRestlessTrophies(killer, monster, killed);
+      killed = _copyState(
+        killed,
+        players: _replacePlayer(killed, killer.id, (_) => loot.player),
+        logEntry: loot.unclaimed.isEmpty
+            ? null
+            : 'restless-unclaimed:${monster.instanceId}:'
+                  '${loot.unclaimed.join(',')}',
+      );
+    }
     if (killed.questDefinitions.isNotEmpty) {
       killed = _applyFullQuestEvent(
         killed,
@@ -793,6 +806,20 @@ GameState _triggerTripwire(
     decks: decks,
     logEntry: 'tripwire-triggered:${trap.ownerId}:${monster.monsterId}',
   );
+  if (monster.monsterId == RestlessMonster.restlessMonsterId) {
+    final killer = _playerById(triggered, trap.ownerId);
+    if (killer != null) {
+      final loot = _awardRestlessTrophies(killer, monster, triggered);
+      triggered = _copyState(
+        triggered,
+        players: _replacePlayer(triggered, killer.id, (_) => loot.player),
+        logEntry: loot.unclaimed.isEmpty
+            ? null
+            : 'restless-unclaimed:${monster.instanceId}:'
+                  '${loot.unclaimed.join(',')}',
+      );
+    }
+  }
   if (triggered.questDefinitions.isNotEmpty) {
     triggered = _applyFullQuestEvent(
       triggered,

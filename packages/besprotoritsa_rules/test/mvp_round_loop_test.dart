@@ -885,6 +885,61 @@ void main() {
     expect(state.players.single.backpack, ['ration', 'flare']);
   });
 
+  test('BUG044 horde keep respects PROT3-CT damage immunity', () {
+    final shield = CardDefinition(
+      id: 'proton-shield',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['card.discardCost', 'damage.preventUntilRoundEnd'],
+    );
+    var state = _mvpState(
+      eventId: 'horde-carry',
+      playerBackpack: const ['proton-shield', 'ration', 'flare'],
+      playerHealth: 10,
+      cardDefinitions: {'proton-shield': shield},
+      additionalDecks: {'supplies': DeckState(drawPile: const [])},
+      eventDefinitions: {
+        'horde-carry': {
+          'id': 'horde-carry',
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+              'failureEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(
+      state,
+      const UseCardAbilityCommand('proton-shield'),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('horde|keep')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.damage, 0);
+    expect(state.players.single.backpack, ['ration', 'flare']);
+  });
+
   test('choosing one duplicate card returns the other physical copy', () {
     final definitions = {
       for (final id in ['flare', 'water'])
@@ -1277,6 +1332,55 @@ void main() {
       state.players.every((hero) => hero.coord != const HexCoord(0, 1)),
       isTrue,
     );
+  });
+
+  test('BUG044 asteroid alert respects PROT3-CT damage immunity', () {
+    final shield = CardDefinition(
+      id: 'proton-shield',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['card.discardCost', 'damage.preventUntilRoundEnd'],
+    );
+    var state = _mvpState(
+      eventId: 'asteroid-alert',
+      playerCoord: const HexCoord(0, 1),
+      playerBackpack: const ['proton-shield'],
+      corridorOpened: true,
+      cardDefinitions: {'proton-shield': shield},
+      additionalDecks: {'supplies': DeckState(drawPile: const [])},
+      eventDefinitions: {
+        'asteroid-alert': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'asteroid_alert'},
+              ],
+              'failureEffects': [
+                {'type': 'asteroid_alert'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(
+      state,
+      const UseCardAbilityCommand('proton-shield'),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([5]),
+    ).state;
+
+    expect(state.players.single.damage, 0);
   });
 
   test(
