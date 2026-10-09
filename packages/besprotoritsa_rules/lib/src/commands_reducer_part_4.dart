@@ -91,15 +91,15 @@ GameState resolveColocation(
 }) {
   if (monsterInstanceId != null) {
     final monster = _monsterById(state, monsterInstanceId);
-    final trap = state.tripwires
-        .where((candidate) => candidate.coord == (coord ?? monster?.coord))
-        .firstOrNull;
-    if (monster != null && trap != null && !_isBossForAbility(state, monster)) {
-      return resolveColocation(
-        _triggerTripwire(state, trap, monster),
-        coord: coord,
-        playerId: playerId,
-      );
+    if (monster != null) {
+      final triggered = _resolveTripwireArrival(state, monster);
+      if (!identical(triggered, state)) {
+        return resolveColocation(
+          triggered,
+          coord: coord,
+          playerId: playerId,
+        );
+      }
     }
   }
   final damage = <IncomingDamage>[];
@@ -161,6 +161,19 @@ GameState resolveColocation(
     pendingDamage: [...state.pendingDamage, ...damage],
   );
   return _startNextIncomingDamage(resolved);
+}
+
+GameState _resolveTripwireArrival(
+  GameState state,
+  MonsterInstance arrivingMonster,
+) {
+  final monster = _monsterById(state, arrivingMonster.instanceId);
+  if (monster == null || _isBossForAbility(state, monster)) return state;
+  final trap = state.tripwires
+      .where((candidate) => candidate.coord == monster.coord)
+      .firstOrNull;
+  if (trap == null) return state;
+  return _triggerTripwire(state, trap, monster);
 }
 
 bool _ignoresBoils(GameState state, PlayerState player) =>

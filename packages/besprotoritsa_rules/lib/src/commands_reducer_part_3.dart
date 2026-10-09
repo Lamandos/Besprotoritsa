@@ -185,14 +185,11 @@ GameState _applyChestCommand(GameState state, GameCommand command) {
     WithdrawFromChestCommand(:final cardId) => _copyState(
       state,
       actionsLeft: state.actionsLeft - 1,
-      players: _replacePlayer(
+      players: _chestWithdrawalPlayers(
         state,
         player.id,
-        (current) => InventoryRules.receive(
-          current,
-          cardId,
-          state.cardDefinitions,
-        ),
+        _receiveChestCard(state, player, cardId),
+        [cardId],
       ),
       chestCards: _removeOne(state.chestCards, cardId),
       logEntry: 'chest-withdraw:${player.id}:$cardId',
@@ -244,11 +241,7 @@ GameState _applyChestTransfer(
   }
   for (final cardId in withdrawCardIds) {
     final chestIndex = chestCards.indexOf(cardId);
-    updatedPlayer = InventoryRules.receive(
-      updatedPlayer,
-      cardId,
-      state.cardDefinitions,
-    );
+    updatedPlayer = _receiveChestCard(state, updatedPlayer, cardId);
     chestCards.removeAt(chestIndex);
   }
   InventoryRules.requireWeaponCapacity(updatedPlayer, state.cardDefinitions);
@@ -256,10 +249,67 @@ GameState _applyChestTransfer(
   return _copyState(
     state,
     actionsLeft: state.actionsLeft - 1,
-    players: _replacePlayer(state, player.id, (_) => updatedPlayer),
+    players: _chestWithdrawalPlayers(
+      state,
+      player.id,
+      updatedPlayer,
+      withdrawCardIds,
+    ),
     chestCards: chestCards,
     logEntry: 'chest-transfer:${player.id}',
   );
+}
+
+PlayerState _receiveChestCard(
+  GameState state,
+  PlayerState player,
+  CardId cardId,
+) {
+  final received = InventoryRules.receive(
+    player,
+    cardId,
+    state.cardDefinitions,
+  );
+  final exhaustedInChest = state.players.any(
+    (owner) => owner.exhaustedRobots.contains(cardId),
+  );
+  if (!exhaustedInChest) return received;
+  return _copyPlayer(
+    received,
+    exhaustedRobots: [
+      ...received.exhaustedRobots.where((id) => id != cardId),
+      cardId,
+    ],
+  );
+}
+
+List<PlayerState> _chestWithdrawalPlayers(
+  GameState state,
+  PlayerId recipientId,
+  PlayerState recipient,
+  Iterable<CardId> cardIds,
+) {
+  final exhaustedWithdrawals = cardIds
+      .where(
+        (cardId) => state.players.any(
+          (owner) => owner.exhaustedRobots.contains(cardId),
+        ),
+      )
+      .toSet();
+  return [
+    for (final player in state.players)
+      if (player.id == recipientId)
+        recipient
+      else if (player.exhaustedRobots.any(exhaustedWithdrawals.contains))
+        _copyPlayer(
+          player,
+          exhaustedRobots: player.exhaustedRobots.where(
+            (id) => !exhaustedWithdrawals.contains(id),
+          ),
+        )
+      else
+        player,
+  ];
 }
 
 GameState _exchange(

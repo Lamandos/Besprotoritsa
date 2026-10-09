@@ -516,7 +516,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
         playerId: player.id,
       );
     }
-    return killed;
+    return _recordPersonalTaskKillProgress(state, killed, player.id);
   }
 
   final consumed = _discardUsedCard(state, player, command.cardId);

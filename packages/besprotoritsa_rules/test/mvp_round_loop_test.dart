@@ -1334,6 +1334,73 @@ void main() {
     );
   });
 
+  test(
+    'BUG048 asteroid relocation triggers a tripwire on the arrival tile',
+    () {
+      var state = _mvpState(
+        eventId: 'asteroid-alert',
+        corridorOpened: true,
+        tripwires: const [
+          TripwireTrap(
+            instanceId: 'tripwire-at-start',
+            coord: HexCoord(0, 0),
+            ownerId: 'ada',
+            cardId: 'tripwire',
+          ),
+        ],
+        monsters: [
+          MonsterInstance(
+            instanceId: 'corridor-ghoul',
+            monsterId: 'ghoul',
+            coord: const HexCoord(0, 1),
+            damage: 0,
+            attack: 1,
+            movement: 0,
+          ),
+        ],
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 2,
+            'defense': 0,
+            'attack': 1,
+            'movement': 0,
+            'features': <String>[],
+          },
+        },
+        additionalDecks: {
+          'supplies': DeckState(drawPile: const []),
+        },
+        eventDefinitions: {
+          'asteroid-alert': {
+            'options': [
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'asteroid_alert'},
+                ],
+                'failureEffects': [
+                  {'type': 'asteroid_alert'},
+                ],
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([1]),
+      ).state;
+
+      expect(state.monsters, isEmpty);
+      expect(state.tripwires, isEmpty);
+      expect(state.decks['supplies']!.discardPile, contains('tripwire'));
+      expect(state.pendingDecision, isNull);
+    },
+  );
+
   test('BUG044 asteroid alert respects PROT3-CT damage immunity', () {
     final shield = CardDefinition(
       id: 'proton-shield',
@@ -2389,6 +2456,77 @@ void main() {
     );
   });
 
+  test('BUG047 gas cylinder kill completes the hunter personal task', () {
+    final gasCylinder = CardDefinition(
+      id: 'gas-cylinder',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 6,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['action.spend', 'monster.killNonBoss'],
+    );
+    final state = step(
+      _mvpState(
+        playerBackpack: const ['gas-cylinder'],
+        cardDefinitions: {'gas-cylinder': gasCylinder},
+        additionalDecks: {'supplies': DeckState(drawPile: const [])},
+        personalTasksByPlayer: const {
+          'ada': ['hunter-gas'],
+        },
+        conditionProgress: const {
+          'hunter-gas': {
+            'personal-task-value': 1,
+            'personal-task-turn': 1,
+          },
+        },
+        taskDefinitions: {
+          'hunter-gas': {
+            'id': 'hunter-gas',
+            'targetType': 'metric',
+            'metric': 'enemies_killed',
+            'targetValue': 2,
+            'window': 'perTurn',
+            'aggregation': 'sum',
+            'rewardCredits': 5,
+            'nameKey': 'task.hunter.name',
+            'descKey': 'task.hunter.description',
+          },
+        },
+        monsters: [
+          MonsterInstance(
+            instanceId: 'gas-target',
+            monsterId: 'ghoul',
+            coord: const HexCoord(0, 0),
+            damage: 0,
+          ),
+        ],
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 2,
+            'defense': 0,
+            'attack': 1,
+            'movement': 1,
+            'features': <String>[],
+          },
+        },
+      ),
+      const UseCardAbilityCommand(
+        'gas-cylinder',
+        targetMonsterInstanceId: 'gas-target',
+      ),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.quests.statusOf('hunter-gas'), QuestStatus.completed);
+    expect(
+      state.quests.conditionProgress['hunter-gas']?['personal-task-value'],
+      2,
+    );
+    expect(state.players.single.credits, 5);
+  });
+
   test('immediate event counterattack advances personal kill tasks', () {
     var state = _mvpState(
       eventId: 'invasion-card',
@@ -3062,6 +3200,7 @@ GameState _mvpState({
   Map<DeckId, DeckState> additionalDecks = const {},
   Iterable<MonsterInstance> monsters = const [],
   Iterable<BoilToken> boils = const [],
+  Iterable<TripwireTrap> tripwires = const [],
   Map<String, Map<String, Object?>> monsterDefinitions = const {},
   int heroCount = 1,
   int secondHeroDamage = 0,
@@ -3122,6 +3261,7 @@ GameState _mvpState({
   ],
   monsters: monsters,
   boils: boils,
+  tripwires: tripwires,
   reserveHeroes: reserveHeroes,
   decks: {
     'events': DeckState(drawPile: [eventId]),

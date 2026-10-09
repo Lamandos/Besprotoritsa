@@ -17,6 +17,12 @@ void main() {
       ItemSlot.armor,
       behaviorIds: const ['equipment.extraWeaponSlot'],
     ),
+    'r69-nic3': _gear(
+      'r69-nic3',
+      ItemType.robot,
+      ItemSlot.robot,
+      behaviorIds: const ['robot.exhaust', 'robot.ignoreEnemyFeatures'],
+    ),
   };
 
   test(
@@ -127,6 +133,100 @@ void main() {
       );
     },
   );
+
+  test(
+    'BUG046 an exhausted robot stays exhausted through a chest transfer',
+    () {
+      var state = _state(
+        cards: cards,
+        board: [_startTile()],
+        players: [
+          _player(
+            'ada',
+            backpack: const ['r69-nic3'],
+            exhaustedRobots: const ['r69-nic3'],
+          ),
+          _player('boris'),
+        ],
+      );
+      state = step(
+        state,
+        TransferChestCardsCommand(depositCardIds: const ['r69-nic3']),
+        FixedDiceRoller([]),
+      ).state;
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      expect(state.activePlayerId, 'boris');
+      state = step(
+        state,
+        TransferChestCardsCommand(withdrawCardIds: const ['r69-nic3']),
+        FixedDiceRoller([]),
+      ).state;
+
+      final ada = state.players.firstWhere((player) => player.id == 'ada');
+      final boris = state.players.firstWhere((player) => player.id == 'boris');
+      expect(
+        [
+          ada.exhaustedRobots.contains('r69-nic3'),
+          boris.exhaustedRobots.contains('r69-nic3'),
+        ],
+        [false, true],
+      );
+
+      final equipped = step(
+        state,
+        const EquipCommand('r69-nic3'),
+        FixedDiceRoller([]),
+      ).state;
+      expect(
+        step(
+          equipped,
+          const UseCardAbilityCommand('r69-nic3'),
+          FixedDiceRoller([]),
+        ).rejection,
+        isA<InventoryCommandRejected>(),
+      );
+    },
+  );
+
+  test('BUG046 legacy chest commands transfer robot exhaustion too', () {
+    var state = _state(
+      cards: cards,
+      board: [_startTile()],
+      players: [
+        _player(
+          'ada',
+          backpack: const ['r69-nic3'],
+          exhaustedRobots: const ['r69-nic3'],
+        ),
+        _player('boris'),
+      ],
+    );
+    state = step(
+      state,
+      const DepositIntoChestCommand('r69-nic3'),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const WithdrawFromChestCommand('r69-nic3'),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(
+      [
+        state.players
+            .firstWhere((player) => player.id == 'ada')
+            .exhaustedRobots
+            .contains('r69-nic3'),
+        state.players
+            .firstWhere((player) => player.id == 'boris')
+            .exhaustedRobots
+            .contains('r69-nic3'),
+      ],
+      [false, true],
+    );
+  });
 
   test('the start-sector chest rejects transfers without an action', () {
     final state = _state(
@@ -457,6 +557,7 @@ HexTile _startTile() => HexTile(
 PlayerState _player(
   String id, {
   Iterable<CardId> backpack = const [],
+  Iterable<CardId> exhaustedRobots = const [],
   int credits = 0,
   int actionPoints = 2,
 }) => PlayerState(
@@ -472,6 +573,7 @@ PlayerState _player(
   conditions: const [],
   alive: true,
   actionPoints: actionPoints,
+  exhaustedRobots: exhaustedRobots,
 );
 
 MonsterInstance _monster(HexCoord coord) => MonsterInstance(

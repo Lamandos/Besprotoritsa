@@ -1182,18 +1182,19 @@ GameState _resolveEventOutcome(
             else
               hero,
         ];
-        final movedMonsters = [
-          for (final monster in damaged.monsters)
-            if (corridors.contains(monster.coord))
-              _copyMonster(
-                monster,
-                coord:
-                    _eventDisplacementTarget(damaged, monster.coord) ??
-                    monster.coord,
-              )
-            else
-              monster,
-        ];
+        final movedMonsters = <MonsterInstance>[];
+        final arrivingMonsters = <MonsterInstance>[];
+        for (final monster in damaged.monsters) {
+          if (!corridors.contains(monster.coord)) {
+            movedMonsters.add(monster);
+            continue;
+          }
+          final destination =
+              _eventDisplacementTarget(damaged, monster.coord) ?? monster.coord;
+          final moved = _copyMonster(monster, coord: destination);
+          movedMonsters.add(moved);
+          if (destination != monster.coord) arrivingMonsters.add(moved);
+        }
         current = _copyState(
           damaged,
           board: closedBoard,
@@ -1201,6 +1202,9 @@ GameState _resolveEventOutcome(
           monsters: movedMonsters,
           logEntry: 'event-asteroid-corridors-closed',
         );
+        for (final monster in arrivingMonsters) {
+          current = _resolveTripwireArrival(current, monster);
+        }
         current = resolveColocation(current);
       case 'destroy_nest':
         final nests = current.monsters
