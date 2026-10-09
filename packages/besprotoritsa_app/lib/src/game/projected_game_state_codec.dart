@@ -1,6 +1,7 @@
 // Public data is documented on the containing types; member names are direct.
 // ignore_for_file: public_member_api_docs
 
+import 'package:besprotoritsa_app/src/game/full_game_state.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 
 /// Rehydrates the intentionally limited state projection sent to one player.
@@ -44,6 +45,8 @@ final class ProjectedGameStateCodec {
       ),
     ),
     quests: _quests(_object(json, 'quests')),
+    cardDefinitions: fullRuntimeCardDefinitions,
+    contentTranslations: fullRuntimeContentTranslations,
     log: _strings(json['log']),
     isComplete: json['isComplete'] == true,
     pendingDecision: _pendingDecision(json['pendingDecision']),

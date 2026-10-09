@@ -66,6 +66,97 @@ void main() {
     expect(result.state.actionsLeft, 2);
   });
 
+  test('BUG039 consumable healing also clears and discards conditions', () {
+    final state = _state(
+      backpack: const ['medkit'],
+      damage: 3,
+      conditions: const ['infection'],
+    );
+    final result = step(
+      state,
+      const UseCardAbilityCommand('medkit'),
+      SeededDiceRoller(131),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.first.damage, 0);
+    expect(result.state.players.first.conditions, isEmpty);
+    expect(
+      result.state.decks['conditions']!.discardPile,
+      contains('infection'),
+    );
+  });
+
+  test('BUG039 medic bag healing also clears and discards conditions', () {
+    final state = _state(
+      backpack: const ['medic-bag'],
+      credits: 2,
+      damage: 2,
+      conditions: const ['infection'],
+    );
+    final result = step(
+      state,
+      const UseCardAbilityCommand(
+        'medic-bag',
+        targetPlayerId: 'hero-1',
+        amount: 1,
+      ),
+      SeededDiceRoller(132),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.first.conditions, isEmpty);
+    expect(
+      result.state.decks['conditions']!.discardPile,
+      contains('infection'),
+    );
+  });
+
+  test('BUG039 H3-AL healing also clears and discards conditions', () {
+    final state = _state(
+      equippedRobot: 'h3-al',
+      secondHeroDamage: 2,
+      secondConditions: const ['infection'],
+    );
+    final result = step(
+      state,
+      const UseCardAbilityCommand('h3-al', targetPlayerId: 'hero-2'),
+      SeededDiceRoller(133),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.last.conditions, isEmpty);
+    expect(
+      result.state.decks['conditions']!.discardPile,
+      contains('infection'),
+    );
+  });
+
+  test(
+    'BUG038 proton shield activates without crashing and prevents damage',
+    () {
+      final state = _state(backpack: const ['proton-shield'], damage: 1);
+      late GameStepResult result;
+
+      expect(
+        () => result = step(
+          state,
+          const UseCardAbilityCommand('proton-shield'),
+          SeededDiceRoller(134),
+        ),
+        returnsNormally,
+      );
+
+      expect(result.rejection, isNull);
+      expect(result.state.players.first.damageImmuneThroughRound, state.round);
+      expect(result.state.players.first.backpack, isEmpty);
+      expect(
+        result.state.decks['supplies']!.discardPile,
+        contains('proton-shield'),
+      );
+    },
+  );
+
   test(
     'BUG032 air canister spends two actions and transfers between airlocks',
     () {
@@ -206,6 +297,44 @@ void main() {
       expect(result.state.actionsLeft, 0);
     },
   );
+
+  test('BUG041 an exhausted robot stays exhausted when transferred', () {
+    final state = _state(
+      equippedRobot: 'r69-nic3',
+      secondHeroCoord: const HexCoord(0, 0),
+    );
+    final activated = step(
+      state,
+      const UseCardAbilityCommand('r69-nic3'),
+      SeededDiceRoller(135),
+    );
+    final exchanged = step(
+      activated.state,
+      const ExchangeCommand(
+        partnerId: 'hero-2',
+        giveCards: [
+          InventoryCardSelection(
+            cardId: 'r69-nic3',
+            area: InventoryCardArea.robot,
+          ),
+        ],
+      ),
+      SeededDiceRoller(136),
+    );
+
+    expect(activated.rejection, isNull);
+    expect(exchanged.rejection, isNull);
+    expect(exchanged.state.players.first.equipped.robot, isNull);
+    expect(
+      exchanged.state.players.first.exhaustedRobots,
+      isNot(contains('r69-nic3')),
+    );
+    expect(exchanged.state.players.last.backpack, contains('r69-nic3'));
+    expect(
+      exchanged.state.players.last.exhaustedRobots,
+      contains('r69-nic3'),
+    );
+  });
 
   test('BUG032 skill stimulant is consumed in the reroll window', () {
     final state = _state(backpack: const ['science-stimulant']);
@@ -550,6 +679,8 @@ GameState _state({
   int actionsLeft = 2,
   int roundNumber = 1,
   String activePlayerId = 'hero-1',
+  Iterable<CardId> conditions = const [],
+  Iterable<CardId> secondConditions = const [],
   PlayerStats playerStats = const PlayerStats(),
   PlayerStats secondHeroStats = const PlayerStats(),
   HexCoord secondHeroCoord = const HexCoord(1, 0),
@@ -581,7 +712,7 @@ GameState _state({
       equipped: EquippedGear(robot: equippedRobot),
       carriedMods: const [],
       implanted: const [],
-      conditions: const [],
+      conditions: conditions,
       alive: true,
       stats: playerStats,
       exhaustedRobots: exhaustedRobots,
@@ -598,7 +729,7 @@ GameState _state({
       equipped: const EquippedGear(),
       carriedMods: const [],
       implanted: const [],
-      conditions: const [],
+      conditions: secondConditions,
       alive: true,
       stats: secondHeroStats,
     ),
@@ -608,6 +739,10 @@ GameState _state({
   decks: {
     'supplies': DeckState(drawPile: const []),
     'monsters': DeckState(drawPile: const []),
+    'conditions': DeckState(drawPile: const []),
+  },
+  conditionCards: {
+    'infection': ConditionCard(id: 'infection'),
   },
   quests: QuestState(),
   cardDefinitions: {
@@ -637,6 +772,15 @@ GameState _state({
       staticEffects: CardStaticEffects(const {}),
       sourceDeck: 'supplies',
       behaviorIds: const ['card.discardCost', 'health.restoreAll'],
+    ),
+    'proton-shield': CardDefinition(
+      id: 'proton-shield',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['card.discardCost', 'damage.preventUntilRoundEnd'],
     ),
     'air-canister': CardDefinition(
       id: 'air-canister',

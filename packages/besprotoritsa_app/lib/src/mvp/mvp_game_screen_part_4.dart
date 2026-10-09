@@ -1463,7 +1463,10 @@ class _InventoryActionButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(gameControllerProvider);
-    final enabled = validate(state, action.command) == null;
+    final controller = ref.read(gameControllerProvider.notifier);
+    final enabled =
+        !controller.validatesCommandsLocally ||
+        validate(state, action.command) == null;
     return FilledButton.tonalIcon(
       onPressed: !enabled
           ? null

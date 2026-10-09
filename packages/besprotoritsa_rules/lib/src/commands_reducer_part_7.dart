@@ -1079,6 +1079,10 @@ GameState _completeRoll(
   return _resumeAutomaticPhase(stateAfterCounters);
 }
 
+bool _ignoresAnyDamage(GameState state, PlayerState player) =>
+    player.damageImmuneThroughRound != null &&
+    state.round <= player.damageImmuneThroughRound!;
+
 /// Applies the machine-readable consequences attached to a verified event
 /// branch. An unmapped outcome is recorded for the journal and left visible in
 /// the coverage registry; consequences are never guessed from prose.
@@ -1425,7 +1429,9 @@ GameState _resolveEventOutcome(
           players: _replacePlayer(
             current,
             playerId,
-            (hero) => _copyPlayer(hero, damage: hero.damage + amount),
+            (hero) => _ignoresAnyDamage(current, hero)
+                ? hero
+                : _copyPlayer(hero, damage: hero.damage + amount),
           ),
           logEntry: 'event-damage:$playerId:$amount',
         );
@@ -1435,7 +1441,7 @@ GameState _resolveEventOutcome(
           current,
           players: [
             for (final hero in current.players)
-              if (hero.alive)
+              if (hero.alive && !_ignoresAnyDamage(current, hero))
                 _copyPlayer(hero, damage: hero.damage + amount)
               else
                 hero,
@@ -1450,7 +1456,9 @@ GameState _resolveEventOutcome(
           players: _replacePlayer(
             current,
             playerId,
-            (hero) => _copyPlayer(hero, damage: hero.damage + rolledDamage),
+            (hero) => _ignoresAnyDamage(current, hero)
+                ? hero
+                : _copyPlayer(hero, damage: hero.damage + rolledDamage),
           ),
           logEntry: 'event-damage-roll:$playerId:$rolledDamage',
         );
@@ -1461,13 +1469,16 @@ GameState _resolveEventOutcome(
         var rollIndex = 0;
         current = _copyState(
           current,
-          players: [
-            for (final hero in current.players)
-              if (hero.alive)
-                _copyPlayer(hero, damage: hero.damage + rolls[rollIndex++])
-              else
-                hero,
-          ],
+          players: current.players.map((hero) {
+            if (!hero.alive) return hero;
+            final rolledDamage = rolls[rollIndex++];
+            return _copyPlayer(
+              hero,
+              damage:
+                  hero.damage +
+                  (_ignoresAnyDamage(current, hero) ? 0 : rolledDamage),
+            );
+          }),
           logEntry: 'event-damage-each-roll:${rolls.join(',')}',
         );
         current = resolveHeroDeaths(current);

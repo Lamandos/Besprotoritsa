@@ -344,14 +344,28 @@ InventoryTransfer _exchangePlayers(
   for (final cardId in receivedCards) {
     from = InventoryRules.receive(from, cardId, state.cardDefinitions);
   }
+  final exhaustedGiven = player.exhaustedRobots
+      .where(givenCards.contains)
+      .toSet();
+  final exhaustedReceived = partner.exhaustedRobots
+      .where(receivedCards.contains)
+      .toSet();
   return InventoryTransfer(
     from: _copyPlayer(
       from,
       credits: from.credits - command.giveCredits + command.receiveCredits,
+      exhaustedRobots: [
+        ...from.exhaustedRobots.where((id) => !exhaustedGiven.contains(id)),
+        ...exhaustedReceived,
+      ],
     ),
     to: _copyPlayer(
       to,
       credits: to.credits + command.giveCredits - command.receiveCredits,
+      exhaustedRobots: [
+        ...to.exhaustedRobots.where((id) => !exhaustedReceived.contains(id)),
+        ...exhaustedGiven,
+      ],
     ),
   );
 }

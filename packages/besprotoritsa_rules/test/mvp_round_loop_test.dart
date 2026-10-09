@@ -367,6 +367,63 @@ void main() {
     expect(state.players.single.credits, 0);
   });
 
+  test('BUG040 PROT3-CT blocks direct event damage to its owner', () {
+    var state = _mvpState(
+      eventId: 'immune-damage-event',
+      heroCount: 2,
+      playerEquipment: const EquippedGear(robot: 'prot3-ct'),
+      playerHealth: 10,
+      cardDefinitions: {
+        'prot3-ct': CardDefinition(
+          id: 'prot3-ct',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'items',
+          behaviorIds: const [
+            'robot.exhaust',
+            'damage.ignoreAnyUntilRoundEnd',
+          ],
+        ),
+      },
+      eventDefinitions: {
+        'immune-damage-event': {
+          'id': 'immune-damage-event',
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'successEffects': [
+                {'type': 'damage', 'amount': 1},
+                {'type': 'damage_all_players', 'amount': 1},
+                {'type': 'damage_roll_die'},
+                {'type': 'damage_each_player_roll_die'},
+              ],
+              'failureEffects': <Object?>[],
+            },
+          ],
+        },
+      },
+    );
+    state = step(
+      state,
+      const UseCardAbilityCommand('prot3-ct'),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    expect(state.pendingDecision, isA<AwaitingEventOption>());
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([2, 3, 4]),
+    ).state;
+
+    expect(state.players.first.damage, 0);
+    expect(state.players.last.damage, 5);
+  });
+
   test('combat-strength event bonus adds a die to later attacks', () {
     var state = _mvpState(
       eventId: 'combat-strength-event',

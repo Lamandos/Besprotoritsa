@@ -274,7 +274,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
   if (command.cardId == 'medic-bag') {
     final targetId = command.targetPlayerId ?? player.id;
     final amount = command.amount!;
-    return _copyState(
+    final medical = _copyState(
       state,
       actionsLeft: state.actionsLeft - 1,
       players: [
@@ -294,6 +294,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
       ],
       logEntry: 'card-ability:medic-bag:${player.id}:$targetId:$amount',
     );
+    return _clearPlayerConditions(medical, targetId);
   }
 
   if (command.cardId == 'tripwire') {
@@ -397,7 +398,11 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
       ),
       logEntry: 'robot-heal:${player.id}:$targetId:3',
     );
-    return _exhaustRobot(healed, player, command.cardId);
+    return _exhaustRobot(
+      _clearPlayerConditions(healed, targetId),
+      player,
+      command.cardId,
+    );
   }
 
   if (command.cardId == 'prot2-ct') {
@@ -513,6 +518,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
     'stash' => (heal: 0, credits: 10, actions: 0),
     'adrenaline-supply' => (heal: 0, credits: 0, actions: 1),
     'adrenaline-x' => (heal: 0, credits: 0, actions: 2),
+    'proton-shield' => (heal: 0, credits: 0, actions: 0),
     _ => throw StateError('Validated unsupported card ability.'),
   };
   final nextPlayer = _copyPlayer(
@@ -526,11 +532,37 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
         ? state.round
         : updatedPlayer.damageImmuneThroughRound,
   );
-  return _copyState(
+  final resolved = _copyState(
     consumed,
     actionsLeft: consumed.actionsLeft + effect.actions,
     players: _replacePlayer(consumed, updatedPlayer.id, (_) => nextPlayer),
     logEntry: 'card-ability:${command.cardId}:${player.id}',
+  );
+  return effect.heal > 0
+      ? _clearPlayerConditions(resolved, updatedPlayer.id)
+      : resolved;
+}
+
+GameState _clearPlayerConditions(GameState state, PlayerId playerId) {
+  final player = _playerById(state, playerId);
+  if (player == null || player.conditions.isEmpty) return state;
+
+  final decks = Map<DeckId, DeckState>.of(state.decks);
+  final conditionDeck = decks['conditions'];
+  if (conditionDeck != null) {
+    decks['conditions'] = DeckState(
+      drawPile: conditionDeck.drawPile,
+      discardPile: [...conditionDeck.discardPile, ...player.conditions],
+    );
+  }
+  return _copyState(
+    state,
+    players: _replacePlayer(
+      state,
+      playerId,
+      (current) => _copyPlayer(current, conditions: const []),
+    ),
+    decks: decks,
   );
 }
 
