@@ -26,6 +26,7 @@ void main() {
       expect(restored.cardDefinitions['pistol']!.sourceDeck, 'items');
       expect(restored.players.first.monsterDamageImmuneThroughRound, 3);
       expect(restored.players.first.monsterDefenseBonusRound, 5);
+      expect(restored.players.first.enemyFeaturesIgnoredThroughRound, 4);
       expect(restored.players.first.retainedEventCards, ['scientist-report']);
       expect(restored.chestCards, ['shared-tool']);
       expect(restored.pendingDecision, isA<AwaitingRerollChoice>());
@@ -123,6 +124,7 @@ void main() {
     final pendingAttack = AwaitingRerollChoice(
       dice: const [1, 2],
       availableRerolls: 1,
+      rerollSources: const ['defibrillator'],
       window: const DecisionWindow(remainingTicks: 1),
       context: const AttackRollContext(
         playerId: 'ada',
@@ -135,6 +137,7 @@ void main() {
                 .decode(codec.encode(_withPending(base, pendingAttack)))
                 .pendingDecision!
             as AwaitingRerollChoice;
+    expect(restoredAttack.rerollSources, ['defibrillator']);
     final pendingReplacement = AwaitingHeroReplacement(
       playerId: 'hero-2',
       characterIds: const ['scientist'],
@@ -265,6 +268,7 @@ GameState _interruptedState() => GameState(
       conditions: const ['malaise'],
       monsterDamageImmuneThroughRound: 3,
       monsterDefenseBonusRound: 5,
+      enemyFeaturesIgnoredThroughRound: 4,
       retainedEventCards: const ['scientist-report'],
     ),
     _player(
@@ -372,6 +376,7 @@ PlayerState _player({
   bool alive = true,
   int? monsterDamageImmuneThroughRound,
   int? monsterDefenseBonusRound,
+  int? enemyFeaturesIgnoredThroughRound,
   Iterable<String> retainedEventCards = const [],
 }) => PlayerState(
   id: id,
@@ -403,4 +408,5 @@ PlayerState _player({
   weaponModifier: 2,
   monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
   monsterDefenseBonusRound: monsterDefenseBonusRound,
+  enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
 );

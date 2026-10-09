@@ -89,6 +89,19 @@ GameState resolveColocation(
   String? monsterInstanceId,
   PlayerId? playerId,
 }) {
+  if (monsterInstanceId != null) {
+    final monster = _monsterById(state, monsterInstanceId);
+    final trap = state.tripwires
+        .where((candidate) => candidate.coord == (coord ?? monster?.coord))
+        .firstOrNull;
+    if (monster != null && trap != null && !_isBossForAbility(state, monster)) {
+      return resolveColocation(
+        _triggerTripwire(state, trap, monster),
+        coord: coord,
+        playerId: playerId,
+      );
+    }
+  }
   final damage = <IncomingDamage>[];
   for (final monster in state.monsters) {
     if (monster.attack == 0 ||
@@ -164,18 +177,57 @@ int _playerDefense(GameState state, PlayerState player) =>
       0,
       (total, cardId) {
         final definition = state.cardDefinitions[cardId];
-        if (definition == null ||
-            definition.behaviorIds.contains('robot.exhaust')) {
-          return total;
-        }
-        return total + definition.staticEffects[CardStat.defense];
+        return total + (definition?.staticEffects[CardStat.defense] ?? 0);
       },
     ) +
     (player.monsterDefenseBonusRound == state.round ? 1 : 0);
 
 bool _monsterIgnoresDefense(GameState state, MonsterInstance monster) {
+  return _monsterHasFeature(state, monster, 'ignores-defense');
+}
+
+bool _monsterHasFeature(
+  GameState state,
+  MonsterInstance monster,
+  String feature,
+) {
   final features = state.monsterDefinitions[monster.monsterId]?['features'];
-  return features is List<Object?> && features.contains('ignores-defense');
+  return features is List<Object?> && features.contains(feature);
+}
+
+bool _playerIgnoresEnemyFeature(
+  GameState state,
+  PlayerState player,
+  MonsterInstance monster,
+) =>
+    !_monsterHasFeature(state, monster, 'boss') &&
+    _playerHasEnemyFeatureImmunity(state, player);
+
+bool _playerHasEnemyFeatureImmunity(GameState state, PlayerState player) =>
+    player.enemyFeaturesIgnoredThroughRound != null &&
+    state.round <= player.enemyFeaturesIgnoredThroughRound!;
+
+bool _monsterBlocksHeroExits(GameState state, PlayerState player) {
+  if (_playerHasEnemyFeatureImmunity(state, player)) return false;
+  return state.monsters.any(
+    (monster) =>
+        monster.coord == player.coord &&
+        !_monsterHasFeature(state, monster, 'boss') &&
+        _monsterHasFeature(state, monster, 'blocks-exits'),
+  );
+}
+
+int _enemyCombatStrengthPenalty(
+  GameState state,
+  PlayerState player,
+  MonsterInstance? target,
+) {
+  if (target == null ||
+      !_monsterHasFeature(state, target, 'reduces-combat-strength') ||
+      _playerIgnoresEnemyFeature(state, player, target)) {
+    return 0;
+  }
+  return 1;
 }
 
 bool _monsterSpawnsBoilInsteadOfAttack(
@@ -341,20 +393,29 @@ GameStepResult _attack(
       : const EffectEngine()
             .resolvePreAttackRoll(dice.rollDice(1), preAttackHooks)
             .targetDamage;
-  final diceRoll = dice.rollDice(_heroAttackDice(player, state));
+  final target = _monsterById(state, targetInstanceId)!;
+  final diceRoll = dice.rollDice(
+    _heroAttackDice(player, state, target: target),
+  );
   final roll = const EffectEngine().resolveRoll(
     diceRoll,
     hooks,
   );
-  if (roll.rerollsAvailable > 0) {
+  final rerollSources = _attackRerollSources(
+    state,
+    player,
+    roll.rerollsAvailable,
+  );
+  if (rerollSources.isNotEmpty) {
     return GameStepResult(
       state: _copyState(
         state,
         actionsLeft: state.actionsLeft - 1,
         pendingDecision: AwaitingRerollChoice(
           dice: diceRoll,
-          availableRerolls: roll.rerollsAvailable,
-          maxDicePerReroll: 1,
+          availableRerolls: rerollSources.length,
+          maxDicePerReroll: _maxDicePerReroll(state, rerollSources.first),
+          rerollSources: rerollSources,
           window: const DecisionWindow(remainingTicks: 1),
           context: AttackRollContext(
             playerId: player.id,
@@ -390,8 +451,8 @@ GameState _resolveAttackRoll(
   final monster = _monsterById(state, targetInstanceId)!;
   final hooks = _activeEffectHooks(state, player);
   final roll = const EffectEngine().resolveRoll(dice, hooks);
-  final damage =
-      preAttackDamage + (roll.hits - monster.defense).clamp(0, roll.hits);
+  final hits = roll.hits + player.nextAttackBonusHits;
+  final damage = preAttackDamage + (hits - monster.defense).clamp(0, hits);
   final defeated = monster.damage + damage >= monster.health;
   final collateral = defeated
       ? const EffectEngine()
@@ -431,6 +492,7 @@ GameState _resolveAttackRoll(
   var awardedPlayer = _copyPlayer(
     player,
     damage: player.damage + roll.ownerDamage,
+    nextAttackBonusHits: 0,
   );
   var unclaimedLoot = const <CardId>[];
   final rewardDeckId = monster.defeatRewardDeckId;

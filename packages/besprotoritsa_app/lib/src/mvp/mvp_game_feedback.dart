@@ -204,10 +204,7 @@ List<String> _stateConsequences(
         '$name — Кредиты: ${credits > 0 ? '+' : '−'}${credits.abs()}',
       );
     }
-    var actions = player.nextTurnActionDelta - previous.nextTurnActionDelta;
-    if (actions == 0 && after.round > before.round) {
-      actions = player.actionPoints - previous.actionPoints;
-    }
+    final actions = player.nextTurnActionDelta - previous.nextTurnActionDelta;
     if (actions != 0) {
       changes.add(
         '$name — Следующий ход: ${actions > 0 ? '+' : '−'}${actions.abs()} ОД',
@@ -258,6 +255,33 @@ List<String> _stateConsequences(
     if (player.monsterDefenseBonusRound != previous.monsterDefenseBonusRound &&
         player.monsterDefenseBonusRound == after.round) {
       changes.add('$name — Защита +1 до конца раунда.');
+    }
+    if (player.damageImmuneThroughRound != previous.damageImmuneThroughRound &&
+        player.damageImmuneThroughRound != null) {
+      changes.add(
+        '$name — Иммунитет ко всему урону до раунда '
+        '${player.damageImmuneThroughRound}.',
+      );
+    }
+    final newlyExhausted = player.exhaustedRobots
+        .where((id) => !previous.exhaustedRobots.contains(id))
+        .toList();
+    final readied = previous.exhaustedRobots
+        .where((id) => !player.exhaustedRobots.contains(id))
+        .toList();
+    if (newlyExhausted.isNotEmpty) {
+      final labels = newlyExhausted
+          .map((id) => _inventoryCardName(after, id))
+          .join(', ');
+      changes.add(
+        '$name — Робот повёрнут: $labels',
+      );
+    }
+    if (readied.isNotEmpty) {
+      final labels = readied
+          .map((id) => _inventoryCardName(after, id))
+          .join(', ');
+      changes.add('$name — Робот готов: $labels');
     }
   }
   if (includeMonsters) {

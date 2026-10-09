@@ -31,7 +31,11 @@ void main() {
         ),
       ],
       players: [
-        _player('ada', backpack: const ['pistol']),
+        _player(
+          'ada',
+          backpack: const ['pistol'],
+          enemyFeaturesIgnoredThroughRound: 1,
+        ),
         _player(
           'boris',
           backpack: const ['secret-card'],
@@ -73,6 +77,12 @@ void main() {
     expect(fog.tile, isNull);
     expect(view.decks['events']!.cardsRemaining, 2);
     expect(view.decks['events'], isNot(isA<DeckState>()));
+    expect(
+      view.players
+          .singleWhere((player) => player.id == 'ada')
+          .enemyFeaturesIgnoredThroughRound,
+      1,
+    );
     expect(other.backpack, isEmpty);
     expect(other.conditions, isEmpty);
     expect(other.hiddenCardCount, 2);
@@ -96,6 +106,7 @@ PlayerState _player(
   String id, {
   Iterable<CardId> backpack = const [],
   Iterable<CardId> conditions = const [],
+  int? enemyFeaturesIgnoredThroughRound,
 }) => PlayerState(
   id: id,
   characterId: '$id-character',
@@ -108,4 +119,5 @@ PlayerState _player(
   implanted: const [],
   conditions: conditions,
   alive: true,
+  enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
 );

@@ -23,6 +23,15 @@ final class ProjectedGameStateCodec {
     board: _list(json, 'board').map(_tile),
     players: _list(json, 'players').map(_player),
     monsters: _list(json, 'monsters').map(_monster),
+    tripwires: _optionalList(json['tripwires']).map((entry) {
+      final trap = _map(entry);
+      return TripwireTrap(
+        instanceId: _string(trap, 'instanceId'),
+        coord: _coord(_object(trap, 'coord')),
+        ownerId: _string(trap, 'ownerId'),
+        cardId: _string(trap, 'cardId'),
+      );
+    }),
     decks: _object(json, 'decks').map(
       (id, count) => MapEntry(
         id,
@@ -104,6 +113,15 @@ final class ProjectedGameStateCodec {
       monsterDefenseBonusRound: json['monsterDefenseBonusRound'] is int
           ? json['monsterDefenseBonusRound']! as int
           : null,
+      damageImmuneThroughRound: json['damageImmuneThroughRound'] is int
+          ? json['damageImmuneThroughRound']! as int
+          : null,
+      enemyFeaturesIgnoredThroughRound:
+          json['enemyFeaturesIgnoredThroughRound'] is int
+          ? json['enemyFeaturesIgnoredThroughRound']! as int
+          : null,
+      nextAttackBonusHits: _int(json, 'nextAttackBonusHits', fallback: 0),
+      exhaustedRobots: _strings(json['exhaustedRobots']),
     );
   }
 
@@ -143,6 +161,7 @@ final class ProjectedGameStateCodec {
         dice: _ints(json['dice']),
         availableRerolls: _int(json, 'availableRerolls'),
         maxDicePerReroll: _int(json, 'maxDicePerReroll', fallback: 999),
+        rerollSources: _strings(json['rerollSources']),
         window: const DecisionWindow(remainingTicks: 1),
       ),
       'dodge' => AwaitingDodge(
@@ -217,6 +236,9 @@ List<Object?> _values(Map<String, Object?> json, String key) {
   if (value is! List<Object?>) throw FormatException('$key must be an array.');
   return value;
 }
+
+List<Object?> _optionalList(Object? value) =>
+    value == null ? const <Object?>[] : value as List<Object?>;
 
 String _string(Map<String, Object?> json, String key) {
   final value = json[key];

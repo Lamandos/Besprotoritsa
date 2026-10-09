@@ -42,6 +42,10 @@ GameState _startNextIncomingDamage(
     (damage) {
       final target = _playerById(state, damage.targetPlayerId);
       if (target == null || !target.alive) return false;
+      if (target.damageImmuneThroughRound != null &&
+          state.round <= target.damageImmuneThroughRound!) {
+        return false;
+      }
       if (damage.source == DamageSource.monster &&
           target.monsterDamageImmuneThroughRound != null &&
           state.round <= target.monsterDamageImmuneThroughRound!) {
@@ -879,8 +883,10 @@ GameState _startImmediateMonsterAttack(
 ) {
   final target = _playerById(state, playerId);
   if (target != null &&
-      target.monsterDamageImmuneThroughRound != null &&
-      state.round <= target.monsterDamageImmuneThroughRound!) {
+      ((target.damageImmuneThroughRound != null &&
+              state.round <= target.damageImmuneThroughRound!) ||
+          (target.monsterDamageImmuneThroughRound != null &&
+              state.round <= target.monsterDamageImmuneThroughRound!))) {
     return _startImmediateCounterAttack(state, playerId, monster, dice);
   }
   if (_monsterSpawnsBoilInsteadOfAttack(state, monster)) {
@@ -953,15 +959,23 @@ GameState _startImmediateCounterAttack(
       : const EffectEngine()
             .resolvePreAttackRoll(dice.rollDice(1), preAttackHooks)
             .targetDamage;
-  final diceRoll = dice.rollDice(_heroAttackDice(player, state));
+  final diceRoll = dice.rollDice(
+    _heroAttackDice(player, state, target: monster),
+  );
   final roll = const EffectEngine().resolveRoll(diceRoll, hooks);
-  if (roll.rerollsAvailable > 0) {
+  final rerollSources = _attackRerollSources(
+    state,
+    player,
+    roll.rerollsAvailable,
+  );
+  if (rerollSources.isNotEmpty) {
     return _copyState(
       state,
       pendingDecision: AwaitingRerollChoice(
         dice: diceRoll,
-        availableRerolls: roll.rerollsAvailable,
-        maxDicePerReroll: 1,
+        availableRerolls: rerollSources.length,
+        maxDicePerReroll: _maxDicePerReroll(state, rerollSources.first),
+        rerollSources: rerollSources,
         window: const DecisionWindow(remainingTicks: 1),
         context: AttackRollContext(
           playerId: playerId,
@@ -1395,6 +1409,15 @@ GameState _resolveEventOutcome(
             ),
           ),
           logEntry: 'event-heal-all:$playerId',
+        );
+      case 'ready_robots':
+        current = _copyState(
+          current,
+          players: [
+            for (final hero in current.players)
+              _copyPlayer(hero, exhaustedRobots: const <CardId>[]),
+          ],
+          logEntry: 'event-robots-ready:$playerId',
         );
       case 'damage':
         current = _copyState(

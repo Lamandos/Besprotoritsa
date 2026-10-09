@@ -26,6 +26,7 @@ final class GameState {
     required this.quests,
     Iterable<CardId> chestCards = const [],
     Iterable<BoilToken> boils = const [],
+    Iterable<TripwireTrap> tripwires = const [],
     Iterable<ReserveHero> reserveHeroes = const [],
     Map<PlayerId, ReserveHero> queuedReplacements = const {},
     Map<CardId, ConditionCard> conditionCards = const {},
@@ -55,6 +56,7 @@ final class GameState {
        ]),
        monsters = List.unmodifiable(monsters),
        boils = List.unmodifiable(boils),
+       tripwires = List.unmodifiable(tripwires),
        reserveHeroes = List.unmodifiable(reserveHeroes),
        queuedReplacements = UnmodifiableMapView(Map.of(queuedReplacements)),
        conditionCards = UnmodifiableMapView(Map.of(conditionCards)),
@@ -126,6 +128,10 @@ final class GameState {
       this.boils.map((boil) => boil.instanceId),
       'boil instance ids',
     );
+    _ensureUnique(
+      this.tripwires.map((trap) => trap.instanceId),
+      'tripwire instance ids',
+    );
     if (activePlayerId != null &&
         !this.players.any((player) => player.id == activePlayerId)) {
       throw ArgumentError.value(
@@ -156,6 +162,7 @@ final class GameState {
   final List<PlayerState> players;
   final List<MonsterInstance> monsters;
   final List<BoilToken> boils;
+  final List<TripwireTrap> tripwires;
   final List<ReserveHero> reserveHeroes;
   final Map<PlayerId, ReserveHero> queuedReplacements;
   final Map<CardId, ConditionCard> conditionCards;
@@ -226,6 +233,7 @@ final class GameState {
     players: players,
     monsters: monsters,
     boils: boils,
+    tripwires: tripwires,
     reserveHeroes: reserveHeroes,
     queuedReplacements: queuedReplacements,
     conditionCards: conditionCards,

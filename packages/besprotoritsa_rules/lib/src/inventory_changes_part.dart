@@ -437,5 +437,9 @@ abstract final class _InventoryChanges {
     nextTurnActionDelta: player.nextTurnActionDelta,
     monsterDamageImmuneThroughRound: player.monsterDamageImmuneThroughRound,
     monsterDefenseBonusRound: player.monsterDefenseBonusRound,
+    damageImmuneThroughRound: player.damageImmuneThroughRound,
+    enemyFeaturesIgnoredThroughRound: player.enemyFeaturesIgnoredThroughRound,
+    nextAttackBonusHits: player.nextAttackBonusHits,
+    exhaustedRobots: player.exhaustedRobots,
   );
 }

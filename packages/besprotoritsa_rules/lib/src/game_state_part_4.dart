@@ -23,7 +23,9 @@ final class AwaitingRerollChoice extends PendingDecision {
     required this.window,
     this.context,
     this.maxDicePerReroll = 999,
-  }) : dice = List.unmodifiable(dice) {
+    Iterable<CardId> rerollSources = const [],
+  }) : dice = List.unmodifiable(dice),
+       rerollSources = List.unmodifiable(rerollSources) {
     _requireNonNegative(availableRerolls, 'availableRerolls');
     if (maxDicePerReroll < 1) {
       throw ArgumentError.value(
@@ -44,6 +46,7 @@ final class AwaitingRerollChoice extends PendingDecision {
   final DecisionWindow window;
   final RollContext? context;
   final int maxDicePerReroll;
+  final List<CardId> rerollSources;
 
   /// Alias retained for UI code which calls these values rolls.
   List<int> get rolls => dice;

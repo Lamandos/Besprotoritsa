@@ -91,6 +91,11 @@ abstract final class SaveJsonModels {
     'monster_damage_immune_through_round':
         player.monsterDamageImmuneThroughRound,
     'monster_defense_bonus_round': player.monsterDefenseBonusRound,
+    'damage_immune_through_round': player.damageImmuneThroughRound,
+    'enemy_features_ignored_through_round':
+        player.enemyFeaturesIgnoredThroughRound,
+    'next_attack_bonus_hits': player.nextAttackBonusHits,
+    'exhausted_robots': player.exhaustedRobots,
   };
   static PlayerState playerFromJson(Map<String, Object?> json) {
     final equipped = _object(json, 'equipped');
@@ -131,6 +136,18 @@ abstract final class SaveJsonModels {
         json,
         'monster_defense_bonus_round',
       ),
+      damageImmuneThroughRound: _optionalInt(
+        json,
+        'damage_immune_through_round',
+      ),
+      enemyFeaturesIgnoredThroughRound: _optionalInt(
+        json,
+        'enemy_features_ignored_through_round',
+      ),
+      nextAttackBonusHits: _optionalInt(json, 'next_attack_bonus_hits') ?? 0,
+      exhaustedRobots: json.containsKey('exhausted_robots')
+          ? _strings(json, 'exhausted_robots')
+          : const <String>[],
     );
   }
 
@@ -209,6 +226,19 @@ abstract final class SaveJsonModels {
     instanceId: _string(json, 'instance_id'),
     coord: _coordFromJson(_object(json, 'coord')),
   );
+  static Map<String, Object?> tripwireToJson(TripwireTrap trap) => {
+    'instance_id': trap.instanceId,
+    'coord': _coordToJson(trap.coord),
+    'owner_id': trap.ownerId,
+    'card_id': trap.cardId,
+  };
+  static TripwireTrap tripwireFromJson(Map<String, Object?> json) =>
+      TripwireTrap(
+        instanceId: _string(json, 'instance_id'),
+        coord: _coordFromJson(_object(json, 'coord')),
+        ownerId: _string(json, 'owner_id'),
+        cardId: _string(json, 'card_id'),
+      );
   static Map<String, Object?> conditionToJson(ConditionCard condition) => {
     'id': condition.id,
     'stat_modifiers': {
@@ -333,6 +363,7 @@ abstract final class SaveJsonModels {
           'dice': decision.dice,
           'available_rerolls': decision.availableRerolls,
           'max_dice_per_reroll': decision.maxDicePerReroll,
+          'reroll_sources': decision.rerollSources,
           'window': {'remaining_ticks': decision.window.remainingTicks},
           'context': _contextToJson(decision.context),
         },
@@ -381,6 +412,9 @@ abstract final class SaveJsonModels {
         dice: _ints(json, 'dice'),
         availableRerolls: _int(json, 'available_rerolls'),
         maxDicePerReroll: _optionalInt(json, 'max_dice_per_reroll') ?? 999,
+        rerollSources: json.containsKey('reroll_sources')
+            ? _strings(json, 'reroll_sources')
+            : const <String>[],
         window: DecisionWindow(
           remainingTicks: _int(_object(json, 'window'), 'remaining_ticks'),
         ),

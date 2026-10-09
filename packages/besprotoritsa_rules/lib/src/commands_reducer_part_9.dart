@@ -121,6 +121,10 @@ PlayerState _copyPlayer(
   int? nextTurnActionDelta,
   int? monsterDamageImmuneThroughRound,
   int? monsterDefenseBonusRound,
+  int? damageImmuneThroughRound,
+  int? enemyFeaturesIgnoredThroughRound,
+  int? nextAttackBonusHits,
+  Iterable<CardId>? exhaustedRobots,
 }) => PlayerState(
   id: player.id,
   characterId: player.characterId,
@@ -143,6 +147,13 @@ PlayerState _copyPlayer(
       monsterDamageImmuneThroughRound ?? player.monsterDamageImmuneThroughRound,
   monsterDefenseBonusRound:
       monsterDefenseBonusRound ?? player.monsterDefenseBonusRound,
+  damageImmuneThroughRound:
+      damageImmuneThroughRound ?? player.damageImmuneThroughRound,
+  enemyFeaturesIgnoredThroughRound:
+      enemyFeaturesIgnoredThroughRound ??
+      player.enemyFeaturesIgnoredThroughRound,
+  nextAttackBonusHits: nextAttackBonusHits ?? player.nextAttackBonusHits,
+  exhaustedRobots: exhaustedRobots ?? player.exhaustedRobots,
 );
 
 MonsterInstance _copyMonster(
@@ -174,6 +185,7 @@ GameState _copyState(
   Iterable<PlayerState>? players,
   Iterable<MonsterInstance>? monsters,
   Iterable<BoilToken>? boils,
+  Iterable<TripwireTrap>? tripwires,
   Iterable<ReserveHero>? reserveHeroes,
   Map<PlayerId, ReserveHero>? queuedReplacements,
   Iterable<CardId>? chestCards,
@@ -208,6 +220,7 @@ GameState _copyState(
   players: players ?? state.players,
   monsters: monsters ?? state.monsters,
   boils: boils ?? state.boils,
+  tripwires: tripwires ?? state.tripwires,
   reserveHeroes: reserveHeroes ?? state.reserveHeroes,
   queuedReplacements: queuedReplacements ?? state.queuedReplacements,
   chestCards: chestCards ?? state.chestCards,

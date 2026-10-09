@@ -4941,7 +4941,7 @@
         "outcomeBranchesEncoded": 4,
         "outcomeBranchesMissing": [],
         "adaptations": [
-          "Robot exhaustion/readiness is not modeled; returning all robots to ready state is an explicit no-op, disclosed in the in-game rules reference."
+        "Robot exhaustion is modeled; the success outcome explicitly readies the active robots of all players."
         ]
       }
     },

@@ -152,7 +152,14 @@ CommandRejection? validate(GameState state, GameCommand command) {
     return null;
   }
 
-  if (state.actionsLeft == 0 || _activePlayer(state) == null) {
+  if (command is UseCardAbilityCommand) {
+    return _validateCardAbility(state, command);
+  }
+
+  if ((state.actionsLeft == 0 &&
+          !(command is ExchangeCommand &&
+              _usesRemoteCourier(state, command))) ||
+      _activePlayer(state) == null) {
     return const NotEnoughActions();
   }
 
@@ -175,7 +182,15 @@ CommandRejection? validate(GameState state, GameCommand command) {
     final partner = _playerById(state, command.partnerId);
     if (partner == null ||
         partner.id == player.id ||
-        partner.coord != player.coord ||
+        (partner.coord != player.coord &&
+            !_canExchangeRemotely(state, command)) ||
+        (_usesSmugglerMarkRemoteExchange(state, command) &&
+            (command.allGiveCardIds.length + command.allReceiveCardIds.length !=
+                    1 ||
+                command.giveCredits != 0 ||
+                command.receiveCredits != 0)) ||
+        (_usesRemoteCourier(state, command) &&
+            command.allGiveCardIds.contains('c6-car-courier')) ||
         (command.allGiveCardIds.isEmpty &&
             command.allReceiveCardIds.isEmpty &&
             command.giveCredits == 0 &&
@@ -208,6 +223,9 @@ CommandRejection? validate(GameState state, GameCommand command) {
     }
     if (!source.hasExit(edge) || !destination.hasExit(edge.opposite)) {
       return const PortMismatch();
+    }
+    if (_monsterBlocksHeroExits(state, player)) {
+      return const PathBlocked();
     }
     if (source.isBlocked || destination.isBlocked || !destination.opened) {
       return const PathBlocked();
@@ -335,6 +353,9 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
     ),
     EndTurnCommand() => GameStepResult(state: _endTurn(state)),
     HealCommand(:final amount) => GameStepResult(state: _heal(state, amount)),
+    UseCardAbilityCommand() => GameStepResult(
+      state: _useCardAbility(state, command),
+    ),
     EquipCommand() ||
     UnequipCommand() ||
     DiscardCardCommand() ||
@@ -351,9 +372,17 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
     DepositCreditsIntoChestCommand() => throw StateError(
       'Validated as rejected.',
     ),
-    ExchangeCommand() => GameStepResult(state: _exchange(state, command)),
+    ExchangeCommand() => GameStepResult(
+      state: _exchangeWithRobotIfNeeded(state, command),
+    ),
   };
-  final didTakeAction = _isActionCommand(command) && result.rejection == null;
+  final didTakeAction =
+      result.rejection == null &&
+      ((_isActionCommand(command) &&
+              !(command is ExchangeCommand &&
+                  _usesRemoteCourier(state, command))) ||
+          (command is UseCardAbilityCommand &&
+              _cardAbilityConsumesAction(state, command)));
   var resultState = didTakeAction
       ? _copyState(
           result.state,

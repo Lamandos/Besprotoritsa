@@ -180,13 +180,19 @@ String _attackLog(
     '${defeated ? ':defeated' : ''}'
     '${unclaimedLoot.isEmpty ? '' : ':unclaimed:${unclaimedLoot.join(',')}'}';
 
-int _heroAttackDice(PlayerState player, GameState state) =>
-    (_statDice(player, state, StatType.strength) +
-            (player.stats.combatStrength == 0
-                ? 0
-                : player.stats.combatStrength - player.stats.strength))
-        .clamp(1, 999) +
-    player.weaponModifier;
+int _heroAttackDice(
+  PlayerState player,
+  GameState state, {
+  MonsterInstance? target,
+}) =>
+    ((_statDice(player, state, StatType.strength) +
+                    (player.stats.combatStrength == 0
+                        ? 0
+                        : player.stats.combatStrength - player.stats.strength))
+                .clamp(1, 999) +
+            player.weaponModifier -
+            _enemyCombatStrengthPenalty(state, player, target))
+        .clamp(1, 999);
 
 List<EffectHook> _activeEffectHooks(GameState state, PlayerState player) {
   final registry = EffectRegistry.standard();
@@ -194,7 +200,9 @@ List<EffectHook> _activeEffectHooks(GameState state, PlayerState player) {
     for (final cardId in _activeCardIds(player))
       for (final behaviorId
           in state.cardDefinitions[cardId]?.behaviorIds ?? const <String>[])
-        if (registry[behaviorId] case final EffectHook hook) hook,
+        if (!player.exhaustedRobots.contains(cardId) ||
+            !behaviorId.startsWith('dice.reroll.'))
+          if (registry[behaviorId] case final EffectHook hook) hook,
   ];
 }
 
@@ -233,7 +241,8 @@ List<CardId> skillRerollSources(
   StatType stat,
 ) => [
   for (final id in _activeCardIds(player))
-    if ((state.cardDefinitions[id]?.behaviorIds.contains(
+    if (!player.exhaustedRobots.contains(id) &&
+        (state.cardDefinitions[id]?.behaviorIds.contains(
               id == 'drg-4u' ? 'dice.reroll.all' : 'dice.reroll.allForSkill',
             ) ??
             false) &&
@@ -245,7 +254,19 @@ List<CardId> skillRerollSources(
           _ => false,
         })
       id,
+  if (player.backpack.contains('defibrillator')) 'defibrillator',
+  for (final id in player.backpack)
+    if (_stimulantMatchesSkill(id, stat)) id,
 ];
+
+bool _stimulantMatchesSkill(String cardId, StatType stat) => switch (cardId) {
+  'science-stimulant' => stat == StatType.science,
+  'agility-stimulant' => stat == StatType.agility,
+  'endurance-stimulant' => stat == StatType.endurance,
+  'repair-stimulant' => stat == StatType.repair,
+  'strength-stimulant' => stat == StatType.strength,
+  _ => false,
+};
 
 int _cardStatModifier(GameState state, PlayerState player, StatType stat) {
   final cardStat = switch (stat) {

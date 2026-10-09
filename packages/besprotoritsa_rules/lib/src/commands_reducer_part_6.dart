@@ -10,25 +10,32 @@ GameStepResult _startRoll(
   int diceCount = 1,
   RollContext? context,
   bool consumesAction = true,
-}) => GameStepResult(
-  state: _copyState(
-    state,
-    actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
-    pendingDecision: AwaitingRerollChoice(
-      dice: dice.rollDice(diceCount),
-      availableRerolls: context is SkillCheckContext
-          ? skillRerollSources(
-              state,
-              _playerById(state, context.playerId)!,
-              context.stat,
-            ).length
-          : 0,
-      window: const DecisionWindow(remainingTicks: 1),
-      context: context,
+}) {
+  final sources = context is SkillCheckContext
+      ? skillRerollSources(
+          state,
+          _playerById(state, context.playerId)!,
+          context.stat,
+        )
+      : const <CardId>[];
+  return GameStepResult(
+    state: _copyState(
+      state,
+      actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
+      pendingDecision: AwaitingRerollChoice(
+        dice: dice.rollDice(diceCount),
+        availableRerolls: sources.length,
+        maxDicePerReroll: sources.isEmpty
+            ? 999
+            : _maxDicePerReroll(state, sources.first),
+        rerollSources: sources,
+        window: const DecisionWindow(remainingTicks: 1),
+        context: context,
+      ),
+      logEntry: logEntry,
     ),
-    logEntry: logEntry,
-  ),
-);
+  );
+}
 
 GameStepResult _resolveDecision(
   GameState state,
@@ -293,13 +300,24 @@ GameStepResult _resolveReroll(
   for (var index = 0; index < indexes.length; index++) {
     rerolled[indexes[index]] = newRolls[index];
   }
+  var rerolledState = state;
+  final usedSource = pending.rerollSources.firstOrNull;
+  if (usedSource != null) {
+    rerolledState = _consumeRerollSource(rerolledState, pending, usedSource);
+  }
+  final remainingSources = pending.rerollSources.isEmpty
+      ? const <CardId>[]
+      : pending.rerollSources.skip(1).toList();
   return GameStepResult(
     state: _copyState(
-      state,
+      rerolledState,
       pendingDecision: AwaitingRerollChoice(
         dice: rerolled,
         availableRerolls: pending.availableRerolls - 1,
-        maxDicePerReroll: pending.maxDicePerReroll,
+        maxDicePerReroll: remainingSources.isEmpty
+            ? pending.maxDicePerReroll
+            : _maxDicePerReroll(rerolledState, remainingSources.first),
+        rerollSources: remainingSources,
         window: pending.window,
         context: pending.context,
       ),

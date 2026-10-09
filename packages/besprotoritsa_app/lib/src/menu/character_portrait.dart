@@ -10,12 +10,12 @@ import 'package:flutter/material.dart';
 const Map<String, String> characterPortraitAssets = <String, String>{
   'scientist': 'assets/images/character-portraits/scientist.png',
   'guard': 'assets/images/character-portraits/guard.png',
-  'mechanic': 'assets/images/character-portraits/mechanic.png',
-  'worker': 'assets/images/character-portraits/worker.png',
+  'mechanic': 'assets/images/character-portraits/worker.png',
+  'worker': 'assets/images/character-portraits/mechanic.png',
   'hauler': 'assets/images/character-portraits/hauler.png',
   'healer': 'assets/images/character-portraits/healer.png',
-  'engineer': 'assets/images/character-portraits/engineer.png',
-  'astronaut': 'assets/images/character-portraits/astronaut.png',
+  'engineer': 'assets/images/character-portraits/astronaut.png',
+  'astronaut': 'assets/images/character-portraits/engineer.png',
 };
 
 class CharacterPortrait extends StatelessWidget {

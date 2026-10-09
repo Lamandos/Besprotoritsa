@@ -262,13 +262,17 @@ GameState _applyChestTransfer(
   );
 }
 
-GameState _exchange(GameState state, ExchangeCommand command) {
+GameState _exchange(
+  GameState state,
+  ExchangeCommand command, {
+  bool consumesAction = true,
+}) {
   final player = _activePlayer(state)!;
   final partner = _playerById(state, command.partnerId)!;
   final exchanged = _exchangePlayers(state, player, partner, command);
   return _copyState(
     state,
-    actionsLeft: state.actionsLeft - 1,
+    actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
     players: [
       for (final current in state.players)
         if (current.id == player.id)

@@ -41,6 +41,7 @@ class GameStateJsonCodec {
     'players': state.players.map(SaveJsonModels.playerToJson).toList(),
     'monsters': state.monsters.map(SaveJsonModels.monsterToJson).toList(),
     'boils': state.boils.map(SaveJsonModels.boilToJson).toList(),
+    'tripwires': state.tripwires.map(SaveJsonModels.tripwireToJson).toList(),
     'reserve_heroes': state.reserveHeroes
         .map(SaveJsonModels.reserveHeroToJson)
         .toList(),
@@ -108,6 +109,10 @@ class GameStateJsonCodec {
       players: _objects(json, 'players').map(SaveJsonModels.playerFromJson),
       monsters: _objects(json, 'monsters').map(SaveJsonModels.monsterFromJson),
       boils: _objects(json, 'boils').map(SaveJsonModels.boilFromJson),
+      tripwires: _objectsOrDefault(
+        json['tripwires'],
+        'tripwires',
+      ).map(SaveJsonModels.tripwireFromJson),
       reserveHeroes: _objectsOrDefault(
         json['reserve_heroes'],
         'reserve_heroes',
@@ -188,6 +193,7 @@ PendingDecision? _migrateLegacyPendingDecision(PendingDecision? decision) {
   if (decision case AwaitingRerollChoice(
     :final dice,
     :final availableRerolls,
+    :final rerollSources,
     :final window,
     context: SkillCheckContext(
       :final playerId,
@@ -205,6 +211,7 @@ PendingDecision? _migrateLegacyPendingDecision(PendingDecision? decision) {
     return AwaitingRerollChoice(
       dice: dice,
       availableRerolls: availableRerolls,
+      rerollSources: rerollSources,
       window: window,
       maxDicePerReroll: maxDicePerReroll,
       context: SkillCheckContext(

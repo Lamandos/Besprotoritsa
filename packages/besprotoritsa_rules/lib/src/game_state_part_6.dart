@@ -48,6 +48,10 @@ final class ProjectedPlayerState {
     required this.nextTurnActionDelta,
     required this.monsterDamageImmuneThroughRound,
     required this.monsterDefenseBonusRound,
+    required this.damageImmuneThroughRound,
+    required this.enemyFeaturesIgnoredThroughRound,
+    required this.nextAttackBonusHits,
+    required Iterable<CardId> exhaustedRobots,
     required this.isViewer,
     required Iterable<CardId> backpack,
     required Iterable<CardId> carriedMods,
@@ -57,7 +61,8 @@ final class ProjectedPlayerState {
   }) : backpack = List.unmodifiable(backpack),
        carriedMods = List.unmodifiable(carriedMods),
        implanted = List.unmodifiable(implanted),
-       conditions = List.unmodifiable(conditions);
+       conditions = List.unmodifiable(conditions),
+       exhaustedRobots = List.unmodifiable(exhaustedRobots);
 
   factory ProjectedPlayerState.fromState(
     PlayerState state, {
@@ -81,6 +86,10 @@ final class ProjectedPlayerState {
       nextTurnActionDelta: state.nextTurnActionDelta,
       monsterDamageImmuneThroughRound: state.monsterDamageImmuneThroughRound,
       monsterDefenseBonusRound: state.monsterDefenseBonusRound,
+      damageImmuneThroughRound: state.damageImmuneThroughRound,
+      enemyFeaturesIgnoredThroughRound: state.enemyFeaturesIgnoredThroughRound,
+      nextAttackBonusHits: state.nextAttackBonusHits,
+      exhaustedRobots: isViewer ? state.exhaustedRobots : const [],
       isViewer: isViewer,
       backpack: isViewer ? state.backpack : const [],
       carriedMods: isViewer ? state.carriedMods : const [],
@@ -102,6 +111,10 @@ final class ProjectedPlayerState {
   final int nextTurnActionDelta;
   final int? monsterDamageImmuneThroughRound;
   final int? monsterDefenseBonusRound;
+  final int? damageImmuneThroughRound;
+  final int? enemyFeaturesIgnoredThroughRound;
+  final int nextAttackBonusHits;
+  final List<CardId> exhaustedRobots;
   final bool isViewer;
   final List<CardId> backpack;
   final List<CardId> carriedMods;
@@ -142,6 +155,7 @@ final class PlayerGameState {
     required Iterable<ProjectedHexTile> board,
     required Iterable<ProjectedPlayerState> players,
     required Iterable<MonsterInstance> monsters,
+    required Iterable<TripwireTrap> tripwires,
     required Map<DeckId, DeckSummary> decks,
     required this.quests,
     required Iterable<String> log,
@@ -150,6 +164,7 @@ final class PlayerGameState {
        board = List.unmodifiable(board),
        players = List.unmodifiable(players),
        monsters = List.unmodifiable(monsters),
+       tripwires = List.unmodifiable(tripwires),
        decks = UnmodifiableMapView(Map.of(decks)),
        log = List.unmodifiable(log);
 
@@ -163,6 +178,7 @@ final class PlayerGameState {
   final List<ProjectedHexTile> board;
   final List<ProjectedPlayerState> players;
   final List<MonsterInstance> monsters;
+  final List<TripwireTrap> tripwires;
   final Map<DeckId, DeckSummary> decks;
   final ProjectedQuestState quests;
   final List<String> log;
@@ -210,6 +226,9 @@ PlayerGameState projectFor(GameState fullState, PlayerId viewerId) {
     // sector has been opened, just like the tile that contains them.
     monsters: fullState.monsters.where(
       (monster) => fullState.tileAt(monster.coord)?.opened ?? false,
+    ),
+    tripwires: fullState.tripwires.where(
+      (trap) => fullState.tileAt(trap.coord)?.opened ?? false,
     ),
     decks: {
       for (final entry in fullState.decks.entries)
