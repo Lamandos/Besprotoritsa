@@ -276,7 +276,7 @@ class _PendingDecisionModal extends ConsumerWidget {
                       ],
                     ),
                   ),
-            actions: _decisionActions(ref, decision, strings, state),
+            actions: _decisionActions(context, ref, decision, strings, state),
           ),
         ),
       ),
@@ -285,6 +285,7 @@ class _PendingDecisionModal extends ConsumerWidget {
 }
 
 List<Widget> _decisionActions(
+  BuildContext context,
   WidgetRef ref,
   PendingDecision decision,
   AppStrings strings,
@@ -308,6 +309,25 @@ List<Widget> _decisionActions(
                 ),
             child: Text('${strings.reroll}: $die'),
           )
+      else if (availableRerolls > 0 && _allowsAnyCountReroll(state, decision))
+        TextButton(
+          onPressed: () async {
+            final diceIndexes = await _selectDiceForReroll(context, dice);
+            if (diceIndexes == null ||
+                diceIndexes.isEmpty ||
+                !context.mounted) {
+              return;
+            }
+            ref
+                .read(gameControllerProvider.notifier)
+                .dispatch(
+                  ResolvePendingDecisionCommand(
+                    RerollChoice(diceIndexes: diceIndexes),
+                  ),
+                );
+          },
+          child: const Text('Выбрать кубики'),
+        )
       else if (availableRerolls > 0)
         TextButton(
           onPressed: () => ref
@@ -358,6 +378,72 @@ List<Widget> _decisionActions(
   ],
   AwaitingOtherPlayerDecision() => const [],
 };
+
+bool _allowsAnyCountReroll(GameState state, PendingDecision decision) {
+  if (decision is! AwaitingRerollChoice) return false;
+  final source = decision.rerollSources.firstOrNull;
+  return source != null &&
+      (state.cardDefinitions[source]?.behaviorIds.contains(
+            'dice.reroll.anyCountPerAttack',
+          ) ??
+          false);
+}
+
+Future<List<int>?> _selectDiceForReroll(
+  BuildContext context,
+  List<int> dice,
+) => showDialog<List<int>>(
+  context: context,
+  builder: (context) {
+    final selectedDice = <int>{};
+    return StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Выберите кубики для переброса'),
+        content: SizedBox(
+          width: 320,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Можно выбрать любое количество кубиков.'),
+                for (final (index, die) in dice.indexed)
+                  CheckboxListTile(
+                    key: ValueKey<String>('reroll-die-$index'),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Кубик ${index + 1}: $die'),
+                    value: selectedDice.contains(index),
+                    onChanged: (selected) => setState(() {
+                      if (selected ?? false) {
+                        selectedDice.add(index);
+                      } else {
+                        selectedDice.remove(index);
+                      }
+                    }),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            key: const ValueKey<String>('reroll-selected-dice'),
+            onPressed: selectedDice.isEmpty
+                ? null
+                : () => Navigator.of(context).pop(
+                    selectedDice.toList()..sort(),
+                  ),
+            child: const Text('Перебросить выбранные'),
+          ),
+        ],
+      ),
+    );
+  },
+);
 
 Widget _terminalOfferCard(
   BuildContext context,

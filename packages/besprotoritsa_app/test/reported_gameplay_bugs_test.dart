@@ -158,6 +158,52 @@ void main() {
     expect(find.text('Продолжить'), findsOneWidget);
   });
 
+  testWidgets('BUG050 defibrillator lets the player select dice for a reroll', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      (_player(doc)['backpack']! as List).add('defibrillator');
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller([6, 1, 1, 1, 2, 2, 2, 2]),
+    );
+    final controller = container.read(gameControllerProvider.notifier);
+    expect(
+      controller.dispatch(const SkillCheckCommand(StatType.science)),
+      isTrue,
+    );
+    await tester.pump();
+    final initial =
+        container.read(gameControllerProvider).pendingDecision!
+            as AwaitingRerollChoice;
+    expect(initial.dice, hasLength(greaterThan(1)));
+    expect(initial.rerollSources, contains('defibrillator'));
+
+    await tester.tap(find.text('Выбрать кубики'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Выберите кубики для переброса'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('reroll-die-0')));
+    await tester.pump();
+    expect(
+      tester
+          .widget<CheckboxListTile>(
+            find.byKey(const ValueKey('reroll-die-0')),
+          )
+          .value,
+      isTrue,
+    );
+    await tester.tap(find.byKey(const ValueKey('reroll-selected-dice')));
+    await tester.pump(const Duration(milliseconds: 400));
+    final rerolled =
+        container.read(gameControllerProvider).pendingDecision!
+            as AwaitingRerollChoice;
+    expect(rerolled.dice, [2, 1, 1, 1]);
+    expect(rerolled.availableRerolls, 0);
+  });
+
   testWidgets('BUG030 round rollover is not reported as event consequences', (
     tester,
   ) async {
