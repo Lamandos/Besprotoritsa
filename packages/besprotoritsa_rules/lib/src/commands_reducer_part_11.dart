@@ -502,7 +502,12 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
       final loot = _awardRestlessTrophies(killer, monster, killed);
       killed = _copyState(
         killed,
-        players: _replacePlayer(killed, killer.id, (_) => loot.player),
+        players: _restlessTrophyPlayers(
+          killed,
+          killer.id,
+          loot.player,
+          loot.exhaustedRobots,
+        ),
         logEntry: loot.unclaimed.isEmpty
             ? null
             : 'restless-unclaimed:${monster.instanceId}:'
@@ -812,7 +817,12 @@ GameState _triggerTripwire(
       final loot = _awardRestlessTrophies(killer, monster, triggered);
       triggered = _copyState(
         triggered,
-        players: _replacePlayer(triggered, killer.id, (_) => loot.player),
+        players: _restlessTrophyPlayers(
+          triggered,
+          killer.id,
+          loot.player,
+          loot.exhaustedRobots,
+        ),
         logEntry: loot.unclaimed.isEmpty
             ? null
             : 'restless-unclaimed:${monster.instanceId}:'

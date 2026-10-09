@@ -508,6 +508,7 @@ GameState _resolveAttackRoll(
     nextAttackBonusHits: 0,
   );
   var unclaimedLoot = const <CardId>[];
+  var exhaustedTrophies = const <CardId>[];
   final rewardDeckId = monster.defeatRewardDeckId;
   if (defeated && rewardDeckId != null) {
     final rewardDeck = decks[rewardDeckId];
@@ -564,6 +565,7 @@ GameState _resolveAttackRoll(
     final loot = _awardRestlessTrophies(awardedPlayer, monster, state);
     awardedPlayer = loot.player;
     unclaimedLoot = loot.unclaimed;
+    exhaustedTrophies = loot.exhaustedRobots;
   }
   final rolledState = _copyState(
     state,
@@ -574,10 +576,11 @@ GameState _resolveAttackRoll(
     _copyState(
       rolledState,
       actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
-      players: _replacePlayer(
+      players: _restlessTrophyPlayers(
         state,
         player.id,
-        (_) => awardedPlayer,
+        awardedPlayer,
+        exhaustedTrophies,
       ),
       monsters: [
         if (!defeated) _copyMonster(monster, damage: monster.damage + damage),
@@ -611,16 +614,33 @@ GameState _resolveAttackRoll(
       : afterAttack;
 }
 
-({PlayerState player, List<CardId> unclaimed}) _awardRestlessTrophies(
+({
+  PlayerState player,
+  List<CardId> unclaimed,
+  List<CardId> exhaustedRobots,
+})
+_awardRestlessTrophies(
   PlayerState player,
   MonsterInstance restless,
   GameState state,
 ) {
   var awarded = player;
   final unclaimed = <CardId>[];
+  final exhaustedRobots = <CardId>{};
   for (final cardId in restless.carriedGear) {
     try {
       awarded = InventoryRules.receive(awarded, cardId, state.cardDefinitions);
+      if (state.players.any(
+        (owner) => !owner.alive && owner.exhaustedRobots.contains(cardId),
+      )) {
+        exhaustedRobots.add(cardId);
+        if (!awarded.exhaustedRobots.contains(cardId)) {
+          awarded = _copyPlayer(
+            awarded,
+            exhaustedRobots: [...awarded.exhaustedRobots, cardId],
+          );
+        }
+      }
     } on BackpackCapacityExceeded {
       // Combat has already resolved.  A full backpack must not turn a valid
       // kill into an uncaught reducer exception or duplicate its effects.
@@ -631,5 +651,33 @@ GameState _resolveAttackRoll(
       unclaimed.add(cardId);
     }
   }
-  return (player: awarded, unclaimed: unclaimed);
+  return (
+    player: awarded,
+    unclaimed: unclaimed,
+    exhaustedRobots: exhaustedRobots.toList(),
+  );
+}
+
+List<PlayerState> _restlessTrophyPlayers(
+  GameState state,
+  PlayerId recipientId,
+  PlayerState recipient,
+  Iterable<CardId> exhaustedRobots,
+) {
+  final transferred = exhaustedRobots.toSet();
+  return [
+    for (final player in state.players)
+      if (player.id == recipientId)
+        recipient
+      else if (!player.alive &&
+          player.exhaustedRobots.any(transferred.contains))
+        _copyPlayer(
+          player,
+          exhaustedRobots: player.exhaustedRobots.where(
+            (cardId) => !transferred.contains(cardId),
+          ),
+        )
+      else
+        player,
+  ];
 }

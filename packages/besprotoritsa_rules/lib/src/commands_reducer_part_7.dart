@@ -336,15 +336,22 @@ GameStepResult _resolveEventOption(
     }
     var killer = _playerById(selected, playerId)!;
     var unclaimedLoot = const <CardId>[];
+    var exhaustedTrophies = const <CardId>[];
     if (monster.monsterId == RestlessMonster.restlessMonsterId) {
       final loot = _awardRestlessTrophies(killer, monster, selected);
       killer = loot.player;
       unclaimedLoot = loot.unclaimed;
+      exhaustedTrophies = loot.exhaustedRobots;
     }
     final unclaimedCount = unclaimedLoot.length;
     var killed = _copyState(
       selected,
-      players: _replacePlayer(selected, playerId, (_) => killer),
+      players: _restlessTrophyPlayers(
+        selected,
+        playerId,
+        killer,
+        exhaustedTrophies,
+      ),
       monsters: selected.monsters.where(
         (candidate) => candidate.instanceId != monster.instanceId,
       ),
