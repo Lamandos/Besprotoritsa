@@ -108,6 +108,47 @@ void main() {
     expect(context.difficulty, 2);
   });
 
+  test('BUG053 defibrillator is unavailable during event skill checks', () {
+    var state = _mvpState(
+      eventId: 'event-check',
+      playerBackpack: const ['defibrillator'],
+      eventDefinitions: {
+        'event-check': {
+          'options': [
+            {
+              'skillCheck': {'skill': 'science', 'difficulty': 1},
+            },
+          ],
+        },
+      },
+      cardDefinitions: {
+        'defibrillator': CardDefinition(
+          id: 'defibrillator',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 8,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'supplies',
+          behaviorIds: const [
+            'card.discardCost',
+            'dice.reroll.anyCountPerAttack',
+          ],
+        ),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([6]),
+    ).state;
+
+    final pending = state.pendingDecision! as AwaitingRerollChoice;
+    expect(pending.availableRerolls, 0);
+    expect(pending.rerollSources, isNot(contains('defibrillator')));
+    expect(state.players.single.backpack, contains('defibrillator'));
+  });
+
   test('invasion lets the player choose any open sector', () {
     var state = _mvpState(
       eventId: 'invasion-open',
@@ -730,6 +771,59 @@ void main() {
     expect(state.monsters, isEmpty);
     expect(state.players.single.backpack, contains('ration'));
     expect(state.decks['items']!.drawPile, isEmpty);
+  });
+
+  test('BUG055 event monster spawn triggers a tripwire', () {
+    var state = _mvpState(
+      eventId: 'trap-event',
+      eventDefinitions: {
+        'trap-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'successEffects': [
+                {'type': 'spawn_monster'},
+              ],
+              'failureEffects': [
+                {'type': 'no_effect'},
+              ],
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 1,
+          'movement': 1,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+        'supplies': DeckState(drawPile: const []),
+      },
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'event-tripwire',
+          coord: HexCoord(0, 0),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.tripwires, isEmpty);
+    expect(state.decks['supplies']!.discardPile, contains('tripwire'));
   });
 
   test(

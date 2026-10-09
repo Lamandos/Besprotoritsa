@@ -185,12 +185,15 @@ CommandRejection? validate(GameState state, GameCommand command) {
         (partner.coord != player.coord &&
             !_canExchangeRemotely(state, command)) ||
         (_usesSmugglerMarkRemoteExchange(state, command) &&
+            !_usesRemoteCourier(state, command) &&
             (command.allGiveCardIds.length + command.allReceiveCardIds.length !=
                     1 ||
                 command.giveCredits != 0 ||
                 command.receiveCredits != 0)) ||
         (_usesRemoteCourier(state, command) &&
-            command.allGiveCardIds.contains('c6-car-courier')) ||
+            (command.allGiveCardIds.contains('c6-car-courier') ||
+                command.giveCredits > 0 ||
+                command.receiveCredits > 0)) ||
         (command.allGiveCardIds.isEmpty &&
             command.allReceiveCardIds.isEmpty &&
             command.giveCredits == 0 &&

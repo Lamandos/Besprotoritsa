@@ -655,7 +655,8 @@ List<CardId> _attackRerollSources(
       List.filled(hookRerolls - hookSourceCount, 'unknown-reroll'),
     );
   }
-  if (player.backpack.contains('defibrillator')) {
+  if (state.phase == GamePhase.playersTurn &&
+      player.backpack.contains('defibrillator')) {
     sources.add('defibrillator');
   }
   return sources;

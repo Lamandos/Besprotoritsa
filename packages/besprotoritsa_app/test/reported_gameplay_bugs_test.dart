@@ -204,6 +204,55 @@ void main() {
     expect(rerolled.availableRerolls, 0);
   });
 
+  testWidgets('BUG054 door remote offers only open corridors', (tester) async {
+    late HexCoord openCoord;
+    final state = _scenario((doc) {
+      final player = _player(doc);
+      (player['backpack']! as List).add('door-remote');
+      player['credits'] = 4;
+      final occupied = <String>{};
+      for (final hero
+          in (doc['players']! as List).cast<Map<String, dynamic>>()) {
+        final coord = hero['coord']! as Map<String, dynamic>;
+        occupied.add('${coord['q']},${coord['r']}');
+      }
+      final corridors = (doc['board']! as List)
+          .cast<Map<String, dynamic>>()
+          .where((tile) {
+            final coord = tile['coord']! as Map<String, dynamic>;
+            return tile['type'] == 'corridor' &&
+                !occupied.contains('${coord['q']},${coord['r']}');
+          })
+          .toList();
+      expect(corridors.length, greaterThan(1));
+      for (final tile in corridors) {
+        tile['opened'] = false;
+      }
+      corridors[1]['opened'] = true;
+      final coord = corridors[1]['coord']! as Map<String, dynamic>;
+      openCoord = HexCoord(coord['q']! as int, coord['r']! as int);
+    });
+    final container = await _mount(
+      tester,
+      state,
+      viewport: const Size(1280, 1600),
+    );
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final useButton = find.ancestor(
+      of: find.text('Использовать'),
+      matching: find.byType(FilledButton),
+    );
+    expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+    tester.widget<FilledButton>(useButton).onPressed!.call();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(
+      container.read(gameControllerProvider).tileAt(openCoord)!.isBlocked,
+      isTrue,
+    );
+  });
+
   testWidgets('BUG030 round rollover is not reported as event consequences', (
     tester,
   ) async {

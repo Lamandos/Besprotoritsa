@@ -254,7 +254,9 @@ List<CardId> skillRerollSources(
           _ => false,
         })
       id,
-  if (player.backpack.contains('defibrillator')) 'defibrillator',
+  if (state.phase == GamePhase.playersTurn &&
+      player.backpack.contains('defibrillator'))
+    'defibrillator',
   for (final id in player.backpack)
     if (_stimulantMatchesSkill(id, stat)) id,
 ];

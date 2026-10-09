@@ -1678,6 +1678,7 @@ List<UseCardAbilityCommand> _cardAbilityChoices(
     return [
       for (final tile in state.board)
         if (tile.type == HexTileType.corridor &&
+            tile.opened &&
             (tile.isBlocked ||
                 (!state.players.any(
                       (hero) => hero.alive && hero.coord == tile.coord,

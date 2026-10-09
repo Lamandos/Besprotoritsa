@@ -1861,11 +1861,13 @@ GameState _resolveEventOutcome(
           logEntry:
               'event-monster-spawn:${definition['id']}:$drawnMonsterId:$coord',
         );
-        if (rawEffect['immediateCombat'] != false) {
+        current = _resolveTripwireArrival(current, monster);
+        final survivingMonster = _monsterById(current, monster.instanceId);
+        if (survivingMonster != null && rawEffect['immediateCombat'] != false) {
           current = _startImmediateMonsterAttack(
             current,
             playerId,
-            monster,
+            survivingMonster,
             dice,
           );
         }

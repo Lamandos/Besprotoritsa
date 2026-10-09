@@ -346,24 +346,39 @@ void main() {
   test('BUG032 C6-CAR Courier allows a remote exchange without an action', () {
     final state = _state(
       equippedRobot: 'c6-car-courier',
-      credits: 3,
+      backpack: const ['medkit'],
       actionsLeft: 0,
     );
 
     final result = step(
       state,
-      const ExchangeCommand(partnerId: 'hero-2', giveCredits: 1),
+      const ExchangeCommand(partnerId: 'hero-2', giveCardId: 'medkit'),
       SeededDiceRoller(18),
     );
 
     expect(result.rejection, isNull);
-    expect(result.state.players.first.credits, 2);
-    expect(result.state.players.last.credits, 1);
+    expect(result.state.players.first.backpack, isEmpty);
+    expect(result.state.players.last.backpack, ['medkit']);
     expect(
       result.state.players.first.exhaustedRobots,
       contains('c6-car-courier'),
     );
     expect(result.state.actionsLeft, 0);
+  });
+
+  test('BUG052 courier rejects remote credit transfers', () {
+    final state = _state(equippedRobot: 'c6-car-courier', credits: 3);
+
+    final result = step(
+      state,
+      const ExchangeCommand(partnerId: 'hero-2', giveCredits: 1),
+      SeededDiceRoller(252),
+    );
+
+    expect(result.rejection, isA<ExchangeUnavailable>());
+    expect(result.state.players.first.credits, 3);
+    expect(result.state.players.last.credits, 0);
+    expect(result.state.players.first.exhaustedRobots, isEmpty);
   });
 
   test(
@@ -386,6 +401,31 @@ void main() {
       expect(result.state.actionsLeft, 0);
     },
   );
+
+  test('BUG051 courier permits multiple remote items with smuggler mark', () {
+    final state = _state(
+      equippedRobot: 'c6-car-courier',
+      backpack: const ['smuggler-mark', 'medkit', 'medkit'],
+      actionsLeft: 0,
+    );
+    final result = step(
+      state,
+      const ExchangeCommand(
+        partnerId: 'hero-2',
+        giveCardIds: ['medkit', 'medkit'],
+      ),
+      SeededDiceRoller(232),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.first.backpack, ['smuggler-mark']);
+    expect(result.state.players.last.backpack, ['medkit', 'medkit']);
+    expect(
+      result.state.players.first.exhaustedRobots,
+      contains('c6-car-courier'),
+    );
+    expect(result.state.actionsLeft, 0);
+  });
 
   test('BUG041 an exhausted robot stays exhausted when transferred', () {
     final state = _state(
