@@ -72,67 +72,116 @@ class _TokenLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final monstersByCoord = <String, List<MonsterInstance>>{};
+    final tokensByCoord =
+        <String, List<({PlayerState? player, MonsterInstance? monster})>>{};
+    final coordsByKey = <String, HexCoord>{};
+    String keyFor(HexCoord coord) => '${coord.q},${coord.r}';
+    for (final player in players) {
+      final key = keyFor(player.coord);
+      coordsByKey[key] = player.coord;
+      tokensByCoord.putIfAbsent(key, () => []).add((
+        player: player,
+        monster: null,
+      ));
+    }
     for (final monster in monsters) {
-      monstersByCoord
-          .putIfAbsent('${monster.coord.q},${monster.coord.r}', () => [])
-          .add(monster);
+      final key = keyFor(monster.coord);
+      coordsByKey[key] = monster.coord;
+      tokensByCoord.putIfAbsent(key, () => []).add((
+        player: null,
+        monster: monster,
+      ));
+    }
+    final slotsByCoord = <String, List<_TokenSlot>>{};
+    for (final entry in tokensByCoord.entries) {
+      final coord = coordsByKey[entry.key]!;
+      final tile = board.firstWhere((tile) => tile.coord == coord);
+      slotsByCoord[entry.key] = _tokenSlots(
+        _layoutPosition(coord, board),
+        monsterSlots: [
+          for (final token in entry.value) token.monster != null,
+        ],
+        corridor: tile.type == HexTileType.corridor,
+      );
     }
     return Stack(
       children: [
-        for (final (index, player) in players.indexed)
-          _HeroToken(
-            player: player,
-            tokenIndex: index,
-            position: _layoutPosition(player.coord, board),
-            selected: player.id == selectedPlayerId,
-            activeTurn: player.id == activePlayerId,
-            onTap: onSelectPlayer == null
-                ? null
-                : () => onSelectPlayer!(player.id),
-          ),
-        for (final group in monstersByCoord.values)
-          for (final (index, monster) in group.indexed)
-            _MonsterToken(
-              monster: monster,
-              state: state,
-              position: _monsterTokenPosition(
-                _layoutPosition(monster.coord, board),
-                index: index,
-                count: group.length,
+        for (final entry in tokensByCoord.entries)
+          for (final (index, token) in entry.value.indexed)
+            if (token.player case final player?)
+              _HeroToken(
+                player: player,
+                position: slotsByCoord[entry.key]![index].position,
+                diameter: slotsByCoord[entry.key]![index].size.width,
+                selected: player.id == selectedPlayerId,
+                activeTurn: player.id == activePlayerId,
+                onTap: onSelectPlayer == null
+                    ? null
+                    : () => onSelectPlayer!(player.id),
+              )
+            else if (token.monster case final monster?)
+              _MonsterToken(
+                monster: monster,
+                state: state,
+                position: slotsByCoord[entry.key]![index].position,
+                size: slotsByCoord[entry.key]![index].size,
               ),
-            ),
       ],
     );
   }
 }
 
-Offset _monsterTokenPosition(
-  Offset position, {
-  required int index,
-  required int count,
+class _TokenSlot {
+  const _TokenSlot(this.position, this.size);
+
+  final Offset position;
+  final Size size;
+}
+
+List<_TokenSlot> _tokenSlots(
+  Offset tilePosition, {
+  required List<bool> monsterSlots,
+  required bool corridor,
 }) {
-  const tokenWidth = 108.0;
-  const tokenHeight = 82.0;
-  const spacing = 4.0;
-  final columns = math.sqrt(count).ceil();
-  final rows = (count / columns).ceil();
-  final column = index % columns;
-  final row = index ~/ columns;
-  final width = columns * (tokenWidth + spacing) - spacing;
-  final height = rows * (tokenHeight + spacing) - spacing;
-  return Offset(
-    position.dx +
-        99 +
-        column * (tokenWidth + spacing) -
-        width / 2 +
-        tokenWidth / 2,
-    position.dy +
-        82 +
-        row * (tokenHeight + spacing) -
-        height / 2 +
-        tokenHeight / 2,
+  final availableWidth = corridor ? 118.0 : 154.0;
+  final availableHeight = corridor ? 83.0 : 114.0;
+  final columns = math.min(
+    monsterSlots.length,
+    math.max(1, (availableWidth / 44).floor()),
   );
+  final rows = (monsterSlots.length / columns).ceil();
+  final cellWidth = availableWidth / columns;
+  final cellHeight = availableHeight / rows;
+  return [
+    for (var index = 0; index < monsterSlots.length; index++)
+      () {
+        final row = index ~/ columns;
+        final column = index % columns;
+        final width = cellWidth - 4;
+        final height = cellHeight - 4;
+        final size = monsterSlots[index]
+            ? () {
+                final scale = math
+                    .min(1, math.min(width / 72, height / 54))
+                    .toDouble();
+                return Size(72 * scale, 54 * scale);
+              }()
+            : Size.square(math.min(50, math.min(width, height)));
+        return _TokenSlot(
+          Offset(
+            tilePosition.dx +
+                4 +
+                column * cellWidth +
+                (cellWidth - size.width) / 2,
+            tilePosition.dy +
+                4 +
+                row * cellHeight +
+                (cellHeight - size.height) / 2,
+          ),
+          size,
+        );
+      }(),
+  ];
 }
 
 class _HexTileView extends StatelessWidget {
@@ -251,6 +300,7 @@ class _HexTileView extends StatelessWidget {
                 ),
               ),
           ],
+          if (selected) const ColoredBox(color: Color(0x667DFF54)),
           CustomPaint(
             painter: _HexRimPainter(
               active: isKnown,
@@ -371,16 +421,16 @@ Offset _corridorVector(HexEdge edge) => switch (edge) {
 class _HeroToken extends StatelessWidget {
   const _HeroToken({
     required this.player,
-    required this.tokenIndex,
     required this.position,
+    required this.diameter,
     required this.selected,
     required this.activeTurn,
     required this.onTap,
   });
 
   final PlayerState player;
-  final int tokenIndex;
   final Offset position;
+  final double diameter;
   final bool selected;
   final bool activeTurn;
   final VoidCallback? onTap;
@@ -388,8 +438,8 @@ class _HeroToken extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: position.dx + 67 + (tokenIndex % 2) * 56,
-      top: position.dy + 74 + (tokenIndex ~/ 2) * 42,
+      left: position.dx,
+      top: position.dy,
       child: Semantics(
         label: AppStrings.of(
           context,
@@ -405,8 +455,8 @@ class _HeroToken extends StatelessWidget {
                 'hero-${player.id}-at-${player.coord.q}-${player.coord.r}',
               ),
               duration: const Duration(milliseconds: 180),
-              width: selected ? 50 : 42,
-              height: selected ? 50 : 42,
+              width: diameter,
+              height: diameter,
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -439,7 +489,7 @@ class _HeroToken extends StatelessWidget {
               ),
               child: CharacterPortrait(
                 characterId: player.characterId,
-                size: Size(selected ? 44 : 36, selected ? 44 : 36),
+                size: Size.square(diameter - 6),
                 circle: true,
                 borderColor: activeTurn
                     ? const Color(0xFFB5E28C)
@@ -460,11 +510,13 @@ class _MonsterToken extends StatelessWidget {
     required this.monster,
     required this.state,
     required this.position,
+    required this.size,
   });
 
   final MonsterInstance monster;
   final GameState state;
   final Offset position;
+  final Size size;
 
   @override
   Widget build(BuildContext context) {
@@ -487,15 +539,15 @@ class _MonsterToken extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             onTap: () => _showMonsterCard(context, state, monster, monsterName),
             child: SizedBox(
-              width: 108,
-              height: 82,
+              width: size.width,
+              height: size.height,
               child: GameCardArtwork(
                 cardId: monster.monsterId,
                 assetPath:
                     gameMonsterTokenArtworkAsset(monster.monsterId) ??
                     gameCardArtworkAsset(monster.monsterId),
-                width: 108,
-                height: 82,
+                width: size.width,
+                height: size.height,
                 borderRadius: BorderRadius.zero,
                 fit: BoxFit.contain,
                 fallbackIcon: Icons.bug_report,
@@ -531,6 +583,10 @@ void _showMonsterCard(
             ? current.contentTranslations[descriptionKey]
             : null;
         final queue = ref.read(eventQueueProvider);
+        final artworkHeight = math
+            .min(210, MediaQuery.sizeOf(context).height * 0.16)
+            .toDouble();
+        final artworkWidth = artworkHeight * (1544 / 1019);
         return ListenableBuilder(
           listenable: queue,
           builder: (context, _) {
@@ -565,16 +621,16 @@ void _showMonsterCard(
                               case final art?)
                             Image.asset(
                               art,
-                              width: 320,
-                              height: 210,
+                              width: artworkWidth,
+                              height: artworkHeight,
                               fit: BoxFit.contain,
                             ),
                           const SizedBox(height: 10),
                           Text(description ?? 'МОНСТР'),
                           const SizedBox(height: 14),
                           Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
+                            spacing: 6,
+                            runSpacing: 4,
                             children: [
                               if (hero != null)
                                 _monsterStat(
@@ -596,6 +652,17 @@ void _showMonsterCard(
                             const Padding(
                               padding: EdgeInsets.only(top: 12),
                               child: Text('Дождитесь завершения анимации.'),
+                            ),
+                          if (!queue.isPlaying &&
+                              current.pendingDecision == null &&
+                              hero != null &&
+                              target != null &&
+                              hero.coord != target.coord)
+                            const Padding(
+                              padding: EdgeInsets.only(top: 12),
+                              child: Text(
+                                'Герой должен быть в одной клетке с монстром.',
+                              ),
                             ),
                         ],
                       ),
@@ -637,13 +704,13 @@ void _showMonsterCard(
 }
 
 Widget _monsterStat(String label, String value) => Container(
-  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
   decoration: BoxDecoration(
     color: const Color(0xAA28221D),
     borderRadius: BorderRadius.circular(6),
     border: Border.all(color: const Color(0xFF8D6D46)),
   ),
-  child: Text('$label: $value'),
+  child: Text('$label: $value', style: const TextStyle(fontSize: 13)),
 );
 
 class _HexRimPainter extends CustomPainter {
@@ -684,12 +751,12 @@ class _HexRimPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = selected
-            ? 4
+            ? 6
             : active
             ? 2.2
             : 1.2
         ..color = selected
-            ? const Color(0xFFFFCF76)
+            ? const Color(0xFFFFFF6B)
             : active
             ? const Color(0xFFD3AD75)
             : const Color(0xFF75634B),

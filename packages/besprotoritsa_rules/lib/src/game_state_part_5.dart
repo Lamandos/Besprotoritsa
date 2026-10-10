@@ -25,7 +25,9 @@ final class GameState {
     required Map<DeckId, DeckState> decks,
     required this.quests,
     Iterable<CardId> chestCards = const [],
+    Iterable<CardId> exhaustedChestRobots = const [],
     Iterable<BoilToken> boils = const [],
+    Iterable<TripwireTrap> tripwires = const [],
     Iterable<ReserveHero> reserveHeroes = const [],
     Map<PlayerId, ReserveHero> queuedReplacements = const {},
     Map<CardId, ConditionCard> conditionCards = const {},
@@ -55,6 +57,7 @@ final class GameState {
        ]),
        monsters = List.unmodifiable(monsters),
        boils = List.unmodifiable(boils),
+       tripwires = List.unmodifiable(tripwires),
        reserveHeroes = List.unmodifiable(reserveHeroes),
        queuedReplacements = UnmodifiableMapView(Map.of(queuedReplacements)),
        conditionCards = UnmodifiableMapView(Map.of(conditionCards)),
@@ -68,6 +71,7 @@ final class GameState {
        monsterDefinitions = _freezeDefinitions(monsterDefinitions),
        contentTranslations = UnmodifiableMapView(Map.of(contentTranslations)),
        chestCards = List.unmodifiable(chestCards),
+       exhaustedChestRobots = List.unmodifiable(exhaustedChestRobots),
        pendingDamage = List.unmodifiable(pendingDamage),
        decks = UnmodifiableMapView(Map.of(decks)),
        log = List.unmodifiable(log),
@@ -126,6 +130,10 @@ final class GameState {
       this.boils.map((boil) => boil.instanceId),
       'boil instance ids',
     );
+    _ensureUnique(
+      this.tripwires.map((trap) => trap.instanceId),
+      'tripwire instance ids',
+    );
     if (activePlayerId != null &&
         !this.players.any((player) => player.id == activePlayerId)) {
       throw ArgumentError.value(
@@ -156,6 +164,7 @@ final class GameState {
   final List<PlayerState> players;
   final List<MonsterInstance> monsters;
   final List<BoilToken> boils;
+  final List<TripwireTrap> tripwires;
   final List<ReserveHero> reserveHeroes;
   final Map<PlayerId, ReserveHero> queuedReplacements;
   final Map<CardId, ConditionCard> conditionCards;
@@ -173,6 +182,9 @@ final class GameState {
   /// Shared storage in the start/anabiosis sector. Credits are deliberately
   /// not represented here: only cards can be placed in the chest.
   final List<CardId> chestCards;
+
+  /// Robot cards in the shared chest that still need to be readied.
+  final List<CardId> exhaustedChestRobots;
   final List<IncomingDamage> pendingDamage;
   final Map<DeckId, DeckState> decks;
   final QuestState quests;
@@ -226,6 +238,7 @@ final class GameState {
     players: players,
     monsters: monsters,
     boils: boils,
+    tripwires: tripwires,
     reserveHeroes: reserveHeroes,
     queuedReplacements: queuedReplacements,
     conditionCards: conditionCards,
@@ -237,6 +250,7 @@ final class GameState {
     contentTranslations: contentTranslations,
     pendingDamage: pendingDamage,
     chestCards: chestCards,
+    exhaustedChestRobots: exhaustedChestRobots,
     decks: decks,
     quests: quests,
     log: log,

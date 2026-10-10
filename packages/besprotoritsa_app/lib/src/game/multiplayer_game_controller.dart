@@ -231,6 +231,27 @@ Map<String, Object?> _commandToJson(GameCommand command) => switch (command) {
     'type': 'discardCard',
     'cardId': cardId,
   },
+  UseCardAbilityCommand(
+    :final cardId,
+    :final targetPlayerId,
+    :final targetMonsterInstanceId,
+    :final targetCoord,
+    :final targetCardId,
+    :final amount,
+  ) =>
+    <String, Object?>{
+      'type': 'useCardAbility',
+      'cardId': cardId,
+      if (targetPlayerId != null) 'targetPlayerId': targetPlayerId,
+      if (targetMonsterInstanceId != null)
+        'targetMonsterInstanceId': targetMonsterInstanceId,
+      if (targetCoord != null) ...{
+        'targetQ': targetCoord.q,
+        'targetR': targetCoord.r,
+      },
+      if (targetCardId != null) 'targetCardId': targetCardId,
+      if (amount != null) 'amount': amount,
+    },
   ReceiveCardCommand() => throw UnsupportedError(
     'Card rewards are resolved by an authoritative deck or effect, '
     'not a client command.',

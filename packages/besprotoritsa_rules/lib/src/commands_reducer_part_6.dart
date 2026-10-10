@@ -10,25 +10,32 @@ GameStepResult _startRoll(
   int diceCount = 1,
   RollContext? context,
   bool consumesAction = true,
-}) => GameStepResult(
-  state: _copyState(
-    state,
-    actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
-    pendingDecision: AwaitingRerollChoice(
-      dice: dice.rollDice(diceCount),
-      availableRerolls: context is SkillCheckContext
-          ? skillRerollSources(
-              state,
-              _playerById(state, context.playerId)!,
-              context.stat,
-            ).length
-          : 0,
-      window: const DecisionWindow(remainingTicks: 1),
-      context: context,
+}) {
+  final sources = context is SkillCheckContext
+      ? skillRerollSources(
+          state,
+          _playerById(state, context.playerId)!,
+          context.stat,
+        )
+      : const <CardId>[];
+  return GameStepResult(
+    state: _copyState(
+      state,
+      actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
+      pendingDecision: AwaitingRerollChoice(
+        dice: dice.rollDice(diceCount),
+        availableRerolls: sources.length,
+        maxDicePerReroll: sources.isEmpty
+            ? 999
+            : _maxDicePerReroll(state, sources.first),
+        rerollSources: sources,
+        window: const DecisionWindow(remainingTicks: 1),
+        context: context,
+      ),
+      logEntry: logEntry,
     ),
-    logEntry: logEntry,
-  ),
-);
+  );
+}
 
 GameStepResult _resolveDecision(
   GameState state,
@@ -81,9 +88,21 @@ GameStepResult _resolveHeroReplacement(
     );
   }
   final selectedReserve = reserve;
+  final deceased = _playerById(state, pending.playerId);
+  final inherited = deceased == null
+      ? (reserve: selectedReserve, unclaimed: const <CardId>[])
+      : _reserveWithPosthumousInventory(
+          state,
+          selectedReserve,
+          deceased,
+        );
+  final reserveForQueue = inherited.reserve;
   final queuedReplacements = Map<PlayerId, ReserveHero>.of(
     state.queuedReplacements,
-  )..[pending.playerId] = selectedReserve;
+  )..[pending.playerId] = reserveForQueue;
+  final unclaimedLog = inherited.unclaimed.isEmpty
+      ? ''
+      : ':unclaimed:${inherited.unclaimed.join(',')}';
   final selected = _copyState(
     state,
     reserveHeroes: state.reserveHeroes.where(
@@ -93,7 +112,8 @@ GameStepResult _resolveHeroReplacement(
     clearPendingDecision: true,
     logEntry:
         'replacement-selected:'
-        '${pending.playerId}:${selectedReserve.characterId}',
+        '${pending.playerId}:${selectedReserve.characterId}'
+        '$unclaimedLog',
   );
   if (pending.remainingPlayerIds.isNotEmpty) {
     if (selected.reserveHeroes.isEmpty) {
@@ -156,6 +176,55 @@ GameStepResult _resolveHeroReplacement(
     state: _resumeAutomaticPhase(
       _resumePendingEventMonsterSpawn(continued, dice),
     ),
+  );
+}
+
+({ReserveHero reserve, List<CardId> unclaimed}) _reserveWithPosthumousInventory(
+  GameState state,
+  ReserveHero reserve,
+  PlayerState deceased,
+) {
+  var recipient = PlayerState(
+    id: deceased.id,
+    characterId: reserve.characterId,
+    coord: deceased.coord,
+    damage: 0,
+    health: reserve.health,
+    credits: reserve.credits + deceased.credits,
+    backpack: reserve.backpack,
+    equipped: reserve.equipped,
+    carriedMods: reserve.carriedMods,
+    implanted: reserve.implanted,
+    conditions: const [],
+    alive: true,
+    stats: reserve.stats,
+  );
+  final unclaimed = <CardId>[];
+  for (final cardId in deceased.backpack) {
+    try {
+      recipient = InventoryRules.receive(
+        recipient,
+        cardId,
+        state.cardDefinitions,
+      );
+    } on BackpackCapacityExceeded {
+      unclaimed.add(cardId);
+    } on InventoryRuleViolation {
+      unclaimed.add(cardId);
+    }
+  }
+  return (
+    reserve: ReserveHero(
+      characterId: reserve.characterId,
+      health: reserve.health,
+      stats: reserve.stats,
+      credits: recipient.credits,
+      backpack: recipient.backpack,
+      equipped: recipient.equipped,
+      carriedMods: [...recipient.carriedMods, ...deceased.carriedMods],
+      implanted: [...recipient.implanted, ...deceased.implanted],
+    ),
+    unclaimed: unclaimed,
   );
 }
 
@@ -293,13 +362,24 @@ GameStepResult _resolveReroll(
   for (var index = 0; index < indexes.length; index++) {
     rerolled[indexes[index]] = newRolls[index];
   }
+  var rerolledState = state;
+  final usedSource = pending.rerollSources.firstOrNull;
+  if (usedSource != null) {
+    rerolledState = _consumeRerollSource(rerolledState, pending, usedSource);
+  }
+  final remainingSources = pending.rerollSources.isEmpty
+      ? const <CardId>[]
+      : pending.rerollSources.skip(1).toList();
   return GameStepResult(
     state: _copyState(
-      state,
+      rerolledState,
       pendingDecision: AwaitingRerollChoice(
         dice: rerolled,
         availableRerolls: pending.availableRerolls - 1,
-        maxDicePerReroll: pending.maxDicePerReroll,
+        maxDicePerReroll: remainingSources.isEmpty
+            ? pending.maxDicePerReroll
+            : _maxDicePerReroll(rerolledState, remainingSources.first),
+        rerollSources: remainingSources,
         window: pending.window,
         context: pending.context,
       ),

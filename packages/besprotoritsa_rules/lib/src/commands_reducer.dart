@@ -27,3 +27,4 @@ part 'commands_reducer_part_7.dart';
 part 'commands_reducer_part_8.dart';
 part 'commands_reducer_part_9.dart';
 part 'commands_reducer_part_10.dart';
+part 'commands_reducer_part_11.dart';

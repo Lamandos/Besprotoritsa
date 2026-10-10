@@ -42,6 +42,10 @@ GameState _startNextIncomingDamage(
     (damage) {
       final target = _playerById(state, damage.targetPlayerId);
       if (target == null || !target.alive) return false;
+      if (target.damageImmuneThroughRound != null &&
+          state.round <= target.damageImmuneThroughRound!) {
+        return false;
+      }
       if (damage.source == DamageSource.monster &&
           target.monsterDamageImmuneThroughRound != null &&
           state.round <= target.monsterDamageImmuneThroughRound!) {
@@ -151,7 +155,11 @@ GameStepResult _resolveEventOption(
             playerId,
             (current) => _copyPlayer(
               current,
-              damage: current.damage + hero.backpack.length * 2,
+              damage:
+                  current.damage +
+                  (_ignoresAnyDamage(selected, current)
+                      ? 0
+                      : hero.backpack.length * 2),
             ),
           );
     if (choice.option == 'horde|discard') {
@@ -328,15 +336,22 @@ GameStepResult _resolveEventOption(
     }
     var killer = _playerById(selected, playerId)!;
     var unclaimedLoot = const <CardId>[];
+    var exhaustedTrophies = const <CardId>[];
     if (monster.monsterId == RestlessMonster.restlessMonsterId) {
       final loot = _awardRestlessTrophies(killer, monster, selected);
       killer = loot.player;
       unclaimedLoot = loot.unclaimed;
+      exhaustedTrophies = loot.exhaustedRobots;
     }
     final unclaimedCount = unclaimedLoot.length;
     var killed = _copyState(
       selected,
-      players: _replacePlayer(selected, playerId, (_) => killer),
+      players: _restlessTrophyPlayers(
+        selected,
+        playerId,
+        killer,
+        exhaustedTrophies,
+      ),
       monsters: selected.monsters.where(
         (candidate) => candidate.instanceId != monster.instanceId,
       ),
@@ -682,7 +697,13 @@ GameState _spawnEventOptionMonster(
     decks: Map<DeckId, DeckState>.of(state.decks)..['monsters'] = draw.deck,
     logEntry: 'event-monster-spawn:${event['id']}:$monsterId:$coord',
   );
-  return _startImmediateMonsterAttack(spawned, playerId, monster, dice);
+  final arrived = _resolveTripwireArrival(spawned, monster);
+  if (!arrived.monsters.any(
+    (candidate) => candidate.instanceId == monster.instanceId,
+  )) {
+    return arrived;
+  }
+  return _startImmediateMonsterAttack(arrived, playerId, monster, dice);
 }
 
 bool? _eventAutomaticOutcome(
@@ -775,18 +796,24 @@ GameState _resolveEventMonsterSpawn(
     decks: monsters,
     logEntry: 'event-monster-spawn:${event['id']}:$monsterId:$coord',
   );
+  final arrived = _resolveTripwireArrival(spawned, monster);
+  if (!arrived.monsters.any(
+    (candidate) => candidate.instanceId == monster.instanceId,
+  )) {
+    return arrived;
+  }
   final immediateCombat = event['immediateCombat'] == true;
-  if (!immediateCombat) return spawned;
-  final occupants = spawned.players
+  if (!immediateCombat) return arrived;
+  final occupants = arrived.players
       .where((player) => player.alive && player.coord == coord)
       .toList();
-  if (occupants.isEmpty) return spawned;
+  if (occupants.isEmpty) return arrived;
   final combatant = occupants.firstWhere(
     (player) => player.id == playerId,
     orElse: () => occupants.first,
   );
   return _startImmediateMonsterAttack(
-    spawned,
+    arrived,
     combatant.id,
     monster,
     dice,
@@ -879,8 +906,10 @@ GameState _startImmediateMonsterAttack(
 ) {
   final target = _playerById(state, playerId);
   if (target != null &&
-      target.monsterDamageImmuneThroughRound != null &&
-      state.round <= target.monsterDamageImmuneThroughRound!) {
+      ((target.damageImmuneThroughRound != null &&
+              state.round <= target.damageImmuneThroughRound!) ||
+          (target.monsterDamageImmuneThroughRound != null &&
+              state.round <= target.monsterDamageImmuneThroughRound!))) {
     return _startImmediateCounterAttack(state, playerId, monster, dice);
   }
   if (_monsterSpawnsBoilInsteadOfAttack(state, monster)) {
@@ -953,15 +982,23 @@ GameState _startImmediateCounterAttack(
       : const EffectEngine()
             .resolvePreAttackRoll(dice.rollDice(1), preAttackHooks)
             .targetDamage;
-  final diceRoll = dice.rollDice(_heroAttackDice(player, state));
+  final diceRoll = dice.rollDice(
+    _heroAttackDice(player, state, target: monster),
+  );
   final roll = const EffectEngine().resolveRoll(diceRoll, hooks);
-  if (roll.rerollsAvailable > 0) {
+  final rerollSources = _attackRerollSources(
+    state,
+    player,
+    roll.rerollsAvailable,
+  );
+  if (rerollSources.isNotEmpty) {
     return _copyState(
       state,
       pendingDecision: AwaitingRerollChoice(
         dice: diceRoll,
-        availableRerolls: roll.rerollsAvailable,
-        maxDicePerReroll: 1,
+        availableRerolls: rerollSources.length,
+        maxDicePerReroll: _maxDicePerReroll(state, rerollSources.first),
+        rerollSources: rerollSources,
         window: const DecisionWindow(remainingTicks: 1),
         context: AttackRollContext(
           playerId: playerId,
@@ -1000,6 +1037,7 @@ GameState _completeRoll(
       pending.dice,
       consumesAction: false,
       preAttackDamage: context.preAttackDamage,
+      bonusHits: context.bonusHits,
     );
     return context.resumeAutomaticPhase
         ? _resumeAutomaticPhase(resolved)
@@ -1065,6 +1103,10 @@ GameState _completeRoll(
   return _resumeAutomaticPhase(stateAfterCounters);
 }
 
+bool _ignoresAnyDamage(GameState state, PlayerState player) =>
+    player.damageImmuneThroughRound != null &&
+    state.round <= player.damageImmuneThroughRound!;
+
 /// Applies the machine-readable consequences attached to a verified event
 /// branch. An unmapped outcome is recorded for the journal and left visible in
 /// the coverage registry; consequences are never guessed from prose.
@@ -1125,6 +1167,7 @@ GameState _resolveEventOutcome(
             .toList();
         for (final hero in corridorHeroes) {
           final rolled = dice.rollDice(1).single;
+          final ignoresDamage = _ignoresAnyDamage(damaged, hero);
           damaged = _copyState(
             damaged,
             players: _replacePlayer(
@@ -1132,10 +1175,12 @@ GameState _resolveEventOutcome(
               hero.id,
               (currentHero) => _copyPlayer(
                 currentHero,
-                damage: currentHero.damage + rolled,
+                damage: currentHero.damage + (ignoresDamage ? 0 : rolled),
               ),
             ),
-            logEntry: 'event-asteroid-damage:${hero.id}:$rolled',
+            logEntry: ignoresDamage
+                ? 'event-asteroid-damage-ignored:${hero.id}:$rolled'
+                : 'event-asteroid-damage:${hero.id}:$rolled',
           );
         }
         damaged = resolveHeroDeaths(damaged);
@@ -1157,18 +1202,19 @@ GameState _resolveEventOutcome(
             else
               hero,
         ];
-        final movedMonsters = [
-          for (final monster in damaged.monsters)
-            if (corridors.contains(monster.coord))
-              _copyMonster(
-                monster,
-                coord:
-                    _eventDisplacementTarget(damaged, monster.coord) ??
-                    monster.coord,
-              )
-            else
-              monster,
-        ];
+        final movedMonsters = <MonsterInstance>[];
+        final arrivingMonsters = <MonsterInstance>[];
+        for (final monster in damaged.monsters) {
+          if (!corridors.contains(monster.coord)) {
+            movedMonsters.add(monster);
+            continue;
+          }
+          final destination =
+              _eventDisplacementTarget(damaged, monster.coord) ?? monster.coord;
+          final moved = _copyMonster(monster, coord: destination);
+          movedMonsters.add(moved);
+          if (destination != monster.coord) arrivingMonsters.add(moved);
+        }
         current = _copyState(
           damaged,
           board: closedBoard,
@@ -1176,6 +1222,9 @@ GameState _resolveEventOutcome(
           monsters: movedMonsters,
           logEntry: 'event-asteroid-corridors-closed',
         );
+        for (final monster in arrivingMonsters) {
+          current = _resolveTripwireArrival(current, monster);
+        }
         current = resolveColocation(current);
       case 'destroy_nest':
         final nests = current.monsters
@@ -1396,13 +1445,30 @@ GameState _resolveEventOutcome(
           ),
           logEntry: 'event-heal-all:$playerId',
         );
+      case 'ready_robots':
+        final chestCards = current.chestCards.toSet();
+        current = _copyState(
+          current,
+          players: [
+            for (final hero in current.players)
+              _copyPlayer(
+                hero,
+                exhaustedRobots: hero.exhaustedRobots.where(
+                  chestCards.contains,
+                ),
+              ),
+          ],
+          logEntry: 'event-robots-ready:$playerId',
+        );
       case 'damage':
         current = _copyState(
           current,
           players: _replacePlayer(
             current,
             playerId,
-            (hero) => _copyPlayer(hero, damage: hero.damage + amount),
+            (hero) => _ignoresAnyDamage(current, hero)
+                ? hero
+                : _copyPlayer(hero, damage: hero.damage + amount),
           ),
           logEntry: 'event-damage:$playerId:$amount',
         );
@@ -1412,7 +1478,7 @@ GameState _resolveEventOutcome(
           current,
           players: [
             for (final hero in current.players)
-              if (hero.alive)
+              if (hero.alive && !_ignoresAnyDamage(current, hero))
                 _copyPlayer(hero, damage: hero.damage + amount)
               else
                 hero,
@@ -1427,7 +1493,9 @@ GameState _resolveEventOutcome(
           players: _replacePlayer(
             current,
             playerId,
-            (hero) => _copyPlayer(hero, damage: hero.damage + rolledDamage),
+            (hero) => _ignoresAnyDamage(current, hero)
+                ? hero
+                : _copyPlayer(hero, damage: hero.damage + rolledDamage),
           ),
           logEntry: 'event-damage-roll:$playerId:$rolledDamage',
         );
@@ -1438,13 +1506,16 @@ GameState _resolveEventOutcome(
         var rollIndex = 0;
         current = _copyState(
           current,
-          players: [
-            for (final hero in current.players)
-              if (hero.alive)
-                _copyPlayer(hero, damage: hero.damage + rolls[rollIndex++])
-              else
-                hero,
-          ],
+          players: current.players.map((hero) {
+            if (!hero.alive) return hero;
+            final rolledDamage = rolls[rollIndex++];
+            return _copyPlayer(
+              hero,
+              damage:
+                  hero.damage +
+                  (_ignoresAnyDamage(current, hero) ? 0 : rolledDamage),
+            );
+          }),
           logEntry: 'event-damage-each-roll:${rolls.join(',')}',
         );
         current = resolveHeroDeaths(current);
@@ -1520,16 +1591,13 @@ GameState _resolveEventOutcome(
           logEntry: 'event-next-turn-actions:$playerId:$delta',
         );
       case 'monster_defense_bonus_next_round':
+        current = _grantMonsterDefenseBonus(
+          current,
+          playerId,
+          current.round + 1,
+        );
         current = _copyState(
           current,
-          players: _replacePlayer(
-            current,
-            playerId,
-            (hero) => _copyPlayer(
-              hero,
-              monsterDefenseBonusRound: current.round + 1,
-            ),
-          ),
           logEntry: 'event-monster-defense-next-round:$playerId',
         );
       case 'draw':
@@ -1809,11 +1877,13 @@ GameState _resolveEventOutcome(
           logEntry:
               'event-monster-spawn:${definition['id']}:$drawnMonsterId:$coord',
         );
-        if (rawEffect['immediateCombat'] != false) {
+        current = _resolveTripwireArrival(current, monster);
+        final survivingMonster = _monsterById(current, monster.instanceId);
+        if (survivingMonster != null && rawEffect['immediateCombat'] != false) {
           current = _startImmediateMonsterAttack(
             current,
             playerId,
-            monster,
+            survivingMonster,
             dice,
           );
         }
@@ -1928,6 +1998,9 @@ GameState _resolveEventOutcome(
           logEntry:
               'event-monsters-adjacent:${definition['id']}:${monsters.length}',
         );
+        for (final monster in monsters) {
+          current = _resolveTripwireArrival(current, monster);
+        }
       case 'move_to_neighbor':
       case 'move_to_neighbor_and_spawn_monster':
         final targets = _eventMoveTargets(current, playerId);
@@ -2617,7 +2690,7 @@ GameState _applyFullQuestEvent(
       if (statuses[effect.questId] != QuestStatus.active) continue;
       players = [
         for (final player in players)
-          if (player.alive)
+          if (player.alive && !_ignoresAnyDamage(state, player))
             _copyPlayer(player, damage: player.damage + effect.amount)
           else
             player,
@@ -2756,37 +2829,49 @@ GameState _completeMvpQuest(GameState state, SkillCheckContext context) {
 }
 
 GameState _endTurn(GameState state) {
-  final activeIndex = state.players.indexWhere(
-    (player) => player.id == state.activePlayerId,
+  var current = state;
+  final activePlayer = _activePlayer(state);
+  if (activePlayer != null && activePlayer.nextAttackBonusHits > 0) {
+    current = _copyState(
+      state,
+      players: _replacePlayer(
+        state,
+        activePlayer.id,
+        (player) => _copyPlayer(player, nextAttackBonusHits: 0),
+      ),
+    );
+  }
+  final activeIndex = current.players.indexWhere(
+    (player) => player.id == current.activePlayerId,
   );
-  final nextIndex = _nextLivingPlayerIndex(state.players, activeIndex);
+  final nextIndex = _nextLivingPlayerIndex(current.players, activeIndex);
   if (nextIndex == null) {
-    if (state.queuedReplacements.isNotEmpty) {
+    if (current.queuedReplacements.isNotEmpty) {
       return _startNextPlayersTurn(
-        _copyState(state, actionsLeft: 0, clearActivePlayerId: true),
+        _copyState(current, actionsLeft: 0, clearActivePlayerId: true),
       );
     }
-    return _copyState(state, actionsLeft: 0, clearActivePlayerId: true);
+    return _copyState(current, actionsLeft: 0, clearActivePlayerId: true);
   }
   final lastPlayerOfRound = activeIndex >= 0 && nextIndex <= activeIndex;
   if (lastPlayerOfRound) {
     return _runMonstersTurn(
       _copyState(
-        state,
+        current,
         phase: GamePhase.monstersTurn,
         actionsLeft: 0,
         clearActivePlayerId: true,
         monsterTurnIndex: 0,
         monsterStepsRemaining: 0,
-        logEntry: 'players-turn-complete:${state.round}',
+        logEntry: 'players-turn-complete:${current.round}',
       ),
     );
   }
   return _copyState(
-    state,
-    activePlayerId: state.players[nextIndex].id,
-    actionsLeft: state.players[nextIndex].actionPoints,
+    current,
+    activePlayerId: current.players[nextIndex].id,
+    actionsLeft: current.players[nextIndex].actionPoints,
     actionsTakenThisTurn: 0,
-    logEntry: 'end-turn:${state.activePlayerId}',
+    logEntry: 'end-turn:${current.activePlayerId}',
   );
 }

@@ -6,6 +6,60 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('BUG068 saves exhausted carried robots on monsters', () {
+    final restless = RestlessMonster(
+      instanceId: 'restless-ada',
+      coord: const HexCoord(0, 0),
+      attack: 1,
+      defense: 0,
+      carriedGear: const ['r69-nic3'],
+      exhaustedCarriedRobots: const ['r69-nic3'],
+    );
+    final state = GameState(
+      seed: 7,
+      round: 1,
+      phase: GamePhase.eventsPhase,
+      activePlayerId: null,
+      actionsLeft: 0,
+      board: const [],
+      players: const [],
+      monsters: [restless],
+      decks: const {},
+      quests: QuestState(),
+    );
+    final codec = GameStateJsonCodec();
+
+    final restored = codec.decode(codec.encode(state));
+
+    expect(restored.monsters.single.exhaustedCarriedRobots, ['r69-nic3']);
+  });
+
+  test('BUG070 saves and restores chest robot readiness', () {
+    final codec = GameStateJsonCodec();
+    final state = _chestReadinessState(
+      exhaustedChestRobots: const ['r69-nic3'],
+    );
+
+    final restored = codec.decode(codec.encode(state));
+
+    expect(restored.chestCards, ['r69-nic3']);
+    expect(restored.exhaustedChestRobots, ['r69-nic3']);
+  });
+
+  test(
+    'BUG070 migrates legacy chest robot readiness from its former owner',
+    () {
+      final codec = GameStateJsonCodec();
+      final legacy = codec.toJson(
+        _chestReadinessState(ownerExhaustedRobots: const ['r69-nic3']),
+      )..remove('exhausted_chest_robots');
+
+      final restored = codec.fromJson(legacy);
+
+      expect(restored.exhaustedChestRobots, ['r69-nic3']);
+    },
+  );
+
   test(
     'round-trips every field while a reroll decision is pending',
     () async {
@@ -26,6 +80,8 @@ void main() {
       expect(restored.cardDefinitions['pistol']!.sourceDeck, 'items');
       expect(restored.players.first.monsterDamageImmuneThroughRound, 3);
       expect(restored.players.first.monsterDefenseBonusRound, 5);
+      expect(restored.players.first.monsterDefenseBonus, 3);
+      expect(restored.players.first.enemyFeaturesIgnoredThroughRound, 4);
       expect(restored.players.first.retainedEventCards, ['scientist-report']);
       expect(restored.chestCards, ['shared-tool']);
       expect(restored.pendingDecision, isA<AwaitingRerollChoice>());
@@ -49,6 +105,18 @@ void main() {
       codec.toJson(restored)['schema_version'],
       currentSaveSchemaVersion,
     );
+  });
+
+  test('defaults legacy round-scoped defense markers to a one-point bonus', () {
+    final codec = GameStateJsonCodec();
+    final legacy = codec.toJson(_interruptedState());
+    final players = legacy['players']! as List<Object?>;
+    (players.first! as Map<String, Object?>).remove('monster_defense_bonus');
+
+    final restored = codec.fromJson(legacy);
+
+    expect(restored.players.first.monsterDefenseBonusRound, 5);
+    expect(restored.players.first.monsterDefenseBonus, 1);
   });
 
   test('migrates checked in unversioned and release-1 save fixtures', () {
@@ -105,6 +173,54 @@ void main() {
     );
   });
 
+  test('BUG058 restores a legacy pending robot reroll source', () {
+    final codec = GameStateJsonCodec();
+    final legacy = codec.toJson(_interruptedState());
+    final decision = Map<String, Object?>.from(
+      legacy['pending_decision']! as Map<Object?, Object?>,
+    )..remove('reroll_sources');
+    legacy['pending_decision'] = decision;
+
+    final players = (legacy['players']! as List<Object?>)
+        .map(
+          (player) => Map<String, Object?>.from(
+            player! as Map<Object?, Object?>,
+          ),
+        )
+        .toList();
+    final firstPlayer = players.first;
+    firstPlayer['equipped'] = Map<String, Object?>.from(
+      firstPlayer['equipped']! as Map<Object?, Object?>,
+    )..['robot'] = 'sc13-nc3';
+    legacy['players'] = players;
+    final cardDefinitions =
+        Map<String, Object?>.from(
+            legacy['card_definitions']! as Map<Object?, Object?>,
+          )
+          ..['sc13-nc3'] = <String, Object?>{
+            'id': 'sc13-nc3',
+            'category': 'robot',
+            'slots': ['robot'],
+            'cost': 0,
+            'stats': <String, int>{},
+            'behaviorIds': ['robot.exhaust', 'dice.reroll.allForSkill'],
+            'sourceDeck': 'items',
+          };
+    legacy['card_definitions'] = cardDefinitions;
+
+    final restored = codec.fromJson(legacy);
+    final pending = restored.pendingDecision! as AwaitingRerollChoice;
+    final rerolled = step(
+      restored,
+      ResolvePendingDecisionCommand(RerollChoice()),
+      SeededDiceRoller(140),
+    );
+
+    expect(pending.rerollSources, ['sc13-nc3']);
+    expect(rerolled.rejection, isNull);
+    expect(rerolled.state.players.first.exhaustedRobots, contains('sc13-nc3'));
+  });
+
   test('preserves immediate combat continuations in pending decisions', () {
     final base = _interruptedState();
     final codec = GameStateJsonCodec();
@@ -123,11 +239,13 @@ void main() {
     final pendingAttack = AwaitingRerollChoice(
       dice: const [1, 2],
       availableRerolls: 1,
+      rerollSources: const ['defibrillator'],
       window: const DecisionWindow(remainingTicks: 1),
       context: const AttackRollContext(
         playerId: 'ada',
         targetInstanceId: 'event-ghoul',
         resumeAutomaticPhase: true,
+        bonusHits: 1,
       ),
     );
     final restoredAttack =
@@ -135,6 +253,7 @@ void main() {
                 .decode(codec.encode(_withPending(base, pendingAttack)))
                 .pendingDecision!
             as AwaitingRerollChoice;
+    expect(restoredAttack.rerollSources, ['defibrillator']);
     final pendingReplacement = AwaitingHeroReplacement(
       playerId: 'hero-2',
       characterIds: const ['scientist'],
@@ -160,6 +279,7 @@ void main() {
       (restoredAttack.context! as AttackRollContext).resumeAutomaticPhase,
       isTrue,
     );
+    expect((restoredAttack.context! as AttackRollContext).bonusHits, 1);
   });
 
   test('reports invalid card definitions as format errors', () {
@@ -265,6 +385,8 @@ GameState _interruptedState() => GameState(
       conditions: const ['malaise'],
       monsterDamageImmuneThroughRound: 3,
       monsterDefenseBonusRound: 5,
+      monsterDefenseBonus: 3,
+      enemyFeaturesIgnoredThroughRound: 4,
       retainedEventCards: const ['scientist-report'],
     ),
     _player(
@@ -364,6 +486,31 @@ GameState _interruptedState() => GameState(
   ),
 );
 
+GameState _chestReadinessState({
+  Iterable<String> exhaustedChestRobots = const [],
+  Iterable<String> ownerExhaustedRobots = const [],
+}) => GameState(
+  seed: 7,
+  round: 1,
+  phase: GamePhase.eventsPhase,
+  activePlayerId: 'ada',
+  actionsLeft: 0,
+  board: const [],
+  players: [
+    _player(
+      id: 'ada',
+      characterId: 'engineer',
+      coord: const HexCoord(0, 0),
+      exhaustedRobots: ownerExhaustedRobots,
+    ),
+  ],
+  monsters: const [],
+  decks: const {},
+  quests: QuestState(),
+  chestCards: const ['r69-nic3'],
+  exhaustedChestRobots: exhaustedChestRobots,
+);
+
 PlayerState _player({
   required String id,
   required String characterId,
@@ -372,7 +519,10 @@ PlayerState _player({
   bool alive = true,
   int? monsterDamageImmuneThroughRound,
   int? monsterDefenseBonusRound,
+  int monsterDefenseBonus = 1,
+  int? enemyFeaturesIgnoredThroughRound,
   Iterable<String> retainedEventCards = const [],
+  Iterable<String> exhaustedRobots = const [],
 }) => PlayerState(
   id: id,
   characterId: characterId,
@@ -403,4 +553,7 @@ PlayerState _player({
   weaponModifier: 2,
   monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
   monsterDefenseBonusRound: monsterDefenseBonusRound,
+  monsterDefenseBonus: monsterDefenseBonus,
+  enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
+  exhaustedRobots: exhaustedRobots,
 );

@@ -152,6 +152,20 @@ void main() {
   test(
     'projects each WebSocket state with the other hero cards hidden',
     () async {
+      room = manager.createRoom(
+        state: _twoHeroState(
+          players: [
+            _player(
+              'ada',
+              card: 'ada-private-card',
+              monsterDefenseBonusRound: 1,
+              monsterDefenseBonus: 2,
+            ),
+            _player('boris', card: 'boris-secret-card'),
+          ],
+        ),
+        started: true,
+      );
       final ada = await _connect(server, room.code, 'ada-participant');
       addTearDown(ada.sink.close);
       final adaInbox = _Inbox(ada);
@@ -183,6 +197,13 @@ void main() {
         hiddenId: 'ada',
         hiddenCard: 'ada-private-card',
       );
+      final projectedAdaState = Map<String, Object?>.from(
+        adaState['state']! as Map,
+      );
+      final projectedAda = (projectedAdaState['players']! as List<Object?>)
+          .map((player) => Map<String, Object?>.from(player! as Map))
+          .singleWhere((player) => player['id'] == 'ada');
+      expect(projectedAda['monsterDefenseBonus'], 2);
 
       ada.sink.add(
         jsonEncode({
@@ -767,17 +788,24 @@ GameState _threeHeroState() {
   );
 }
 
-PlayerState _player(String id, {required String card, int damage = 0}) =>
-    PlayerState(
-      id: id,
-      characterId: '$id-hero',
-      coord: const HexCoord(0, 0),
-      damage: damage,
-      credits: 0,
-      backpack: [card],
-      equipped: const EquippedGear(),
-      carriedMods: const [],
-      implanted: const [],
-      conditions: const ['private-condition'],
-      alive: true,
-    );
+PlayerState _player(
+  String id, {
+  required String card,
+  int damage = 0,
+  int? monsterDefenseBonusRound,
+  int monsterDefenseBonus = 1,
+}) => PlayerState(
+  id: id,
+  characterId: '$id-hero',
+  coord: const HexCoord(0, 0),
+  damage: damage,
+  credits: 0,
+  backpack: [card],
+  equipped: const EquippedGear(),
+  carriedMods: const [],
+  implanted: const [],
+  conditions: const ['private-condition'],
+  alive: true,
+  monsterDefenseBonusRound: monsterDefenseBonusRound,
+  monsterDefenseBonus: monsterDefenseBonus,
+);

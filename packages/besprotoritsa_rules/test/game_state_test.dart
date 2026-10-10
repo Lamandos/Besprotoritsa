@@ -31,7 +31,13 @@ void main() {
         ),
       ],
       players: [
-        _player('ada', backpack: const ['pistol']),
+        _player(
+          'ada',
+          backpack: const ['pistol'],
+          enemyFeaturesIgnoredThroughRound: 1,
+          monsterDefenseBonusRound: 1,
+          monsterDefenseBonus: 2,
+        ),
         _player(
           'boris',
           backpack: const ['secret-card'],
@@ -56,6 +62,8 @@ void main() {
       decks: {
         'events': DeckState(drawPile: const ['event-2', 'event-1']),
       },
+      chestCards: const ['r69-nic3'],
+      exhaustedChestRobots: const ['r69-nic3'],
       quests: QuestState(
         storyQuestIds: const ['chapter-1'],
         personalTasksByPlayer: const {
@@ -73,6 +81,19 @@ void main() {
     expect(fog.tile, isNull);
     expect(view.decks['events']!.cardsRemaining, 2);
     expect(view.decks['events'], isNot(isA<DeckState>()));
+    expect(view.exhaustedChestRobots, ['r69-nic3']);
+    expect(
+      view.players
+          .singleWhere((player) => player.id == 'ada')
+          .enemyFeaturesIgnoredThroughRound,
+      1,
+    );
+    expect(
+      view.players
+          .singleWhere((player) => player.id == 'ada')
+          .monsterDefenseBonus,
+      2,
+    );
     expect(other.backpack, isEmpty);
     expect(other.conditions, isEmpty);
     expect(other.hiddenCardCount, 2);
@@ -96,6 +117,9 @@ PlayerState _player(
   String id, {
   Iterable<CardId> backpack = const [],
   Iterable<CardId> conditions = const [],
+  int? enemyFeaturesIgnoredThroughRound,
+  int? monsterDefenseBonusRound,
+  int monsterDefenseBonus = 1,
 }) => PlayerState(
   id: id,
   characterId: '$id-character',
@@ -108,4 +132,7 @@ PlayerState _player(
   implanted: const [],
   conditions: conditions,
   alive: true,
+  monsterDefenseBonusRound: monsterDefenseBonusRound,
+  monsterDefenseBonus: monsterDefenseBonus,
+  enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
 );

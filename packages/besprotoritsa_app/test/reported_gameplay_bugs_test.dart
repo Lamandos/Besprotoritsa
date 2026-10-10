@@ -2,14 +2,543 @@ import 'dart:convert';
 
 import 'package:besprotoritsa_app/besprotoritsa_app.dart';
 import 'package:besprotoritsa_app/src/game/full_game_state.dart';
+import 'package:besprotoritsa_app/src/menu/character_portrait.dart';
 import 'package:besprotoritsa_data/besprotoritsa_data.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('BUG025 character portraits follow the printed character cards', () {
+    expect(
+      characterPortraitAssets['worker'],
+      'assets/images/character-portraits/mechanic.png',
+    );
+    expect(
+      characterPortraitAssets['mechanic'],
+      'assets/images/character-portraits/worker.png',
+    );
+    expect(
+      characterPortraitAssets['astronaut'],
+      'assets/images/character-portraits/engineer.png',
+    );
+    expect(
+      characterPortraitAssets['engineer'],
+      'assets/images/character-portraits/astronaut.png',
+    );
+  });
+
+  testWidgets('BUG026 tokens stay inside tiles and clear tile labels', (
+    tester,
+  ) async {
+    final state = _scenarioWithCharacters(
+      const ['scientist', 'guard', 'mechanic', 'worker'],
+      (doc) {
+        final startCoord = _player(doc)['coord']! as Map<String, dynamic>;
+        for (final tile
+            in (doc['board']! as List).cast<Map<String, dynamic>>()) {
+          final coord = tile['coord']! as Map<String, dynamic>;
+          if (coord['q'] == startCoord['q'] && coord['r'] == startCoord['r']) {
+            tile['opened'] = true;
+          }
+        }
+        for (final player
+            in (doc['players']! as List).cast<Map<String, dynamic>>()) {
+          player['coord'] = Map<String, dynamic>.of(startCoord);
+        }
+        doc['monsters'] = [
+          _monsterJson(
+            _monster(
+              'token-layout-monster',
+              HexCoord(startCoord['q']! as int, startCoord['r']! as int),
+            ),
+          ),
+        ];
+      },
+    );
+    await _mount(tester, state);
+    final coord = state.players.first.coord;
+    final tileFinder = find.byKey(
+      ValueKey<String>('hex-${coord.q}-${coord.r}'),
+    );
+    final tile = tester.getRect(
+      tileFinder,
+    );
+    final heroRects = [
+      for (final player in state.players)
+        tester.getRect(
+          find.byKey(
+            ValueKey<String>(
+              'hero-${player.id}-at-${coord.q}-${coord.r}',
+            ),
+          ),
+        ),
+    ];
+    final monster = tester.getRect(
+      find.byTooltip('Карточка монстра: test-ghoul'),
+    );
+    final locationId = state.tileAt(coord)?.locationId;
+    final title = locationId == null
+        ? 'АНАБИОЗ'
+        : state.contentTranslations['content.location.$locationId']!;
+    final titleRect = tester.getRect(
+      find.descendant(of: tileFinder, matching: find.text(title)),
+    );
+    for (final hero in heroRects) {
+      expect(tile.contains(hero.topLeft), isTrue);
+      expect(tile.contains(hero.bottomRight), isTrue);
+      expect(hero.overlaps(titleRect), isFalse);
+    }
+    expect(tile.contains(monster.topLeft), isTrue);
+    expect(tile.contains(monster.bottomRight), isTrue);
+  });
+
+  testWidgets('BUG027 confirms a discard pile destination before discarding', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      (_player(doc)['backpack']! as List).add('medic-bag');
+    });
+    final container = await _mount(
+      tester,
+      state,
+      viewport: const Size(1280, 1600),
+    );
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 400));
+    final discardButton = find.ancestor(
+      of: find.text('Сбросить').first,
+      matching: find.byType(FilledButton),
+    );
+    tester.widget<FilledButton>(discardButton).onPressed!.call();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.textContaining('колоду сброса'), findsOneWidget);
+    expect(
+      container.read(gameControllerProvider).players.first.backpack,
+      contains('medic-bag'),
+    );
+  });
+
+  testWidgets('BUG028 event choice shows its check and the hero skill pool', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'rubble',
+      };
+    });
+    await _mount(tester, state);
+    expect(find.textContaining('Проверка силы'), findsOneWidget);
+    expect(find.textContaining('Ваша сила — 2'), findsOneWidget);
+  });
+
+  testWidgets('BUG029 no-reroll check does not offer to keep a result', (
+    tester,
+  ) async {
+    final container = await _mount(
+      tester,
+      _scenario(),
+      dice: FixedDiceRoller([1, 1, 1, 1]),
+    );
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const SkillCheckCommand(StatType.science)),
+      isTrue,
+    );
+    await tester.pump();
+    expect(find.text('Оставить результат'), findsNothing);
+    expect(find.text('Продолжить'), findsOneWidget);
+  });
+
+  testWidgets('BUG050 defibrillator lets the player select dice for a reroll', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      (_player(doc)['backpack']! as List).add('defibrillator');
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller([6, 1, 1, 1, 2, 2, 2, 2]),
+    );
+    final controller = container.read(gameControllerProvider.notifier);
+    expect(
+      controller.dispatch(const SkillCheckCommand(StatType.science)),
+      isTrue,
+    );
+    await tester.pump();
+    final initial =
+        container.read(gameControllerProvider).pendingDecision!
+            as AwaitingRerollChoice;
+    expect(initial.dice, hasLength(greaterThan(1)));
+    expect(initial.rerollSources, contains('defibrillator'));
+
+    await tester.tap(find.text('Выбрать кубики'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Выберите кубики для переброса'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('reroll-die-0')));
+    await tester.pump();
+    expect(
+      tester
+          .widget<CheckboxListTile>(
+            find.byKey(const ValueKey('reroll-die-0')),
+          )
+          .value,
+      isTrue,
+    );
+    await tester.tap(find.byKey(const ValueKey('reroll-selected-dice')));
+    await tester.pump(const Duration(milliseconds: 400));
+    final rerolled =
+        container.read(gameControllerProvider).pendingDecision!
+            as AwaitingRerollChoice;
+    expect(rerolled.dice, [2, 1, 1, 1]);
+    expect(rerolled.availableRerolls, 0);
+  });
+
+  testWidgets('BUG054 door remote offers only open corridors', (tester) async {
+    late HexCoord openCoord;
+    final state = _scenario((doc) {
+      final player = _player(doc);
+      (player['backpack']! as List).add('door-remote');
+      player['credits'] = 4;
+      final occupied = <String>{};
+      for (final hero
+          in (doc['players']! as List).cast<Map<String, dynamic>>()) {
+        final coord = hero['coord']! as Map<String, dynamic>;
+        occupied.add('${coord['q']},${coord['r']}');
+      }
+      final corridors = (doc['board']! as List)
+          .cast<Map<String, dynamic>>()
+          .where((tile) {
+            final coord = tile['coord']! as Map<String, dynamic>;
+            return tile['type'] == 'corridor' &&
+                !occupied.contains('${coord['q']},${coord['r']}');
+          })
+          .toList();
+      expect(corridors.length, greaterThan(1));
+      for (final tile in corridors) {
+        tile['opened'] = false;
+      }
+      corridors[1]['opened'] = true;
+      final coord = corridors[1]['coord']! as Map<String, dynamic>;
+      openCoord = HexCoord(coord['q']! as int, coord['r']! as int);
+    });
+    final container = await _mount(
+      tester,
+      state,
+      viewport: const Size(1280, 1600),
+    );
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final useButton = find.ancestor(
+      of: find.text('Использовать'),
+      matching: find.byType(FilledButton),
+    );
+    expect(useButton, findsOneWidget);
+    expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+    tester.widget<FilledButton>(useButton).onPressed!.call();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(
+      container.read(gameControllerProvider).tileAt(openCoord)!.isBlocked,
+      isTrue,
+    );
+  });
+
+  testWidgets('BUG030 round rollover is not reported as event consequences', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['event_turn_index'] = 2;
+      for (final player
+          in (doc['players']! as List).cast<Map<String, dynamic>>()) {
+        player['action_points'] = 0;
+      }
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-2'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'cabin-noise',
+      };
+    });
+    final container = await _mount(tester, state, dice: FixedDiceRoller([]));
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            const ResolvePendingDecisionCommand(EventOptionChoice('option-2')),
+          ),
+      isTrue,
+    );
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('Результат события'), findsOneWidget);
+    expect(container.read(gameControllerProvider).round, 2);
+    expect(find.textContaining('Следующий ход: +2 ОД'), findsNothing);
+  });
+
+  test('BUG031 ship-map text matches the printed source card', () {
+    final translations = _scenario().contentTranslations;
+    expect(
+      translations['content.event.ship-map.description'],
+      'Вы нашли карту корабля, которую никогда не видели до этого. '
+      'На ней есть незнакомый вам проход.',
+    );
+    expect(
+      translations['content.event.ship-map.option.o1.success'],
+      'Вы рассматриваете карту и понимаете, что находитесь рядом с этим '
+      'проходом. Свернув на него, вы натыкаетесь на дроида. '
+      '«Привет, новый хозяин», - слышите вы. Возьмите робота из колоды '
+      'предметов.',
+    );
+    expect(
+      translations['content.event.ship-map.option.o1.failure'],
+      'Вы быстро нашли этот проход, но долго не могли выбраться из него. '
+      'В следующий ход вы выполняете на одно действие меньше.',
+    );
+    expect(
+      translations['content.event.ship-map.option.o2.success'],
+      'Понимая, что не очень сильны в картографии, вы мельком осматриваете '
+      'карту и решаете оставить её там, где нашли. '
+      'Откройте любой неизведанный фрагмент карты.',
+    );
+    expect(
+      translations['content.event.ship-map.option.o2.failure'],
+      translations['content.event.ship-map.option.o2.success'],
+    );
+  });
+
+  testWidgets('BUG032 inventory exposes active card abilities', (tester) async {
+    final state = _scenario((doc) {
+      (_player(doc)['backpack']! as List).add('medic-bag');
+      _player(doc)['damage'] = 1;
+      _player(doc)['credits'] = 3;
+    });
+    final container = await _mount(
+      tester,
+      state,
+      viewport: const Size(1280, 1600),
+    );
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 400));
+    final useButton = find.ancestor(
+      of: find.text('Использовать'),
+      matching: find.byType(FilledButton),
+    );
+    tester.widget<FilledButton>(useButton).onPressed!.call();
+    await tester.pumpAndSettle();
+    expect(find.text('Саквояж фельдшера'), findsNWidgets(2));
+    expect(find.textContaining('Лечение:'), findsOneWidget);
+    await tester.tap(find.text('Лечить'));
+    await tester.pumpAndSettle();
+    expect(container.read(gameControllerProvider).players.first.damage, 0);
+    expect(container.read(gameControllerProvider).players.first.credits, 2);
+    expect(container.read(gameControllerProvider).actionsLeft, 1);
+  });
+
+  testWidgets('BUG071 air canister can be used with one action remaining', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['actions_left'] = 1;
+      (_player(doc)['backpack']! as List).add('air-canister');
+      final tiles = (doc['board']! as List).cast<Map<String, dynamic>>();
+      final coord = _player(doc)['coord']! as Map<String, dynamic>;
+      final source = tiles.firstWhere((tile) {
+        final tileCoord = tile['coord']! as Map<String, dynamic>;
+        return tileCoord['q'] == coord['q'] && tileCoord['r'] == coord['r'];
+      });
+      final target = tiles.firstWhere((tile) => !identical(tile, source));
+      for (final tile in tiles) {
+        if (identical(tile, source) || identical(tile, target)) continue;
+        tile['type'] = 'corridor';
+        tile['opened'] = false;
+        tile['is_blocked'] = false;
+      }
+      source['type'] = 'airlock';
+      source['opened'] = true;
+      source['is_blocked'] = false;
+      target['type'] = 'airlock';
+      target['opened'] = true;
+      target['is_blocked'] = false;
+    });
+    final container = await _mount(
+      tester,
+      state,
+      viewport: const Size(1280, 1600),
+    );
+
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 400));
+    final useButton = find.ancestor(
+      of: find.text('Использовать'),
+      matching: find.byType(FilledButton),
+    );
+    expect(useButton, findsOneWidget);
+    expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+    tester.widget<FilledButton>(useButton).onPressed!.call();
+    await tester.pumpAndSettle();
+
+    final targetCoord = state.board
+        .firstWhere(
+          (tile) =>
+              tile.type == HexTileType.airlock &&
+              tile.coord != state.players.first.coord,
+        )
+        .coord;
+    expect(container.read(gameControllerProvider).actionsLeft, 0);
+    expect(
+      container
+          .read(gameControllerProvider)
+          .players
+          .firstWhere((player) => player.id == state.activePlayerId)
+          .coord,
+      targetCoord,
+    );
+  });
+
+  testWidgets(
+    'BUG082 GHB-DTN remains usable when its current tile is first',
+    (tester) async {
+      final state = _scenario((doc) {
+        final player = _player(doc);
+        final tiles = (doc['board']! as List).cast<Map<String, dynamic>>();
+        final firstTile = tiles.first;
+        final firstCoord = firstTile['coord']! as Map<String, dynamic>;
+        player['coord'] = Map<String, dynamic>.of(firstCoord);
+        (player['equipped']! as Map<String, dynamic>)['robot'] = 'ghb-dtn';
+        for (final tile in tiles) {
+          tile['opened'] = true;
+          tile['is_blocked'] = false;
+        }
+      });
+      final player = state.players.firstWhere(
+        (candidate) => candidate.id == state.activePlayerId,
+      );
+      expect(
+        state.board.any(
+          (tile) =>
+              tile.coord != player.coord &&
+              tile.opened &&
+              !tile.isBlocked &&
+              validate(
+                    state,
+                    UseCardAbilityCommand(
+                      'ghb-dtn',
+                      targetPlayerId: player.id,
+                      targetCoord: tile.coord,
+                    ),
+                  ) ==
+                  null,
+        ),
+        isTrue,
+      );
+      await _mount(tester, state, viewport: const Size(1280, 1600));
+
+      await tester.tap(find.byKey(mvpInventoryButtonKey));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final useButton = find.ancestor(
+        of: find.text('Использовать'),
+        matching: find.byType(FilledButton),
+      );
+      expect(useButton, findsOneWidget);
+      expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+    },
+  );
+
+  testWidgets('BUG032 equipped R69-NIC3 can be activated from inventory', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      (_player(doc)['equipped']! as Map<String, dynamic>)['robot'] = 'r69-nic3';
+    });
+    final container = await _mount(
+      tester,
+      state,
+      viewport: const Size(1280, 1600),
+    );
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final useButton = find.ancestor(
+      of: find.text('Использовать'),
+      matching: find.byType(FilledButton),
+    );
+    expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+    tester.widget<FilledButton>(useButton).onPressed!.call();
+    await tester.pumpAndSettle();
+
+    final owner = container.read(gameControllerProvider).players.first;
+    expect(owner.enemyFeaturesIgnoredThroughRound, 1);
+    expect(owner.exhaustedRobots, contains('r69-nic3'));
+  });
+
+  testWidgets('BUG033 ship-map explains and enables fragment selection', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      final tiles = (doc['board']! as List).cast<Map<String, dynamic>>();
+      final options = <String>[];
+      for (final tile in tiles.where((tile) => tile['opened'] != true)) {
+        final coord = tile['coord']! as Map<String, dynamic>;
+        options.add('reveal:${coord['q']}:${coord['r']}');
+      }
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': options,
+        'player_id': _player(doc)['id'],
+        'event_id': 'ship-map',
+      };
+    });
+    await _mount(tester, state);
+    expect(
+      find.textContaining('Выберите любой закрытый фрагмент'),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('event-target-board-widget')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'BUG034 terminal offer shows full item and disables unaffordable buy',
+    (
+      tester,
+    ) async {
+      final state = _scenario((doc) {
+        _player(doc)['credits'] = 3;
+        doc['pending_decision'] = {
+          'type': 'terminal_pick',
+          'offered_cards': ['medkit'],
+          'player_id': _player(doc)['id'],
+          'deck_id': 'supplies',
+        };
+      });
+      await _mount(tester, state);
+      expect(find.textContaining('восполнить всё здоровье'), findsOneWidget);
+      expect(find.text('Цена: ₡8'), findsOneWidget);
+      final offer = find.byKey(const ValueKey<String>('terminal-offer-medkit'));
+      expect(offer, findsOneWidget);
+      final buy = find.descendant(
+        of: offer,
+        matching: find.byType(FilledButton),
+      );
+      expect(tester.widget<FilledButton>(buy).onPressed, isNull);
+    },
+  );
+
   testWidgets('BUG016 roster follows equipment and removal', (tester) async {
     final state = _scenario();
     final container = await _mount(tester, state);
@@ -227,7 +756,7 @@ void main() {
           isTrue,
         );
         await tester.pump(const Duration(seconds: 1));
-        await tester.tap(find.text('Оставить результат'));
+        await tester.tap(find.text('Продолжить'));
         await tester.pump(const Duration(seconds: 1));
         expect(find.text('Результат события'), findsOneWidget);
         expect(
@@ -236,7 +765,10 @@ void main() {
         );
         expect(
           find.textContaining(
-            succeeded ? 'Вылечено урона: 3' : 'Следующий ход: −1 ОД',
+            succeeded
+                ? 'Восстановите 3 здоровья и в следующий ход выполните '
+                      'на одно действие больше.'
+                : 'В следующий ход выполните на одно действие меньше.',
           ),
           findsOneWidget,
         );
@@ -479,7 +1011,7 @@ void main() {
       isTrue,
     );
     await tester.pump();
-    await tester.tap(find.text('Оставить результат'));
+    await tester.tap(find.text('Продолжить'));
     await tester.pump(const Duration(seconds: 1));
     expect(
       container.read(gameControllerProvider).players.first.backpack,
@@ -530,6 +1062,7 @@ void main() {
       state,
       queue: queue,
       dice: FixedDiceRoller([6, 6, 6, 6]),
+      viewport: const Size(1211, 650),
     );
     queue.enqueue([const DamageDealt(playerId: 'player-1', amount: 1)]);
     await tester.pump();
@@ -541,6 +1074,25 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 300));
+    expect(find.textContaining('Сила боя:'), findsOneWidget);
+    expect(find.textContaining('Здоровье:'), findsOneWidget);
+    expect(find.textContaining('Защита:'), findsOneWidget);
+    expect(find.textContaining('Атака:'), findsOneWidget);
+    expect(find.textContaining('Движение:'), findsOneWidget);
+    final queueWarning = find.text('Дождитесь завершения анимации.');
+    expect(queueWarning, findsOneWidget);
+    final cardViewport = tester.getRect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(SingleChildScrollView),
+      ),
+    );
+    final warningBounds = tester.getRect(queueWarning);
+    expect(
+      cardViewport.contains(warningBounds.topLeft) &&
+          cardViewport.contains(warningBounds.bottomRight),
+      isTrue,
+    );
     final attack = find.widgetWithText(TextButton, 'Атаковать');
     expect(tester.widget<TextButton>(attack).onPressed, isNull);
     await tester.pump(const Duration(seconds: 2));
@@ -551,12 +1103,133 @@ void main() {
     expect(container.read(gameControllerProvider).actionsLeft, 1);
     expect(find.text('Результат атаки'), findsOneWidget);
   });
+
+  testWidgets('BUG035 monster stats fit in the card on a short screen', (
+    tester,
+  ) async {
+    final state = _scenarioWithCharacters(
+      const ['guard', 'worker', 'mechanic', 'scientist'],
+      (doc) {
+        doc['round'] = 4;
+        doc['phase'] = 'playersTurn';
+        doc['actions_left'] = 2;
+        final start = _player(doc)['coord']! as Map<String, dynamic>;
+        for (final player
+            in (doc['players']! as List).cast<Map<String, dynamic>>()) {
+          player['coord'] = Map<String, dynamic>.of(start);
+        }
+        doc['monsters'] = [
+          _monsterJson(
+            MonsterInstance(
+              instanceId: 'plagued-target',
+              monsterId: 'plagued',
+              coord: HexCoord(start['q']! as int, start['r']! as int),
+              damage: 0,
+              health: 4,
+              defense: 1,
+              attack: 3,
+              movement: 2,
+            ),
+          ),
+        ];
+      },
+    );
+    await _mount(tester, state, viewport: const Size(1211, 650));
+    await tester.tap(find.byTooltip('Карточка монстра: Чумной'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final scrollViewport = tester.getRect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(SingleChildScrollView),
+      ),
+    );
+    for (final label in const [
+      'Здоровье: 4/4',
+      'Защита: 1',
+      'Атака: 3',
+      'Движение: 2',
+    ]) {
+      final stat = find.text(label);
+      expect(stat, findsOneWidget);
+      final bounds = tester.getRect(stat);
+      expect(
+        scrollViewport.contains(bounds.topLeft) &&
+            scrollViewport.contains(bounds.bottomRight),
+        isTrue,
+        reason: '$label должен быть виден без прокрутки карточки',
+      );
+    }
+    final attack = find.widgetWithText(TextButton, 'Атаковать');
+    expect(tester.widget<TextButton>(attack).onPressed, isNotNull);
+  });
+
+  testWidgets('BUG035 explains when hero and monster are in different cells', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      final start = _player(doc)['coord']! as Map<String, dynamic>;
+      final otherTile = (doc['board']! as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere((tile) {
+            final coord = tile['coord']! as Map<String, dynamic>;
+            return coord['q'] != start['q'] || coord['r'] != start['r'];
+          });
+      final coord = otherTile['coord']! as Map<String, dynamic>;
+      doc['monsters'] = [
+        _monsterJson(
+          MonsterInstance(
+            instanceId: 'plagued-target',
+            monsterId: 'plagued',
+            coord: HexCoord(coord['q']! as int, coord['r']! as int),
+            damage: 0,
+            health: 4,
+            defense: 1,
+            attack: 3,
+            movement: 2,
+          ),
+        ),
+      ];
+    });
+    await _mount(tester, state, viewport: const Size(1211, 650));
+    await tester.tap(find.byTooltip('Карточка монстра: Чумной'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+      tester
+          .widget<TextButton>(
+            find.widgetWithText(TextButton, 'Атаковать'),
+          )
+          .onPressed,
+      isNull,
+    );
+    final reason = find.text('Герой должен быть в одной клетке с монстром.');
+    expect(reason, findsOneWidget);
+    final scrollViewport = tester.getRect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(SingleChildScrollView),
+      ),
+    );
+    final reasonBounds = tester.getRect(reason);
+    expect(
+      scrollViewport.contains(reasonBounds.topLeft) &&
+          scrollViewport.contains(reasonBounds.bottomRight),
+      isTrue,
+    );
+  });
 }
 
-GameState _scenario([void Function(Map<String, dynamic>)? edit]) {
+GameState _scenario([void Function(Map<String, dynamic>)? edit]) =>
+    _scenarioWithCharacters(const ['scientist', 'guard'], edit);
+
+GameState _scenarioWithCharacters(
+  List<String> characterIds, [
+  void Function(Map<String, dynamic>)? edit,
+]) {
   final codec = GameStateJsonCodec();
   final source = createFullGameState(
-    characterIds: const ['scientist', 'guard'],
+    characterIds: characterIds,
     seed: 42,
   );
   final doc = jsonDecode(codec.encode(source)) as Map<String, dynamic>;
@@ -614,6 +1287,7 @@ Future<ProviderContainer> _mount(
   GameState state, {
   DiceRoller? dice,
   EventQueue? queue,
+  Size viewport = const Size(1280, 800),
 }) async {
   final events = queue ?? EventQueue(eventDuration: Duration.zero);
   final container = ProviderContainer(
@@ -626,14 +1300,17 @@ Future<ProviderContainer> _mount(
   );
   addTearDown(container.dispose);
   addTearDown(events.dispose);
-  tester.view.physicalSize = const Size(1280, 800);
+  tester.view.physicalSize = viewport;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: const MaterialApp(home: MvpGameScreen()),
+      child: DefaultAssetBundle(
+        bundle: _TransparentAssetBundle(),
+        child: const MaterialApp(home: MvpGameScreen()),
+      ),
     ),
   );
   await tester.pump(const Duration(milliseconds: 300));
@@ -642,3 +1319,17 @@ Future<ProviderContainer> _mount(
 
 String _rosterText(WidgetTester tester) =>
     tester.widget<Text>(find.textContaining('СИЛ ').first).data!;
+
+class _TransparentAssetBundle extends CachingAssetBundle {
+  static final Uint8List _transparentPng = Uint8List.fromList(
+    base64Decode(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j5k8AAAAASUVORK5CYII=',
+    ),
+  );
+
+  @override
+  Future<ByteData> load(String key) async =>
+      key.endsWith('.png') || key.endsWith('.webp')
+      ? ByteData.sublistView(_transparentPng)
+      : rootBundle.load(key);
+}

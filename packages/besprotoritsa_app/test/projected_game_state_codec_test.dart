@@ -11,6 +11,7 @@ void main() {
       'activePlayerId': 'ada',
       'actionsLeft': 2,
       'chestCards': <Object?>['shared-tool'],
+      'exhaustedChestRobots': <Object?>['r69-nic3'],
       'board': <Object?>[],
       'players': <Object?>[
         <String, Object?>{
@@ -20,6 +21,8 @@ void main() {
           'damage': 0,
           'health': 10,
           'credits': 0,
+          'monsterDefenseBonusRound': 1,
+          'monsterDefenseBonus': 2,
           'equipped': <String, Object?>{},
           'backpack': <Object?>[],
           'carriedMods': <Object?>[],
@@ -40,9 +43,57 @@ void main() {
 
     expect(state.pendingDecision, isA<AwaitingOtherPlayerDecision>());
     expect(state.chestCards, ['shared-tool']);
+    expect(state.exhaustedChestRobots, ['r69-nic3']);
+    expect(state.players.single.monsterDefenseBonus, 2);
     expect(
       (state.pendingDecision! as AwaitingOtherPlayerDecision).awaitingPlayerId,
       'boris',
     );
   });
+
+  test(
+    'BUG037 projected terminal offers include local price and description data',
+    () {
+      final state = const ProjectedGameStateCodec().decode(<String, Object?>{
+        'schemaVersion': 1,
+        'round': 1,
+        'phase': 'playersTurn',
+        'activePlayerId': 'ada',
+        'actionsLeft': 2,
+        'board': <Object?>[],
+        'players': <Object?>[
+          <String, Object?>{
+            'id': 'ada',
+            'characterId': 'scientist',
+            'coord': <String, int>{'q': 0, 'r': 0},
+            'damage': 0,
+            'health': 10,
+            'credits': 20,
+            'equipped': <String, Object?>{},
+            'backpack': <Object?>[],
+            'carriedMods': <Object?>[],
+            'implanted': <Object?>[],
+            'conditions': <Object?>[],
+            'alive': true,
+          },
+        ],
+        'monsters': <Object?>[],
+        'decks': <String, Object?>{},
+        'quests': <String, Object?>{'storyQuestIds': <Object?>[]},
+        'log': <Object?>[],
+        'pendingDecision': <String, Object?>{
+          'type': 'terminalPick',
+          'playerId': 'ada',
+          'offeredCards': <Object?>['medkit'],
+        },
+      });
+
+      expect(state.pendingDecision, isA<AwaitingTerminalPick>());
+      expect(state.cardDefinitions['medkit']?.cost, 8);
+      expect(
+        state.contentTranslations['content.supply.medkit.description'],
+        isNotEmpty,
+      );
+    },
+  );
 }

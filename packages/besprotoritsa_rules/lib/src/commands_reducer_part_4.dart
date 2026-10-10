@@ -89,6 +89,20 @@ GameState resolveColocation(
   String? monsterInstanceId,
   PlayerId? playerId,
 }) {
+  if (monsterInstanceId != null) {
+    final monster = _monsterById(state, monsterInstanceId);
+    if (monster != null) {
+      final triggered = _resolveTripwireArrival(state, monster);
+      if (!identical(triggered, state)) {
+        return resolveColocation(
+          triggered,
+          coord: coord,
+          monsterInstanceId: monsterInstanceId,
+          playerId: playerId,
+        );
+      }
+    }
+  }
   final damage = <IncomingDamage>[];
   for (final monster in state.monsters) {
     if (monster.attack == 0 ||
@@ -150,6 +164,19 @@ GameState resolveColocation(
   return _startNextIncomingDamage(resolved);
 }
 
+GameState _resolveTripwireArrival(
+  GameState state,
+  MonsterInstance arrivingMonster,
+) {
+  final monster = _monsterById(state, arrivingMonster.instanceId);
+  if (monster == null || _isBossForAbility(state, monster)) return state;
+  final trap = state.tripwires
+      .where((candidate) => candidate.coord == monster.coord)
+      .firstOrNull;
+  if (trap == null) return state;
+  return _triggerTripwire(state, trap, monster);
+}
+
 bool _ignoresBoils(GameState state, PlayerState player) =>
     InventoryRules.activeCardIds(player).any(
       (cardId) =>
@@ -164,18 +191,83 @@ int _playerDefense(GameState state, PlayerState player) =>
       0,
       (total, cardId) {
         final definition = state.cardDefinitions[cardId];
-        if (definition == null ||
-            definition.behaviorIds.contains('robot.exhaust')) {
-          return total;
-        }
-        return total + definition.staticEffects[CardStat.defense];
+        return total + (definition?.staticEffects[CardStat.defense] ?? 0);
       },
     ) +
-    (player.monsterDefenseBonusRound == state.round ? 1 : 0);
+    (player.monsterDefenseBonusRound == state.round
+        ? player.monsterDefenseBonus
+        : 0);
+
+GameState _grantMonsterDefenseBonus(
+  GameState state,
+  PlayerId playerId,
+  int round,
+) {
+  final player = _playerById(state, playerId);
+  if (player == null) return state;
+  final bonus = player.monsterDefenseBonusRound == round
+      ? player.monsterDefenseBonus + 1
+      : 1;
+  return _copyState(
+    state,
+    players: _replacePlayer(
+      state,
+      playerId,
+      (current) => _copyPlayer(
+        current,
+        monsterDefenseBonusRound: round,
+        monsterDefenseBonus: bonus,
+      ),
+    ),
+  );
+}
 
 bool _monsterIgnoresDefense(GameState state, MonsterInstance monster) {
+  return _monsterHasFeature(state, monster, 'ignores-defense');
+}
+
+bool _monsterHasFeature(
+  GameState state,
+  MonsterInstance monster,
+  String feature,
+) {
   final features = state.monsterDefinitions[monster.monsterId]?['features'];
-  return features is List<Object?> && features.contains('ignores-defense');
+  return features is List<Object?> && features.contains(feature);
+}
+
+bool _playerIgnoresEnemyFeature(
+  GameState state,
+  PlayerState player,
+  MonsterInstance monster,
+) =>
+    !_monsterHasFeature(state, monster, 'boss') &&
+    _playerHasEnemyFeatureImmunity(state, player);
+
+bool _playerHasEnemyFeatureImmunity(GameState state, PlayerState player) =>
+    player.enemyFeaturesIgnoredThroughRound != null &&
+    state.round <= player.enemyFeaturesIgnoredThroughRound!;
+
+bool _monsterBlocksHeroExits(GameState state, PlayerState player) {
+  if (_playerHasEnemyFeatureImmunity(state, player)) return false;
+  return state.monsters.any(
+    (monster) =>
+        monster.coord == player.coord &&
+        !_monsterHasFeature(state, monster, 'boss') &&
+        _monsterHasFeature(state, monster, 'blocks-exits'),
+  );
+}
+
+int _enemyCombatStrengthPenalty(
+  GameState state,
+  PlayerState player,
+  MonsterInstance? target,
+) {
+  if (target == null ||
+      !_monsterHasFeature(state, target, 'reduces-combat-strength') ||
+      _playerIgnoresEnemyFeature(state, player, target)) {
+    return 0;
+  }
+  return 1;
 }
 
 bool _monsterSpawnsBoilInsteadOfAttack(
@@ -334,6 +426,20 @@ GameStepResult _attack(
   DiceRoller dice,
 ) {
   final player = _activePlayer(state)!;
+  final target = _monsterById(state, targetInstanceId)!;
+  final bonusHits = target.coord == player.coord
+      ? player.nextAttackBonusHits
+      : 0;
+  final attackState = player.nextAttackBonusHits == 0
+      ? state
+      : _copyState(
+          state,
+          players: _replacePlayer(
+            state,
+            player.id,
+            (current) => _copyPlayer(current, nextAttackBonusHits: 0),
+          ),
+        );
   final hooks = _activeEffectHooks(state, player);
   final preAttackHooks = hooks.whereType<PreAttackDamageHook>();
   final preAttackDamage = preAttackHooks.isEmpty
@@ -341,25 +447,34 @@ GameStepResult _attack(
       : const EffectEngine()
             .resolvePreAttackRoll(dice.rollDice(1), preAttackHooks)
             .targetDamage;
-  final diceRoll = dice.rollDice(_heroAttackDice(player, state));
+  final diceRoll = dice.rollDice(
+    _heroAttackDice(player, state, target: target),
+  );
   final roll = const EffectEngine().resolveRoll(
     diceRoll,
     hooks,
   );
-  if (roll.rerollsAvailable > 0) {
+  final rerollSources = _attackRerollSources(
+    state,
+    player,
+    roll.rerollsAvailable,
+  );
+  if (rerollSources.isNotEmpty) {
     return GameStepResult(
       state: _copyState(
-        state,
+        attackState,
         actionsLeft: state.actionsLeft - 1,
         pendingDecision: AwaitingRerollChoice(
           dice: diceRoll,
-          availableRerolls: roll.rerollsAvailable,
-          maxDicePerReroll: 1,
+          availableRerolls: rerollSources.length,
+          maxDicePerReroll: _maxDicePerReroll(state, rerollSources.first),
+          rerollSources: rerollSources,
           window: const DecisionWindow(remainingTicks: 1),
           context: AttackRollContext(
             playerId: player.id,
             targetInstanceId: targetInstanceId,
             preAttackDamage: preAttackDamage,
+            bonusHits: bonusHits,
           ),
         ),
         logEntry: 'attack-roll:${player.id}:$targetInstanceId',
@@ -368,12 +483,13 @@ GameStepResult _attack(
   }
   return GameStepResult(
     state: _resolveAttackRoll(
-      state,
+      attackState,
       player.id,
       targetInstanceId,
       diceRoll,
       consumesAction: true,
       preAttackDamage: preAttackDamage,
+      bonusHits: bonusHits,
     ),
   );
 }
@@ -385,13 +501,14 @@ GameState _resolveAttackRoll(
   List<int> dice, {
   required bool consumesAction,
   int preAttackDamage = 0,
+  int bonusHits = 0,
 }) {
   final player = _playerById(state, playerId)!;
   final monster = _monsterById(state, targetInstanceId)!;
   final hooks = _activeEffectHooks(state, player);
   final roll = const EffectEngine().resolveRoll(dice, hooks);
-  final damage =
-      preAttackDamage + (roll.hits - monster.defense).clamp(0, roll.hits);
+  final hits = roll.hits + bonusHits;
+  final damage = preAttackDamage + (hits - monster.defense).clamp(0, hits);
   final defeated = monster.damage + damage >= monster.health;
   final collateral = defeated
       ? const EffectEngine()
@@ -430,65 +547,26 @@ GameState _resolveAttackRoll(
   }
   var awardedPlayer = _copyPlayer(
     player,
-    damage: player.damage + roll.ownerDamage,
+    damage:
+        player.damage +
+        (_ignoresAnyDamage(state, player) ? 0 : roll.ownerDamage),
+    nextAttackBonusHits: 0,
   );
   var unclaimedLoot = const <CardId>[];
-  final rewardDeckId = monster.defeatRewardDeckId;
-  if (defeated && rewardDeckId != null) {
-    final rewardDeck = decks[rewardDeckId];
-    if (rewardDeck != null) {
-      final draw = DeckRules.draw(
-        rewardDeck,
-        seed: _deckSeed(state, 'defeat-reward:${monster.instanceId}'),
-      );
-      if (draw.cards.isNotEmpty) {
-        final rewardCard = draw.cards.single;
-        try {
-          awardedPlayer = InventoryRules.receive(
-            awardedPlayer,
-            rewardCard,
-            state.cardDefinitions,
-          );
-          decks[rewardDeckId] = draw.deck;
-        } on BackpackCapacityExceeded {
-          try {
-            awardedPlayer = InventoryRules.equipOnReceive(
-              awardedPlayer,
-              rewardCard,
-              state.cardDefinitions,
-            );
-            decks[rewardDeckId] = draw.deck;
-          } on Object catch (error) {
-            if (error is! BackpackCapacityExceeded &&
-                error is! InventoryRuleViolation) {
-              rethrow;
-            }
-            decks[rewardDeckId] = DeckRules.returnAndShuffle(
-              draw.deck,
-              [rewardCard],
-              seed: _deckSeed(
-                state,
-                'defeat-reward-return:${monster.instanceId}',
-              ),
-            );
-          }
-        } on InventoryRuleViolation {
-          decks[rewardDeckId] = DeckRules.returnAndShuffle(
-            draw.deck,
-            [rewardCard],
-            seed: _deckSeed(
-              state,
-              'defeat-reward-return:${monster.instanceId}',
-            ),
-          );
-        }
-      }
-    }
+  var exhaustedTrophies = const <CardId>[];
+  if (defeated) {
+    awardedPlayer = _awardMonsterDefeatReward(
+      awardedPlayer,
+      monster,
+      state,
+      decks,
+    );
   }
   if (defeated && monster.monsterId == RestlessMonster.restlessMonsterId) {
     final loot = _awardRestlessTrophies(awardedPlayer, monster, state);
     awardedPlayer = loot.player;
     unclaimedLoot = loot.unclaimed;
+    exhaustedTrophies = loot.exhaustedRobots;
   }
   final rolledState = _copyState(
     state,
@@ -499,10 +577,11 @@ GameState _resolveAttackRoll(
     _copyState(
       rolledState,
       actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
-      players: _replacePlayer(
+      players: _restlessTrophyPlayers(
         state,
         player.id,
-        (_) => awardedPlayer,
+        awardedPlayer,
+        exhaustedTrophies,
       ),
       monsters: [
         if (!defeated) _copyMonster(monster, damage: monster.damage + damage),
@@ -536,16 +615,88 @@ GameState _resolveAttackRoll(
       : afterAttack;
 }
 
-({PlayerState player, List<CardId> unclaimed}) _awardRestlessTrophies(
+PlayerState _awardMonsterDefeatReward(
+  PlayerState player,
+  MonsterInstance monster,
+  GameState state,
+  Map<DeckId, DeckState> decks,
+) {
+  final rewardDeckId = monster.defeatRewardDeckId;
+  if (rewardDeckId == null) return player;
+  final rewardDeck = decks[rewardDeckId];
+  if (rewardDeck == null) return player;
+  final draw = DeckRules.draw(
+    rewardDeck,
+    seed: _deckSeed(state, 'defeat-reward:${monster.instanceId}'),
+  );
+  if (draw.cards.isEmpty) return player;
+
+  final rewardCard = draw.cards.single;
+  var awardedPlayer = player;
+  try {
+    awardedPlayer = InventoryRules.receive(
+      awardedPlayer,
+      rewardCard,
+      state.cardDefinitions,
+    );
+    decks[rewardDeckId] = draw.deck;
+  } on BackpackCapacityExceeded {
+    try {
+      awardedPlayer = InventoryRules.equipOnReceive(
+        awardedPlayer,
+        rewardCard,
+        state.cardDefinitions,
+      );
+      decks[rewardDeckId] = draw.deck;
+    } on Object catch (error) {
+      if (error is! BackpackCapacityExceeded &&
+          error is! InventoryRuleViolation) {
+        rethrow;
+      }
+      decks[rewardDeckId] = DeckRules.returnAndShuffle(
+        draw.deck,
+        [rewardCard],
+        seed: _deckSeed(state, 'defeat-reward-return:${monster.instanceId}'),
+      );
+    }
+  } on InventoryRuleViolation {
+    decks[rewardDeckId] = DeckRules.returnAndShuffle(
+      draw.deck,
+      [rewardCard],
+      seed: _deckSeed(state, 'defeat-reward-return:${monster.instanceId}'),
+    );
+  }
+  return awardedPlayer;
+}
+
+({
+  PlayerState player,
+  List<CardId> unclaimed,
+  List<CardId> exhaustedRobots,
+})
+_awardRestlessTrophies(
   PlayerState player,
   MonsterInstance restless,
   GameState state,
 ) {
   var awarded = player;
   final unclaimed = <CardId>[];
+  final exhaustedRobots = <CardId>{};
   for (final cardId in restless.carriedGear) {
     try {
       awarded = InventoryRules.receive(awarded, cardId, state.cardDefinitions);
+      if (restless.exhaustedCarriedRobots.contains(cardId) ||
+          state.players.any(
+            (owner) => !owner.alive && owner.exhaustedRobots.contains(cardId),
+          )) {
+        exhaustedRobots.add(cardId);
+        if (!awarded.exhaustedRobots.contains(cardId)) {
+          awarded = _copyPlayer(
+            awarded,
+            exhaustedRobots: [...awarded.exhaustedRobots, cardId],
+          );
+        }
+      }
     } on BackpackCapacityExceeded {
       // Combat has already resolved.  A full backpack must not turn a valid
       // kill into an uncaught reducer exception or duplicate its effects.
@@ -556,5 +707,33 @@ GameState _resolveAttackRoll(
       unclaimed.add(cardId);
     }
   }
-  return (player: awarded, unclaimed: unclaimed);
+  return (
+    player: awarded,
+    unclaimed: unclaimed,
+    exhaustedRobots: exhaustedRobots.toList(),
+  );
+}
+
+List<PlayerState> _restlessTrophyPlayers(
+  GameState state,
+  PlayerId recipientId,
+  PlayerState recipient,
+  Iterable<CardId> exhaustedRobots,
+) {
+  final transferred = exhaustedRobots.toSet();
+  return [
+    for (final player in state.players)
+      if (player.id == recipientId)
+        recipient
+      else if (!player.alive &&
+          player.exhaustedRobots.any(transferred.contains))
+        _copyPlayer(
+          player,
+          exhaustedRobots: player.exhaustedRobots.where(
+            (cardId) => !transferred.contains(cardId),
+          ),
+        )
+      else
+        player,
+  ];
 }

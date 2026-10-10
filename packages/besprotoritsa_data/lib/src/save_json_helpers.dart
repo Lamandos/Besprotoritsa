@@ -114,6 +114,7 @@ Map<String, Object?>? _contextToJson(RollContext? context) => switch (context) {
     'player_id': context.playerId,
     'target_instance_id': context.targetInstanceId,
     'pre_attack_damage': context.preAttackDamage,
+    'bonus_hits': context.bonusHits,
     'resume_automatic_phase': context.resumeAutomaticPhase,
   },
 };
@@ -126,6 +127,7 @@ RollContext? _contextFromJson(Object? value) {
       playerId: _string(json, 'player_id'),
       targetInstanceId: _string(json, 'target_instance_id'),
       preAttackDamage: _optionalInt(json, 'pre_attack_damage') ?? 0,
+      bonusHits: _optionalInt(json, 'bonus_hits') ?? 0,
       resumeAutomaticPhase: json['resume_automatic_phase'] == true,
     ),
     'skill' || null => SkillCheckContext(

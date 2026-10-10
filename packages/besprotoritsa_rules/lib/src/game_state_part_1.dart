@@ -196,6 +196,22 @@ final class BoilToken {
   final HexCoord coord;
 }
 
+/// A placed tripwire that kills the next non-boss monster entering its tile.
+@immutable
+final class TripwireTrap {
+  const TripwireTrap({
+    required this.instanceId,
+    required this.coord,
+    required this.ownerId,
+    required this.cardId,
+  }) : assert(instanceId != '', 'instanceId must not be empty');
+
+  final String instanceId;
+  final HexCoord coord;
+  final PlayerId ownerId;
+  final CardId cardId;
+}
+
 /// The private and public state of one participant's character.
 @immutable
 final class PlayerState {
@@ -219,11 +235,17 @@ final class PlayerState {
     this.nextTurnActionDelta = 0,
     this.monsterDamageImmuneThroughRound,
     this.monsterDefenseBonusRound,
+    this.monsterDefenseBonus = 1,
+    this.damageImmuneThroughRound,
+    this.enemyFeaturesIgnoredThroughRound,
+    this.nextAttackBonusHits = 0,
+    Iterable<CardId> exhaustedRobots = const [],
   }) : backpack = List.unmodifiable(backpack),
        carriedMods = List.unmodifiable(carriedMods),
        implanted = List.unmodifiable(implanted),
        conditions = List.unmodifiable(conditions),
-       retainedEventCards = List.unmodifiable(retainedEventCards) {
+       retainedEventCards = List.unmodifiable(retainedEventCards),
+       exhaustedRobots = List.unmodifiable(exhaustedRobots) {
     _requireId(id, 'id');
     _requireId(characterId, 'characterId');
     _requireNonNegative(damage, 'damage');
@@ -232,6 +254,7 @@ final class PlayerState {
     }
     _requireNonNegative(credits, 'credits');
     _requireNonNegative(weaponModifier, 'weaponModifier');
+    _requireNonNegative(nextAttackBonusHits, 'nextAttackBonusHits');
     _requireNonNegative(actionPoints, 'actionPoints');
     // A load-bearing backpack can raise the effective limit to five. The
     // current effective limit depends on card definitions and is enforced by
@@ -282,8 +305,24 @@ final class PlayerState {
   /// is active.
   final int? monsterDamageImmuneThroughRound;
 
-  /// Round in which a temporary +1 monster-defense effect applies.
+  /// Round in which the temporary monster-defense bonus applies.
   final int? monsterDefenseBonusRound;
+
+  /// Magnitude of the temporary monster-defense bonus for that round.
+  final int monsterDefenseBonus;
+
+  /// Last round through which this hero ignores all incoming damage.
+  final int? damageImmuneThroughRound;
+
+  /// Last round through which this hero ignores non-boss enemy features that
+  /// directly affect them.
+  final int? enemyFeaturesIgnoredThroughRound;
+
+  /// One-shot bonus hits added to the next attack.
+  final int nextAttackBonusHits;
+
+  /// Equipped robot cards that have been rotated and need a power cell.
+  final List<CardId> exhaustedRobots;
 
   /// Returns this character with the supplied per-round action point count.
   PlayerState withActionPoints(int value) => PlayerState(
@@ -306,6 +345,11 @@ final class PlayerState {
     nextTurnActionDelta: nextTurnActionDelta,
     monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
     monsterDefenseBonusRound: monsterDefenseBonusRound,
+    monsterDefenseBonus: monsterDefenseBonus,
+    damageImmuneThroughRound: damageImmuneThroughRound,
+    enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
+    nextAttackBonusHits: nextAttackBonusHits,
+    exhaustedRobots: exhaustedRobots,
   );
 
   PlayerState withNextTurnActionDelta(int value) => PlayerState(
@@ -328,6 +372,11 @@ final class PlayerState {
     nextTurnActionDelta: value,
     monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
     monsterDefenseBonusRound: monsterDefenseBonusRound,
+    monsterDefenseBonus: monsterDefenseBonus,
+    damageImmuneThroughRound: damageImmuneThroughRound,
+    enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
+    nextAttackBonusHits: nextAttackBonusHits,
+    exhaustedRobots: exhaustedRobots,
   );
 }
 

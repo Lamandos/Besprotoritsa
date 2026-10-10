@@ -60,6 +60,10 @@ class _PendingDecisionModal extends ConsumerWidget {
     final eventDescription = eventId == null
         ? null
         : _runtimeEventText(state, eventId, 'descKey');
+    final eventOptions = switch (decision) {
+      AwaitingEventOption(:final options) => options,
+      _ => const <String>[],
+    };
     final coordinateOptions = switch (decision) {
       AwaitingEventOption(:final options) => _eventCoordinateOptions(
         state,
@@ -82,11 +86,19 @@ class _PendingDecisionModal extends ConsumerWidget {
         : state.players
               .where((player) => player.id == targetPlayerId)
               .firstOrNull;
+    final decisionPlayer = switch (decision) {
+      AwaitingTerminalPick(:final playerId) =>
+        state.players.where((player) => player.id == playerId).firstOrNull,
+      _ => null,
+    };
     final targetPlayerName = targetPlayer == null
         ? null
         : fullRuntimeCharacterName(targetPlayer.characterId);
     final rerollSources = _decisionRerollSources(state, decision);
     final prompt = _decisionPrompt(decision, strings);
+    final terminalDecision = decision is AwaitingTerminalPick
+        ? decision as AwaitingTerminalPick
+        : null;
     final sourceNames = rerollSources
         .map((id) => _inventoryCardName(state, id))
         .join(', ');
@@ -135,7 +147,32 @@ class _PendingDecisionModal extends ConsumerWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-            content: eventId == null
+            content: terminalDecision != null
+                ? SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(prompt),
+                        if (decisionPlayer != null)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              'Ваши кредиты: ₡${decisionPlayer.credits}',
+                            ),
+                          ),
+                        for (final cardId in terminalDecision.offeredCards)
+                          _terminalOfferCard(
+                            context,
+                            ref,
+                            state,
+                            terminalDecision,
+                            cardId,
+                          ),
+                      ],
+                    ),
+                  )
+                : eventId == null
                 ? SingleChildScrollView(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -158,8 +195,8 @@ class _PendingDecisionModal extends ConsumerWidget {
                             sourceCopy,
                           ),
                         if (coordinateOptions.isNotEmpty) ...[
-                          const Text(
-                            'Выберите подсвеченное поле на карте',
+                          Text(
+                            _coordinateOptionPrompt(coordinateOptions.values),
                             textAlign: TextAlign.center,
                           ),
                           SizedBox(
@@ -190,6 +227,15 @@ class _PendingDecisionModal extends ConsumerWidget {
                           ),
                           const SizedBox(height: 8),
                         ],
+                        for (final option in eventOptions)
+                          if (!coordinateOptions.containsValue(option))
+                            _eventOptionControl(
+                              context,
+                              ref,
+                              state,
+                              eventId,
+                              option,
+                            ),
                         GameCardSurface(
                           material: GameCardMaterial.event,
                           overlayColor: const Color(0xD91B1510),
@@ -230,7 +276,7 @@ class _PendingDecisionModal extends ConsumerWidget {
                       ],
                     ),
                   ),
-            actions: _decisionActions(ref, decision, strings, state),
+            actions: _decisionActions(context, ref, decision, strings, state),
           ),
         ),
       ),
@@ -239,6 +285,7 @@ class _PendingDecisionModal extends ConsumerWidget {
 }
 
 List<Widget> _decisionActions(
+  BuildContext context,
   WidgetRef ref,
   PendingDecision decision,
   AppStrings strings,
@@ -262,6 +309,25 @@ List<Widget> _decisionActions(
                 ),
             child: Text('${strings.reroll}: $die'),
           )
+      else if (availableRerolls > 0 && _allowsAnyCountReroll(state, decision))
+        TextButton(
+          onPressed: () async {
+            final diceIndexes = await _selectDiceForReroll(context, dice);
+            if (diceIndexes == null ||
+                diceIndexes.isEmpty ||
+                !context.mounted) {
+              return;
+            }
+            ref
+                .read(gameControllerProvider.notifier)
+                .dispatch(
+                  ResolvePendingDecisionCommand(
+                    RerollChoice(diceIndexes: diceIndexes),
+                  ),
+                );
+          },
+          child: const Text('Выбрать кубики'),
+        )
       else if (availableRerolls > 0)
         TextButton(
           onPressed: () => ref
@@ -273,7 +339,9 @@ List<Widget> _decisionActions(
         onPressed: () => ref
             .read(gameControllerProvider.notifier)
             .dispatch(const ResolvePendingDecisionCommand(KeepRollChoice())),
-        child: Text(strings.keepResult),
+        child: Text(
+          availableRerolls > 0 ? strings.keepResult : 'Продолжить',
+        ),
       ),
     ],
   AwaitingDodge() => [
@@ -284,28 +352,8 @@ List<Widget> _decisionActions(
       child: Text(strings.dodge),
     ),
   ],
-  AwaitingEventOption(:final options) => [
-    for (final option in options)
-      if (!_eventCoordinateOptions(state, options).containsValue(option))
-        FilledButton(
-          onPressed: () => ref
-              .read(gameControllerProvider.notifier)
-              .dispatch(
-                ResolvePendingDecisionCommand(EventOptionChoice(option)),
-              ),
-          child: Text(_eventOptionLabel(state, decision.eventId, option)),
-        ),
-  ],
-  AwaitingTerminalPick(:final offeredCards) => [
-    for (final cardId in offeredCards)
-      FilledButton(
-        onPressed: () => ref
-            .read(gameControllerProvider.notifier)
-            .dispatch(
-              ResolvePendingDecisionCommand(TerminalPickChoice(cardId)),
-            ),
-        child: Text(strings.buyCommand(cardId)),
-      ),
+  AwaitingEventOption() => const [],
+  AwaitingTerminalPick() => [
     TextButton(
       onPressed: () => ref
           .read(gameControllerProvider.notifier)
@@ -331,6 +379,234 @@ List<Widget> _decisionActions(
   AwaitingOtherPlayerDecision() => const [],
 };
 
+bool _allowsAnyCountReroll(GameState state, PendingDecision decision) {
+  if (decision is! AwaitingRerollChoice) return false;
+  final source = decision.rerollSources.firstOrNull;
+  return source != null &&
+      (state.cardDefinitions[source]?.behaviorIds.contains(
+            'dice.reroll.anyCountPerAttack',
+          ) ??
+          false);
+}
+
+Future<List<int>?> _selectDiceForReroll(
+  BuildContext context,
+  List<int> dice,
+) => showDialog<List<int>>(
+  context: context,
+  builder: (context) {
+    final selectedDice = <int>{};
+    return StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('Выберите кубики для переброса'),
+        content: SizedBox(
+          width: 320,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Можно выбрать любое количество кубиков.'),
+                for (final (index, die) in dice.indexed)
+                  CheckboxListTile(
+                    key: ValueKey<String>('reroll-die-$index'),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Кубик ${index + 1}: $die'),
+                    value: selectedDice.contains(index),
+                    onChanged: (selected) => setState(() {
+                      if (selected ?? false) {
+                        selectedDice.add(index);
+                      } else {
+                        selectedDice.remove(index);
+                      }
+                    }),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            key: const ValueKey<String>('reroll-selected-dice'),
+            onPressed: selectedDice.isEmpty
+                ? null
+                : () => Navigator.of(context).pop(
+                    selectedDice.toList()..sort(),
+                  ),
+            child: const Text('Перебросить выбранные'),
+          ),
+        ],
+      ),
+    );
+  },
+);
+
+Widget _terminalOfferCard(
+  BuildContext context,
+  WidgetRef ref,
+  GameState state,
+  AwaitingTerminalPick decision,
+  String cardId,
+) {
+  final definition = state.cardDefinitions[cardId];
+  final player = state.players
+      .where((entry) => entry.id == decision.playerId)
+      .firstOrNull;
+  final cost = definition?.cost ?? 0;
+  final affordable =
+      definition != null && player != null && player.credits >= cost;
+  final name = _inventoryCardName(state, cardId);
+  final description =
+      state.contentTranslations['content.supply.$cardId.description'];
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 10),
+    child: GameCardSurface(
+      key: ValueKey<String>('terminal-offer-$cardId'),
+      material: GameCardMaterial.item,
+      overlayColor: const Color(0xD91B1510),
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GameCardArtwork(
+            cardId: cardId,
+            kind: GameCardArtworkKind.supply,
+            width: 76,
+            height: 104,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Color(0xFFFFF1D5),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(description ?? 'Описание карты недоступно.'),
+                const SizedBox(height: 8),
+                Text('Цена: ₡$cost'),
+                if (player != null && !affordable)
+                  Text('Не хватает: ₡${cost - player.credits}'),
+                const SizedBox(height: 6),
+                FilledButton(
+                  key: ValueKey<String>('terminal-buy-$cardId'),
+                  onPressed: !affordable
+                      ? null
+                      : () => ref
+                            .read(gameControllerProvider.notifier)
+                            .dispatch(
+                              ResolvePendingDecisionCommand(
+                                TerminalPickChoice(cardId),
+                              ),
+                            ),
+                  child: Text('Купить · ₡$cost'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _eventOptionControl(
+  BuildContext context,
+  WidgetRef ref,
+  GameState state,
+  String eventId,
+  String option,
+) {
+  final check = _eventOptionSkillCheck(state, eventId, option);
+  final playerId = switch (state.pendingDecision) {
+    AwaitingEventOption(:final playerId) => playerId,
+    _ => null,
+  };
+  final player = playerId == null
+      ? null
+      : state.players.where((entry) => entry.id == playerId).firstOrNull;
+  final pool = check == null || player == null
+      ? null
+      : playerStatValue(state, player, check.$1);
+  final statName = check == null ? null : _eventStatName(check.$1);
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FilledButton(
+          key: ValueKey<String>('event-option-$option'),
+          onPressed: () => ref
+              .read(gameControllerProvider.notifier)
+              .dispatch(
+                ResolvePendingDecisionCommand(EventOptionChoice(option)),
+              ),
+          child: Text(_eventOptionLabel(state, eventId, option)),
+        ),
+        if (check != null) ...[
+          Text(
+            'Проверка ${_eventStatGenitive(check.$1)} · сложность ${check.$2}',
+          ),
+          if (pool != null) Text('Ваша $statName — $pool'),
+        ],
+      ],
+    ),
+  );
+}
+
+(StatType, int)? _eventOptionSkillCheck(
+  GameState state,
+  String eventId,
+  String option,
+) {
+  final index = int.tryParse(option.replaceFirst('option-', ''));
+  final rawOptions = state.eventDefinitions[eventId]?['options'];
+  if (index == null ||
+      rawOptions is! List<Object?> ||
+      index < 1 ||
+      index > rawOptions.length) {
+    return null;
+  }
+  final rawOption = rawOptions[index - 1];
+  if (rawOption is! Map<String, Object?>) return null;
+  final rawCheck = rawOption['skillCheck'];
+  if (rawCheck is! Map<String, Object?>) return null;
+  final skill = rawCheck['skill'];
+  final difficulty = rawCheck['difficulty'];
+  if (skill is! String || difficulty is! int) return null;
+  final stat = StatType.values
+      .where((value) => value.name == skill)
+      .firstOrNull;
+  return stat == null ? null : (stat, difficulty);
+}
+
+String _eventStatName(StatType stat) => switch (stat) {
+  StatType.strength => 'сила',
+  StatType.combatStrength => 'боевая сила',
+  StatType.science => 'наука',
+  StatType.repair => 'ремонт',
+  StatType.endurance => 'выносливость',
+  StatType.agility => 'ловкость',
+};
+
+String _eventStatGenitive(StatType stat) => switch (stat) {
+  StatType.strength || StatType.combatStrength => 'силы',
+  StatType.science => 'науки',
+  StatType.repair => 'ремонта',
+  StatType.endurance => 'выносливости',
+  StatType.agility => 'ловкости',
+};
+
 Map<HexCoord, String> _eventCoordinateOptions(
   GameState state,
   Iterable<String> options,
@@ -340,6 +616,20 @@ Map<HexCoord, String> _eventCoordinateOptions(
         when state.tileAt(coord) != null)
       coord: option,
 };
+
+String _coordinateOptionPrompt(Iterable<String> options) {
+  final kinds = options.map((option) => option.split(':').first).toSet();
+  if (kinds.length == 1 && kinds.single == 'reveal') {
+    return 'Выберите любой закрытый фрагмент — он откроется после выбора.';
+  }
+  if (kinds.every((kind) => kind == 'sector' || kind == 'place')) {
+    return 'Выберите подсвеченный сектор, в котором разместить монстра.';
+  }
+  if (kinds.every((kind) => kind == 'move' || kind == 'move_spawn')) {
+    return 'Выберите подсвеченный сектор для перемещения.';
+  }
+  return 'Выберите один из подсвеченных секторов карты.';
+}
 
 HexCoord? _eventOptionCoord(String option) {
   final parts = option.split(':');
@@ -358,6 +648,7 @@ List<CardId> _decisionRerollSources(GameState state, PendingDecision decision) {
   if (decision is! AwaitingRerollChoice || decision.availableRerolls == 0) {
     return const [];
   }
+  if (decision.rerollSources.isNotEmpty) return decision.rerollSources;
   final context = decision.context;
   final playerId = switch (context) {
     SkillCheckContext(:final playerId) => playerId,

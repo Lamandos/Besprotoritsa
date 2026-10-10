@@ -1682,6 +1682,22 @@ GameCommand _commandFromJson(
     'discardCard' => DiscardCardCommand(
       _requiredString(json, 'cardId'),
     ),
+    'useCardAbility' => UseCardAbilityCommand(
+      _requiredString(json, 'cardId'),
+      targetPlayerId: _optionalString(json, 'targetPlayerId'),
+      targetMonsterInstanceId: _optionalString(
+        json,
+        'targetMonsterInstanceId',
+      ),
+      targetCoord: json['targetQ'] is int && json['targetR'] is int
+          ? HexCoord(
+              _requiredInt(json, 'targetQ'),
+              _requiredInt(json, 'targetR'),
+            )
+          : null,
+      targetCardId: _optionalString(json, 'targetCardId'),
+      amount: _optionalInt(json, 'amount'),
+    ),
     'implantModification' => ImplantModificationCommand(
       _requiredString(json, 'cardId'),
     ),
@@ -1778,10 +1794,21 @@ Map<String, Object?> _projectedStateToJson(
   'activePlayerId': state.activePlayerId,
   'actionsLeft': state.actionsLeft,
   'chestCards': state.chestCards,
+  'exhaustedChestRobots': state.exhaustedChestRobots,
   'isComplete': fullState.isComplete,
   'board': state.board.map(_projectedTileToJson).toList(),
   'players': state.players.map(_projectedPlayerToJson).toList(),
   'monsters': state.monsters.map(_monsterToJson).toList(),
+  'tripwires': state.tripwires
+      .map(
+        (trap) => <String, Object?>{
+          'instanceId': trap.instanceId,
+          'coord': _coordToJson(trap.coord),
+          'ownerId': trap.ownerId,
+          'cardId': trap.cardId,
+        },
+      )
+      .toList(),
   'decks': {
     for (final entry in state.decks.entries)
       entry.key: entry.value.cardsRemaining,
@@ -1830,33 +1857,39 @@ Map<String, Object?> _projectedTileToJson(ProjectedHexTile tile) =>
         },
     };
 
-Map<String, Object?> _projectedPlayerToJson(ProjectedPlayerState player) =>
-    <String, Object?>{
-      'id': player.id,
-      'characterId': player.characterId,
-      'coord': _coordToJson(player.coord),
-      'damage': player.damage,
-      'health': player.health,
-      'credits': player.credits,
-      'equipped': {
-        'weapon': player.equipped.weapon,
-        'secondWeapon': player.equipped.secondWeapon,
-        'armor': player.equipped.armor,
-        'clothing': player.equipped.clothing,
-        'robot': player.equipped.robot,
-      },
-      'alive': player.alive,
-      'actionPoints': player.actionPoints,
-      'nextTurnActionDelta': player.nextTurnActionDelta,
-      'monsterDamageImmuneThroughRound': player.monsterDamageImmuneThroughRound,
-      'monsterDefenseBonusRound': player.monsterDefenseBonusRound,
-      'isViewer': player.isViewer,
-      'backpack': player.backpack,
-      'carriedMods': player.carriedMods,
-      'implanted': player.implanted,
-      'conditions': player.conditions,
-      'hiddenCardCount': player.hiddenCardCount,
-    };
+Map<String, Object?> _projectedPlayerToJson(
+  ProjectedPlayerState player,
+) => <String, Object?>{
+  'id': player.id,
+  'characterId': player.characterId,
+  'coord': _coordToJson(player.coord),
+  'damage': player.damage,
+  'health': player.health,
+  'credits': player.credits,
+  'equipped': {
+    'weapon': player.equipped.weapon,
+    'secondWeapon': player.equipped.secondWeapon,
+    'armor': player.equipped.armor,
+    'clothing': player.equipped.clothing,
+    'robot': player.equipped.robot,
+  },
+  'alive': player.alive,
+  'actionPoints': player.actionPoints,
+  'nextTurnActionDelta': player.nextTurnActionDelta,
+  'monsterDamageImmuneThroughRound': player.monsterDamageImmuneThroughRound,
+  'monsterDefenseBonusRound': player.monsterDefenseBonusRound,
+  'monsterDefenseBonus': player.monsterDefenseBonus,
+  'damageImmuneThroughRound': player.damageImmuneThroughRound,
+  'enemyFeaturesIgnoredThroughRound': player.enemyFeaturesIgnoredThroughRound,
+  'nextAttackBonusHits': player.nextAttackBonusHits,
+  'exhaustedRobots': player.exhaustedRobots,
+  'isViewer': player.isViewer,
+  'backpack': player.backpack,
+  'carriedMods': player.carriedMods,
+  'implanted': player.implanted,
+  'conditions': player.conditions,
+  'hiddenCardCount': player.hiddenCardCount,
+};
 
 Map<String, Object?> _monsterToJson(MonsterInstance monster) =>
     <String, Object?>{
@@ -1895,6 +1928,7 @@ Map<String, Object?>? _pendingDecisionToJson(
         'dice': dice,
         'availableRerolls': availableRerolls,
         'maxDicePerReroll': decision.maxDicePerReroll,
+        'rerollSources': decision.rerollSources,
       },
     AwaitingDodge(:final monsterDamage, :final requiredAgilitySuccesses) =>
       <String, Object?>{

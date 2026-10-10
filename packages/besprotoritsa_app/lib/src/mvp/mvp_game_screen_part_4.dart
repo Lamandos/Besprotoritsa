@@ -182,10 +182,34 @@ class _HeroRosterPanel extends StatelessWidget {
                             '${player.monsterDamageImmuneThroughRound}',
                             style: const TextStyle(fontSize: 8),
                           ),
+                        if (player.damageImmuneThroughRound != null &&
+                            state.round <= player.damageImmuneThroughRound!)
+                          Text(
+                            'Иммунитет ко всему урону до раунда '
+                            '${player.damageImmuneThroughRound}',
+                            style: const TextStyle(fontSize: 8),
+                          ),
+                        if (player.enemyFeaturesIgnoredThroughRound != null &&
+                            state.round <=
+                                player.enemyFeaturesIgnoredThroughRound!)
+                          Text(
+                            'Игнорирует особенности не-боссов до раунда '
+                            '${player.enemyFeaturesIgnoredThroughRound}',
+                            style: const TextStyle(fontSize: 8),
+                          ),
                         if (player.monsterDefenseBonusRound == state.round)
-                          const Text(
-                            'Защита +1 до конца раунда',
-                            style: TextStyle(fontSize: 8),
+                          Text(
+                            'Защита +${player.monsterDefenseBonus} '
+                            'до конца раунда',
+                            style: const TextStyle(fontSize: 8),
+                          ),
+                        if (player.exhaustedRobots.isNotEmpty)
+                          Text(
+                            'Робот повёрнут: '
+                            '${player.exhaustedRobots.map(
+                              (id) => _inventoryCardName(state, id),
+                            ).join(', ')}',
+                            style: const TextStyle(fontSize: 8),
                           ),
                         const SizedBox(height: 4),
                         Row(
@@ -789,6 +813,13 @@ class _InventoryPanel extends ConsumerWidget {
                       icon: Icons.inventory_2_outlined,
                       actions: isActivePlayer
                           ? [
+                              if (_inventoryAbilityCommand(
+                                    state,
+                                    selectedPlayer,
+                                    item,
+                                  )
+                                  case final ability?)
+                                _InventoryAction('Использовать', ability),
                               if (state
                                       .cardDefinitions[item]
                                       ?.slots
@@ -875,6 +906,15 @@ class _InventoryPanel extends ConsumerWidget {
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
+                                if (partner.coord != selectedPlayer.coord)
+                                  const Text(
+                                    'Дистанционно',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Color(0xFFD3AD75),
+                                      fontSize: 9,
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -900,7 +940,10 @@ List<PlayerState> _colocatedPartners(GameState state, PlayerState player) => [
   for (final partner in state.players)
     if (partner.alive &&
         partner.id != player.id &&
-        partner.coord == player.coord)
+        (partner.coord == player.coord ||
+            (player.equipped.robot == 'c6-car-courier' &&
+                !player.exhaustedRobots.contains('c6-car-courier')) ||
+            player.backpack.contains('smuggler-mark')))
       partner,
 ];
 
@@ -1156,7 +1199,9 @@ void _showExchangeDialog(
                 child: Column(
                   children: [
                     Text(
-                      'ОБМЕН · ВЫБЕРИТЕ КАРТЫ И КРЕДИТЫ',
+                      partner.coord == activePlayer.coord
+                          ? 'ОБМЕН · ВЫБЕРИТЕ КАРТЫ И КРЕДИТЫ'
+                          : 'C6-КУРЬЕР · ДИСТАНЦИОННЫЙ ОБМЕН',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 10),
@@ -1389,6 +1434,15 @@ Widget _equippedInventoryRow(
   icon: Icons.shield_outlined,
   actions: isActivePlayer
       ? [
+          if (_inventoryAbilityCommand(
+                state,
+                state.players.firstWhere(
+                  (player) => player.id == state.activePlayerId,
+                ),
+                item,
+              )
+              case final ability?)
+            _InventoryAction('Использовать', ability),
           _InventoryAction('Снять', UnequipCommand(itemSlot)),
           _InventoryAction('Сбросить', DiscardCardCommand(item)),
         ]
@@ -1410,15 +1464,437 @@ class _InventoryActionButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(gameControllerProvider);
-    final enabled = validate(state, action.command) == null;
+    final controller = ref.read(gameControllerProvider.notifier);
+    final enabled =
+        !controller.validatesCommandsLocally ||
+        validate(state, action.command) == null;
     return FilledButton.tonalIcon(
       onPressed: !enabled
           ? null
-          : () => _dispatchWithFeedback(context, ref, action.command),
+          : () async {
+              if (action.command case UseCardAbilityCommand(:final cardId)) {
+                final command = await _chooseCardAbility(
+                  context,
+                  state,
+                  cardId,
+                );
+                if (command == null || !context.mounted) return;
+                await _dispatchWithFeedback(context, ref, command);
+                return;
+              }
+              if (action.command case DiscardCardCommand(:final cardId)) {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('Сбросить карту?'),
+                    content: Text(
+                      '«${_inventoryCardName(state, cardId)}» попадёт '
+                      'в колоду сброса.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        child: const Text('Отмена'),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
+                        child: const Text('Сбросить'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed != true) return;
+              }
+              if (!context.mounted) return;
+              await _dispatchWithFeedback(context, ref, action.command);
+            },
       icon: const Icon(Icons.play_arrow, size: 16),
       label: Text(action.label),
     );
   }
+}
+
+UseCardAbilityCommand? _inventoryAbilityCommand(
+  GameState state,
+  PlayerState player,
+  String cardId,
+) {
+  if (cardId == 'medic-bag') {
+    final target = [
+      player,
+      for (final candidate in state.players)
+        if (candidate.id != player.id &&
+            candidate.alive &&
+            candidate.coord.distanceTo(player.coord) <= 1)
+          candidate,
+    ].where((candidate) => candidate.damage > 0).firstOrNull;
+    if (target == null || player.credits == 0) return null;
+    return UseCardAbilityCommand(
+      cardId,
+      targetPlayerId: target.id,
+      amount: player.credits.clamp(1, target.damage),
+    );
+  }
+  if (cardId == 'gas-cylinder') {
+    final monster = state.monsters
+        .where((monster) => monster.coord == player.coord)
+        .where((monster) {
+          final features =
+              state.monsterDefinitions[monster.monsterId]?['features'];
+          return !(features is List<Object?> && features.contains('boss'));
+        })
+        .firstOrNull;
+    if (monster == null) return null;
+    return UseCardAbilityCommand(
+      cardId,
+      targetMonsterInstanceId: monster.instanceId,
+    );
+  }
+  return _cardAbilityChoices(state, player, cardId).firstOrNull;
+}
+
+Future<UseCardAbilityCommand?> _chooseCardAbility(
+  BuildContext context,
+  GameState state,
+  String cardId,
+) async {
+  final player = state.players.firstWhere(
+    (candidate) => candidate.id == state.activePlayerId,
+  );
+  if (cardId != 'medic-bag') {
+    final choices = _cardAbilityChoices(state, player, cardId);
+    if (choices.isEmpty) return null;
+    if (choices.length == 1) return choices.single;
+    return showDialog<UseCardAbilityCommand>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(_inventoryCardName(state, cardId)),
+        content: SizedBox(
+          width: 380,
+          height: 300,
+          child: ListView(
+            children: [
+              for (final choice in choices)
+                ListTile(
+                  title: Text(_cardAbilityChoiceLabel(state, choice)),
+                  onTap: () => Navigator.of(dialogContext).pop(choice),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Отмена'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  final targets = [
+    player,
+    for (final candidate in state.players)
+      if (candidate.id != player.id &&
+          candidate.alive &&
+          candidate.coord.distanceTo(player.coord) <= 1)
+        candidate,
+  ].where((candidate) => candidate.damage > 0).toList();
+  if (targets.isEmpty || player.credits == 0) return null;
+  return showDialog<UseCardAbilityCommand>(
+    context: context,
+    builder: (dialogContext) => _MedicBagDialog(
+      player: player,
+      targets: targets,
+    ),
+  );
+}
+
+List<UseCardAbilityCommand> _cardAbilityChoices(
+  GameState state,
+  PlayerState player,
+  String cardId,
+) {
+  if (cardId == 'tripwire' ||
+      const {
+        'nanobots',
+        'dry-rations',
+        'water',
+        'ration',
+        'medkit',
+        'credits',
+        'stash',
+        'adrenaline-supply',
+        'adrenaline-x',
+        'proton-shield',
+        'gtu-b1c4',
+        'prot2-ct',
+        'prot3-ct',
+      }.contains(cardId)) {
+    return [UseCardAbilityCommand(cardId)];
+  }
+  if (const {'r69-nic3', 'alarm-bot'}.contains(cardId)) {
+    if (player.equipped.robot != cardId ||
+        player.exhaustedRobots.contains(cardId)) {
+      return const [];
+    }
+    return [UseCardAbilityCommand(cardId)];
+  }
+  if (cardId == 'gas-cylinder') {
+    if (!player.backpack.contains(cardId) || state.actionsLeft < 1) {
+      return const [];
+    }
+    return [
+      for (final monster in state.monsters)
+        if (monster.coord == player.coord &&
+            !_isBossMonster(state, monster.monsterId))
+          UseCardAbilityCommand(
+            cardId,
+            targetMonsterInstanceId: monster.instanceId,
+          ),
+    ];
+  }
+  if (cardId == 'air-canister') {
+    final source = state.tileAt(player.coord);
+    if (!player.backpack.contains(cardId) ||
+        source?.type != HexTileType.airlock ||
+        state.actionsLeft < 1) {
+      return const [];
+    }
+    return [
+      for (final tile in state.board)
+        if (tile.coord != player.coord &&
+            tile.type == HexTileType.airlock &&
+            tile.opened &&
+            !tile.isBlocked)
+          UseCardAbilityCommand(cardId, targetCoord: tile.coord),
+    ];
+  }
+  if (cardId == 'door-remote') {
+    if (!player.backpack.contains(cardId) ||
+        player.credits < 2 ||
+        state.actionsLeft < 1) {
+      return const [];
+    }
+    return [
+      for (final tile in state.board)
+        if (tile.type == HexTileType.corridor &&
+            tile.opened &&
+            (tile.isBlocked ||
+                (!state.players.any(
+                      (hero) => hero.alive && hero.coord == tile.coord,
+                    ) &&
+                    !state.monsters.any(
+                      (monster) => monster.coord == tile.coord,
+                    ) &&
+                    !state.boils.any((boil) => boil.coord == tile.coord))))
+          UseCardAbilityCommand(cardId, targetCoord: tile.coord),
+    ];
+  }
+  if (cardId == 'power-cell') {
+    if (!player.backpack.contains(cardId)) return const [];
+    return [
+      for (final robotId in player.exhaustedRobots)
+        UseCardAbilityCommand(cardId, targetCardId: robotId),
+    ];
+  }
+  if (cardId == 'h3-al') {
+    if (player.equipped.robot != cardId ||
+        player.exhaustedRobots.contains(cardId)) {
+      return const [];
+    }
+    return [
+      for (final target in state.players)
+        if (target.alive && target.damage > 0)
+          UseCardAbilityCommand(cardId, targetPlayerId: target.id),
+    ];
+  }
+  if (cardId == 'sc0-u7') {
+    if (player.equipped.robot != cardId ||
+        player.exhaustedRobots.contains(cardId)) {
+      return const [];
+    }
+    return [
+      for (final tile in state.board)
+        if (!tile.opened)
+          UseCardAbilityCommand(cardId, targetCoord: tile.coord),
+    ];
+  }
+  if (cardId == 'ghb-dtn') {
+    if (player.equipped.robot != cardId ||
+        player.exhaustedRobots.contains(cardId)) {
+      return const [];
+    }
+    return [
+      for (final target in state.players)
+        if (target.alive)
+          for (final tile in state.board)
+            if (tile.coord != target.coord &&
+                tile.opened &&
+                !tile.isBlocked &&
+                (_mvpPathDistance(state, target.coord, tile.coord) ?? 3) <= 2)
+              UseCardAbilityCommand(
+                cardId,
+                targetPlayerId: target.id,
+                targetCoord: tile.coord,
+              ),
+    ];
+  }
+  return const [];
+}
+
+bool _isBossMonster(GameState state, String monsterId) {
+  final features = state.monsterDefinitions[monsterId]?['features'];
+  return features is List<Object?> && features.contains('boss');
+}
+
+int? _mvpPathDistance(GameState state, HexCoord start, HexCoord target) {
+  if (start == target) return 0;
+  final distances = <HexCoord, int>{start: 0};
+  final queue = <HexCoord>[start];
+  for (var index = 0; index < queue.length; index++) {
+    final current = queue[index];
+    final tile = state.tileAt(current);
+    if (tile == null || !tile.opened || tile.isBlocked) continue;
+    for (final edge in tile.exits) {
+      final next = current.neighbor(edge);
+      final neighbor = state.tileAt(next);
+      if (neighbor == null ||
+          !neighbor.opened ||
+          neighbor.isBlocked ||
+          !neighbor.hasExit(edge.opposite) ||
+          distances.containsKey(next)) {
+        continue;
+      }
+      final distance = distances[current]! + 1;
+      if (next == target) return distance;
+      distances[next] = distance;
+      queue.add(next);
+    }
+  }
+  return null;
+}
+
+String _cardAbilityChoiceLabel(
+  GameState state,
+  UseCardAbilityCommand command,
+) {
+  if (command.targetMonsterInstanceId case final monsterId?) {
+    final monster = state.monsters
+        .where((candidate) => candidate.instanceId == monsterId)
+        .firstOrNull;
+    if (monster != null) {
+      final nameKey = state.monsterDefinitions[monster.monsterId]?['nameKey'];
+      final name = nameKey is String
+          ? state.contentTranslations[nameKey] ?? monster.monsterId
+          : monster.monsterId;
+      return 'Убить: $name';
+    }
+  }
+  if (command.targetCardId case final cardId?) {
+    return 'Подготовить робота ${_inventoryCardName(state, cardId)}';
+  }
+  if (command.targetPlayerId case final playerId?) {
+    final target = state.players
+        .where((candidate) => candidate.id == playerId)
+        .firstOrNull;
+    final name = target == null
+        ? playerId
+        : fullRuntimeCharacterName(target.characterId);
+    if (command.targetCoord case final coord?) {
+      return '$name → сектор (${coord.q}, ${coord.r})';
+    }
+    return 'Лечить: $name';
+  }
+  if (command.targetCoord case final coord?) {
+    final tile = state.tileAt(coord);
+    final action = switch (command.cardId) {
+      'air-canister' => 'Перейти к шлюзу',
+      'door-remote' =>
+        (tile?.isBlocked ?? false) ? 'Открыть коридор' : 'Закрыть коридор',
+      'sc0-u7' => 'Открыть фрагмент',
+      _ => 'Выбрать сектор',
+    };
+    return '$action (${coord.q}, ${coord.r})';
+  }
+  return 'Использовать карту';
+}
+
+class _MedicBagDialog extends StatefulWidget {
+  const _MedicBagDialog({required this.player, required this.targets});
+
+  final PlayerState player;
+  final List<PlayerState> targets;
+
+  @override
+  State<_MedicBagDialog> createState() => _MedicBagDialogState();
+}
+
+class _MedicBagDialogState extends State<_MedicBagDialog> {
+  late PlayerState _target = widget.targets.first;
+  late int _amount = widget.player.credits.clamp(1, _target.damage);
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Саквояж фельдшера'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          '1 кредит восстанавливает 1 здоровье. Используется 1 действие.',
+        ),
+        const SizedBox(height: 12),
+        DropdownButton<PlayerState>(
+          value: _target,
+          isExpanded: true,
+          items: [
+            for (final target in widget.targets)
+              DropdownMenuItem(
+                value: target,
+                child: Text(
+                  '${fullRuntimeCharacterName(target.characterId)} — '
+                  '${target.damage} ед. урона',
+                ),
+              ),
+          ],
+          onChanged: (target) {
+            if (target == null) return;
+            setState(() {
+              _target = target;
+              _amount = widget.player.credits.clamp(1, target.damage);
+            });
+          },
+        ),
+        Text('Лечение: $_amount здоровья · ₡$_amount'),
+        Slider(
+          value: _amount.toDouble(),
+          min: 1,
+          max: widget.player.credits.clamp(1, _target.damage).toDouble(),
+          divisions: widget.player.credits.clamp(1, _target.damage) > 1
+              ? widget.player.credits.clamp(1, _target.damage) - 1
+              : null,
+          onChanged: (value) => setState(() => _amount = value.round()),
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(),
+        child: const Text('Отмена'),
+      ),
+      FilledButton(
+        onPressed: () => Navigator.of(context).pop(
+          UseCardAbilityCommand(
+            'medic-bag',
+            targetPlayerId: _target.id,
+            amount: _amount,
+          ),
+        ),
+        child: const Text('Лечить'),
+      ),
+    ],
+  );
 }
 
 Widget _itemCardRow({

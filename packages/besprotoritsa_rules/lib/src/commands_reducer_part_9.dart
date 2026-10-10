@@ -121,6 +121,11 @@ PlayerState _copyPlayer(
   int? nextTurnActionDelta,
   int? monsterDamageImmuneThroughRound,
   int? monsterDefenseBonusRound,
+  int? monsterDefenseBonus,
+  int? damageImmuneThroughRound,
+  int? enemyFeaturesIgnoredThroughRound,
+  int? nextAttackBonusHits,
+  Iterable<CardId>? exhaustedRobots,
 }) => PlayerState(
   id: player.id,
   characterId: player.characterId,
@@ -143,6 +148,16 @@ PlayerState _copyPlayer(
       monsterDamageImmuneThroughRound ?? player.monsterDamageImmuneThroughRound,
   monsterDefenseBonusRound:
       monsterDefenseBonusRound ?? player.monsterDefenseBonusRound,
+  monsterDefenseBonus: monsterDefenseBonus ?? player.monsterDefenseBonus,
+  damageImmuneThroughRound:
+      damageImmuneThroughRound ?? player.damageImmuneThroughRound,
+  enemyFeaturesIgnoredThroughRound:
+      enemyFeaturesIgnoredThroughRound ??
+      player.enemyFeaturesIgnoredThroughRound,
+  nextAttackBonusHits: coord != null && coord != player.coord
+      ? 0
+      : nextAttackBonusHits ?? player.nextAttackBonusHits,
+  exhaustedRobots: exhaustedRobots ?? player.exhaustedRobots,
 );
 
 MonsterInstance _copyMonster(
@@ -159,6 +174,7 @@ MonsterInstance _copyMonster(
   attack: monster.attack,
   movement: monster.movement,
   carriedGear: monster.carriedGear,
+  exhaustedCarriedRobots: monster.exhaustedCarriedRobots,
   returnsToMonsterDeck: monster.returnsToMonsterDeck,
   defeatRewardDeckId: monster.defeatRewardDeckId,
 );
@@ -174,9 +190,11 @@ GameState _copyState(
   Iterable<PlayerState>? players,
   Iterable<MonsterInstance>? monsters,
   Iterable<BoilToken>? boils,
+  Iterable<TripwireTrap>? tripwires,
   Iterable<ReserveHero>? reserveHeroes,
   Map<PlayerId, ReserveHero>? queuedReplacements,
   Iterable<CardId>? chestCards,
+  Iterable<CardId>? exhaustedChestRobots,
   Map<DeckId, DeckState>? decks,
   QuestState? quests,
   Iterable<IncomingDamage>? pendingDamage,
@@ -208,9 +226,11 @@ GameState _copyState(
   players: players ?? state.players,
   monsters: monsters ?? state.monsters,
   boils: boils ?? state.boils,
+  tripwires: tripwires ?? state.tripwires,
   reserveHeroes: reserveHeroes ?? state.reserveHeroes,
   queuedReplacements: queuedReplacements ?? state.queuedReplacements,
   chestCards: chestCards ?? state.chestCards,
+  exhaustedChestRobots: exhaustedChestRobots ?? state.exhaustedChestRobots,
   conditionCards: state.conditionCards,
   cardDefinitions: state.cardDefinitions,
   eventDefinitions: state.eventDefinitions,

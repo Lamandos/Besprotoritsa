@@ -2196,6 +2196,9 @@
             {
               "type": "heal",
               "amount": 2
+            },
+            {
+              "type": "ready_robots"
             }
           ],
           "failureEffects": [

@@ -78,6 +78,64 @@ void main() {
     },
   );
 
+  test('BUG072 GHB-DTN movement advances an arrive objective', () {
+    const destination = HexCoord(0, 2);
+    final state = _mvpState(
+      corridorOpened: true,
+      crewMessOpened: true,
+      playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+      storyQuestIds: const ['arrive-crew-mess'],
+      questDefinitions: {
+        'arrive-crew-mess': {
+          'id': 'arrive-crew-mess',
+          'number': 1,
+          'chapter': 1,
+          'conditions': [
+            {
+              'id': 'reach-crew-mess',
+              'type': 'arrive',
+              'locationId': 'crew-mess',
+            },
+          ],
+          'reward': {'credits': 0, 'items': <Object?>[]},
+          'nextQuestIds': <Object?>[],
+          'nameKey': 'arrive-crew-mess.name',
+          'descKey': 'arrive-crew-mess.description',
+        },
+      },
+      cardDefinitions: {
+        'ghb-dtn': CardDefinition(
+          id: 'ghb-dtn',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+        ),
+      },
+    );
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand('ghb-dtn', targetCoord: destination),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.single.coord, destination);
+    expect(
+      result
+          .state
+          .quests
+          .conditionProgress['arrive-crew-mess']?['reach-crew-mess'],
+      1,
+    );
+    expect(
+      result.state.quests.statusOf('arrive-crew-mess'),
+      QuestStatus.completed,
+    );
+  });
+
   test('runtime event definitions drive options and skill checks', () {
     var state = _mvpState(
       eventId: 'runtime-event',
@@ -106,6 +164,433 @@ void main() {
     final context = roll.context! as SkillCheckContext;
     expect(context.stat, StatType.science);
     expect(context.difficulty, 2);
+  });
+
+  test('BUG066 tripwire kill resets movement for the next monster', () {
+    final state = _mvpState(
+      playerCoord: const HexCoord(0, 2),
+      corridorOpened: true,
+      crewMessOpened: true,
+      monsters: [
+        MonsterInstance(
+          instanceId: 'tripwire-target',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          movement: 2,
+        ),
+        MonsterInstance(
+          instanceId: 'movement-follower',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          movement: 2,
+        ),
+      ],
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'bug066-tripwire',
+          coord: HexCoord(0, 1),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+    );
+
+    final result = step(state, const EndTurnCommand(), FixedDiceRoller([]));
+
+    expect(result.state.monsters, hasLength(1));
+    expect(result.state.monsters.single.instanceId, 'movement-follower');
+    expect(result.state.monsters.single.coord, const HexCoord(0, 2));
+  });
+
+  test('BUG073 tripwire triggers on a Restless spawned by hero death', () {
+    final state = _mvpState(
+      playerDamage: 1,
+      playerHealth: 1,
+      heroCount: 2,
+      additionalDecks: {'supplies': DeckState(drawPile: const [])},
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'bug073-tripwire',
+          coord: HexCoord(0, 0),
+          ownerId: 'hero-2',
+          cardId: 'tripwire',
+        ),
+      ],
+    );
+
+    final result = resolveHeroDeaths(state);
+
+    expect(result.monsters, isEmpty);
+    expect(result.tripwires, isEmpty);
+    expect(result.decks['supplies']!.discardPile, contains('tripwire'));
+    expect(result.log, contains('tripwire-triggered:hero-2:restless'));
+  });
+
+  test(
+    'BUG077 tripwire arrival does not reattack from a stationary monster',
+    () {
+      const destination = HexCoord(0, 0);
+      final state = _mvpState(
+        additionalDecks: {'supplies': DeckState(drawPile: const [])},
+        monsters: [
+          MonsterInstance(
+            instanceId: 'stationary-monster',
+            monsterId: 'ghoul',
+            coord: destination,
+            damage: 0,
+            attack: 1,
+            movement: 0,
+          ),
+          MonsterInstance(
+            instanceId: 'arriving-monster',
+            monsterId: 'ghoul',
+            coord: destination,
+            damage: 0,
+          ),
+        ],
+        tripwires: const [
+          TripwireTrap(
+            instanceId: 'bug077-tripwire',
+            coord: destination,
+            ownerId: 'ada',
+            cardId: 'tripwire',
+          ),
+        ],
+      );
+
+      final result = resolveColocation(
+        state,
+        coord: destination,
+        monsterInstanceId: 'arriving-monster',
+      );
+
+      expect(result.monsters.map((monster) => monster.instanceId), [
+        'stationary-monster',
+      ]);
+      expect(result.pendingDecision, isNull);
+      expect(result.pendingDamage, isEmpty);
+    },
+  );
+
+  test('BUG080 GHB-DTN rejects a move to the current sector', () {
+    const currentSector = HexCoord(0, 0);
+    final state = _mvpState(
+      playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+      cardDefinitions: {
+        'ghb-dtn': CardDefinition(
+          id: 'ghb-dtn',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+        ),
+      },
+      monsters: [
+        MonsterInstance(
+          instanceId: 'stationary-monster',
+          monsterId: 'ghoul',
+          coord: currentSector,
+          damage: 0,
+          attack: 1,
+          movement: 0,
+        ),
+      ],
+    );
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand('ghb-dtn', targetCoord: currentSector),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isNotNull);
+    expect(result.state.players.single.coord, currentSector);
+    expect(result.state.players.single.exhaustedRobots, isEmpty);
+  });
+
+  test('BUG081 tripwire reward survives its dead owner replacement', () {
+    const sector = HexCoord(0, 0);
+    final state = _mvpState(
+      playerDamage: 3,
+      playerAlive: false,
+      queuedReplacements: {
+        'ada': ReserveHero(
+          characterId: 'guard-reserve',
+          health: 3,
+          stats: const PlayerStats(science: 1, agility: 1),
+        ),
+      },
+      additionalDecks: {
+        'supplies': DeckState(drawPile: const ['medkit']),
+      },
+      cardDefinitions: {
+        'medkit': CardDefinition(
+          id: 'medkit',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'supplies',
+          behaviorIds: const ['health.restoreAll'],
+        ),
+      },
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'dead-owner-tripwire',
+          coord: sector,
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+      monsters: [
+        MonsterInstance(
+          instanceId: 'reward-monster',
+          monsterId: 'ghoul',
+          coord: sector,
+          damage: 0,
+          defeatRewardDeckId: 'supplies',
+        ),
+      ],
+    );
+
+    final triggered = resolveColocation(
+      state,
+      coord: sector,
+      monsterInstanceId: 'reward-monster',
+    );
+    final replaced = step(
+      triggered,
+      const EndTurnCommand(),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(replaced.players.single.alive, isTrue);
+    expect(replaced.players.single.backpack, contains('medkit'));
+  });
+
+  test('BUG081 tripwire Restless loot survives its dead owner replacement', () {
+    const sector = HexCoord(0, 0);
+    final state = _mvpState(
+      playerDamage: 3,
+      playerAlive: false,
+      queuedReplacements: {
+        'ada': ReserveHero(
+          characterId: 'guard-reserve',
+          health: 3,
+          stats: const PlayerStats(science: 1, agility: 1),
+        ),
+      },
+      cardDefinitions: {
+        'medkit': CardDefinition(
+          id: 'medkit',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'supplies',
+          behaviorIds: const ['health.restoreAll'],
+        ),
+      },
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'dead-owner-tripwire',
+          coord: sector,
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+      monsters: [
+        RestlessMonster(
+          instanceId: 'restless-on-tripwire',
+          coord: sector,
+          attack: 1,
+          defense: 0,
+          carriedGear: const ['medkit'],
+        ),
+      ],
+    );
+
+    final triggered = resolveColocation(
+      state,
+      coord: sector,
+      monsterInstanceId: 'restless-on-tripwire',
+    );
+    final replaced = step(
+      triggered,
+      const EndTurnCommand(),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(replaced.players.single.alive, isTrue);
+    expect(replaced.players.single.backpack, contains('medkit'));
+  });
+
+  test(
+    'BUG081 tripwire reward survives own-death spawn before '
+    'replacement selection',
+    () {
+      const sector = HexCoord(0, 0);
+      final state = _mvpState(
+        playerDamage: 3,
+        playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+        reserveHeroes: [
+          ReserveHero(
+            characterId: 'guard-reserve',
+            health: 3,
+            stats: const PlayerStats(science: 1, agility: 1),
+          ),
+        ],
+        cardDefinitions: {
+          'ghb-dtn': CardDefinition(
+            id: 'ghb-dtn',
+            type: ItemType.robot,
+            slots: const [ItemSlot.robot],
+            cost: 0,
+            staticEffects: CardStaticEffects(const {}),
+            behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+          ),
+        },
+        tripwires: const [
+          TripwireTrap(
+            instanceId: 'own-death-tripwire',
+            coord: sector,
+            ownerId: 'ada',
+            cardId: 'tripwire',
+          ),
+        ],
+      );
+
+      final dead = resolveHeroDeaths(state);
+      expect(dead.pendingDecision, isA<AwaitingHeroReplacement>());
+      expect(dead.tripwires, isEmpty);
+      expect(dead.players.single.backpack, contains('ghb-dtn'));
+
+      final selected = step(
+        dead,
+        const ResolvePendingDecisionCommand(
+          SelectReplacementHeroChoice('guard-reserve'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(
+        selected.queuedReplacements['ada']?.backpack,
+        contains('ghb-dtn'),
+      );
+
+      final activated = step(
+        selected,
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      ).state;
+      expect(activated.players.single.characterId, 'guard-reserve');
+      expect(activated.players.single.backpack, contains('ghb-dtn'));
+    },
+  );
+
+  test('BUG065 ready robots event preserves exhaustion in the chest', () {
+    var state = _mvpState(
+      eventId: 'ready-robots-event',
+      playerBackpack: const ['r69-nic3'],
+      playerExhaustedRobots: const ['r69-nic3'],
+      cardDefinitions: {
+        'r69-nic3': CardDefinition(
+          id: 'r69-nic3',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          behaviorIds: const ['robot.exhaust', 'robot.ignoreEnemyFeatures'],
+        ),
+      },
+      eventDefinitions: {
+        'ready-robots-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'successEffects': [
+                {'type': 'ready_robots'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+
+    state = step(
+      state,
+      const DepositIntoChestCommand('r69-nic3'),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.chestCards, contains('r69-nic3'));
+    expect(state.exhaustedChestRobots, contains('r69-nic3'));
+    expect(state.players.single.exhaustedRobots, isNot(contains('r69-nic3')));
+
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.phase, GamePhase.playersTurn);
+    expect(state.log, contains('event-robots-ready:ada'));
+    expect(state.exhaustedChestRobots, contains('r69-nic3'));
+    expect(state.players.single.exhaustedRobots, isNot(contains('r69-nic3')));
+
+    state = step(
+      state,
+      const WithdrawFromChestCommand('r69-nic3'),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.backpack, contains('r69-nic3'));
+    expect(state.players.single.exhaustedRobots, contains('r69-nic3'));
+    expect(state.exhaustedChestRobots, isEmpty);
+  });
+
+  test('BUG053 defibrillator is unavailable during event skill checks', () {
+    var state = _mvpState(
+      eventId: 'event-check',
+      playerBackpack: const ['defibrillator'],
+      eventDefinitions: {
+        'event-check': {
+          'options': [
+            {
+              'skillCheck': {'skill': 'science', 'difficulty': 1},
+            },
+          ],
+        },
+      },
+      cardDefinitions: {
+        'defibrillator': CardDefinition(
+          id: 'defibrillator',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 8,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'supplies',
+          behaviorIds: const [
+            'card.discardCost',
+            'dice.reroll.anyCountPerAttack',
+          ],
+        ),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([6]),
+    ).state;
+
+    final pending = state.pendingDecision! as AwaitingRerollChoice;
+    expect(pending.availableRerolls, 0);
+    expect(pending.rerollSources, isNot(contains('defibrillator')));
+    expect(state.players.single.backpack, contains('defibrillator'));
   });
 
   test('invasion lets the player choose any open sector', () {
@@ -155,6 +640,186 @@ void main() {
     ).state;
 
     expect(state.monsters.single.coord, const HexCoord(0, 1));
+  });
+
+  test('BUG059 invasion spawn triggers a tripwire', () {
+    var state = _mvpState(
+      eventId: 'invasion-tripwire',
+      corridorOpened: true,
+      eventDefinitions: {
+        'invasion-tripwire': {
+          'id': 'invasion-tripwire',
+          'immediateCombat': true,
+          'spawn': {'behaviorId': 'monster.spawn', 'target': 'openSector'},
+          'options': [
+            {
+              'skillCheck': null,
+              'behaviorId': 'monster.spawn',
+              'resolution': 'immediate',
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 0,
+          'movement': 0,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+        'supplies': DeckState(drawPile: const []),
+      },
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'invasion-tripwire-trap',
+          coord: HexCoord(0, 1),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('sector:0:1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.tripwires, isEmpty);
+    expect(state.decks['supplies']!.discardPile, contains('tripwire'));
+    expect(state.decks['monsters']!.discardPile, contains('ghoul'));
+  });
+
+  test('BUG062 move-and-spawn event resolves its destination tripwire', () {
+    var state = _mvpState(
+      eventId: 'pack-tripwire',
+      corridorOpened: true,
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'pack-event-tripwire',
+          coord: HexCoord(0, 1),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+      eventDefinitions: {
+        'pack-tripwire': {
+          'id': 'pack-tripwire',
+          'options': [
+            {
+              'skillCheck': {'skill': 'endurance', 'difficulty': 1},
+              'successEffects': [
+                {'type': 'move_to_neighbor'},
+              ],
+              'failureEffects': [
+                {'type': 'move_to_neighbor_and_spawn_monster'},
+              ],
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 1,
+          'movement': 0,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+        'supplies': DeckState(drawPile: const []),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([1]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        EventOptionChoice('move_spawn:1:0:1'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.tripwires, isEmpty);
+    expect(state.pendingDecision, isNull);
+    expect(state.decks['supplies']!.discardPile, contains('tripwire'));
+    expect(state.decks['monsters']!.discardPile, contains('ghoul'));
+  });
+
+  test('BUG062 adjacent event spawns resolve each tripwire arrival', () {
+    var state = _mvpState(
+      eventId: 'adjacent-tripwire',
+      corridorOpened: true,
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'adjacent-event-tripwire',
+          coord: HexCoord(0, 1),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+      eventDefinitions: {
+        'adjacent-tripwire': {
+          'id': 'adjacent-tripwire',
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'failure',
+              'failureEffects': [
+                {'type': 'spawn_monsters_adjacent'},
+              ],
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 1,
+          'movement': 1,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+        'supplies': DeckState(drawPile: const []),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.tripwires, isEmpty);
+    expect(state.decks['supplies']!.discardPile, contains('tripwire'));
+    expect(state.decks['monsters']!.discardPile, contains('ghoul'));
   });
 
   test('invasion lets the player choose any closed fallback sector', () {
@@ -365,6 +1030,63 @@ void main() {
 
     expect(state.players.single.damage, 2);
     expect(state.players.single.credits, 0);
+  });
+
+  test('BUG040 PROT3-CT blocks direct event damage to its owner', () {
+    var state = _mvpState(
+      eventId: 'immune-damage-event',
+      heroCount: 2,
+      playerEquipment: const EquippedGear(robot: 'prot3-ct'),
+      playerHealth: 10,
+      cardDefinitions: {
+        'prot3-ct': CardDefinition(
+          id: 'prot3-ct',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'items',
+          behaviorIds: const [
+            'robot.exhaust',
+            'damage.ignoreAnyUntilRoundEnd',
+          ],
+        ),
+      },
+      eventDefinitions: {
+        'immune-damage-event': {
+          'id': 'immune-damage-event',
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'successEffects': [
+                {'type': 'damage', 'amount': 1},
+                {'type': 'damage_all_players', 'amount': 1},
+                {'type': 'damage_roll_die'},
+                {'type': 'damage_each_player_roll_die'},
+              ],
+              'failureEffects': <Object?>[],
+            },
+          ],
+        },
+      },
+    );
+    state = step(
+      state,
+      const UseCardAbilityCommand('prot3-ct'),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    expect(state.pendingDecision, isA<AwaitingEventOption>());
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([2, 3, 4]),
+    ).state;
+
+    expect(state.players.first.damage, 0);
+    expect(state.players.last.damage, 5);
   });
 
   test('combat-strength event bonus adds a die to later attacks', () {
@@ -675,6 +1397,59 @@ void main() {
     expect(state.decks['items']!.drawPile, isEmpty);
   });
 
+  test('BUG055 event monster spawn triggers a tripwire', () {
+    var state = _mvpState(
+      eventId: 'trap-event',
+      eventDefinitions: {
+        'trap-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'successEffects': [
+                {'type': 'spawn_monster'},
+              ],
+              'failureEffects': [
+                {'type': 'no_effect'},
+              ],
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 1,
+          'movement': 1,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+        'supplies': DeckState(drawPile: const []),
+      },
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'event-tripwire',
+          coord: HexCoord(0, 0),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.tripwires, isEmpty);
+    expect(state.decks['supplies']!.discardPile, contains('tripwire'));
+  });
+
   test(
     'events without a printed check use their declared automatic outcome',
     () {
@@ -825,6 +1600,61 @@ void main() {
     ).state;
 
     expect(state.players.single.damage, 4);
+    expect(state.players.single.backpack, ['ration', 'flare']);
+  });
+
+  test('BUG044 horde keep respects PROT3-CT damage immunity', () {
+    final shield = CardDefinition(
+      id: 'proton-shield',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['card.discardCost', 'damage.preventUntilRoundEnd'],
+    );
+    var state = _mvpState(
+      eventId: 'horde-carry',
+      playerBackpack: const ['proton-shield', 'ration', 'flare'],
+      playerHealth: 10,
+      cardDefinitions: {'proton-shield': shield},
+      additionalDecks: {'supplies': DeckState(drawPile: const [])},
+      eventDefinitions: {
+        'horde-carry': {
+          'id': 'horde-carry',
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+              'failureEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(
+      state,
+      const UseCardAbilityCommand('proton-shield'),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('horde|keep')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.damage, 0);
     expect(state.players.single.backpack, ['ration', 'flare']);
   });
 
@@ -1220,6 +2050,122 @@ void main() {
       state.players.every((hero) => hero.coord != const HexCoord(0, 1)),
       isTrue,
     );
+  });
+
+  test(
+    'BUG048 asteroid relocation triggers a tripwire on the arrival tile',
+    () {
+      var state = _mvpState(
+        eventId: 'asteroid-alert',
+        corridorOpened: true,
+        tripwires: const [
+          TripwireTrap(
+            instanceId: 'tripwire-at-start',
+            coord: HexCoord(0, 0),
+            ownerId: 'ada',
+            cardId: 'tripwire',
+          ),
+        ],
+        monsters: [
+          MonsterInstance(
+            instanceId: 'corridor-ghoul',
+            monsterId: 'ghoul',
+            coord: const HexCoord(0, 1),
+            damage: 0,
+            attack: 1,
+            movement: 0,
+          ),
+        ],
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 2,
+            'defense': 0,
+            'attack': 1,
+            'movement': 0,
+            'features': <String>[],
+          },
+        },
+        additionalDecks: {
+          'supplies': DeckState(drawPile: const []),
+        },
+        eventDefinitions: {
+          'asteroid-alert': {
+            'options': [
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'asteroid_alert'},
+                ],
+                'failureEffects': [
+                  {'type': 'asteroid_alert'},
+                ],
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([1]),
+      ).state;
+
+      expect(state.monsters, isEmpty);
+      expect(state.tripwires, isEmpty);
+      expect(state.decks['supplies']!.discardPile, contains('tripwire'));
+      expect(state.pendingDecision, isNull);
+    },
+  );
+
+  test('BUG044 asteroid alert respects PROT3-CT damage immunity', () {
+    final shield = CardDefinition(
+      id: 'proton-shield',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['card.discardCost', 'damage.preventUntilRoundEnd'],
+    );
+    var state = _mvpState(
+      eventId: 'asteroid-alert',
+      playerCoord: const HexCoord(0, 1),
+      playerBackpack: const ['proton-shield'],
+      corridorOpened: true,
+      cardDefinitions: {'proton-shield': shield},
+      additionalDecks: {'supplies': DeckState(drawPile: const [])},
+      eventDefinitions: {
+        'asteroid-alert': {
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'asteroid_alert'},
+              ],
+              'failureEffects': [
+                {'type': 'asteroid_alert'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(
+      state,
+      const UseCardAbilityCommand('proton-shield'),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([5]),
+    ).state;
+
+    expect(state.players.single.damage, 0);
   });
 
   test(
@@ -1795,6 +2741,7 @@ void main() {
         FixedDiceRoller([]),
       ).state;
       expect(state.players.single.monsterDefenseBonusRound, state.round);
+      expect(state.players.single.monsterDefenseBonus, 1);
     },
   );
 
@@ -2228,6 +3175,153 @@ void main() {
     );
   });
 
+  test('BUG075 recharging a robot advances the Robot Owner task', () {
+    const targetRobotId = 'r69-nic3';
+    final state = _mvpState(
+      playerBackpack: const ['power-cell', 'power-cell'],
+      playerEquipment: const EquippedGear(robot: targetRobotId),
+      personalTasksByPlayer: const {
+        'ada': ['robot-owner-test'],
+      },
+      taskDefinitions: {
+        'robot-owner-test': {
+          'id': 'robot-owner-test',
+          'targetType': 'metric',
+          'metric': 'robot_reloaded',
+          'targetValue': 2,
+          'window': 'game',
+          'aggregation': 'sum',
+          'rewardCredits': 5,
+          'nameKey': 'task.robot-owner.name',
+          'descKey': 'task.robot-owner.description',
+        },
+      },
+      cardDefinitions: {
+        targetRobotId: CardDefinition(
+          id: targetRobotId,
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'items',
+          behaviorIds: const ['robot.exhaust', 'robot.ignoreEnemyFeatures'],
+        ),
+        'power-cell': CardDefinition(
+          id: 'power-cell',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 7,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'supplies',
+          behaviorIds: const ['card.discardCost', 'robot.ready'],
+        ),
+      },
+      additionalDecks: {
+        'supplies': DeckState(drawPile: const []),
+      },
+    );
+
+    var reloaded = state;
+    for (var cycle = 0; cycle < 2; cycle++) {
+      reloaded = step(
+        reloaded,
+        const UseCardAbilityCommand(targetRobotId),
+        FixedDiceRoller([]),
+      ).state;
+      expect(reloaded.players.single.exhaustedRobots, contains(targetRobotId));
+
+      reloaded = step(
+        reloaded,
+        const UseCardAbilityCommand('power-cell', targetCardId: targetRobotId),
+        FixedDiceRoller([]),
+      ).state;
+      expect(
+        reloaded.players.single.exhaustedRobots,
+        isNot(contains(targetRobotId)),
+      );
+    }
+
+    expect(reloaded.quests.statusOf('robot-owner-test'), QuestStatus.completed);
+    expect(
+      reloaded
+          .quests
+          .conditionProgress['robot-owner-test']?['personal-task-value'],
+      2,
+    );
+    expect(reloaded.players.single.credits, 5);
+  });
+
+  test('BUG047 gas cylinder kill completes the hunter personal task', () {
+    final gasCylinder = CardDefinition(
+      id: 'gas-cylinder',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 6,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['action.spend', 'monster.killNonBoss'],
+    );
+    final state = step(
+      _mvpState(
+        playerBackpack: const ['gas-cylinder'],
+        cardDefinitions: {'gas-cylinder': gasCylinder},
+        additionalDecks: {'supplies': DeckState(drawPile: const [])},
+        personalTasksByPlayer: const {
+          'ada': ['hunter-gas'],
+        },
+        conditionProgress: const {
+          'hunter-gas': {
+            'personal-task-value': 1,
+            'personal-task-turn': 1,
+          },
+        },
+        taskDefinitions: {
+          'hunter-gas': {
+            'id': 'hunter-gas',
+            'targetType': 'metric',
+            'metric': 'enemies_killed',
+            'targetValue': 2,
+            'window': 'perTurn',
+            'aggregation': 'sum',
+            'rewardCredits': 5,
+            'nameKey': 'task.hunter.name',
+            'descKey': 'task.hunter.description',
+          },
+        },
+        monsters: [
+          MonsterInstance(
+            instanceId: 'gas-target',
+            monsterId: 'ghoul',
+            coord: const HexCoord(0, 0),
+            damage: 0,
+          ),
+        ],
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 2,
+            'defense': 0,
+            'attack': 1,
+            'movement': 1,
+            'features': <String>[],
+          },
+        },
+      ),
+      const UseCardAbilityCommand(
+        'gas-cylinder',
+        targetMonsterInstanceId: 'gas-target',
+      ),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.quests.statusOf('hunter-gas'), QuestStatus.completed);
+    expect(
+      state.quests.conditionProgress['hunter-gas']?['personal-task-value'],
+      2,
+    );
+    expect(state.players.single.credits, 5);
+  });
+
   test('immediate event counterattack advances personal kill tasks', () {
     var state = _mvpState(
       eventId: 'invasion-card',
@@ -2495,6 +3589,95 @@ void main() {
     expect(state.quests.statusOf('quest-05'), QuestStatus.active);
     expect(state.quests.statusOf('quest-06'), QuestStatus.completed);
     expect(state.players.map((player) => player.damage), [2, 2]);
+  });
+
+  test('BUG063 quest completion damage respects any-damage immunity', () {
+    final sharedQuests = <String, Map<String, Object?>>{
+      'quest-05': {
+        'id': 'quest-05',
+        'number': 5,
+        'chapter': 4,
+        'conditions': [
+          {'id': 'medicine', 'type': 'collect_item', 'itemId': 'medicine'},
+        ],
+        'reward': {'credits': 0, 'items': <Object?>[]},
+        'nextQuestIds': <Object?>[],
+        'nameKey': 'quest-05.name',
+        'descKey': 'quest-05.description',
+      },
+      'quest-06': {
+        'id': 'quest-06',
+        'number': 6,
+        'chapter': 5,
+        'conditions': [
+          {
+            'id': 'engine-check',
+            'type': 'skill_check',
+            'skill': 'science',
+            'locationId': 'crew-mess',
+          },
+        ],
+        'completionEffects': [
+          {
+            'type': 'damage_all_players_if_quest_active',
+            'questId': 'quest-05',
+            'amount': 2,
+          },
+        ],
+        'reward': {'credits': 0, 'items': <Object?>[]},
+        'nextQuestIds': <Object?>[],
+        'nameKey': 'quest-06.name',
+        'descKey': 'quest-06.description',
+      },
+    };
+    final shields = <({String id, bool robot})>[
+      (id: 'prot3-ct', robot: true),
+      (id: 'proton-shield', robot: false),
+    ];
+    final damageTaken = <int>[];
+    for (final shield in shields) {
+      final card = CardDefinition(
+        id: shield.id,
+        type: shield.robot ? ItemType.robot : ItemType.supply,
+        slots: shield.robot ? const [ItemSlot.robot] : const [],
+        cost: 0,
+        staticEffects: CardStaticEffects(const {}),
+        sourceDeck: shield.robot ? 'items' : 'supplies',
+        behaviorIds: shield.robot
+            ? const ['robot.exhaust', 'damage.ignoreAnyUntilRoundEnd']
+            : const ['card.discardCost', 'damage.preventUntilRoundEnd'],
+      );
+      var state = _mvpState(
+        playerCoord: const HexCoord(0, 2),
+        playerHealth: 10,
+        playerBackpack: shield.robot ? const [] : [shield.id],
+        playerEquipment: shield.robot
+            ? EquippedGear(robot: shield.id)
+            : const EquippedGear(),
+        storyQuestIds: const ['quest-05', 'quest-06'],
+        questDefinitions: sharedQuests,
+        cardDefinitions: {shield.id: card},
+        additionalDecks: {'supplies': DeckState(drawPile: const [])},
+      );
+      state = step(
+        state,
+        UseCardAbilityCommand(shield.id),
+        FixedDiceRoller([]),
+      ).state;
+      state = step(
+        state,
+        const SkillCheckCommand(StatType.science),
+        FixedDiceRoller([6]),
+      ).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(KeepRollChoice()),
+        FixedDiceRoller([]),
+      ).state;
+      damageTaken.add(state.players.single.damage);
+    }
+
+    expect(damageTaken, [0, 0]);
   });
 
   test('killing a monster advances damage-token quest counters', () {
@@ -2898,18 +4081,24 @@ GameState _mvpState({
   Map<String, Map<String, Object?>> questDefinitions = const {},
   Map<String, Map<String, Object?>> taskDefinitions = const {},
   Map<CardId, CardDefinition> cardDefinitions = const {},
+  Iterable<CardId> playerExhaustedRobots = const [],
   Map<DeckId, DeckState> additionalDecks = const {},
   Iterable<MonsterInstance> monsters = const [],
   Iterable<BoilToken> boils = const [],
+  Iterable<TripwireTrap> tripwires = const [],
   Map<String, Map<String, Object?>> monsterDefinitions = const {},
   int heroCount = 1,
+  int playerDamage = 0,
+  bool playerAlive = true,
   int secondHeroDamage = 0,
   Iterable<ReserveHero> reserveHeroes = const [],
+  Map<PlayerId, ReserveHero> queuedReplacements = const {},
   int initialCredits = 0,
   int playerHealth = 3,
   PlayerStats playerStats = const PlayerStats(science: 1, agility: 1),
   VentColor corridorVentColor = VentColor.none,
   bool corridorOpened = false,
+  bool crewMessOpened = false,
 }) => GameState(
   seed: 17,
   round: 1,
@@ -2936,7 +4125,7 @@ GameState _mvpState({
       id: 'crew-mess',
       coord: const HexCoord(0, 2),
       type: HexTileType.compartment,
-      opened: false,
+      opened: crewMessOpened,
       exits: const {HexEdge.north},
       locationId: 'crew-mess',
     ),
@@ -2947,21 +4136,28 @@ GameState _mvpState({
         id: index == 0 ? 'ada' : 'hero-${index + 1}',
         characterId: index == 0 ? 'engineer' : 'guard',
         coord: playerCoord,
-        damage: index == 1 ? secondHeroDamage : 0,
+        damage: index == 0
+            ? playerDamage
+            : index == 1
+            ? secondHeroDamage
+            : 0,
         credits: initialCredits,
         health: playerHealth,
         backpack: playerBackpack,
         equipped: playerEquipment,
+        exhaustedRobots: playerExhaustedRobots,
         carriedMods: const [],
         implanted: const [],
         conditions: const [],
-        alive: true,
+        alive: playerAlive,
         stats: playerStats,
       ),
   ],
   monsters: monsters,
   boils: boils,
+  tripwires: tripwires,
   reserveHeroes: reserveHeroes,
+  queuedReplacements: queuedReplacements,
   decks: {
     'events': DeckState(drawPile: [eventId]),
     ...additionalDecks,
