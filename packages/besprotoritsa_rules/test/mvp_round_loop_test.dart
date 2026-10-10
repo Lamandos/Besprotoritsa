@@ -136,6 +136,49 @@ void main() {
     );
   });
 
+  test('BUG086 GHB-DTN resolves colocation on every path step', () {
+    const destination = HexCoord(0, 2);
+    final state = _mvpState(
+      corridorOpened: true,
+      crewMessOpened: true,
+      playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+      monsters: [
+        MonsterInstance(
+          instanceId: 'intermediate-monster',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 1),
+          damage: 0,
+          attack: 1,
+          movement: 0,
+        ),
+      ],
+      cardDefinitions: {
+        'ghb-dtn': CardDefinition(
+          id: 'ghb-dtn',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+        ),
+      },
+    );
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand('ghb-dtn', targetCoord: destination),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.single.coord, destination);
+    expect(result.state.pendingDecision, isA<AwaitingDodge>());
+    expect(
+      result.state.players.single.exhaustedRobots,
+      contains('ghb-dtn'),
+    );
+  });
+
   test('runtime event definitions drive options and skill checks', () {
     var state = _mvpState(
       eventId: 'runtime-event',
@@ -429,6 +472,69 @@ void main() {
       expect(replaced.players.single.alive, isTrue);
       expect(replaced.players.single.backpack, contains('r69-nic3'));
       expect(replaced.players.single.exhaustedRobots, contains('r69-nic3'));
+    },
+  );
+
+  test(
+    'BUG087 replacement keeps exhaustion on a tripwire-returned robot',
+    () {
+      const sector = HexCoord(0, 0);
+      final state = _mvpState(
+        playerDamage: 3,
+        playerEquipment: const EquippedGear(robot: 'r69-nic3'),
+        playerExhaustedRobots: const ['r69-nic3'],
+        reserveHeroes: [
+          ReserveHero(
+            characterId: 'guard-reserve',
+            health: 3,
+            stats: const PlayerStats(science: 1, agility: 1),
+          ),
+        ],
+        cardDefinitions: {
+          'r69-nic3': CardDefinition(
+            id: 'r69-nic3',
+            type: ItemType.robot,
+            slots: const [ItemSlot.robot],
+            cost: 0,
+            staticEffects: CardStaticEffects(const {}),
+            behaviorIds: const ['robot.exhaust', 'robot.ignoreEnemyFeatures'],
+          ),
+        },
+        tripwires: const [
+          TripwireTrap(
+            instanceId: 'bug087-tripwire',
+            coord: sector,
+            ownerId: 'ada',
+            cardId: 'tripwire',
+          ),
+        ],
+      );
+
+      final dead = resolveHeroDeaths(state);
+      expect(dead.pendingDecision, isA<AwaitingHeroReplacement>());
+      expect(dead.players.single.backpack, contains('r69-nic3'));
+      expect(dead.players.single.exhaustedRobots, contains('r69-nic3'));
+
+      final selected = step(
+        dead,
+        const ResolvePendingDecisionCommand(
+          SelectReplacementHeroChoice('guard-reserve'),
+        ),
+        FixedDiceRoller([]),
+      );
+      expect(selected.rejection, isNull);
+      expect(
+        selected.state.queuedReplacements['ada']?.exhaustedRobots,
+        contains('r69-nic3'),
+      );
+
+      final activated = step(
+        selected.state,
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      ).state;
+      expect(activated.players.single.characterId, 'guard-reserve');
+      expect(activated.players.single.exhaustedRobots, contains('r69-nic3'));
     },
   );
 

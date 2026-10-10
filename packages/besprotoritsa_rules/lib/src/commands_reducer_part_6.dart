@@ -208,6 +208,13 @@ GameStepResult _resolveHeroReplacement(
         cardId,
         state.cardDefinitions,
       );
+      if (deceased.exhaustedRobots.contains(cardId) &&
+          !recipient.exhaustedRobots.contains(cardId)) {
+        recipient = _copyPlayer(
+          recipient,
+          exhaustedRobots: [...recipient.exhaustedRobots, cardId],
+        );
+      }
     } on BackpackCapacityExceeded {
       unclaimed.add(cardId);
     } on InventoryRuleViolation {
@@ -224,7 +231,7 @@ GameStepResult _resolveHeroReplacement(
       equipped: recipient.equipped,
       carriedMods: [...recipient.carriedMods, ...deceased.carriedMods],
       implanted: [...recipient.implanted, ...deceased.implanted],
-      exhaustedRobots: reserve.exhaustedRobots,
+      exhaustedRobots: recipient.exhaustedRobots,
     ),
     unclaimed: unclaimed,
   );

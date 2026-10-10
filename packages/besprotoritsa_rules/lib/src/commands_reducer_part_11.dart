@@ -136,15 +136,17 @@ CommandRejection? _validateCardAbility(
       final destination = command.targetCoord == null
           ? null
           : state.tileAt(command.targetCoord!);
+      final path = targetPlayer == null || destination == null
+          ? null
+          : _heroPath(state, targetPlayer.coord, destination.coord);
       if (targetPlayer == null ||
           !targetPlayer.alive ||
           destination == null ||
           !destination.opened ||
           destination.isBlocked ||
           destination.coord == targetPlayer.coord ||
-          (_heroPathDistance(state, targetPlayer.coord, destination.coord) ??
-                  3) >
-              2) {
+          path == null ||
+          path.length - 1 > 2) {
         return const InventoryCommandRejected(
           'Выберите другой открытый сектор не дальше двух шагов от союзника.',
         );
@@ -373,29 +375,33 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
   if (command.cardId == 'ghb-dtn') {
     final targetId = command.targetPlayerId ?? player.id;
     final destination = command.targetCoord!;
-    final moved = _copyState(
-      state,
-      players: _replacePlayer(
-        state,
-        targetId,
-        (current) => _copyPlayer(current, coord: destination),
-      ),
+    final target = _playerById(state, targetId)!;
+    final path = _heroPath(state, target.coord, destination)!;
+    var moved = state;
+    for (final coord in path.skip(1)) {
+      moved = _copyState(
+        moved,
+        players: _replacePlayer(
+          moved,
+          targetId,
+          (current) => _copyPlayer(current, coord: coord),
+        ),
+      );
+      moved = resolveColocation(moved, coord: coord, playerId: targetId);
+      final locationId = moved.tileAt(coord)?.locationId;
+      if (locationId != null) {
+        moved = _applyFullQuestEvent(
+          moved,
+          QuestArrived(locationId),
+          playerId: targetId,
+        );
+      }
+    }
+    moved = _copyState(
+      moved,
       logEntry: 'robot-move:${player.id}:$targetId:$destination',
     );
-    final triggered = resolveColocation(
-      moved,
-      coord: destination,
-      playerId: targetId,
-    );
-    final locationId = triggered.tileAt(destination)?.locationId;
-    final questResolved = locationId == null
-        ? triggered
-        : _applyFullQuestEvent(
-            triggered,
-            QuestArrived(locationId),
-            playerId: targetId,
-          );
-    return _exhaustRobot(questResolved, player, command.cardId);
+    return _exhaustRobot(moved, player, command.cardId);
   }
 
   if (command.cardId == 'sc0-u7') {
@@ -651,28 +657,31 @@ GameState _exhaustRobot(
   logEntry: 'robot-exhausted:${player.id}:$cardId',
 );
 
-int? _heroPathDistance(GameState state, HexCoord start, HexCoord target) {
-  if (start == target) return 0;
-  final distances = <HexCoord, int>{start: 0};
-  final queue = <HexCoord>[start];
-  for (var index = 0; index < queue.length; index++) {
-    final current = queue[index];
+List<HexCoord>? _heroPath(GameState state, HexCoord start, HexCoord target) {
+  if (start == target) return [start];
+  final paths = <List<HexCoord>>[
+    [start],
+  ];
+  final visited = <HexCoord>{start};
+  for (var index = 0; index < paths.length; index++) {
+    final path = paths[index];
+    final current = path.last;
     final tile = state.tileAt(current);
     if (tile == null || !tile.opened || tile.isBlocked) continue;
-    for (final edge in tile.exits) {
+    for (final edge in HexEdge.values) {
+      if (!tile.hasExit(edge)) continue;
       final next = current.neighbor(edge);
       final neighbor = state.tileAt(next);
       if (neighbor == null ||
           !neighbor.opened ||
           neighbor.isBlocked ||
           !neighbor.hasExit(edge.opposite) ||
-          distances.containsKey(next)) {
+          !visited.add(next)) {
         continue;
       }
-      final distance = distances[current]! + 1;
-      if (next == target) return distance;
-      distances[next] = distance;
-      queue.add(next);
+      final nextPath = [...path, next];
+      if (next == target) return nextPath;
+      paths.add(nextPath);
     }
   }
   return null;
