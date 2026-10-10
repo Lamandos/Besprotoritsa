@@ -167,6 +167,67 @@ void main() {
     expect(activatedAgain.state.players.first.nextAttackBonusHits, 1);
   });
 
+  test('BUG076 GTU-B1c4 bonus is cleared when moving sectors', () {
+    final state = _state(
+      equippedRobot: 'gtu-b1c4',
+      monsters: [
+        MonsterInstance(
+          instanceId: 'first-fight',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 3,
+        ),
+      ],
+    );
+    final activated = step(
+      state,
+      const UseCardAbilityCommand('gtu-b1c4'),
+      SeededDiceRoller(149),
+    );
+
+    final moved = step(
+      activated.state,
+      const MoveCommand(HexCoord(1, 0)),
+      SeededDiceRoller(150),
+    );
+
+    expect(activated.rejection, isNull);
+    expect(moved.rejection, isNull);
+    expect(moved.state.players.first.coord, const HexCoord(1, 0));
+    expect(moved.state.players.first.nextAttackBonusHits, 0);
+  });
+
+  test('BUG076 GTU-B1c4 bonus is cleared when ending the turn', () {
+    final state = _state(
+      equippedRobot: 'gtu-b1c4',
+      monsters: [
+        MonsterInstance(
+          instanceId: 'first-fight',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 3,
+        ),
+      ],
+    );
+    final activated = step(
+      state,
+      const UseCardAbilityCommand('gtu-b1c4'),
+      SeededDiceRoller(151),
+    );
+
+    final endedTurn = step(
+      activated.state,
+      const EndTurnCommand(),
+      SeededDiceRoller(152),
+    );
+
+    expect(activated.rejection, isNull);
+    expect(endedTurn.rejection, isNull);
+    expect(endedTurn.state.players.first.nextAttackBonusHits, 0);
+  });
+
   test('BUG032 medic bag heals an adjacent hero for credits and an action', () {
     final state = _state(
       backpack: const ['medic-bag'],
