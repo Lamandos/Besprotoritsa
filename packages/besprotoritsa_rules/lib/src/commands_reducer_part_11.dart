@@ -51,9 +51,9 @@ CommandRejection? _validateCardAbility(
         target.coord == source?.coord ||
         !target.opened ||
         (target.isBlocked) ||
-        state.actionsLeft < 2) {
+        state.actionsLeft < 1) {
       return const InventoryCommandRejected(
-        'Выберите открытый шлюз; для перехода нужны 2 действия.',
+        'Выберите открытый шлюз; для перехода нужно 1 действие.',
       );
     }
     return null;
@@ -335,7 +335,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
   if (command.cardId == 'air-canister') {
     final target = command.targetCoord!;
     final moved = _discardUsedCard(state, player, command.cardId);
-    return _move(moved, target, 2).state;
+    return _move(moved, target, 1).state;
   }
 
   if (command.cardId == 'door-remote') {

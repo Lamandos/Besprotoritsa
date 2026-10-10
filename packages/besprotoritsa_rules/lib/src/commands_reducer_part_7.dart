@@ -1446,11 +1446,17 @@ GameState _resolveEventOutcome(
           logEntry: 'event-heal-all:$playerId',
         );
       case 'ready_robots':
+        final chestCards = current.chestCards.toSet();
         current = _copyState(
           current,
           players: [
             for (final hero in current.players)
-              _copyPlayer(hero, exhaustedRobots: const <CardId>[]),
+              _copyPlayer(
+                hero,
+                exhaustedRobots: hero.exhaustedRobots.where(
+                  chestCards.contains,
+                ),
+              ),
           ],
           logEntry: 'event-robots-ready:$playerId',
         );

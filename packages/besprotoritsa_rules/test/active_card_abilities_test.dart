@@ -468,7 +468,35 @@ void main() {
   );
 
   test(
-    'BUG032 air canister spends two actions and transfers between airlocks',
+    'BUG064 air canister transfers for one remaining action',
+    () {
+      final state = _state(
+        backpack: const ['air-canister'],
+        actionsLeft: 1,
+        board: [
+          _tile('source', const HexCoord(0, 0), HexTileType.airlock),
+          _tile('destination', const HexCoord(4, 0), HexTileType.airlock),
+        ],
+      );
+
+      final result = step(
+        state,
+        const UseCardAbilityCommand(
+          'air-canister',
+          targetCoord: HexCoord(4, 0),
+        ),
+        SeededDiceRoller(14),
+      );
+
+      expect(result.rejection, isNull);
+      expect(result.state.players.first.coord, const HexCoord(4, 0));
+      expect(result.state.actionsLeft, 0);
+      expect(result.state.players.first.backpack, isEmpty);
+    },
+  );
+
+  test(
+    'air canister spends one action and transfers between airlocks',
     () {
       final state = _state(
         backpack: const ['air-canister'],
@@ -490,7 +518,7 @@ void main() {
       expect(result.rejection, isNull);
       expect(result.state.players.first.coord, const HexCoord(4, 0));
       expect(result.state.players.first.backpack, isEmpty);
-      expect(result.state.actionsLeft, 0);
+      expect(result.state.actionsLeft, 1);
       expect(
         result.state.decks['supplies']!.discardPile,
         contains('air-canister'),

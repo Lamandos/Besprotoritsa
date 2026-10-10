@@ -108,6 +108,64 @@ void main() {
     expect(context.difficulty, 2);
   });
 
+  test('BUG065 ready robots event preserves exhaustion in the chest', () {
+    var state = _mvpState(
+      eventId: 'ready-robots-event',
+      playerBackpack: const ['r69-nic3'],
+      playerExhaustedRobots: const ['r69-nic3'],
+      cardDefinitions: {
+        'r69-nic3': CardDefinition(
+          id: 'r69-nic3',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          behaviorIds: const ['robot.exhaust', 'robot.ignoreEnemyFeatures'],
+        ),
+      },
+      eventDefinitions: {
+        'ready-robots-event': {
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'success',
+              'successEffects': [
+                {'type': 'ready_robots'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+
+    state = step(
+      state,
+      const DepositIntoChestCommand('r69-nic3'),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.chestCards, contains('r69-nic3'));
+    expect(state.players.single.exhaustedRobots, contains('r69-nic3'));
+
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.phase, GamePhase.playersTurn);
+    expect(state.log, contains('event-robots-ready:ada'));
+    expect(state.players.single.exhaustedRobots, contains('r69-nic3'));
+
+    state = step(
+      state,
+      const WithdrawFromChestCommand('r69-nic3'),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.single.backpack, contains('r69-nic3'));
+    expect(state.players.single.exhaustedRobots, contains('r69-nic3'));
+  });
+
   test('BUG053 defibrillator is unavailable during event skill checks', () {
     var state = _mvpState(
       eventId: 'event-check',
@@ -3560,6 +3618,7 @@ GameState _mvpState({
   Map<String, Map<String, Object?>> questDefinitions = const {},
   Map<String, Map<String, Object?>> taskDefinitions = const {},
   Map<CardId, CardDefinition> cardDefinitions = const {},
+  Iterable<CardId> playerExhaustedRobots = const [],
   Map<DeckId, DeckState> additionalDecks = const {},
   Iterable<MonsterInstance> monsters = const [],
   Iterable<BoilToken> boils = const [],
@@ -3615,6 +3674,7 @@ GameState _mvpState({
         health: playerHealth,
         backpack: playerBackpack,
         equipped: playerEquipment,
+        exhaustedRobots: playerExhaustedRobots,
         carriedMods: const [],
         implanted: const [],
         conditions: const [],
