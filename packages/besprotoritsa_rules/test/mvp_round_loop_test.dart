@@ -428,6 +428,69 @@ void main() {
     expect(replaced.players.single.backpack, contains('medkit'));
   });
 
+  test(
+    'BUG081 tripwire reward survives own-death spawn before '
+    'replacement selection',
+    () {
+      const sector = HexCoord(0, 0);
+      final state = _mvpState(
+        playerDamage: 3,
+        playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+        reserveHeroes: [
+          ReserveHero(
+            characterId: 'guard-reserve',
+            health: 3,
+            stats: const PlayerStats(science: 1, agility: 1),
+          ),
+        ],
+        cardDefinitions: {
+          'ghb-dtn': CardDefinition(
+            id: 'ghb-dtn',
+            type: ItemType.robot,
+            slots: const [ItemSlot.robot],
+            cost: 0,
+            staticEffects: CardStaticEffects(const {}),
+            behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+          ),
+        },
+        tripwires: const [
+          TripwireTrap(
+            instanceId: 'own-death-tripwire',
+            coord: sector,
+            ownerId: 'ada',
+            cardId: 'tripwire',
+          ),
+        ],
+      );
+
+      final dead = resolveHeroDeaths(state);
+      expect(dead.pendingDecision, isA<AwaitingHeroReplacement>());
+      expect(dead.tripwires, isEmpty);
+      expect(dead.players.single.backpack, contains('ghb-dtn'));
+
+      final selected = step(
+        dead,
+        const ResolvePendingDecisionCommand(
+          SelectReplacementHeroChoice('guard-reserve'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(
+        selected.queuedReplacements['ada']?.backpack,
+        contains('ghb-dtn'),
+      );
+
+      final activated = step(
+        selected,
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      ).state;
+      expect(activated.players.single.characterId, 'guard-reserve');
+      expect(activated.players.single.backpack, contains('ghb-dtn'));
+    },
+  );
+
   test('BUG065 ready robots event preserves exhaustion in the chest', () {
     var state = _mvpState(
       eventId: 'ready-robots-event',

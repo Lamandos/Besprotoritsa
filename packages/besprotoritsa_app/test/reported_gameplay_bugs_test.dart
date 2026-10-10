@@ -406,6 +406,56 @@ void main() {
     );
   });
 
+  testWidgets(
+    'BUG082 GHB-DTN remains usable when its current tile is first',
+    (tester) async {
+      final state = _scenario((doc) {
+        final player = _player(doc);
+        final tiles = (doc['board']! as List).cast<Map<String, dynamic>>();
+        final firstTile = tiles.first;
+        final firstCoord = firstTile['coord']! as Map<String, dynamic>;
+        player['coord'] = Map<String, dynamic>.of(firstCoord);
+        (player['equipped']! as Map<String, dynamic>)['robot'] = 'ghb-dtn';
+        for (final tile in tiles) {
+          tile['opened'] = true;
+          tile['is_blocked'] = false;
+        }
+      });
+      final player = state.players.firstWhere(
+        (candidate) => candidate.id == state.activePlayerId,
+      );
+      expect(
+        state.board.any(
+          (tile) =>
+              tile.coord != player.coord &&
+              tile.opened &&
+              !tile.isBlocked &&
+              validate(
+                    state,
+                    UseCardAbilityCommand(
+                      'ghb-dtn',
+                      targetPlayerId: player.id,
+                      targetCoord: tile.coord,
+                    ),
+                  ) ==
+                  null,
+        ),
+        isTrue,
+      );
+      await _mount(tester, state, viewport: const Size(1280, 1600));
+
+      await tester.tap(find.byKey(mvpInventoryButtonKey));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      final useButton = find.ancestor(
+        of: find.text('Использовать'),
+        matching: find.byType(FilledButton),
+      );
+      expect(useButton, findsOneWidget);
+      expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+    },
+  );
+
   testWidgets('BUG032 equipped R69-NIC3 can be activated from inventory', (
     tester,
   ) async {

@@ -1729,7 +1729,8 @@ List<UseCardAbilityCommand> _cardAbilityChoices(
       for (final target in state.players)
         if (target.alive)
           for (final tile in state.board)
-            if (tile.opened &&
+            if (tile.coord != target.coord &&
+                tile.opened &&
                 !tile.isBlocked &&
                 (_mvpPathDistance(state, target.coord, tile.coord) ?? 3) <= 2)
               UseCardAbilityCommand(

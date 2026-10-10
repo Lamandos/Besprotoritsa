@@ -88,9 +88,21 @@ GameStepResult _resolveHeroReplacement(
     );
   }
   final selectedReserve = reserve;
+  final deceased = _playerById(state, pending.playerId);
+  final inherited = deceased == null
+      ? (reserve: selectedReserve, unclaimed: const <CardId>[])
+      : _reserveWithPosthumousInventory(
+          state,
+          selectedReserve,
+          deceased,
+        );
+  final reserveForQueue = inherited.reserve;
   final queuedReplacements = Map<PlayerId, ReserveHero>.of(
     state.queuedReplacements,
-  )..[pending.playerId] = selectedReserve;
+  )..[pending.playerId] = reserveForQueue;
+  final unclaimedLog = inherited.unclaimed.isEmpty
+      ? ''
+      : ':unclaimed:${inherited.unclaimed.join(',')}';
   final selected = _copyState(
     state,
     reserveHeroes: state.reserveHeroes.where(
@@ -100,7 +112,8 @@ GameStepResult _resolveHeroReplacement(
     clearPendingDecision: true,
     logEntry:
         'replacement-selected:'
-        '${pending.playerId}:${selectedReserve.characterId}',
+        '${pending.playerId}:${selectedReserve.characterId}'
+        '$unclaimedLog',
   );
   if (pending.remainingPlayerIds.isNotEmpty) {
     if (selected.reserveHeroes.isEmpty) {
@@ -163,6 +176,55 @@ GameStepResult _resolveHeroReplacement(
     state: _resumeAutomaticPhase(
       _resumePendingEventMonsterSpawn(continued, dice),
     ),
+  );
+}
+
+({ReserveHero reserve, List<CardId> unclaimed}) _reserveWithPosthumousInventory(
+  GameState state,
+  ReserveHero reserve,
+  PlayerState deceased,
+) {
+  var recipient = PlayerState(
+    id: deceased.id,
+    characterId: reserve.characterId,
+    coord: deceased.coord,
+    damage: 0,
+    health: reserve.health,
+    credits: reserve.credits + deceased.credits,
+    backpack: reserve.backpack,
+    equipped: reserve.equipped,
+    carriedMods: reserve.carriedMods,
+    implanted: reserve.implanted,
+    conditions: const [],
+    alive: true,
+    stats: reserve.stats,
+  );
+  final unclaimed = <CardId>[];
+  for (final cardId in deceased.backpack) {
+    try {
+      recipient = InventoryRules.receive(
+        recipient,
+        cardId,
+        state.cardDefinitions,
+      );
+    } on BackpackCapacityExceeded {
+      unclaimed.add(cardId);
+    } on InventoryRuleViolation {
+      unclaimed.add(cardId);
+    }
+  }
+  return (
+    reserve: ReserveHero(
+      characterId: reserve.characterId,
+      health: reserve.health,
+      stats: reserve.stats,
+      credits: recipient.credits,
+      backpack: recipient.backpack,
+      equipped: recipient.equipped,
+      carriedMods: [...recipient.carriedMods, ...deceased.carriedMods],
+      implanted: [...recipient.implanted, ...deceased.implanted],
+    ),
+    unclaimed: unclaimed,
   );
 }
 
