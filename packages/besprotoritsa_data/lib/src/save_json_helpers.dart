@@ -79,6 +79,37 @@ Map<String, Object?> _coordToJson(HexCoord coord) => {
 HexCoord _coordFromJson(Map<String, Object?> json) =>
     HexCoord(_int(json, 'q'), _int(json, 'r'));
 
+Map<String, Object?>? _ghbDtnContinuationToJson(
+  GhbDtnMovementContinuation? continuation,
+) => continuation == null
+    ? null
+    : {
+        'player_id': continuation.playerId,
+        'remaining_path': continuation.remainingPath.map(_coordToJson).toList(),
+      };
+
+GhbDtnMovementContinuation? _ghbDtnContinuationFromJson(Object? value) {
+  if (value == null) return null;
+  final json = _asObject(value, 'pending_decision.ghb_dtn_continuation');
+  final path = json['remaining_path'];
+  if (path is! List) {
+    throw const FormatException(
+      'pending_decision.ghb_dtn_continuation.remaining_path must be a list.',
+    );
+  }
+  return GhbDtnMovementContinuation(
+    playerId: _string(json, 'player_id'),
+    remainingPath: path.map(
+      (coord) => _coordFromJson(
+        _asObject(
+          coord,
+          'pending_decision.ghb_dtn_continuation.remaining_path',
+        ),
+      ),
+    ),
+  );
+}
+
 Map<String, Object?> _statsToJson(PlayerStats stats) => {
   'strength': stats.strength,
   'combat_strength': stats.combatStrength,

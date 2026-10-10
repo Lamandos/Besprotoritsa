@@ -377,31 +377,21 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
     final destination = command.targetCoord!;
     final target = _playerById(state, targetId)!;
     final path = _heroPath(state, target.coord, destination)!;
-    var moved = state;
-    for (final coord in path.skip(1)) {
-      moved = _copyState(
-        moved,
-        players: _replacePlayer(
-          moved,
-          targetId,
-          (current) => _copyPlayer(current, coord: coord),
-        ),
-      );
-      moved = resolveColocation(moved, coord: coord, playerId: targetId);
-      final locationId = moved.tileAt(coord)?.locationId;
-      if (locationId != null) {
-        moved = _applyFullQuestEvent(
-          moved,
-          QuestArrived(locationId),
-          playerId: targetId,
-        );
-      }
-    }
-    moved = _copyState(
-      moved,
-      logEntry: 'robot-move:${player.id}:$targetId:$destination',
+    final moved = _exhaustRobot(
+      _copyState(
+        state,
+        logEntry: 'robot-move:${player.id}:$targetId:$destination',
+      ),
+      player,
+      command.cardId,
     );
-    return _exhaustRobot(moved, player, command.cardId);
+    return _continueGhbDtnMovement(
+      moved,
+      GhbDtnMovementContinuation(
+        playerId: targetId,
+        remainingPath: path.skip(1),
+      ),
+    );
   }
 
   if (command.cardId == 'sc0-u7') {
@@ -657,6 +647,71 @@ GameState _exhaustRobot(
   logEntry: 'robot-exhausted:${player.id}:$cardId',
 );
 
+GameState _continueGhbDtnMovement(
+  GameState state,
+  GhbDtnMovementContinuation continuation,
+) {
+  var moved = state;
+  for (var index = 0; index < continuation.remainingPath.length; index++) {
+    final player = _playerById(moved, continuation.playerId);
+    if (player == null || !player.alive) return moved;
+    final coord = continuation.remainingPath[index];
+    moved = _copyState(
+      moved,
+      players: _replacePlayer(
+        moved,
+        continuation.playerId,
+        (current) => _copyPlayer(current, coord: coord),
+      ),
+    );
+    moved = resolveColocation(
+      moved,
+      coord: coord,
+      playerId: continuation.playerId,
+    );
+    final locationId = moved.tileAt(coord)?.locationId;
+    if (locationId != null) {
+      moved = _applyFullQuestEvent(
+        moved,
+        QuestArrived(locationId),
+        playerId: continuation.playerId,
+      );
+    }
+
+    final pendingDecision = moved.pendingDecision;
+    if (pendingDecision != null) {
+      final remainingPath = continuation.remainingPath.skip(index + 1);
+      if (remainingPath.isNotEmpty && pendingDecision is AwaitingDodge) {
+        moved = _copyState(
+          moved,
+          pendingDecision: _withGhbDtnContinuation(
+            pendingDecision,
+            GhbDtnMovementContinuation(
+              playerId: continuation.playerId,
+              remainingPath: remainingPath,
+            ),
+          ),
+        );
+      }
+      return moved;
+    }
+  }
+  return moved;
+}
+
+AwaitingDodge _withGhbDtnContinuation(
+  AwaitingDodge pending,
+  GhbDtnMovementContinuation continuation,
+) => AwaitingDodge(
+  monsterDamage: pending.monsterDamage,
+  requiredAgilitySuccesses: pending.requiredAgilitySuccesses,
+  targetPlayerId: pending.targetPlayerId,
+  source: pending.source,
+  counterAttackMonsterInstanceId: pending.counterAttackMonsterInstanceId,
+  counterAttackPlayerId: pending.counterAttackPlayerId,
+  ghbDtnContinuation: continuation,
+);
+
 List<HexCoord>? _heroPath(GameState state, HexCoord start, HexCoord target) {
   if (start == target) return [start];
   final paths = <List<HexCoord>>[
@@ -702,7 +757,8 @@ List<CardId> _attackRerollSources(
         case ModifyRollHook(:final rerollsPerAttack) when rerollsPerAttack > 0:
           sources.addAll(List.filled(rerollsPerAttack, cardId));
         default:
-          if (behaviorId == 'dice.reroll.anyCountPerAttack') {
+          if (behaviorId == 'dice.reroll.anyCountPerAttack' ||
+              behaviorId == 'dice.reroll.all') {
             sources.add(cardId);
           }
       }

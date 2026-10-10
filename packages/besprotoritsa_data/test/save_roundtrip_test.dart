@@ -263,18 +263,27 @@ void main() {
   test('preserves immediate combat continuations in pending decisions', () {
     final base = _interruptedState();
     final codec = GameStateJsonCodec();
-    const pendingDodge = AwaitingDodge(
+    final pendingDodge = AwaitingDodge(
       monsterDamage: 1,
       requiredAgilitySuccesses: 2,
       targetPlayerId: 'ada',
       counterAttackMonsterInstanceId: 'event-ghoul',
       counterAttackPlayerId: 'ada',
+      ghbDtnContinuation: GhbDtnMovementContinuation(
+        playerId: 'ada',
+        remainingPath: const [HexCoord(0, 2)],
+      ),
     );
     final restoredDodge =
         codec
                 .decode(codec.encode(_withPending(base, pendingDodge)))
                 .pendingDecision!
             as AwaitingDodge;
+    expect(restoredDodge.ghbDtnContinuation?.playerId, 'ada');
+    expect(
+      restoredDodge.ghbDtnContinuation?.remainingPath,
+      const [HexCoord(0, 2)],
+    );
     final pendingAttack = AwaitingRerollChoice(
       dice: const [1, 2],
       availableRerolls: 1,

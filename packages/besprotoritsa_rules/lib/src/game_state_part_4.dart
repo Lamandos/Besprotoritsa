@@ -104,6 +104,7 @@ final class AwaitingDodge extends PendingDecision {
     this.source = DamageSource.monster,
     this.counterAttackMonsterInstanceId,
     this.counterAttackPlayerId,
+    this.ghbDtnContinuation,
   }) : assert(monsterDamage >= 0, 'monsterDamage must not be negative.'),
        assert(
          requiredAgilitySuccesses >= 0,
@@ -116,9 +117,22 @@ final class AwaitingDodge extends PendingDecision {
   final DamageSource source;
   final String? counterAttackMonsterInstanceId;
   final PlayerId? counterAttackPlayerId;
+  final GhbDtnMovementContinuation? ghbDtnContinuation;
 
   /// Short name convenient for generic decision views.
   int get requiredSuccesses => requiredAgilitySuccesses;
+}
+
+/// The remaining GHB-DTN path to continue after its current dodge is resolved.
+@immutable
+final class GhbDtnMovementContinuation {
+  GhbDtnMovementContinuation({
+    required this.playerId,
+    required Iterable<HexCoord> remainingPath,
+  }) : remainingPath = List.unmodifiable(remainingPath);
+
+  final PlayerId playerId;
+  final List<HexCoord> remainingPath;
 }
 
 /// A pending choice between event branches, normally the A and B options.

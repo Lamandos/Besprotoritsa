@@ -209,6 +209,47 @@ void main() {
     );
   });
 
+  test('BUG088 DRG-4U can reroll all attack dice', () {
+    final state = _state(
+      equippedRobot: 'drg-4u',
+      monsters: [
+        MonsterInstance(
+          instanceId: 'ghoul-1',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 20,
+          attack: 1,
+          movement: 0,
+        ),
+      ],
+    );
+
+    final attacked = step(
+      state,
+      const AttackCommand('ghoul-1'),
+      FixedDiceRoller([1]),
+    );
+
+    expect(attacked.rejection, isNull);
+    final pendingDecision = attacked.state.pendingDecision;
+    expect(pendingDecision, isA<AwaitingRerollChoice>());
+    final pending = pendingDecision! as AwaitingRerollChoice;
+    expect(pending.rerollSources, ['drg-4u']);
+    expect(pending.maxDicePerReroll, greaterThan(1));
+
+    final rerolled = step(
+      attacked.state,
+      ResolvePendingDecisionCommand(
+        RerollChoice(sourceCardId: 'drg-4u'),
+      ),
+      FixedDiceRoller([6]),
+    );
+
+    expect(rerolled.rejection, isNull);
+    expect(rerolled.state.players.first.exhaustedRobots, contains('drg-4u'));
+  });
+
   test('BUG056 a pending GTU-B1c4 hit cannot be stacked', () {
     final state = _state(
       backpack: const ['power-cell'],
@@ -1537,6 +1578,19 @@ GameState _state({
       staticEffects: CardStaticEffects(const {}),
       sourceDeck: 'items',
       behaviorIds: const ['robot.exhaust', 'dice.reroll.allForSkill'],
+    ),
+    'drg-4u': CardDefinition(
+      id: 'drg-4u',
+      type: ItemType.robot,
+      slots: const [ItemSlot.robot],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'specialItems',
+      behaviorIds: const [
+        'equipment.extraBackpackCapacity',
+        'robot.exhaust',
+        'dice.reroll.all',
+      ],
     ),
     'science-stimulant': CardDefinition(
       id: 'science-stimulant',

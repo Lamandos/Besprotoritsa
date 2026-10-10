@@ -488,17 +488,36 @@ GameStepResult _resolveDodge(
       );
     }
   }
-  return GameStepResult(
-    state: _resumeAutomaticPhase(
-      _resumePendingEventMonsterSpawn(
-        _startNextIncomingDamage(
-          _copyState(
-            withContinuation,
-            logEntry: 'dodge:$targetId:$remainingDamage',
-          ),
+  final resumed = _resumeAutomaticPhase(
+    _resumePendingEventMonsterSpawn(
+      _startNextIncomingDamage(
+        _copyState(
+          withContinuation,
+          logEntry: 'dodge:$targetId:$remainingDamage',
         ),
-        dice,
       ),
+      dice,
     ),
+  );
+  final movementContinuation = pending.ghbDtnContinuation;
+  if (movementContinuation == null) return GameStepResult(state: resumed);
+  final nextDecision = resumed.pendingDecision;
+  if (nextDecision is AwaitingDodge) {
+    return GameStepResult(
+      state: _copyState(
+        resumed,
+        pendingDecision: _withGhbDtnContinuation(
+          nextDecision,
+          movementContinuation,
+        ),
+      ),
+    );
+  }
+  final mover = _playerById(resumed, movementContinuation.playerId);
+  if (mover == null || !mover.alive || nextDecision != null) {
+    return GameStepResult(state: resumed);
+  }
+  return GameStepResult(
+    state: _continueGhbDtnMovement(resumed, movementContinuation),
   );
 }

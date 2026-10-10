@@ -51,12 +51,12 @@ reported: 2026-10-11
 
 ## Регрессионный тест
 
-- Тестовый файл и имя теста: `packages/besprotoritsa_rules/test/mvp_round_loop_test.dart` — `BUG086 GHB-DTN resolves colocation on every path step`.
+- Тестовый файл и имя теста: `packages/besprotoritsa_rules/test/mvp_round_loop_test.dart` — `BUG086 GHB-DTN resolves colocation on every path step`. При остановке на незавершённом уклонении координата остаётся промежуточной; продолжение после уклонения проверяет BUG089.
 - Команда запуска: `dart test packages/besprotoritsa_rules/test/mvp_round_loop_test.dart --name 'BUG086 GHB-DTN resolves colocation on every path step' --reporter expanded`.
 - **До исправления (красный):** `dart test packages/besprotoritsa_rules/test/mvp_round_loop_test.dart --name 'BUG086 GHB-DTN resolves colocation on every path step' --reporter expanded` — код завершения 1.
 - Результат и причина падения: assertion ожидал `AwaitingDodge`, фактическое `pendingDecision` было `null`; монстр на промежуточном шаге не был обработан.
 - **После исправления (зелёный):** та же команда — тест прошёл.
-- Результат связанных проверок: `dart test packages/besprotoritsa_rules/test --reporter expanded` — все 213 тестов прошли; `dart analyze packages/besprotoritsa_rules` — замечаний нет.
+- Результат связанных проверок: после BUG089 `dart test packages/besprotoritsa_rules/test --reporter expanded` — все 216 тестов прошли; `dart analyze packages/besprotoritsa_rules packages/besprotoritsa_data` — замечаний нет.
 
 ## Исправление
 

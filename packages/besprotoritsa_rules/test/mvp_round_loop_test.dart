@@ -171,13 +171,152 @@ void main() {
     );
 
     expect(result.rejection, isNull);
-    expect(result.state.players.single.coord, destination);
+    expect(result.state.players.single.coord, const HexCoord(0, 1));
     expect(result.state.pendingDecision, isA<AwaitingDodge>());
     expect(
       result.state.players.single.exhaustedRobots,
       contains('ghb-dtn'),
     );
   });
+
+  test('BUG089 GHB-DTN pauses at an intermediate encounter', () {
+    const destination = HexCoord(0, 2);
+    const intermediate = HexCoord(0, 1);
+    final state = _mvpState(
+      corridorOpened: true,
+      crewMessOpened: true,
+      playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+      storyQuestIds: const ['arrive-crew-mess'],
+      questDefinitions: {
+        'arrive-crew-mess': {
+          'id': 'arrive-crew-mess',
+          'number': 1,
+          'chapter': 1,
+          'conditions': [
+            {
+              'id': 'reach-crew-mess',
+              'type': 'arrive',
+              'locationId': 'crew-mess',
+            },
+          ],
+          'reward': {'credits': 0, 'items': <Object?>[]},
+          'nextQuestIds': <Object?>[],
+          'nameKey': 'arrive-crew-mess.name',
+          'descKey': 'arrive-crew-mess.description',
+        },
+      },
+      monsters: [
+        MonsterInstance(
+          instanceId: 'intermediate-monster',
+          monsterId: 'ghoul',
+          coord: intermediate,
+          damage: 0,
+          attack: 1,
+          movement: 0,
+        ),
+      ],
+      cardDefinitions: {
+        'ghb-dtn': CardDefinition(
+          id: 'ghb-dtn',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+        ),
+      },
+    );
+
+    final moved = step(
+      state,
+      const UseCardAbilityCommand('ghb-dtn', targetCoord: destination),
+      FixedDiceRoller([]),
+    );
+
+    expect(moved.rejection, isNull);
+    expect(moved.state.players.single.coord, intermediate);
+    expect(moved.state.pendingDecision, isA<AwaitingDodge>());
+    expect(
+      moved
+          .state
+          .quests
+          .conditionProgress['arrive-crew-mess']?['reach-crew-mess'],
+      isNot(1),
+    );
+
+    final dodged = step(
+      moved.state,
+      const ResolvePendingDecisionCommand(DodgeChoice()),
+      FixedDiceRoller([6]),
+    );
+
+    expect(dodged.rejection, isNull);
+    expect(dodged.state.players.single.coord, destination);
+    expect(
+      dodged
+          .state
+          .quests
+          .conditionProgress['arrive-crew-mess']?['reach-crew-mess'],
+      1,
+    );
+  });
+
+  test(
+    'BUG089 lethal GHB-DTN encounter resolves at its intermediate sector',
+    () {
+      const destination = HexCoord(0, 2);
+      const intermediate = HexCoord(0, 1);
+      final state = _mvpState(
+        corridorOpened: true,
+        crewMessOpened: true,
+        playerDamage: 2,
+        playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+        monsters: [
+          MonsterInstance(
+            instanceId: 'intermediate-monster',
+            monsterId: 'ghoul',
+            coord: intermediate,
+            damage: 0,
+            attack: 1,
+            movement: 0,
+          ),
+        ],
+        cardDefinitions: {
+          'ghb-dtn': CardDefinition(
+            id: 'ghb-dtn',
+            type: ItemType.robot,
+            slots: const [ItemSlot.robot],
+            cost: 0,
+            staticEffects: CardStaticEffects(const {}),
+            behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+          ),
+        },
+      );
+
+      final moved = step(
+        state,
+        const UseCardAbilityCommand('ghb-dtn', targetCoord: destination),
+        FixedDiceRoller([]),
+      );
+      final died = step(
+        moved.state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([1]),
+      );
+
+      expect(moved.state.players.single.coord, intermediate);
+      expect(died.state.players.single.alive, isFalse);
+      expect(
+        died.state.monsters
+            .singleWhere(
+              (monster) =>
+                  monster.monsterId == RestlessMonster.restlessMonsterId,
+            )
+            .coord,
+        intermediate,
+      );
+    },
+  );
 
   test('runtime event definitions drive options and skill checks', () {
     var state = _mvpState(
