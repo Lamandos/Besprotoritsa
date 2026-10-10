@@ -141,11 +141,12 @@ CommandRejection? _validateCardAbility(
           destination == null ||
           !destination.opened ||
           destination.isBlocked ||
+          destination.coord == targetPlayer.coord ||
           (_heroPathDistance(state, targetPlayer.coord, destination.coord) ??
                   3) >
               2) {
         return const InventoryCommandRejected(
-          'Выберите открытый сектор не дальше двух шагов от союзника.',
+          'Выберите другой открытый сектор не дальше двух шагов от союзника.',
         );
       }
     }
@@ -864,35 +865,43 @@ GameState _triggerTripwire(
   final trapOwner = _playerById(triggered, trap.ownerId);
   if (trapOwner != null) {
     final rewardDecks = Map<DeckId, DeckState>.of(triggered.decks);
+    final rewardRecipient = _tripwireRewardRecipient(triggered, trapOwner);
     final rewardedOwner = _awardMonsterDefeatReward(
-      trapOwner,
+      rewardRecipient,
       monster,
       triggered,
       rewardDecks,
     );
-    triggered = _copyState(
+    triggered = _storeTripwireOwnerReward(
       triggered,
-      players: _replacePlayer(triggered, trapOwner.id, (_) => rewardedOwner),
+      trapOwner.id,
+      rewardedOwner,
       decks: rewardDecks,
     );
   }
   if (monster.monsterId == RestlessMonster.restlessMonsterId) {
-    final killer = _playerById(triggered, trap.ownerId);
-    if (killer != null) {
-      final loot = _awardRestlessTrophies(killer, monster, triggered);
-      triggered = _copyState(
+    final owner = _playerById(triggered, trap.ownerId);
+    if (owner != null) {
+      final rewardRecipient = _tripwireRewardRecipient(triggered, owner);
+      final loot = _awardRestlessTrophies(
+        rewardRecipient,
+        monster,
         triggered,
-        players: _restlessTrophyPlayers(
-          triggered,
-          killer.id,
-          loot.player,
-          loot.exhaustedRobots,
-        ),
-        logEntry: loot.unclaimed.isEmpty
-            ? null
-            : 'restless-unclaimed:${monster.instanceId}:'
-                  '${loot.unclaimed.join(',')}',
       );
+      triggered = _storeTripwireOwnerReward(
+        triggered,
+        owner.id,
+        loot.player,
+        exhaustedRobots: loot.exhaustedRobots,
+      );
+      if (loot.unclaimed.isNotEmpty) {
+        triggered = _copyState(
+          triggered,
+          logEntry:
+              'restless-unclaimed:${monster.instanceId}:'
+              '${loot.unclaimed.join(',')}',
+        );
+      }
     }
   }
   if (triggered.questDefinitions.isNotEmpty) {
@@ -903,4 +912,80 @@ GameState _triggerTripwire(
     );
   }
   return _recordPersonalTaskKillProgress(state, triggered, trap.ownerId);
+}
+
+PlayerState _tripwireRewardRecipient(GameState state, PlayerState owner) {
+  final replacement = state.queuedReplacements[owner.id];
+  if (replacement == null) return owner;
+  return PlayerState(
+    id: owner.id,
+    characterId: replacement.characterId,
+    coord: owner.coord,
+    damage: 0,
+    health: replacement.health,
+    credits: replacement.credits,
+    backpack: replacement.backpack,
+    equipped: replacement.equipped,
+    carriedMods: replacement.carriedMods,
+    implanted: replacement.implanted,
+    conditions: const [],
+    alive: true,
+    stats: replacement.stats,
+  );
+}
+
+GameState _storeTripwireOwnerReward(
+  GameState state,
+  PlayerId ownerId,
+  PlayerState rewardedOwner, {
+  Map<DeckId, DeckState>? decks,
+  Iterable<CardId> exhaustedRobots = const [],
+}) {
+  final transferredExhaustion = exhaustedRobots.toSet();
+  final replacement = state.queuedReplacements[ownerId];
+  if (replacement == null) {
+    return _copyState(
+      state,
+      players: _restlessTrophyPlayers(
+        state,
+        ownerId,
+        rewardedOwner,
+        exhaustedRobots,
+      ),
+      decks: decks,
+    );
+  }
+  final queuedReplacements =
+      Map<PlayerId, ReserveHero>.of(
+          state.queuedReplacements,
+        )
+        ..[ownerId] = ReserveHero(
+          characterId: replacement.characterId,
+          health: replacement.health,
+          stats: replacement.stats,
+          credits: rewardedOwner.credits,
+          backpack: rewardedOwner.backpack,
+          equipped: rewardedOwner.equipped,
+          carriedMods: rewardedOwner.carriedMods,
+          implanted: rewardedOwner.implanted,
+        );
+  return _copyState(
+    state,
+    players: [
+      for (final player in state.players)
+        if (player.id != ownerId &&
+            !player.alive &&
+            player.exhaustedRobots.any(transferredExhaustion.contains))
+          _copyPlayer(
+            player,
+            exhaustedRobots: player.exhaustedRobots.where(
+              (cardId) => !transferredExhaustion.contains(cardId),
+            ),
+          )
+        else
+          player,
+    ],
+    queuedReplacements: queuedReplacements,
+    decks: decks,
+  );
 }

@@ -274,6 +274,160 @@ void main() {
     },
   );
 
+  test('BUG080 GHB-DTN rejects a move to the current sector', () {
+    const currentSector = HexCoord(0, 0);
+    final state = _mvpState(
+      playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+      cardDefinitions: {
+        'ghb-dtn': CardDefinition(
+          id: 'ghb-dtn',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+        ),
+      },
+      monsters: [
+        MonsterInstance(
+          instanceId: 'stationary-monster',
+          monsterId: 'ghoul',
+          coord: currentSector,
+          damage: 0,
+          attack: 1,
+          movement: 0,
+        ),
+      ],
+    );
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand('ghb-dtn', targetCoord: currentSector),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isNotNull);
+    expect(result.state.players.single.coord, currentSector);
+    expect(result.state.players.single.exhaustedRobots, isEmpty);
+  });
+
+  test('BUG081 tripwire reward survives its dead owner replacement', () {
+    const sector = HexCoord(0, 0);
+    final state = _mvpState(
+      playerDamage: 3,
+      playerAlive: false,
+      queuedReplacements: {
+        'ada': ReserveHero(
+          characterId: 'guard-reserve',
+          health: 3,
+          stats: const PlayerStats(science: 1, agility: 1),
+        ),
+      },
+      additionalDecks: {
+        'supplies': DeckState(drawPile: const ['medkit']),
+      },
+      cardDefinitions: {
+        'medkit': CardDefinition(
+          id: 'medkit',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'supplies',
+          behaviorIds: const ['health.restoreAll'],
+        ),
+      },
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'dead-owner-tripwire',
+          coord: sector,
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+      monsters: [
+        MonsterInstance(
+          instanceId: 'reward-monster',
+          monsterId: 'ghoul',
+          coord: sector,
+          damage: 0,
+          defeatRewardDeckId: 'supplies',
+        ),
+      ],
+    );
+
+    final triggered = resolveColocation(
+      state,
+      coord: sector,
+      monsterInstanceId: 'reward-monster',
+    );
+    final replaced = step(
+      triggered,
+      const EndTurnCommand(),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(replaced.players.single.alive, isTrue);
+    expect(replaced.players.single.backpack, contains('medkit'));
+  });
+
+  test('BUG081 tripwire Restless loot survives its dead owner replacement', () {
+    const sector = HexCoord(0, 0);
+    final state = _mvpState(
+      playerDamage: 3,
+      playerAlive: false,
+      queuedReplacements: {
+        'ada': ReserveHero(
+          characterId: 'guard-reserve',
+          health: 3,
+          stats: const PlayerStats(science: 1, agility: 1),
+        ),
+      },
+      cardDefinitions: {
+        'medkit': CardDefinition(
+          id: 'medkit',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'supplies',
+          behaviorIds: const ['health.restoreAll'],
+        ),
+      },
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'dead-owner-tripwire',
+          coord: sector,
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+      monsters: [
+        RestlessMonster(
+          instanceId: 'restless-on-tripwire',
+          coord: sector,
+          attack: 1,
+          defense: 0,
+          carriedGear: const ['medkit'],
+        ),
+      ],
+    );
+
+    final triggered = resolveColocation(
+      state,
+      coord: sector,
+      monsterInstanceId: 'restless-on-tripwire',
+    );
+    final replaced = step(
+      triggered,
+      const EndTurnCommand(),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(replaced.players.single.alive, isTrue);
+    expect(replaced.players.single.backpack, contains('medkit'));
+  });
+
   test('BUG065 ready robots event preserves exhaustion in the chest', () {
     var state = _mvpState(
       eventId: 'ready-robots-event',
@@ -3872,8 +4026,10 @@ GameState _mvpState({
   Map<String, Map<String, Object?>> monsterDefinitions = const {},
   int heroCount = 1,
   int playerDamage = 0,
+  bool playerAlive = true,
   int secondHeroDamage = 0,
   Iterable<ReserveHero> reserveHeroes = const [],
+  Map<PlayerId, ReserveHero> queuedReplacements = const {},
   int initialCredits = 0,
   int playerHealth = 3,
   PlayerStats playerStats = const PlayerStats(science: 1, agility: 1),
@@ -3930,7 +4086,7 @@ GameState _mvpState({
         carriedMods: const [],
         implanted: const [],
         conditions: const [],
-        alive: true,
+        alive: playerAlive,
         stats: playerStats,
       ),
   ],
@@ -3938,6 +4094,7 @@ GameState _mvpState({
   boils: boils,
   tripwires: tripwires,
   reserveHeroes: reserveHeroes,
+  queuedReplacements: queuedReplacements,
   decks: {
     'events': DeckState(drawPile: [eventId]),
     ...additionalDecks,
