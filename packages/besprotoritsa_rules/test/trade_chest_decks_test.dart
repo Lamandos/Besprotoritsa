@@ -228,6 +228,58 @@ void main() {
     );
   });
 
+  test(
+    'BUG070 exhausted robot remains exhausted after chest owner replacement',
+    () {
+      var state = _state(
+        cards: cards,
+        board: [_startTile()],
+        players: [
+          _player(
+            'ada',
+            backpack: const ['r69-nic3'],
+            exhaustedRobots: const ['r69-nic3'],
+            damage: 3,
+          ),
+        ],
+        reserveHeroes: [
+          ReserveHero(
+            characterId: 'scientist',
+            health: 8,
+            stats: const PlayerStats(science: 4),
+          ),
+        ],
+      );
+
+      state = step(
+        state,
+        const DepositIntoChestCommand('r69-nic3'),
+        FixedDiceRoller([]),
+      ).state;
+      state = resolveHeroDeaths(state);
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(
+          SelectReplacementHeroChoice('scientist'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+
+      expect(state.players.single.characterId, 'scientist');
+      state = step(
+        state,
+        const WithdrawFromChestCommand('r69-nic3'),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(
+        state.players.single.exhaustedRobots,
+        contains('r69-nic3'),
+      );
+    },
+  );
+
   test('the start-sector chest rejects transfers without an action', () {
     final state = _state(
       cards: cards,
@@ -519,6 +571,7 @@ GameState _state({
   Map<DeckId, DeckState> decks = const {},
   int actionsLeft = 2,
   Iterable<CardId> chestCards = const [],
+  Iterable<ReserveHero> reserveHeroes = const [],
 }) => GameState(
   seed: 13,
   round: 1,
@@ -530,6 +583,7 @@ GameState _state({
   monsters: monsters,
   decks: decks,
   chestCards: chestCards,
+  reserveHeroes: reserveHeroes,
   quests: QuestState(),
   cardDefinitions: cards,
 );
@@ -558,13 +612,16 @@ PlayerState _player(
   String id, {
   Iterable<CardId> backpack = const [],
   Iterable<CardId> exhaustedRobots = const [],
+  int damage = 0,
+  int health = 3,
   int credits = 0,
   int actionPoints = 2,
 }) => PlayerState(
   id: id,
   characterId: '$id-character',
   coord: const HexCoord(0, 0),
-  damage: 0,
+  damage: damage,
+  health: health,
   credits: credits,
   backpack: backpack,
   equipped: const EquippedGear(),

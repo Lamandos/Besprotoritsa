@@ -60,6 +60,8 @@ void main() {
       decks: {
         'events': DeckState(drawPile: const ['event-2', 'event-1']),
       },
+      chestCards: const ['r69-nic3'],
+      exhaustedChestRobots: const ['r69-nic3'],
       quests: QuestState(
         storyQuestIds: const ['chapter-1'],
         personalTasksByPlayer: const {
@@ -77,6 +79,7 @@ void main() {
     expect(fog.tile, isNull);
     expect(view.decks['events']!.cardsRemaining, 2);
     expect(view.decks['events'], isNot(isA<DeckState>()));
+    expect(view.exhaustedChestRobots, ['r69-nic3']);
     expect(
       view.players
           .singleWhere((player) => player.id == 'ada')

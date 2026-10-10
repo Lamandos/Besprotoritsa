@@ -182,7 +182,8 @@ void main() {
       FixedDiceRoller([]),
     ).state;
     expect(state.chestCards, contains('r69-nic3'));
-    expect(state.players.single.exhaustedRobots, contains('r69-nic3'));
+    expect(state.exhaustedChestRobots, contains('r69-nic3'));
+    expect(state.players.single.exhaustedRobots, isNot(contains('r69-nic3')));
 
     state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
     state = step(
@@ -192,7 +193,8 @@ void main() {
     ).state;
     expect(state.phase, GamePhase.playersTurn);
     expect(state.log, contains('event-robots-ready:ada'));
-    expect(state.players.single.exhaustedRobots, contains('r69-nic3'));
+    expect(state.exhaustedChestRobots, contains('r69-nic3'));
+    expect(state.players.single.exhaustedRobots, isNot(contains('r69-nic3')));
 
     state = step(
       state,
@@ -202,6 +204,7 @@ void main() {
 
     expect(state.players.single.backpack, contains('r69-nic3'));
     expect(state.players.single.exhaustedRobots, contains('r69-nic3'));
+    expect(state.exhaustedChestRobots, isEmpty);
   });
 
   test('BUG053 defibrillator is unavailable during event skill checks', () {

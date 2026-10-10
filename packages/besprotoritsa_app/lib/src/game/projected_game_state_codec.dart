@@ -21,6 +21,7 @@ final class ProjectedGameStateCodec {
     activePlayerId: json['activePlayerId'] as String?,
     actionsLeft: _int(json, 'actionsLeft'),
     chestCards: _strings(json['chestCards']),
+    exhaustedChestRobots: _strings(json['exhaustedChestRobots']),
     board: _list(json, 'board').map(_tile),
     players: _list(json, 'players').map(_player),
     monsters: _list(json, 'monsters').map(_monster),

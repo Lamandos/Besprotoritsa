@@ -1794,6 +1794,7 @@ Map<String, Object?> _projectedStateToJson(
   'activePlayerId': state.activePlayerId,
   'actionsLeft': state.actionsLeft,
   'chestCards': state.chestCards,
+  'exhaustedChestRobots': state.exhaustedChestRobots,
   'isComplete': fullState.isComplete,
   'board': state.board.map(_projectedTileToJson).toList(),
   'players': state.players.map(_projectedPlayerToJson).toList(),

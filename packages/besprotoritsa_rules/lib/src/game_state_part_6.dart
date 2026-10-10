@@ -152,6 +152,7 @@ final class PlayerGameState {
     required this.activePlayerId,
     required this.actionsLeft,
     required Iterable<CardId> chestCards,
+    required Iterable<CardId> exhaustedChestRobots,
     required Iterable<ProjectedHexTile> board,
     required Iterable<ProjectedPlayerState> players,
     required Iterable<MonsterInstance> monsters,
@@ -161,6 +162,7 @@ final class PlayerGameState {
     required Iterable<String> log,
     required this.pendingDecision,
   }) : chestCards = List.unmodifiable(chestCards),
+       exhaustedChestRobots = List.unmodifiable(exhaustedChestRobots),
        board = List.unmodifiable(board),
        players = List.unmodifiable(players),
        monsters = List.unmodifiable(monsters),
@@ -175,6 +177,7 @@ final class PlayerGameState {
   final PlayerId? activePlayerId;
   final int actionsLeft;
   final List<CardId> chestCards;
+  final List<CardId> exhaustedChestRobots;
   final List<ProjectedHexTile> board;
   final List<ProjectedPlayerState> players;
   final List<MonsterInstance> monsters;
@@ -210,6 +213,7 @@ PlayerGameState projectFor(GameState fullState, PlayerId viewerId) {
     activePlayerId: fullState.activePlayerId,
     actionsLeft: fullState.actionsLeft,
     chestCards: fullState.chestCards,
+    exhaustedChestRobots: fullState.exhaustedChestRobots,
     board: fullState.board.map(
       (tile) => tile.opened
           ? ProjectedHexTile._visible(tile)

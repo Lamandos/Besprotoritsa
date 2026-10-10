@@ -1657,7 +1657,7 @@ List<UseCardAbilityCommand> _cardAbilityChoices(
     final source = state.tileAt(player.coord);
     if (!player.backpack.contains(cardId) ||
         source?.type != HexTileType.airlock ||
-        state.actionsLeft < 2) {
+        state.actionsLeft < 1) {
       return const [];
     }
     return [

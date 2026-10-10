@@ -244,6 +244,7 @@ void main() {
       of: find.text('Использовать'),
       matching: find.byType(FilledButton),
     );
+    expect(useButton, findsOneWidget);
     expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
     tester.widget<FilledButton>(useButton).onPressed!.call();
     await tester.pump(const Duration(milliseconds: 600));
@@ -342,6 +343,67 @@ void main() {
     expect(container.read(gameControllerProvider).players.first.damage, 0);
     expect(container.read(gameControllerProvider).players.first.credits, 2);
     expect(container.read(gameControllerProvider).actionsLeft, 1);
+  });
+
+  testWidgets('BUG071 air canister can be used with one action remaining', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['actions_left'] = 1;
+      (_player(doc)['backpack']! as List).add('air-canister');
+      final tiles = (doc['board']! as List).cast<Map<String, dynamic>>();
+      final coord = _player(doc)['coord']! as Map<String, dynamic>;
+      final source = tiles.firstWhere((tile) {
+        final tileCoord = tile['coord']! as Map<String, dynamic>;
+        return tileCoord['q'] == coord['q'] && tileCoord['r'] == coord['r'];
+      });
+      final target = tiles.firstWhere((tile) => !identical(tile, source));
+      for (final tile in tiles) {
+        if (identical(tile, source) || identical(tile, target)) continue;
+        tile['type'] = 'corridor';
+        tile['opened'] = false;
+        tile['is_blocked'] = false;
+      }
+      source['type'] = 'airlock';
+      source['opened'] = true;
+      source['is_blocked'] = false;
+      target['type'] = 'airlock';
+      target['opened'] = true;
+      target['is_blocked'] = false;
+    });
+    final container = await _mount(
+      tester,
+      state,
+      viewport: const Size(1280, 1600),
+    );
+
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 400));
+    final useButton = find.ancestor(
+      of: find.text('Использовать'),
+      matching: find.byType(FilledButton),
+    );
+    expect(useButton, findsOneWidget);
+    expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+    tester.widget<FilledButton>(useButton).onPressed!.call();
+    await tester.pumpAndSettle();
+
+    final targetCoord = state.board
+        .firstWhere(
+          (tile) =>
+              tile.type == HexTileType.airlock &&
+              tile.coord != state.players.first.coord,
+        )
+        .coord;
+    expect(container.read(gameControllerProvider).actionsLeft, 0);
+    expect(
+      container
+          .read(gameControllerProvider)
+          .players
+          .firstWhere((player) => player.id == state.activePlayerId)
+          .coord,
+      targetCoord,
+    );
   });
 
   testWidgets('BUG032 equipped R69-NIC3 can be activated from inventory', (

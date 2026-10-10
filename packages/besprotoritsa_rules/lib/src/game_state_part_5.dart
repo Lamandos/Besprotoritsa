@@ -25,6 +25,7 @@ final class GameState {
     required Map<DeckId, DeckState> decks,
     required this.quests,
     Iterable<CardId> chestCards = const [],
+    Iterable<CardId> exhaustedChestRobots = const [],
     Iterable<BoilToken> boils = const [],
     Iterable<TripwireTrap> tripwires = const [],
     Iterable<ReserveHero> reserveHeroes = const [],
@@ -70,6 +71,7 @@ final class GameState {
        monsterDefinitions = _freezeDefinitions(monsterDefinitions),
        contentTranslations = UnmodifiableMapView(Map.of(contentTranslations)),
        chestCards = List.unmodifiable(chestCards),
+       exhaustedChestRobots = List.unmodifiable(exhaustedChestRobots),
        pendingDamage = List.unmodifiable(pendingDamage),
        decks = UnmodifiableMapView(Map.of(decks)),
        log = List.unmodifiable(log),
@@ -180,6 +182,9 @@ final class GameState {
   /// Shared storage in the start/anabiosis sector. Credits are deliberately
   /// not represented here: only cards can be placed in the chest.
   final List<CardId> chestCards;
+
+  /// Robot cards in the shared chest that still need to be readied.
+  final List<CardId> exhaustedChestRobots;
   final List<IncomingDamage> pendingDamage;
   final Map<DeckId, DeckState> decks;
   final QuestState quests;
@@ -245,6 +250,7 @@ final class GameState {
     contentTranslations: contentTranslations,
     pendingDamage: pendingDamage,
     chestCards: chestCards,
+    exhaustedChestRobots: exhaustedChestRobots,
     decks: decks,
     quests: quests,
     log: log,

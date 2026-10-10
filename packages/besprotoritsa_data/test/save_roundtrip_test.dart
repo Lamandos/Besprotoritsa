@@ -34,6 +34,32 @@ void main() {
     expect(restored.monsters.single.exhaustedCarriedRobots, ['r69-nic3']);
   });
 
+  test('BUG070 saves and restores chest robot readiness', () {
+    final codec = GameStateJsonCodec();
+    final state = _chestReadinessState(
+      exhaustedChestRobots: const ['r69-nic3'],
+    );
+
+    final restored = codec.decode(codec.encode(state));
+
+    expect(restored.chestCards, ['r69-nic3']);
+    expect(restored.exhaustedChestRobots, ['r69-nic3']);
+  });
+
+  test(
+    'BUG070 migrates legacy chest robot readiness from its former owner',
+    () {
+      final codec = GameStateJsonCodec();
+      final legacy = codec.toJson(
+        _chestReadinessState(ownerExhaustedRobots: const ['r69-nic3']),
+      )..remove('exhausted_chest_robots');
+
+      final restored = codec.fromJson(legacy);
+
+      expect(restored.exhaustedChestRobots, ['r69-nic3']);
+    },
+  );
+
   test(
     'round-trips every field while a reroll decision is pending',
     () async {
@@ -446,6 +472,31 @@ GameState _interruptedState() => GameState(
   ),
 );
 
+GameState _chestReadinessState({
+  Iterable<String> exhaustedChestRobots = const [],
+  Iterable<String> ownerExhaustedRobots = const [],
+}) => GameState(
+  seed: 7,
+  round: 1,
+  phase: GamePhase.eventsPhase,
+  activePlayerId: 'ada',
+  actionsLeft: 0,
+  board: const [],
+  players: [
+    _player(
+      id: 'ada',
+      characterId: 'engineer',
+      coord: const HexCoord(0, 0),
+      exhaustedRobots: ownerExhaustedRobots,
+    ),
+  ],
+  monsters: const [],
+  decks: const {},
+  quests: QuestState(),
+  chestCards: const ['r69-nic3'],
+  exhaustedChestRobots: exhaustedChestRobots,
+);
+
 PlayerState _player({
   required String id,
   required String characterId,
@@ -456,6 +507,7 @@ PlayerState _player({
   int? monsterDefenseBonusRound,
   int? enemyFeaturesIgnoredThroughRound,
   Iterable<String> retainedEventCards = const [],
+  Iterable<String> exhaustedRobots = const [],
 }) => PlayerState(
   id: id,
   characterId: characterId,
@@ -487,4 +539,5 @@ PlayerState _player({
   monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
   monsterDefenseBonusRound: monsterDefenseBonusRound,
   enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
+  exhaustedRobots: exhaustedRobots,
 );
