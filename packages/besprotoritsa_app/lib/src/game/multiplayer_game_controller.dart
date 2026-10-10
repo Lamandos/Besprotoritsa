@@ -319,9 +319,10 @@ Map<String, Object?> _coordCommand(String type, HexCoord coord) =>
 
 Map<String, Object?> _choiceToJson(DecisionChoice choice) => switch (choice) {
   KeepRollChoice() => const <String, Object?>{'type': 'keepRoll'},
-  RerollChoice(:final diceIndexes) => <String, Object?>{
+  RerollChoice(:final diceIndexes, :final sourceCardId) => <String, Object?>{
     'type': 'reroll',
     'diceIndexes': diceIndexes.toList(),
+    if (sourceCardId != null) 'sourceCardId': sourceCardId,
   },
   DodgeChoice() => const <String, Object?>{'type': 'dodge'},
   EventOptionChoice(:final option) => <String, Object?>{

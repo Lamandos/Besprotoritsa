@@ -1770,6 +1770,7 @@ DecisionChoice _choiceFromJson(Map<String, Object?> json) {
         }
         return index;
       }),
+      sourceCardId: _optionalString(json, 'sourceCardId'),
     ),
     'dodge' => const DodgeChoice(),
     'eventOption' => EventOptionChoice(_requiredString(json, 'option')),
