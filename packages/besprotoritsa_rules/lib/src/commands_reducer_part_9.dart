@@ -152,7 +152,9 @@ PlayerState _copyPlayer(
   enemyFeaturesIgnoredThroughRound:
       enemyFeaturesIgnoredThroughRound ??
       player.enemyFeaturesIgnoredThroughRound,
-  nextAttackBonusHits: nextAttackBonusHits ?? player.nextAttackBonusHits,
+  nextAttackBonusHits: coord != null && coord != player.coord
+      ? 0
+      : nextAttackBonusHits ?? player.nextAttackBonusHits,
   exhaustedRobots: exhaustedRobots ?? player.exhaustedRobots,
 );
 

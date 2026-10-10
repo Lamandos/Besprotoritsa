@@ -291,6 +291,7 @@ Iterable<String> _activeCardIds(PlayerState player) sync* {
 
 GameState _heal(GameState state, int amount) {
   final player = _activePlayer(state)!;
+  final healing = amount + _healingBonus(state, player);
   final conditionDeck = state.decks['conditions'];
   final decks = Map<DeckId, DeckState>.of(state.decks);
   if (conditionDeck != null && player.conditions.isNotEmpty) {
@@ -306,7 +307,7 @@ GameState _heal(GameState state, int amount) {
       state,
       (current) => _copyPlayer(
         current,
-        damage: (current.damage - amount).clamp(0, current.damage),
+        damage: (current.damage - healing).clamp(0, current.damage),
         conditions: const [],
       ),
     ),

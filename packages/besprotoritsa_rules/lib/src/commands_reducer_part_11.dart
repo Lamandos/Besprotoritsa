@@ -97,6 +97,13 @@ CommandRejection? _validateCardAbility(
         'Робот должен быть экипирован и находиться в готовности.',
       );
     }
+    if (command.cardId == 'gtu-b1c4' &&
+        (player.nextAttackBonusHits > 0 ||
+            !state.monsters.any((monster) => monster.coord == player.coord))) {
+      return const InventoryCommandRejected(
+        'GTU-B1c4 можно применить только в бою перед атакой.',
+      );
+    }
     if (command.cardId == 'h3-al') {
       final target = _playerById(state, command.targetPlayerId ?? player.id);
       if (target == null || !target.alive || target.damage == 0) {
@@ -275,6 +282,8 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
   if (command.cardId == 'medic-bag') {
     final targetId = command.targetPlayerId ?? player.id;
     final amount = command.amount!;
+    final target = _playerById(state, targetId)!;
+    final healing = amount + _healingBonus(state, target);
     final medical = _copyState(
       state,
       actionsLeft: state.actionsLeft - 1,
@@ -284,12 +293,15 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
             _copyPlayer(
               current,
               credits: current.credits - amount,
-              damage: current.damage - amount,
+              damage: (current.damage - healing).clamp(0, current.damage),
             )
           else if (current.id == player.id)
             _copyPlayer(current, credits: current.credits - amount)
           else if (current.id == targetId)
-            _copyPlayer(current, damage: current.damage - amount)
+            _copyPlayer(
+              current,
+              damage: (current.damage - healing).clamp(0, current.damage),
+            )
           else
             current,
       ],
@@ -387,6 +399,8 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
 
   if (command.cardId == 'h3-al') {
     final targetId = command.targetPlayerId ?? player.id;
+    final target = _playerById(state, targetId)!;
+    final healing = 3 + _healingBonus(state, target);
     final healed = _copyState(
       state,
       players: _replacePlayer(
@@ -394,7 +408,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
         targetId,
         (current) => _copyPlayer(
           current,
-          damage: (current.damage - 3).clamp(0, current.damage),
+          damage: (current.damage - healing).clamp(0, current.damage),
         ),
       ),
       logEntry: 'robot-heal:${player.id}:$targetId:3',
@@ -450,7 +464,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
           state,
           (current) => _copyPlayer(
             current,
-            nextAttackBonusHits: current.nextAttackBonusHits + 1,
+            nextAttackBonusHits: 1,
           ),
         ),
         logEntry: 'robot-next-hit:${player.id}',
@@ -539,9 +553,12 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
     'proton-shield' => (heal: 0, credits: 0, actions: 0),
     _ => throw StateError('Validated unsupported card ability.'),
   };
+  final healing = effect.heal == 0
+      ? 0
+      : effect.heal + _healingBonus(consumed, updatedPlayer);
   final nextPlayer = _copyPlayer(
     updatedPlayer,
-    damage: (updatedPlayer.damage - effect.heal).clamp(0, updatedPlayer.damage),
+    damage: (updatedPlayer.damage - healing).clamp(0, updatedPlayer.damage),
     credits: updatedPlayer.credits + effect.credits,
     monsterDefenseBonusRound: command.cardId == 'nanobots'
         ? state.round
@@ -556,7 +573,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
     players: _replacePlayer(consumed, updatedPlayer.id, (_) => nextPlayer),
     logEntry: 'card-ability:${command.cardId}:${player.id}',
   );
-  return effect.heal > 0
+  return healing > 0
       ? _clearPlayerConditions(resolved, updatedPlayer.id)
       : resolved;
 }
@@ -583,6 +600,13 @@ GameState _clearPlayerConditions(GameState state, PlayerId playerId) {
     decks: decks,
   );
 }
+
+int _healingBonus(GameState state, PlayerState player) =>
+    _activeCardIds(player).fold<int>(0, (bonus, cardId) {
+      final behaviors = state.cardDefinitions[cardId]?.behaviorIds;
+      return bonus +
+          ((behaviors?.contains('health.healingBonus') ?? false) ? 1 : 0);
+    });
 
 GameState _exhaustRobot(
   GameState state,

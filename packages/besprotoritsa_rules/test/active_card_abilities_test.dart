@@ -2,6 +2,114 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('BUG056 GTU-B1c4 cannot bank a hit before combat', () {
+    final state = _state(equippedRobot: 'gtu-b1c4');
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand('gtu-b1c4'),
+      SeededDiceRoller(130),
+    );
+
+    expect(result.rejection, isNotNull);
+    expect(result.state.players.first.nextAttackBonusHits, 0);
+    expect(result.state.players.first.exhaustedRobots, isEmpty);
+  });
+
+  test('BUG056 GTU-B1c4 bonus is captured by the attack window', () {
+    final opponent = MonsterInstance(
+      instanceId: 'ghoul-1',
+      monsterId: 'ghoul',
+      coord: const HexCoord(0, 0),
+      damage: 0,
+      health: 20,
+      attack: 1,
+      movement: 0,
+    );
+    final state = _state(
+      equippedRobot: 'gtu-b1c4',
+      equippedWeapon: 'assault-rifle',
+      monsters: [opponent],
+    );
+    final baseline = _state(
+      equippedWeapon: 'assault-rifle',
+      monsters: [opponent],
+    );
+    final activated = step(
+      state,
+      const UseCardAbilityCommand('gtu-b1c4'),
+      SeededDiceRoller(141),
+    );
+    final pending = step(
+      activated.state,
+      const AttackCommand('ghoul-1'),
+      SeededDiceRoller(142),
+    );
+    final baselinePending = step(
+      baseline,
+      const AttackCommand('ghoul-1'),
+      SeededDiceRoller(142),
+    );
+
+    expect(activated.rejection, isNull);
+    expect(pending.rejection, isNull);
+    expect(pending.state.pendingDecision, isA<AwaitingRerollChoice>());
+    expect(pending.state.players.first.nextAttackBonusHits, 0);
+
+    final resolved = step(
+      pending.state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      SeededDiceRoller(143),
+    );
+    final baselineResolved = step(
+      baselinePending.state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      SeededDiceRoller(143),
+    );
+    expect(
+      resolved.state.monsters.single.damage,
+      baselineResolved.state.monsters.single.damage + 1,
+    );
+  });
+
+  test('BUG056 a pending GTU-B1c4 hit cannot be stacked', () {
+    final state = _state(
+      backpack: const ['power-cell'],
+      equippedRobot: 'gtu-b1c4',
+      monsters: [
+        MonsterInstance(
+          instanceId: 'ghoul-1',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 20,
+          attack: 1,
+          movement: 0,
+        ),
+      ],
+    );
+    final activated = step(
+      state,
+      const UseCardAbilityCommand('gtu-b1c4'),
+      SeededDiceRoller(144),
+    );
+    final reloaded = step(
+      activated.state,
+      const UseCardAbilityCommand('power-cell', targetCardId: 'gtu-b1c4'),
+      SeededDiceRoller(145),
+    );
+    final activatedAgain = step(
+      reloaded.state,
+      const UseCardAbilityCommand('gtu-b1c4'),
+      SeededDiceRoller(146),
+    );
+
+    expect(activated.rejection, isNull);
+    expect(reloaded.rejection, isNull);
+    expect(activatedAgain.rejection, isNotNull);
+    expect(activatedAgain.state.players.first.nextAttackBonusHits, 1);
+  });
+
   test('BUG032 medic bag heals an adjacent hero for credits and an action', () {
     final state = _state(
       backpack: const ['medic-bag'],
@@ -192,6 +300,48 @@ void main() {
       result.state.decks['conditions']!.discardPile,
       contains('infection'),
     );
+  });
+
+  test('BUG057 Old Cloak increases active healing by one', () {
+    final rationed = step(
+      _state(
+        backpack: const ['dry-rations'],
+        equippedArmor: 'old-cloak',
+        damage: 5,
+      ),
+      const UseCardAbilityCommand('dry-rations'),
+      SeededDiceRoller(137),
+    );
+    final bagged = step(
+      _state(
+        backpack: const ['medic-bag'],
+        equippedArmor: 'old-cloak',
+        credits: 1,
+        damage: 4,
+      ),
+      const UseCardAbilityCommand(
+        'medic-bag',
+        targetPlayerId: 'hero-1',
+        amount: 1,
+      ),
+      SeededDiceRoller(138),
+    );
+    final robotic = step(
+      _state(
+        equippedRobot: 'h3-al',
+        equippedArmor: 'old-cloak',
+        damage: 4,
+      ),
+      const UseCardAbilityCommand('h3-al'),
+      SeededDiceRoller(139),
+    );
+
+    expect(rationed.rejection, isNull);
+    expect(rationed.state.players.first.damage, 0);
+    expect(bagged.rejection, isNull);
+    expect(bagged.state.players.first.damage, 2);
+    expect(robotic.rejection, isNull);
+    expect(robotic.state.players.first.damage, 0);
   });
 
   test(
@@ -804,6 +954,8 @@ GameState _state({
   int damage = 0,
   int secondHeroDamage = 0,
   String? equippedRobot,
+  String? equippedWeapon,
+  String? equippedArmor,
   Iterable<CardId> exhaustedRobots = const [],
   int actionsLeft = 2,
   int roundNumber = 1,
@@ -838,7 +990,11 @@ GameState _state({
       health: 5,
       credits: credits,
       backpack: backpack,
-      equipped: EquippedGear(robot: equippedRobot),
+      equipped: EquippedGear(
+        weapon: equippedWeapon,
+        armor: equippedArmor,
+        robot: equippedRobot,
+      ),
       carriedMods: const [],
       implanted: const [],
       conditions: conditions,
@@ -875,6 +1031,33 @@ GameState _state({
   },
   quests: QuestState(),
   cardDefinitions: {
+    'gtu-b1c4': CardDefinition(
+      id: 'gtu-b1c4',
+      type: ItemType.robot,
+      slots: const [ItemSlot.robot],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'items',
+      behaviorIds: const ['robot.exhaust', 'combat.addHit'],
+    ),
+    'old-cloak': CardDefinition(
+      id: 'old-cloak',
+      type: ItemType.armor,
+      slots: const [ItemSlot.armor],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {CardStat.defense: 1}),
+      sourceDeck: 'specialItems',
+      behaviorIds: const ['health.healingBonus'],
+    ),
+    'assault-rifle': CardDefinition(
+      id: 'assault-rifle',
+      type: ItemType.weapon,
+      slots: const [ItemSlot.weapon],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'specialItems',
+      behaviorIds: const ['dice.reroll.anyCountPerAttack'],
+    ),
     'medic-bag': CardDefinition(
       id: 'medic-bag',
       type: ItemType.supply,
@@ -910,6 +1093,15 @@ GameState _state({
       staticEffects: CardStaticEffects(const {}),
       sourceDeck: 'supplies',
       behaviorIds: const ['card.discardCost', 'health.restoreAll'],
+    ),
+    'dry-rations': CardDefinition(
+      id: 'dry-rations',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['card.discardCost', 'health.restore'],
     ),
     'proton-shield': CardDefinition(
       id: 'proton-shield',

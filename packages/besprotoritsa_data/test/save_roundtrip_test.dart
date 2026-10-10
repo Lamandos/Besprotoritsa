@@ -106,6 +106,54 @@ void main() {
     );
   });
 
+  test('BUG058 restores a legacy pending robot reroll source', () {
+    final codec = GameStateJsonCodec();
+    final legacy = codec.toJson(_interruptedState());
+    final decision = Map<String, Object?>.from(
+      legacy['pending_decision']! as Map<Object?, Object?>,
+    )..remove('reroll_sources');
+    legacy['pending_decision'] = decision;
+
+    final players = (legacy['players']! as List<Object?>)
+        .map(
+          (player) => Map<String, Object?>.from(
+            player! as Map<Object?, Object?>,
+          ),
+        )
+        .toList();
+    final firstPlayer = players.first;
+    firstPlayer['equipped'] = Map<String, Object?>.from(
+      firstPlayer['equipped']! as Map<Object?, Object?>,
+    )..['robot'] = 'sc13-nc3';
+    legacy['players'] = players;
+    final cardDefinitions =
+        Map<String, Object?>.from(
+            legacy['card_definitions']! as Map<Object?, Object?>,
+          )
+          ..['sc13-nc3'] = <String, Object?>{
+            'id': 'sc13-nc3',
+            'category': 'robot',
+            'slots': ['robot'],
+            'cost': 0,
+            'stats': <String, int>{},
+            'behaviorIds': ['robot.exhaust', 'dice.reroll.allForSkill'],
+            'sourceDeck': 'items',
+          };
+    legacy['card_definitions'] = cardDefinitions;
+
+    final restored = codec.fromJson(legacy);
+    final pending = restored.pendingDecision! as AwaitingRerollChoice;
+    final rerolled = step(
+      restored,
+      ResolvePendingDecisionCommand(RerollChoice()),
+      SeededDiceRoller(140),
+    );
+
+    expect(pending.rerollSources, ['sc13-nc3']);
+    expect(rerolled.rejection, isNull);
+    expect(rerolled.state.players.first.exhaustedRobots, contains('sc13-nc3'));
+  });
+
   test('preserves immediate combat continuations in pending decisions', () {
     final base = _interruptedState();
     final codec = GameStateJsonCodec();
@@ -130,6 +178,7 @@ void main() {
         playerId: 'ada',
         targetInstanceId: 'event-ghoul',
         resumeAutomaticPhase: true,
+        bonusHits: 1,
       ),
     );
     final restoredAttack =
@@ -163,6 +212,7 @@ void main() {
       (restoredAttack.context! as AttackRollContext).resumeAutomaticPhase,
       isTrue,
     );
+    expect((restoredAttack.context! as AttackRollContext).bonusHits, 1);
   });
 
   test('reports invalid card definitions as format errors', () {

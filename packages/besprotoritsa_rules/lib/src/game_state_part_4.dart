@@ -82,12 +82,15 @@ final class AttackRollContext extends RollContext {
     required this.playerId,
     required this.targetInstanceId,
     this.preAttackDamage = 0,
+    this.bonusHits = 0,
     this.resumeAutomaticPhase = false,
-  }) : super();
+  }) : assert(bonusHits >= 0, 'bonusHits must not be negative.'),
+       super();
 
   final PlayerId playerId;
   final String targetInstanceId;
   final int preAttackDamage;
+  final int bonusHits;
   final bool resumeAutomaticPhase;
 }
 

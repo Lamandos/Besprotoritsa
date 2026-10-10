@@ -399,6 +399,20 @@ GameStepResult _attack(
   DiceRoller dice,
 ) {
   final player = _activePlayer(state)!;
+  final target = _monsterById(state, targetInstanceId)!;
+  final bonusHits = target.coord == player.coord
+      ? player.nextAttackBonusHits
+      : 0;
+  final attackState = player.nextAttackBonusHits == 0
+      ? state
+      : _copyState(
+          state,
+          players: _replacePlayer(
+            state,
+            player.id,
+            (current) => _copyPlayer(current, nextAttackBonusHits: 0),
+          ),
+        );
   final hooks = _activeEffectHooks(state, player);
   final preAttackHooks = hooks.whereType<PreAttackDamageHook>();
   final preAttackDamage = preAttackHooks.isEmpty
@@ -406,7 +420,6 @@ GameStepResult _attack(
       : const EffectEngine()
             .resolvePreAttackRoll(dice.rollDice(1), preAttackHooks)
             .targetDamage;
-  final target = _monsterById(state, targetInstanceId)!;
   final diceRoll = dice.rollDice(
     _heroAttackDice(player, state, target: target),
   );
@@ -422,7 +435,7 @@ GameStepResult _attack(
   if (rerollSources.isNotEmpty) {
     return GameStepResult(
       state: _copyState(
-        state,
+        attackState,
         actionsLeft: state.actionsLeft - 1,
         pendingDecision: AwaitingRerollChoice(
           dice: diceRoll,
@@ -434,6 +447,7 @@ GameStepResult _attack(
             playerId: player.id,
             targetInstanceId: targetInstanceId,
             preAttackDamage: preAttackDamage,
+            bonusHits: bonusHits,
           ),
         ),
         logEntry: 'attack-roll:${player.id}:$targetInstanceId',
@@ -442,12 +456,13 @@ GameStepResult _attack(
   }
   return GameStepResult(
     state: _resolveAttackRoll(
-      state,
+      attackState,
       player.id,
       targetInstanceId,
       diceRoll,
       consumesAction: true,
       preAttackDamage: preAttackDamage,
+      bonusHits: bonusHits,
     ),
   );
 }
@@ -459,12 +474,13 @@ GameState _resolveAttackRoll(
   List<int> dice, {
   required bool consumesAction,
   int preAttackDamage = 0,
+  int bonusHits = 0,
 }) {
   final player = _playerById(state, playerId)!;
   final monster = _monsterById(state, targetInstanceId)!;
   final hooks = _activeEffectHooks(state, player);
   final roll = const EffectEngine().resolveRoll(dice, hooks);
-  final hits = roll.hits + player.nextAttackBonusHits;
+  final hits = roll.hits + bonusHits;
   final damage = preAttackDamage + (hits - monster.defense).clamp(0, hits);
   final defeated = monster.damage + damage >= monster.health;
   final collateral = defeated

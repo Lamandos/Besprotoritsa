@@ -87,8 +87,37 @@ class GameStateJsonCodec {
   /// Migrates [document] to the current version and reconstructs its state.
   GameState fromJson(Map<String, Object?> document) {
     final json = _migrator.migrate(document);
+    final phase = SaveJsonModels.gamePhaseFromJson(_string(json, 'phase'));
+    final activePlayerId = _nullableString(
+      json['active_player_id'],
+      'active_player_id',
+    );
+    final players = _objects(
+      json,
+      'players',
+    ).map(SaveJsonModels.playerFromJson).toList();
+    final cardDefinitions =
+        _objectMapOrDefault(
+          json['card_definitions'],
+          'card_definitions',
+        ).map(
+          (id, value) => MapEntry(
+            id,
+            SaveJsonModels.cardDefinitionFromJson(value),
+          ),
+        );
+    final rawPendingDecision = json['pending_decision'];
+    final missingRerollSources =
+        rawPendingDecision is Map &&
+        rawPendingDecision['type'] == 'reroll' &&
+        !rawPendingDecision.containsKey('reroll_sources');
     final pendingDecision = _migrateLegacyPendingDecision(
       SaveJsonModels.decisionFromJson(json['pending_decision']),
+      missingRerollSources: missingRerollSources,
+      players: players,
+      cardDefinitions: cardDefinitions,
+      phase: phase,
+      activePlayerId: activePlayerId,
     );
     return GameState(
       // GameState's schemaVersion describes the rules model, not the save file.
@@ -98,15 +127,12 @@ class GameStateJsonCodec {
       contentSetVersion: _string(json, 'content_set_version'),
       difficulty: _intOrDefault(json, 'difficulty', defaultValue: 1),
       round: _int(json, 'round'),
-      phase: SaveJsonModels.gamePhaseFromJson(_string(json, 'phase')),
-      activePlayerId: _nullableString(
-        json['active_player_id'],
-        'active_player_id',
-      ),
+      phase: phase,
+      activePlayerId: activePlayerId,
       actionsLeft: _int(json, 'actions_left'),
       actionsTakenThisTurn: _intOrDefault(json, 'actions_taken_this_turn'),
       board: _objects(json, 'board').map(SaveJsonModels.tileFromJson),
-      players: _objects(json, 'players').map(SaveJsonModels.playerFromJson),
+      players: players,
       monsters: _objects(json, 'monsters').map(SaveJsonModels.monsterFromJson),
       boils: _objects(json, 'boils').map(SaveJsonModels.boilFromJson),
       tripwires: _objectsOrDefault(
@@ -130,16 +156,7 @@ class GameStateJsonCodec {
       conditionCards: _objectMap(json, 'condition_cards').map(
         (id, value) => MapEntry(id, SaveJsonModels.conditionFromJson(value)),
       ),
-      cardDefinitions:
-          _objectMapOrDefault(
-            json['card_definitions'],
-            'card_definitions',
-          ).map(
-            (id, value) => MapEntry(
-              id,
-              SaveJsonModels.cardDefinitionFromJson(value),
-            ),
-          ),
+      cardDefinitions: cardDefinitions,
       eventDefinitions:
           _objectMapOrDefault(
             json['event_definitions'],
@@ -189,44 +206,146 @@ class GameStateJsonCodec {
   }
 }
 
-PendingDecision? _migrateLegacyPendingDecision(PendingDecision? decision) {
-  if (decision case AwaitingRerollChoice(
-    :final dice,
-    :final availableRerolls,
-    :final rerollSources,
-    :final window,
-    context: SkillCheckContext(
-      :final playerId,
-      :final stat,
-      :final difficulty,
-      eventId: 'cabin-noise',
-      eventBehaviorId: null,
-      :final eventOptionIndex,
-      :final questId,
-    ),
-    :final maxDicePerReroll,
+PendingDecision? _migrateLegacyPendingDecision(
+  PendingDecision? decision, {
+  required bool missingRerollSources,
+  required Iterable<PlayerState> players,
+  required Map<CardId, CardDefinition> cardDefinitions,
+  required GamePhase phase,
+  required PlayerId? activePlayerId,
+}) {
+  if (decision is! AwaitingRerollChoice) return decision;
+
+  var context = decision.context;
+  if (context case SkillCheckContext(
+    :final playerId,
+    :final stat,
+    :final difficulty,
+    eventId: 'cabin-noise',
+    eventBehaviorId: null,
+    :final eventOptionIndex,
+    :final questId,
   )) {
     // Version 1 saves written before event behavior IDs were persisted can
     // resume this released event without its data-driven behavior identifier.
-    return AwaitingRerollChoice(
-      dice: dice,
-      availableRerolls: availableRerolls,
-      rerollSources: rerollSources,
-      window: window,
-      maxDicePerReroll: maxDicePerReroll,
-      context: SkillCheckContext(
-        playerId: playerId,
-        stat: stat,
-        difficulty: difficulty,
-        eventId: 'cabin-noise',
-        eventBehaviorId: 'event_cabin_noise',
-        eventOptionIndex: eventOptionIndex,
-        questId: questId,
-      ),
+    context = SkillCheckContext(
+      playerId: playerId,
+      stat: stat,
+      difficulty: difficulty,
+      eventId: 'cabin-noise',
+      eventBehaviorId: 'event_cabin_noise',
+      eventOptionIndex: eventOptionIndex,
+      questId: questId,
     );
   }
-  return decision;
+
+  var rerollSources = decision.rerollSources;
+  if (missingRerollSources &&
+      rerollSources.isEmpty &&
+      decision.availableRerolls > 0) {
+    final contextPlayerId = switch (context) {
+      SkillCheckContext(:final playerId) => playerId,
+      AttackRollContext(:final playerId) => playerId,
+      _ => activePlayerId,
+    };
+    final player = players
+        .where((entry) => entry.id == contextPlayerId)
+        .firstOrNull;
+    if (player != null) {
+      final inferred = _inferLegacyRerollSources(
+        context: context,
+        player: player,
+        cardDefinitions: cardDefinitions,
+        phase: phase,
+      );
+      // Source order determines which card/robot is consumed first. Only use
+      // the reconstruction when the saved count identifies the full list.
+      if (inferred.length == decision.availableRerolls) {
+        rerollSources = inferred;
+      }
+    }
+  }
+
+  return AwaitingRerollChoice(
+    dice: decision.dice,
+    availableRerolls: decision.availableRerolls,
+    rerollSources: rerollSources,
+    window: decision.window,
+    maxDicePerReroll: decision.maxDicePerReroll,
+    context: context,
+  );
 }
+
+List<CardId> _inferLegacyRerollSources({
+  required RollContext? context,
+  required PlayerState player,
+  required Map<CardId, CardDefinition> cardDefinitions,
+  required GamePhase phase,
+}) {
+  final sources = <CardId>[];
+  if (context case SkillCheckContext(:final stat)) {
+    for (final cardId in InventoryRules.activeCardIds(player)) {
+      if (player.exhaustedRobots.contains(cardId)) continue;
+      final behaviors =
+          cardDefinitions[cardId]?.behaviorIds ?? const <String>[];
+      final eligible = switch (cardId) {
+        'sc13-nc3' =>
+          (stat == StatType.science || stat == StatType.repair) &&
+              behaviors.contains('dice.reroll.allForSkill'),
+        'f1t-b07' =>
+          (stat == StatType.endurance || stat == StatType.agility) &&
+              behaviors.contains('dice.reroll.allForSkill'),
+        'drg-4u' =>
+          stat == StatType.strength && behaviors.contains('dice.reroll.all'),
+        'pipe-wrench' =>
+          stat == StatType.repair &&
+              behaviors.contains('dice.reroll.allForSkill'),
+        _ => false,
+      };
+      if (eligible) sources.add(cardId);
+    }
+    if (phase == GamePhase.playersTurn &&
+        player.backpack.contains('defibrillator')) {
+      sources.add('defibrillator');
+    }
+    for (final cardId in player.backpack) {
+      if (_legacyStimulantMatchesSkill(cardId, stat)) sources.add(cardId);
+    }
+  } else if (context is AttackRollContext) {
+    final registry = EffectRegistry.standard();
+    for (final cardId in InventoryRules.activeCardIds(player)) {
+      if (player.exhaustedRobots.contains(cardId)) continue;
+      for (final behaviorId
+          in cardDefinitions[cardId]?.behaviorIds ?? const <String>[]) {
+        switch (registry[behaviorId]) {
+          case ModifyRollHook(:final rerollsPerAttack)
+              when rerollsPerAttack > 0:
+            sources.addAll(List.filled(rerollsPerAttack, cardId));
+          default:
+            if (behaviorId == 'dice.reroll.anyCountPerAttack' ||
+                (cardId == 'drg-4u' && behaviorId == 'dice.reroll.all')) {
+              sources.add(cardId);
+            }
+        }
+      }
+    }
+    if (phase == GamePhase.playersTurn &&
+        player.backpack.contains('defibrillator')) {
+      sources.add('defibrillator');
+    }
+  }
+  return sources;
+}
+
+bool _legacyStimulantMatchesSkill(CardId cardId, StatType stat) =>
+    switch (cardId) {
+      'science-stimulant' => stat == StatType.science,
+      'agility-stimulant' => stat == StatType.agility,
+      'endurance-stimulant' => stat == StatType.endurance,
+      'repair-stimulant' => stat == StatType.repair,
+      'strength-stimulant' => stat == StatType.strength,
+      _ => false,
+    };
 
 Map<String, Object?> _object(Map<String, Object?> json, String key) {
   final value = json[key];

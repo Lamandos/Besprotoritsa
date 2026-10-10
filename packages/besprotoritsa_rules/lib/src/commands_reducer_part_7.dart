@@ -1025,6 +1025,7 @@ GameState _completeRoll(
       pending.dice,
       consumesAction: false,
       preAttackDamage: context.preAttackDamage,
+      bonusHits: context.bonusHits,
     );
     return context.resumeAutomaticPhase
         ? _resumeAutomaticPhase(resolved)
@@ -2810,37 +2811,49 @@ GameState _completeMvpQuest(GameState state, SkillCheckContext context) {
 }
 
 GameState _endTurn(GameState state) {
-  final activeIndex = state.players.indexWhere(
-    (player) => player.id == state.activePlayerId,
+  var current = state;
+  final activePlayer = _activePlayer(state);
+  if (activePlayer != null && activePlayer.nextAttackBonusHits > 0) {
+    current = _copyState(
+      state,
+      players: _replacePlayer(
+        state,
+        activePlayer.id,
+        (player) => _copyPlayer(player, nextAttackBonusHits: 0),
+      ),
+    );
+  }
+  final activeIndex = current.players.indexWhere(
+    (player) => player.id == current.activePlayerId,
   );
-  final nextIndex = _nextLivingPlayerIndex(state.players, activeIndex);
+  final nextIndex = _nextLivingPlayerIndex(current.players, activeIndex);
   if (nextIndex == null) {
-    if (state.queuedReplacements.isNotEmpty) {
+    if (current.queuedReplacements.isNotEmpty) {
       return _startNextPlayersTurn(
-        _copyState(state, actionsLeft: 0, clearActivePlayerId: true),
+        _copyState(current, actionsLeft: 0, clearActivePlayerId: true),
       );
     }
-    return _copyState(state, actionsLeft: 0, clearActivePlayerId: true);
+    return _copyState(current, actionsLeft: 0, clearActivePlayerId: true);
   }
   final lastPlayerOfRound = activeIndex >= 0 && nextIndex <= activeIndex;
   if (lastPlayerOfRound) {
     return _runMonstersTurn(
       _copyState(
-        state,
+        current,
         phase: GamePhase.monstersTurn,
         actionsLeft: 0,
         clearActivePlayerId: true,
         monsterTurnIndex: 0,
         monsterStepsRemaining: 0,
-        logEntry: 'players-turn-complete:${state.round}',
+        logEntry: 'players-turn-complete:${current.round}',
       ),
     );
   }
   return _copyState(
-    state,
-    activePlayerId: state.players[nextIndex].id,
-    actionsLeft: state.players[nextIndex].actionPoints,
+    current,
+    activePlayerId: current.players[nextIndex].id,
+    actionsLeft: current.players[nextIndex].actionPoints,
     actionsTakenThisTurn: 0,
-    logEntry: 'end-turn:${state.activePlayerId}',
+    logEntry: 'end-turn:${current.activePlayerId}',
   );
 }
