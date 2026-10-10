@@ -198,9 +198,10 @@ class _HeroRosterPanel extends StatelessWidget {
                             style: const TextStyle(fontSize: 8),
                           ),
                         if (player.monsterDefenseBonusRound == state.round)
-                          const Text(
-                            'Защита +1 до конца раунда',
-                            style: TextStyle(fontSize: 8),
+                          Text(
+                            'Защита +${player.monsterDefenseBonus} '
+                            'до конца раунда',
+                            style: const TextStyle(fontSize: 8),
                           ),
                         if (player.exhaustedRobots.isNotEmpty)
                           Text(

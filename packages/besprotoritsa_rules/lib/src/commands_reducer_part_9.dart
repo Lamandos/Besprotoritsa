@@ -121,6 +121,7 @@ PlayerState _copyPlayer(
   int? nextTurnActionDelta,
   int? monsterDamageImmuneThroughRound,
   int? monsterDefenseBonusRound,
+  int? monsterDefenseBonus,
   int? damageImmuneThroughRound,
   int? enemyFeaturesIgnoredThroughRound,
   int? nextAttackBonusHits,
@@ -147,6 +148,7 @@ PlayerState _copyPlayer(
       monsterDamageImmuneThroughRound ?? player.monsterDamageImmuneThroughRound,
   monsterDefenseBonusRound:
       monsterDefenseBonusRound ?? player.monsterDefenseBonusRound,
+  monsterDefenseBonus: monsterDefenseBonus ?? player.monsterDefenseBonus,
   damageImmuneThroughRound:
       damageImmuneThroughRound ?? player.damageImmuneThroughRound,
   enemyFeaturesIgnoredThroughRound:

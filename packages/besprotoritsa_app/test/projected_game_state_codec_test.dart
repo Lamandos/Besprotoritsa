@@ -21,6 +21,8 @@ void main() {
           'damage': 0,
           'health': 10,
           'credits': 0,
+          'monsterDefenseBonusRound': 1,
+          'monsterDefenseBonus': 2,
           'equipped': <String, Object?>{},
           'backpack': <Object?>[],
           'carriedMods': <Object?>[],
@@ -42,6 +44,7 @@ void main() {
     expect(state.pendingDecision, isA<AwaitingOtherPlayerDecision>());
     expect(state.chestCards, ['shared-tool']);
     expect(state.exhaustedChestRobots, ['r69-nic3']);
+    expect(state.players.single.monsterDefenseBonus, 2);
     expect(
       (state.pendingDecision! as AwaitingOtherPlayerDecision).awaitingPlayerId,
       'boris',

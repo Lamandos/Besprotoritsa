@@ -35,6 +35,8 @@ void main() {
           'ada',
           backpack: const ['pistol'],
           enemyFeaturesIgnoredThroughRound: 1,
+          monsterDefenseBonusRound: 1,
+          monsterDefenseBonus: 2,
         ),
         _player(
           'boris',
@@ -86,6 +88,12 @@ void main() {
           .enemyFeaturesIgnoredThroughRound,
       1,
     );
+    expect(
+      view.players
+          .singleWhere((player) => player.id == 'ada')
+          .monsterDefenseBonus,
+      2,
+    );
     expect(other.backpack, isEmpty);
     expect(other.conditions, isEmpty);
     expect(other.hiddenCardCount, 2);
@@ -110,6 +118,8 @@ PlayerState _player(
   Iterable<CardId> backpack = const [],
   Iterable<CardId> conditions = const [],
   int? enemyFeaturesIgnoredThroughRound,
+  int? monsterDefenseBonusRound,
+  int monsterDefenseBonus = 1,
 }) => PlayerState(
   id: id,
   characterId: '$id-character',
@@ -122,5 +132,7 @@ PlayerState _player(
   implanted: const [],
   conditions: conditions,
   alive: true,
+  monsterDefenseBonusRound: monsterDefenseBonusRound,
+  monsterDefenseBonus: monsterDefenseBonus,
   enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
 );

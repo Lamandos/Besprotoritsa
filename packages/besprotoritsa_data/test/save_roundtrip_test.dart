@@ -80,6 +80,7 @@ void main() {
       expect(restored.cardDefinitions['pistol']!.sourceDeck, 'items');
       expect(restored.players.first.monsterDamageImmuneThroughRound, 3);
       expect(restored.players.first.monsterDefenseBonusRound, 5);
+      expect(restored.players.first.monsterDefenseBonus, 3);
       expect(restored.players.first.enemyFeaturesIgnoredThroughRound, 4);
       expect(restored.players.first.retainedEventCards, ['scientist-report']);
       expect(restored.chestCards, ['shared-tool']);
@@ -104,6 +105,18 @@ void main() {
       codec.toJson(restored)['schema_version'],
       currentSaveSchemaVersion,
     );
+  });
+
+  test('defaults legacy round-scoped defense markers to a one-point bonus', () {
+    final codec = GameStateJsonCodec();
+    final legacy = codec.toJson(_interruptedState());
+    final players = legacy['players']! as List<Object?>;
+    (players.first! as Map<String, Object?>).remove('monster_defense_bonus');
+
+    final restored = codec.fromJson(legacy);
+
+    expect(restored.players.first.monsterDefenseBonusRound, 5);
+    expect(restored.players.first.monsterDefenseBonus, 1);
   });
 
   test('migrates checked in unversioned and release-1 save fixtures', () {
@@ -372,6 +385,7 @@ GameState _interruptedState() => GameState(
       conditions: const ['malaise'],
       monsterDamageImmuneThroughRound: 3,
       monsterDefenseBonusRound: 5,
+      monsterDefenseBonus: 3,
       enemyFeaturesIgnoredThroughRound: 4,
       retainedEventCards: const ['scientist-report'],
     ),
@@ -505,6 +519,7 @@ PlayerState _player({
   bool alive = true,
   int? monsterDamageImmuneThroughRound,
   int? monsterDefenseBonusRound,
+  int monsterDefenseBonus = 1,
   int? enemyFeaturesIgnoredThroughRound,
   Iterable<String> retainedEventCards = const [],
   Iterable<String> exhaustedRobots = const [],
@@ -538,6 +553,7 @@ PlayerState _player({
   weaponModifier: 2,
   monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
   monsterDefenseBonusRound: monsterDefenseBonusRound,
+  monsterDefenseBonus: monsterDefenseBonus,
   enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
   exhaustedRobots: exhaustedRobots,
 );

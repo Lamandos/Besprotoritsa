@@ -48,6 +48,7 @@ final class ProjectedPlayerState {
     required this.nextTurnActionDelta,
     required this.monsterDamageImmuneThroughRound,
     required this.monsterDefenseBonusRound,
+    required this.monsterDefenseBonus,
     required this.damageImmuneThroughRound,
     required this.enemyFeaturesIgnoredThroughRound,
     required this.nextAttackBonusHits,
@@ -86,6 +87,7 @@ final class ProjectedPlayerState {
       nextTurnActionDelta: state.nextTurnActionDelta,
       monsterDamageImmuneThroughRound: state.monsterDamageImmuneThroughRound,
       monsterDefenseBonusRound: state.monsterDefenseBonusRound,
+      monsterDefenseBonus: state.monsterDefenseBonus,
       damageImmuneThroughRound: state.damageImmuneThroughRound,
       enemyFeaturesIgnoredThroughRound: state.enemyFeaturesIgnoredThroughRound,
       nextAttackBonusHits: state.nextAttackBonusHits,
@@ -111,6 +113,7 @@ final class ProjectedPlayerState {
   final int nextTurnActionDelta;
   final int? monsterDamageImmuneThroughRound;
   final int? monsterDefenseBonusRound;
+  final int monsterDefenseBonus;
   final int? damageImmuneThroughRound;
   final int? enemyFeaturesIgnoredThroughRound;
   final int nextAttackBonusHits;

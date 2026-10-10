@@ -235,6 +235,7 @@ final class PlayerState {
     this.nextTurnActionDelta = 0,
     this.monsterDamageImmuneThroughRound,
     this.monsterDefenseBonusRound,
+    this.monsterDefenseBonus = 1,
     this.damageImmuneThroughRound,
     this.enemyFeaturesIgnoredThroughRound,
     this.nextAttackBonusHits = 0,
@@ -304,8 +305,11 @@ final class PlayerState {
   /// is active.
   final int? monsterDamageImmuneThroughRound;
 
-  /// Round in which a temporary +1 monster-defense effect applies.
+  /// Round in which the temporary monster-defense bonus applies.
   final int? monsterDefenseBonusRound;
+
+  /// Magnitude of the temporary monster-defense bonus for that round.
+  final int monsterDefenseBonus;
 
   /// Last round through which this hero ignores all incoming damage.
   final int? damageImmuneThroughRound;
@@ -341,6 +345,7 @@ final class PlayerState {
     nextTurnActionDelta: nextTurnActionDelta,
     monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
     monsterDefenseBonusRound: monsterDefenseBonusRound,
+    monsterDefenseBonus: monsterDefenseBonus,
     damageImmuneThroughRound: damageImmuneThroughRound,
     enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
     nextAttackBonusHits: nextAttackBonusHits,
@@ -367,6 +372,7 @@ final class PlayerState {
     nextTurnActionDelta: value,
     monsterDamageImmuneThroughRound: monsterDamageImmuneThroughRound,
     monsterDefenseBonusRound: monsterDefenseBonusRound,
+    monsterDefenseBonus: monsterDefenseBonus,
     damageImmuneThroughRound: damageImmuneThroughRound,
     enemyFeaturesIgnoredThroughRound: enemyFeaturesIgnoredThroughRound,
     nextAttackBonusHits: nextAttackBonusHits,

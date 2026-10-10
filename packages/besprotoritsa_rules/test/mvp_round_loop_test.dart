@@ -2524,6 +2524,7 @@ void main() {
         FixedDiceRoller([]),
       ).state;
       expect(state.players.single.monsterDefenseBonusRound, state.round);
+      expect(state.players.single.monsterDefenseBonus, 1);
     },
   );
 

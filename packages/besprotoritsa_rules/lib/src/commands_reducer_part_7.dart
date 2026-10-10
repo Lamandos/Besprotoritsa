@@ -1591,16 +1591,13 @@ GameState _resolveEventOutcome(
           logEntry: 'event-next-turn-actions:$playerId:$delta',
         );
       case 'monster_defense_bonus_next_round':
+        current = _grantMonsterDefenseBonus(
+          current,
+          playerId,
+          current.round + 1,
+        );
         current = _copyState(
           current,
-          players: _replacePlayer(
-            current,
-            playerId,
-            (hero) => _copyPlayer(
-              hero,
-              monsterDefenseBonusRound: current.round + 1,
-            ),
-          ),
           logEntry: 'event-monster-defense-next-round:$playerId',
         );
       case 'draw':

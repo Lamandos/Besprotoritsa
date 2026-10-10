@@ -1878,6 +1878,7 @@ Map<String, Object?> _projectedPlayerToJson(
   'nextTurnActionDelta': player.nextTurnActionDelta,
   'monsterDamageImmuneThroughRound': player.monsterDamageImmuneThroughRound,
   'monsterDefenseBonusRound': player.monsterDefenseBonusRound,
+  'monsterDefenseBonus': player.monsterDefenseBonus,
   'damageImmuneThroughRound': player.damageImmuneThroughRound,
   'enemyFeaturesIgnoredThroughRound': player.enemyFeaturesIgnoredThroughRound,
   'nextAttackBonusHits': player.nextAttackBonusHits,

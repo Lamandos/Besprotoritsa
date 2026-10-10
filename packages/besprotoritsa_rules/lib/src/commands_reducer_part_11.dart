@@ -228,7 +228,7 @@ CommandRejection? _validateCardAbility(
       'Расходуемая карта должна находиться в рюкзаке.',
     );
   }
-  if (_cardAbilityRestoresHealth(command.cardId) && player.damage == 0) {
+  if (_cardAbilityRequiresMissingHealth(command.cardId) && player.damage == 0) {
     return const InventoryCommandRejected('Здоровье уже полностью.');
   }
   return null;
@@ -253,8 +253,7 @@ bool _isDirectlyUsableBehavior(String id) => const {
   'robot.ignoreEnemyFeatures',
 }.contains(id);
 
-bool _cardAbilityRestoresHealth(String cardId) => const {
-  'nanobots',
+bool _cardAbilityRequiresMissingHealth(String cardId) => const {
   'dry-rations',
   'water',
   'ration',
@@ -435,16 +434,14 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
   }
 
   if (command.cardId == 'prot2-ct') {
+    final withDefense = _grantMonsterDefenseBonus(
+      state,
+      player.id,
+      state.round,
+    );
     return _exhaustRobot(
       _copyState(
-        state,
-        players: _replaceActivePlayer(
-          state,
-          (current) => _copyPlayer(
-            current,
-            monsterDefenseBonusRound: state.round,
-          ),
-        ),
+        withDefense,
         logEntry: 'robot-defense:${player.id}:${state.round}',
       ),
       player,
@@ -566,7 +563,10 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
   }
 
   final consumed = _discardUsedCard(state, player, command.cardId);
-  final updatedPlayer = _activePlayer(consumed)!;
+  final withDefense = command.cardId == 'nanobots'
+      ? _grantMonsterDefenseBonus(consumed, player.id, state.round)
+      : consumed;
+  final updatedPlayer = _activePlayer(withDefense)!;
   final effect = switch (command.cardId) {
     'nanobots' => (heal: 1, credits: 0, actions: 0),
     'dry-rations' => (heal: 4, credits: 0, actions: 0),
@@ -583,24 +583,22 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
   final healing = effect.heal == 0
       ? 0
       : effect.heal + _healingBonus(consumed, updatedPlayer);
+  final actualHealing = healing.clamp(0, updatedPlayer.damage);
   final nextPlayer = _copyPlayer(
     updatedPlayer,
-    damage: (updatedPlayer.damage - healing).clamp(0, updatedPlayer.damage),
+    damage: updatedPlayer.damage - actualHealing,
     credits: updatedPlayer.credits + effect.credits,
-    monsterDefenseBonusRound: command.cardId == 'nanobots'
-        ? state.round
-        : updatedPlayer.monsterDefenseBonusRound,
     damageImmuneThroughRound: command.cardId == 'proton-shield'
         ? state.round
         : updatedPlayer.damageImmuneThroughRound,
   );
   final resolved = _copyState(
-    consumed,
-    actionsLeft: consumed.actionsLeft + effect.actions,
-    players: _replacePlayer(consumed, updatedPlayer.id, (_) => nextPlayer),
+    withDefense,
+    actionsLeft: withDefense.actionsLeft + effect.actions,
+    players: _replacePlayer(withDefense, updatedPlayer.id, (_) => nextPlayer),
     logEntry: 'card-ability:${command.cardId}:${player.id}',
   );
-  return healing > 0
+  return actualHealing > 0
       ? _clearPlayerConditions(resolved, updatedPlayer.id)
       : resolved;
 }

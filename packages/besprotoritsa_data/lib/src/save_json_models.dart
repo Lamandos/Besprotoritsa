@@ -91,6 +91,7 @@ abstract final class SaveJsonModels {
     'monster_damage_immune_through_round':
         player.monsterDamageImmuneThroughRound,
     'monster_defense_bonus_round': player.monsterDefenseBonusRound,
+    'monster_defense_bonus': player.monsterDefenseBonus,
     'damage_immune_through_round': player.damageImmuneThroughRound,
     'enemy_features_ignored_through_round':
         player.enemyFeaturesIgnoredThroughRound,
@@ -136,6 +137,7 @@ abstract final class SaveJsonModels {
         json,
         'monster_defense_bonus_round',
       ),
+      monsterDefenseBonus: _optionalInt(json, 'monster_defense_bonus') ?? 1,
       damageImmuneThroughRound: _optionalInt(
         json,
         'damage_immune_through_round',

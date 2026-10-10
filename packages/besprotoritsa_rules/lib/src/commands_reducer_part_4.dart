@@ -194,7 +194,33 @@ int _playerDefense(GameState state, PlayerState player) =>
         return total + (definition?.staticEffects[CardStat.defense] ?? 0);
       },
     ) +
-    (player.monsterDefenseBonusRound == state.round ? 1 : 0);
+    (player.monsterDefenseBonusRound == state.round
+        ? player.monsterDefenseBonus
+        : 0);
+
+GameState _grantMonsterDefenseBonus(
+  GameState state,
+  PlayerId playerId,
+  int round,
+) {
+  final player = _playerById(state, playerId);
+  if (player == null) return state;
+  final bonus = player.monsterDefenseBonusRound == round
+      ? player.monsterDefenseBonus + 1
+      : 1;
+  return _copyState(
+    state,
+    players: _replacePlayer(
+      state,
+      playerId,
+      (current) => _copyPlayer(
+        current,
+        monsterDefenseBonusRound: round,
+        monsterDefenseBonus: bonus,
+      ),
+    ),
+  );
+}
 
 bool _monsterIgnoresDefense(GameState state, MonsterInstance monster) {
   return _monsterHasFeature(state, monster, 'ignores-defense');

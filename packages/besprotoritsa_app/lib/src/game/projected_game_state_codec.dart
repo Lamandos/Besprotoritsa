@@ -117,6 +117,7 @@ final class ProjectedGameStateCodec {
       monsterDefenseBonusRound: json['monsterDefenseBonusRound'] is int
           ? json['monsterDefenseBonusRound']! as int
           : null,
+      monsterDefenseBonus: _int(json, 'monsterDefenseBonus', fallback: 1),
       damageImmuneThroughRound: json['damageImmuneThroughRound'] is int
           ? json['damageImmuneThroughRound']! as int
           : null,

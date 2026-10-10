@@ -20,6 +20,86 @@ void main() {
     expect(result.state.players.first.exhaustedRobots, isEmpty);
   });
 
+  test('BUG078 Nanobots can be used at full health', () {
+    final result = step(
+      _state(backpack: const ['nanobots'], conditions: const ['infection']),
+      const UseCardAbilityCommand('nanobots'),
+      SeededDiceRoller(149),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.first.backpack, isEmpty);
+    expect(result.state.players.first.conditions, ['infection']);
+    expect(result.state.players.first.monsterDefenseBonusRound, 1);
+  });
+
+  test('BUG079 multiple Nanobots defense bonuses accumulate', () {
+    var state = _state(
+      backpack: const ['nanobots', 'nanobots'],
+      damage: 2,
+      monsters: [
+        MonsterInstance(
+          instanceId: 'attacking-ghoul',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          attack: 3,
+        ),
+      ],
+    );
+    state = step(
+      state,
+      const UseCardAbilityCommand('nanobots'),
+      SeededDiceRoller(152),
+    ).state;
+    state = step(
+      state,
+      const UseCardAbilityCommand('nanobots'),
+      SeededDiceRoller(153),
+    ).state;
+    final attacked = resolveColocation(state);
+
+    expect(
+      (attacked.pendingDecision! as AwaitingDodge).monsterDamage,
+      1,
+    );
+  });
+
+  test('BUG079 Nanobots bonus stacks with PROT2-CT defense', () {
+    final state = _state(
+      backpack: const ['nanobots'],
+      damage: 1,
+      equippedRobot: 'prot2-ct',
+      monsters: [
+        MonsterInstance(
+          instanceId: 'attacking-ghoul',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          attack: 3,
+        ),
+      ],
+    );
+    final healed = step(
+      state,
+      const UseCardAbilityCommand('nanobots'),
+      SeededDiceRoller(154),
+    );
+    final activated = step(
+      healed.state,
+      const UseCardAbilityCommand('prot2-ct'),
+      SeededDiceRoller(155),
+    );
+    final attacked = resolveColocation(activated.state);
+
+    expect(healed.rejection, isNull);
+    expect(activated.rejection, isNull);
+    expect(
+      (attacked.pendingDecision! as AwaitingDodge).monsterDamage,
+      1,
+    );
+  });
+
   test('BUG069 PROT2-CT cannot activate outside combat', () {
     final state = _state(equippedRobot: 'prot2-ct');
 
@@ -1279,6 +1359,15 @@ GameState _state({
   },
   quests: QuestState(),
   cardDefinitions: {
+    'nanobots': CardDefinition(
+      id: 'nanobots',
+      type: ItemType.supply,
+      slots: const [],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'supplies',
+      behaviorIds: const ['card.discardCost', 'health.restore'],
+    ),
     'gtu-b1c4': CardDefinition(
       id: 'gtu-b1c4',
       type: ItemType.robot,

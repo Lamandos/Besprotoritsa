@@ -252,9 +252,12 @@ List<String> _stateConsequences(
         '${player.monsterDamageImmuneThroughRound}.',
       );
     }
-    if (player.monsterDefenseBonusRound != previous.monsterDefenseBonusRound &&
-        player.monsterDefenseBonusRound == after.round) {
-      changes.add('$name — Защита +1 до конца раунда.');
+    if (player.monsterDefenseBonusRound == after.round &&
+        (player.monsterDefenseBonusRound != previous.monsterDefenseBonusRound ||
+            player.monsterDefenseBonus != previous.monsterDefenseBonus)) {
+      changes.add(
+        '$name — Защита +${player.monsterDefenseBonus} до конца раунда.',
+      );
     }
     if (player.damageImmuneThroughRound != previous.damageImmuneThroughRound &&
         player.damageImmuneThroughRound != null) {
