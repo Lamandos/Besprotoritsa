@@ -228,6 +228,52 @@ void main() {
     expect(result.log, contains('tripwire-triggered:hero-2:restless'));
   });
 
+  test(
+    'BUG077 tripwire arrival does not reattack from a stationary monster',
+    () {
+      const destination = HexCoord(0, 0);
+      final state = _mvpState(
+        additionalDecks: {'supplies': DeckState(drawPile: const [])},
+        monsters: [
+          MonsterInstance(
+            instanceId: 'stationary-monster',
+            monsterId: 'ghoul',
+            coord: destination,
+            damage: 0,
+            attack: 1,
+            movement: 0,
+          ),
+          MonsterInstance(
+            instanceId: 'arriving-monster',
+            monsterId: 'ghoul',
+            coord: destination,
+            damage: 0,
+          ),
+        ],
+        tripwires: const [
+          TripwireTrap(
+            instanceId: 'bug077-tripwire',
+            coord: destination,
+            ownerId: 'ada',
+            cardId: 'tripwire',
+          ),
+        ],
+      );
+
+      final result = resolveColocation(
+        state,
+        coord: destination,
+        monsterInstanceId: 'arriving-monster',
+      );
+
+      expect(result.monsters.map((monster) => monster.instanceId), [
+        'stationary-monster',
+      ]);
+      expect(result.pendingDecision, isNull);
+      expect(result.pendingDamage, isEmpty);
+    },
+  );
+
   test('BUG065 ready robots event preserves exhaustion in the chest', () {
     var state = _mvpState(
       eventId: 'ready-robots-event',

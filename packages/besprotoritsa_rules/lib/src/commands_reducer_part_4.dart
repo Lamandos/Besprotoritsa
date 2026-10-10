@@ -97,6 +97,7 @@ GameState resolveColocation(
         return resolveColocation(
           triggered,
           coord: coord,
+          monsterInstanceId: monsterInstanceId,
           playerId: playerId,
         );
       }
