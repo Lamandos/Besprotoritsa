@@ -511,14 +511,27 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
       decks: decks,
       logEntry: 'card-ability:gas-cylinder:${player.id}:${monster.monsterId}',
     );
+    final killer = _playerById(killed, player.id)!;
+    final rewardDecks = Map<DeckId, DeckState>.of(killed.decks);
+    final rewardedKiller = _awardMonsterDefeatReward(
+      killer,
+      monster,
+      killed,
+      rewardDecks,
+    );
+    killed = _copyState(
+      killed,
+      players: _replacePlayer(killed, killer.id, (_) => rewardedKiller),
+      decks: rewardDecks,
+    );
     if (monster.monsterId == RestlessMonster.restlessMonsterId) {
-      final killer = _playerById(killed, player.id)!;
-      final loot = _awardRestlessTrophies(killer, monster, killed);
+      final currentKiller = _playerById(killed, player.id)!;
+      final loot = _awardRestlessTrophies(currentKiller, monster, killed);
       killed = _copyState(
         killed,
         players: _restlessTrophyPlayers(
           killed,
-          killer.id,
+          currentKiller.id,
           loot.player,
           loot.exhaustedRobots,
         ),
@@ -836,6 +849,21 @@ GameState _triggerTripwire(
     decks: decks,
     logEntry: 'tripwire-triggered:${trap.ownerId}:${monster.monsterId}',
   );
+  final trapOwner = _playerById(triggered, trap.ownerId);
+  if (trapOwner != null) {
+    final rewardDecks = Map<DeckId, DeckState>.of(triggered.decks);
+    final rewardedOwner = _awardMonsterDefeatReward(
+      trapOwner,
+      monster,
+      triggered,
+      rewardDecks,
+    );
+    triggered = _copyState(
+      triggered,
+      players: _replacePlayer(triggered, trapOwner.id, (_) => rewardedOwner),
+      decks: rewardDecks,
+    );
+  }
   if (monster.monsterId == RestlessMonster.restlessMonsterId) {
     final killer = _playerById(triggered, trap.ownerId);
     if (killer != null) {

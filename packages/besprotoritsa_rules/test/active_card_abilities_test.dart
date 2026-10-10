@@ -221,6 +221,104 @@ void main() {
     expect(tripwireResult.players.first.backpack, contains('medkit'));
   });
 
+  test('BUG060 gas cylinder awards a monster defeat reward', () {
+    final state = _state(
+      backpack: const ['gas-cylinder'],
+      supplyDeckDrawPile: const ['medkit'],
+      monsterDefinitions: {
+        'ghoul': {'features': <String>[]},
+      },
+      monsters: [
+        MonsterInstance(
+          instanceId: 'reward-gas-ghoul',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 2,
+          movement: 0,
+          defeatRewardDeckId: 'supplies',
+        ),
+      ],
+    );
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand(
+        'gas-cylinder',
+        targetMonsterInstanceId: 'reward-gas-ghoul',
+      ),
+      SeededDiceRoller(147),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.monsters, isEmpty);
+    expect(result.state.players.first.backpack, contains('medkit'));
+    expect(result.state.decks['supplies']!.drawPile, isEmpty);
+  });
+
+  test('BUG060 tripwire awards a monster defeat reward', () {
+    final state = _state(
+      backpack: const ['tripwire'],
+      supplyDeckDrawPile: const ['medkit'],
+      monsterDefinitions: {
+        'ghoul': {'features': <String>[]},
+      },
+    );
+    final placed = step(
+      state,
+      const UseCardAbilityCommand('tripwire'),
+      SeededDiceRoller(148),
+    );
+    final triggered = spawnMonster(
+      placed.state,
+      MonsterInstance(
+        instanceId: 'reward-tripwire-ghoul',
+        monsterId: 'ghoul',
+        coord: const HexCoord(0, 0),
+        damage: 0,
+        health: 2,
+        movement: 0,
+        defeatRewardDeckId: 'supplies',
+      ),
+    );
+
+    expect(placed.rejection, isNull);
+    expect(triggered.monsters, isEmpty);
+    expect(triggered.players.first.backpack, contains('medkit'));
+    expect(triggered.decks['supplies']!.drawPile, isEmpty);
+  });
+
+  test('BUG061 PROT3-CT prevents pneumatic gun self-damage', () {
+    final state = _state(
+      equippedRobot: 'prot3-ct',
+      equippedWeapon: 'pneumo-cannon',
+      monsters: [
+        MonsterInstance(
+          instanceId: 'pneumo-target',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 10,
+          movement: 0,
+        ),
+      ],
+    );
+    final activated = step(
+      state,
+      const UseCardAbilityCommand('prot3-ct'),
+      SeededDiceRoller(149),
+    );
+    final attacked = step(
+      activated.state,
+      const AttackCommand('pneumo-target'),
+      FixedDiceRoller([6]),
+    );
+
+    expect(activated.rejection, isNull);
+    expect(attacked.rejection, isNull);
+    expect(attacked.state.players.first.damage, 0);
+  });
+
   test('BUG032 a consumable medicine is removed and restores health', () {
     final state = _state(backpack: const ['medkit'], damage: 3);
     final result = step(
@@ -959,6 +1057,7 @@ GameState _state({
   Iterable<CardId> exhaustedRobots = const [],
   int actionsLeft = 2,
   int roundNumber = 1,
+  Iterable<CardId> supplyDeckDrawPile = const [],
   String activePlayerId = 'hero-1',
   Iterable<CardId> conditions = const [],
   Iterable<CardId> secondConditions = const [],
@@ -1022,7 +1121,7 @@ GameState _state({
   monsters: monsters,
   monsterDefinitions: monsterDefinitions,
   decks: {
-    'supplies': DeckState(drawPile: const []),
+    'supplies': DeckState(drawPile: supplyDeckDrawPile),
     'monsters': DeckState(drawPile: const []),
     'conditions': DeckState(drawPile: const []),
   },
@@ -1039,6 +1138,24 @@ GameState _state({
       staticEffects: CardStaticEffects(const {}),
       sourceDeck: 'items',
       behaviorIds: const ['robot.exhaust', 'combat.addHit'],
+    ),
+    'prot3-ct': CardDefinition(
+      id: 'prot3-ct',
+      type: ItemType.robot,
+      slots: const [ItemSlot.robot],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'items',
+      behaviorIds: const ['robot.exhaust', 'damage.ignoreAnyUntilRoundEnd'],
+    ),
+    'pneumo-cannon': CardDefinition(
+      id: 'pneumo-cannon',
+      type: ItemType.weapon,
+      slots: const [ItemSlot.weapon],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'items',
+      behaviorIds: const ['dice.successFace.3', 'dice.face6.damageBoth'],
     ),
     'old-cloak': CardDefinition(
       id: 'old-cloak',

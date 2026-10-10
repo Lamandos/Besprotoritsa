@@ -790,18 +790,24 @@ GameState _resolveEventMonsterSpawn(
     decks: monsters,
     logEntry: 'event-monster-spawn:${event['id']}:$monsterId:$coord',
   );
+  final arrived = _resolveTripwireArrival(spawned, monster);
+  if (!arrived.monsters.any(
+    (candidate) => candidate.instanceId == monster.instanceId,
+  )) {
+    return arrived;
+  }
   final immediateCombat = event['immediateCombat'] == true;
-  if (!immediateCombat) return spawned;
-  final occupants = spawned.players
+  if (!immediateCombat) return arrived;
+  final occupants = arrived.players
       .where((player) => player.alive && player.coord == coord)
       .toList();
-  if (occupants.isEmpty) return spawned;
+  if (occupants.isEmpty) return arrived;
   final combatant = occupants.firstWhere(
     (player) => player.id == playerId,
     orElse: () => occupants.first,
   );
   return _startImmediateMonsterAttack(
-    spawned,
+    arrived,
     combatant.id,
     monster,
     dice,

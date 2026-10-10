@@ -520,62 +520,20 @@ GameState _resolveAttackRoll(
   }
   var awardedPlayer = _copyPlayer(
     player,
-    damage: player.damage + roll.ownerDamage,
+    damage:
+        player.damage +
+        (_ignoresAnyDamage(state, player) ? 0 : roll.ownerDamage),
     nextAttackBonusHits: 0,
   );
   var unclaimedLoot = const <CardId>[];
   var exhaustedTrophies = const <CardId>[];
-  final rewardDeckId = monster.defeatRewardDeckId;
-  if (defeated && rewardDeckId != null) {
-    final rewardDeck = decks[rewardDeckId];
-    if (rewardDeck != null) {
-      final draw = DeckRules.draw(
-        rewardDeck,
-        seed: _deckSeed(state, 'defeat-reward:${monster.instanceId}'),
-      );
-      if (draw.cards.isNotEmpty) {
-        final rewardCard = draw.cards.single;
-        try {
-          awardedPlayer = InventoryRules.receive(
-            awardedPlayer,
-            rewardCard,
-            state.cardDefinitions,
-          );
-          decks[rewardDeckId] = draw.deck;
-        } on BackpackCapacityExceeded {
-          try {
-            awardedPlayer = InventoryRules.equipOnReceive(
-              awardedPlayer,
-              rewardCard,
-              state.cardDefinitions,
-            );
-            decks[rewardDeckId] = draw.deck;
-          } on Object catch (error) {
-            if (error is! BackpackCapacityExceeded &&
-                error is! InventoryRuleViolation) {
-              rethrow;
-            }
-            decks[rewardDeckId] = DeckRules.returnAndShuffle(
-              draw.deck,
-              [rewardCard],
-              seed: _deckSeed(
-                state,
-                'defeat-reward-return:${monster.instanceId}',
-              ),
-            );
-          }
-        } on InventoryRuleViolation {
-          decks[rewardDeckId] = DeckRules.returnAndShuffle(
-            draw.deck,
-            [rewardCard],
-            seed: _deckSeed(
-              state,
-              'defeat-reward-return:${monster.instanceId}',
-            ),
-          );
-        }
-      }
-    }
+  if (defeated) {
+    awardedPlayer = _awardMonsterDefeatReward(
+      awardedPlayer,
+      monster,
+      state,
+      decks,
+    );
   }
   if (defeated && monster.monsterId == RestlessMonster.restlessMonsterId) {
     final loot = _awardRestlessTrophies(awardedPlayer, monster, state);
@@ -628,6 +586,60 @@ GameState _resolveAttackRoll(
   return defeated
       ? _recordPersonalTaskKillProgress(state, afterAttack, playerId)
       : afterAttack;
+}
+
+PlayerState _awardMonsterDefeatReward(
+  PlayerState player,
+  MonsterInstance monster,
+  GameState state,
+  Map<DeckId, DeckState> decks,
+) {
+  final rewardDeckId = monster.defeatRewardDeckId;
+  if (rewardDeckId == null) return player;
+  final rewardDeck = decks[rewardDeckId];
+  if (rewardDeck == null) return player;
+  final draw = DeckRules.draw(
+    rewardDeck,
+    seed: _deckSeed(state, 'defeat-reward:${monster.instanceId}'),
+  );
+  if (draw.cards.isEmpty) return player;
+
+  final rewardCard = draw.cards.single;
+  var awardedPlayer = player;
+  try {
+    awardedPlayer = InventoryRules.receive(
+      awardedPlayer,
+      rewardCard,
+      state.cardDefinitions,
+    );
+    decks[rewardDeckId] = draw.deck;
+  } on BackpackCapacityExceeded {
+    try {
+      awardedPlayer = InventoryRules.equipOnReceive(
+        awardedPlayer,
+        rewardCard,
+        state.cardDefinitions,
+      );
+      decks[rewardDeckId] = draw.deck;
+    } on Object catch (error) {
+      if (error is! BackpackCapacityExceeded &&
+          error is! InventoryRuleViolation) {
+        rethrow;
+      }
+      decks[rewardDeckId] = DeckRules.returnAndShuffle(
+        draw.deck,
+        [rewardCard],
+        seed: _deckSeed(state, 'defeat-reward-return:${monster.instanceId}'),
+      );
+    }
+  } on InventoryRuleViolation {
+    decks[rewardDeckId] = DeckRules.returnAndShuffle(
+      draw.deck,
+      [rewardCard],
+      seed: _deckSeed(state, 'defeat-reward-return:${monster.instanceId}'),
+    );
+  }
+  return awardedPlayer;
 }
 
 ({

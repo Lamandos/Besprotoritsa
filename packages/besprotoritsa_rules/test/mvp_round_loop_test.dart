@@ -198,6 +198,65 @@ void main() {
     expect(state.monsters.single.coord, const HexCoord(0, 1));
   });
 
+  test('BUG059 invasion spawn triggers a tripwire', () {
+    var state = _mvpState(
+      eventId: 'invasion-tripwire',
+      corridorOpened: true,
+      eventDefinitions: {
+        'invasion-tripwire': {
+          'id': 'invasion-tripwire',
+          'immediateCombat': true,
+          'spawn': {'behaviorId': 'monster.spawn', 'target': 'openSector'},
+          'options': [
+            {
+              'skillCheck': null,
+              'behaviorId': 'monster.spawn',
+              'resolution': 'immediate',
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 0,
+          'movement': 0,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+        'supplies': DeckState(drawPile: const []),
+      },
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'invasion-tripwire-trap',
+          coord: HexCoord(0, 1),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('sector:0:1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.tripwires, isEmpty);
+    expect(state.decks['supplies']!.discardPile, contains('tripwire'));
+    expect(state.decks['monsters']!.discardPile, contains('ghoul'));
+  });
+
   test('invasion lets the player choose any closed fallback sector', () {
     var state = _mvpState(
       eventId: 'location-invasion',
