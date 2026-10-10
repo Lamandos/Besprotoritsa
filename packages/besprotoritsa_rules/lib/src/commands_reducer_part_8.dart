@@ -287,6 +287,7 @@ GameState _activateQueuedReplacements(GameState state) {
             equipped: replacement.equipped,
             carriedMods: replacement.carriedMods,
             implanted: replacement.implanted,
+            exhaustedRobots: replacement.exhaustedRobots,
             conditions: const [],
             alive: true,
             stats: replacement.stats,

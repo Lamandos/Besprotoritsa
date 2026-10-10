@@ -27,7 +27,7 @@ GameStepResult _startRoll(
         availableRerolls: sources.length,
         maxDicePerReroll: sources.isEmpty
             ? 999
-            : _maxDicePerReroll(state, sources.first),
+            : maxDicePerReroll(state, sources.first),
         rerollSources: sources,
         window: const DecisionWindow(remainingTicks: 1),
         context: context,
@@ -195,6 +195,7 @@ GameStepResult _resolveHeroReplacement(
     equipped: reserve.equipped,
     carriedMods: reserve.carriedMods,
     implanted: reserve.implanted,
+    exhaustedRobots: reserve.exhaustedRobots,
     conditions: const [],
     alive: true,
     stats: reserve.stats,
@@ -223,6 +224,7 @@ GameStepResult _resolveHeroReplacement(
       equipped: recipient.equipped,
       carriedMods: [...recipient.carriedMods, ...deceased.carriedMods],
       implanted: [...recipient.implanted, ...deceased.implanted],
+      exhaustedRobots: reserve.exhaustedRobots,
     ),
     unclaimed: unclaimed,
   );
@@ -351,7 +353,22 @@ GameStepResult _resolveReroll(
       rejection: const ActionBlockedByPendingDecision(),
     );
   }
-  if (indexes.length > pending.maxDicePerReroll) {
+  final sourceIndex = choice.sourceCardId == null
+      ? (pending.rerollSources.isEmpty ? -1 : 0)
+      : pending.rerollSources.indexOf(choice.sourceCardId!);
+  if (choice.sourceCardId != null && sourceIndex < 0) {
+    return GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
+    );
+  }
+  final usedSource = sourceIndex < 0
+      ? null
+      : pending.rerollSources[sourceIndex];
+  final maxDice = usedSource == null
+      ? pending.maxDicePerReroll
+      : maxDicePerReroll(state, usedSource);
+  if (indexes.length > maxDice) {
     return GameStepResult(
       state: state,
       rejection: const ActionBlockedByPendingDecision(),
@@ -363,13 +380,11 @@ GameStepResult _resolveReroll(
     rerolled[indexes[index]] = newRolls[index];
   }
   var rerolledState = state;
-  final usedSource = pending.rerollSources.firstOrNull;
   if (usedSource != null) {
     rerolledState = _consumeRerollSource(rerolledState, pending, usedSource);
   }
-  final remainingSources = pending.rerollSources.isEmpty
-      ? const <CardId>[]
-      : pending.rerollSources.skip(1).toList();
+  final remainingSources = List<CardId>.of(pending.rerollSources);
+  if (sourceIndex >= 0) remainingSources.removeAt(sourceIndex);
   return GameStepResult(
     state: _copyState(
       rerolledState,
@@ -378,7 +393,7 @@ GameStepResult _resolveReroll(
         availableRerolls: pending.availableRerolls - 1,
         maxDicePerReroll: remainingSources.isEmpty
             ? pending.maxDicePerReroll
-            : _maxDicePerReroll(rerolledState, remainingSources.first),
+            : maxDicePerReroll(rerolledState, remainingSources.first),
         rerollSources: remainingSources,
         window: pending.window,
         context: pending.context,

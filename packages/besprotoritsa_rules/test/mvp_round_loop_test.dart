@@ -371,6 +371,67 @@ void main() {
     expect(replaced.players.single.backpack, contains('medkit'));
   });
 
+  test(
+    'BUG083 tripwire replacement keeps exhausted Restless robot exhausted',
+    () {
+      const sector = HexCoord(0, 0);
+      final state = _mvpState(
+        playerDamage: 3,
+        playerAlive: false,
+        queuedReplacements: {
+          'ada': ReserveHero(
+            characterId: 'guard-reserve',
+            health: 3,
+            stats: const PlayerStats(science: 1, agility: 1),
+          ),
+        },
+        cardDefinitions: {
+          'r69-nic3': CardDefinition(
+            id: 'r69-nic3',
+            type: ItemType.robot,
+            slots: const [ItemSlot.robot],
+            cost: 0,
+            staticEffects: CardStaticEffects(const {}),
+            behaviorIds: const ['robot.exhaust', 'robot.ignoreEnemyFeatures'],
+          ),
+        },
+        tripwires: const [
+          TripwireTrap(
+            instanceId: 'bug083-tripwire',
+            coord: sector,
+            ownerId: 'ada',
+            cardId: 'tripwire',
+          ),
+        ],
+        monsters: [
+          RestlessMonster(
+            instanceId: 'bug083-restless',
+            coord: sector,
+            attack: 1,
+            defense: 0,
+            carriedGear: const ['r69-nic3'],
+            exhaustedCarriedRobots: const ['r69-nic3'],
+          ),
+        ],
+      );
+
+      final triggered = resolveColocation(
+        state,
+        coord: sector,
+        monsterInstanceId: 'bug083-restless',
+      );
+      final replaced = step(
+        triggered,
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(replaced.players.single.alive, isTrue);
+      expect(replaced.players.single.backpack, contains('r69-nic3'));
+      expect(replaced.players.single.exhaustedRobots, contains('r69-nic3'));
+    },
+  );
+
   test('BUG081 tripwire Restless loot survives its dead owner replacement', () {
     const sector = HexCoord(0, 0);
     final state = _mvpState(

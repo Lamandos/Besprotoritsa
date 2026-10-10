@@ -997,7 +997,7 @@ GameState _startImmediateCounterAttack(
       pendingDecision: AwaitingRerollChoice(
         dice: diceRoll,
         availableRerolls: rerollSources.length,
-        maxDicePerReroll: _maxDicePerReroll(state, rerollSources.first),
+        maxDicePerReroll: maxDicePerReroll(state, rerollSources.first),
         rerollSources: rerollSources,
         window: const DecisionWindow(remainingTicks: 1),
         context: AttackRollContext(

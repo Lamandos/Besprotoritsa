@@ -92,9 +92,11 @@ final class ReserveHero {
     this.equipped = const EquippedGear(),
     Iterable<CardId> carriedMods = const [],
     Iterable<CardId> implanted = const [],
+    Iterable<CardId> exhaustedRobots = const [],
   }) : backpack = List.unmodifiable(backpack),
        carriedMods = List.unmodifiable(carriedMods),
-       implanted = List.unmodifiable(implanted) {
+       implanted = List.unmodifiable(implanted),
+       exhaustedRobots = List.unmodifiable(exhaustedRobots) {
     _requireId(characterId, 'characterId');
     if (health < 1) {
       throw ArgumentError.value(health, 'health', 'Health must be positive.');
@@ -110,6 +112,7 @@ final class ReserveHero {
   final EquippedGear equipped;
   final List<CardId> carriedMods;
   final List<CardId> implanted;
+  final List<CardId> exhaustedRobots;
 }
 
 /// Full deck state. Its card order is deliberately available only in GameState.

@@ -293,18 +293,55 @@ List<Widget> _decisionActions(
 ) => switch (decision) {
   AwaitingRerollChoice(
     :final availableRerolls,
-    :final maxDicePerReroll,
+    maxDicePerReroll: final maxDiceLimit,
     :final dice,
+    :final rerollSources,
   ) =>
     [
-      if (availableRerolls > 0 && maxDicePerReroll == 1)
+      if (availableRerolls > 0 && rerollSources.toSet().length > 1)
+        for (final source in rerollSources.toSet())
+          TextButton(
+            key: ValueKey<String>('reroll-source-option-$source'),
+            onPressed: () async {
+              final sourceLimit = maxDicePerReroll(state, source);
+              final diceIndexes =
+                  sourceLimit == 1 ||
+                      _allowsAnyCountRerollFromSource(state, source)
+                  ? await _selectDiceForReroll(
+                      context,
+                      dice,
+                      maxDice: sourceLimit,
+                    )
+                  : List<int>.generate(dice.length, (index) => index);
+              if (diceIndexes == null ||
+                  diceIndexes.isEmpty ||
+                  !context.mounted) {
+                return;
+              }
+              ref
+                  .read(gameControllerProvider.notifier)
+                  .dispatch(
+                    ResolvePendingDecisionCommand(
+                      RerollChoice(
+                        diceIndexes: diceIndexes,
+                        sourceCardId: source,
+                      ),
+                    ),
+                  );
+            },
+            child: Text('Переброс: ${_inventoryCardName(state, source)}'),
+          )
+      else if (availableRerolls > 0 && maxDiceLimit == 1)
         for (final (index, die) in dice.indexed)
           TextButton(
             onPressed: () => ref
                 .read(gameControllerProvider.notifier)
                 .dispatch(
                   ResolvePendingDecisionCommand(
-                    RerollChoice(diceIndexes: <int>[index]),
+                    RerollChoice(
+                      diceIndexes: <int>[index],
+                      sourceCardId: rerollSources.firstOrNull,
+                    ),
                   ),
                 ),
             child: Text('${strings.reroll}: $die'),
@@ -312,7 +349,11 @@ List<Widget> _decisionActions(
       else if (availableRerolls > 0 && _allowsAnyCountReroll(state, decision))
         TextButton(
           onPressed: () async {
-            final diceIndexes = await _selectDiceForReroll(context, dice);
+            final diceIndexes = await _selectDiceForReroll(
+              context,
+              dice,
+              maxDice: maxDiceLimit,
+            );
             if (diceIndexes == null ||
                 diceIndexes.isEmpty ||
                 !context.mounted) {
@@ -322,7 +363,10 @@ List<Widget> _decisionActions(
                 .read(gameControllerProvider.notifier)
                 .dispatch(
                   ResolvePendingDecisionCommand(
-                    RerollChoice(diceIndexes: diceIndexes),
+                    RerollChoice(
+                      diceIndexes: diceIndexes,
+                      sourceCardId: rerollSources.firstOrNull,
+                    ),
                   ),
                 );
           },
@@ -332,7 +376,11 @@ List<Widget> _decisionActions(
         TextButton(
           onPressed: () => ref
               .read(gameControllerProvider.notifier)
-              .dispatch(ResolvePendingDecisionCommand(RerollChoice())),
+              .dispatch(
+                ResolvePendingDecisionCommand(
+                  RerollChoice(sourceCardId: rerollSources.firstOrNull),
+                ),
+              ),
           child: Text(strings.reroll),
         ),
       FilledButton(
@@ -382,17 +430,21 @@ List<Widget> _decisionActions(
 bool _allowsAnyCountReroll(GameState state, PendingDecision decision) {
   if (decision is! AwaitingRerollChoice) return false;
   final source = decision.rerollSources.firstOrNull;
-  return source != null &&
-      (state.cardDefinitions[source]?.behaviorIds.contains(
-            'dice.reroll.anyCountPerAttack',
-          ) ??
-          false);
+  return source != null && _allowsAnyCountRerollFromSource(state, source);
 }
+
+bool _allowsAnyCountRerollFromSource(GameState state, CardId source) =>
+    source == 'defibrillator' ||
+    (state.cardDefinitions[source]?.behaviorIds.contains(
+          'dice.reroll.anyCountPerAttack',
+        ) ??
+        false);
 
 Future<List<int>?> _selectDiceForReroll(
   BuildContext context,
-  List<int> dice,
-) => showDialog<List<int>>(
+  List<int> dice, {
+  int maxDice = 999,
+}) => showDialog<List<int>>(
   context: context,
   builder: (context) {
     final selectedDice = <int>{};
@@ -405,7 +457,11 @@ Future<List<int>?> _selectDiceForReroll(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Можно выбрать любое количество кубиков.'),
+                Text(
+                  maxDice == 1
+                      ? 'Можно выбрать один кубик.'
+                      : 'Можно выбрать любое количество кубиков.',
+                ),
                 for (final (index, die) in dice.indexed)
                   CheckboxListTile(
                     key: ValueKey<String>('reroll-die-$index'),
@@ -415,7 +471,9 @@ Future<List<int>?> _selectDiceForReroll(
                     value: selectedDice.contains(index),
                     onChanged: (selected) => setState(() {
                       if (selected ?? false) {
-                        selectedDice.add(index);
+                        if (selectedDice.length < maxDice) {
+                          selectedDice.add(index);
+                        }
                       } else {
                         selectedDice.remove(index);
                       }

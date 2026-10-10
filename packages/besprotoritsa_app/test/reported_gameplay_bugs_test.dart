@@ -204,6 +204,64 @@ void main() {
     expect(rerolled.availableRerolls, 0);
   });
 
+  testWidgets('BUG084 player can choose the reroll source', (tester) async {
+    final state = _scenario((doc) {
+      (_player(doc)['backpack']! as List)
+        ..add('defibrillator')
+        ..add('science-stimulant');
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller([6, 1, 1, 1, 2, 2, 2, 2]),
+    );
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const SkillCheckCommand(StatType.science)),
+      isTrue,
+    );
+    await tester.pump();
+
+    final initial =
+        container.read(gameControllerProvider).pendingDecision!
+            as AwaitingRerollChoice;
+    expect(initial.rerollSources, ['defibrillator', 'science-stimulant']);
+    expect(
+      find.byKey(
+        const ValueKey<String>('reroll-source-option-science-stimulant'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey<String>('reroll-source-option-science-stimulant'),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Выберите кубики для переброса'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey<String>('reroll-die-0')));
+    await tester.pump();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('reroll-selected-dice')),
+    );
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final rerolled =
+        container.read(gameControllerProvider).pendingDecision!
+            as AwaitingRerollChoice;
+    expect(rerolled.rerollSources, ['defibrillator']);
+    expect(
+      container.read(gameControllerProvider).players.first.backpack,
+      contains('defibrillator'),
+    );
+    expect(
+      container.read(gameControllerProvider).players.first.backpack,
+      isNot(contains('science-stimulant')),
+    );
+  });
+
   testWidgets('BUG054 door remote offers only open corridors', (tester) async {
     late HexCoord openCoord;
     final state = _scenario((doc) {

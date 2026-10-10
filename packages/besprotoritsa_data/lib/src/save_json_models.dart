@@ -167,6 +167,7 @@ abstract final class SaveJsonModels {
     },
     'carried_mods': hero.carriedMods,
     'implanted': hero.implanted,
+    'exhausted_robots': hero.exhaustedRobots,
     'stats': _statsToJson(hero.stats),
   };
 
@@ -189,6 +190,9 @@ abstract final class SaveJsonModels {
       ),
       carriedMods: _strings(json, 'carried_mods'),
       implanted: _strings(json, 'implanted'),
+      exhaustedRobots: json.containsKey('exhausted_robots')
+          ? _strings(json, 'exhausted_robots')
+          : const <String>[],
       stats: _statsFromJson(_object(json, 'stats')),
     );
   }

@@ -46,6 +46,45 @@ void main() {
     expect(restored.exhaustedChestRobots, ['r69-nic3']);
   });
 
+  test('BUG083 saves exhaustion on a queued replacement robot', () {
+    final state = GameState(
+      seed: 7,
+      round: 1,
+      phase: GamePhase.playersTurn,
+      activePlayerId: 'ada',
+      actionsLeft: 0,
+      board: const [],
+      players: [
+        _player(
+          id: 'ada',
+          characterId: 'scientist',
+          coord: const HexCoord(0, 0),
+          alive: false,
+        ),
+      ],
+      monsters: const [],
+      decks: const {},
+      quests: QuestState(),
+      queuedReplacements: {
+        'ada': ReserveHero(
+          characterId: 'guard-reserve',
+          health: 3,
+          stats: const PlayerStats(),
+          backpack: const ['r69-nic3'],
+          exhaustedRobots: const ['r69-nic3'],
+        ),
+      },
+    );
+    final codec = GameStateJsonCodec();
+
+    final restored = codec.decode(codec.encode(state));
+
+    expect(
+      restored.queuedReplacements['ada']?.exhaustedRobots,
+      ['r69-nic3'],
+    );
+  });
+
   test(
     'BUG070 migrates legacy chest robot readiness from its former owner',
     () {

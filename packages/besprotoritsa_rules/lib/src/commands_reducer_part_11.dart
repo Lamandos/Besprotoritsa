@@ -712,7 +712,7 @@ List<CardId> _attackRerollSources(
   return sources;
 }
 
-int _maxDicePerReroll(GameState state, CardId source) {
+int maxDicePerReroll(GameState state, CardId source) {
   if (const {
     'science-stimulant',
     'agility-stimulant',
@@ -928,6 +928,7 @@ PlayerState _tripwireRewardRecipient(GameState state, PlayerState owner) {
     equipped: replacement.equipped,
     carriedMods: replacement.carriedMods,
     implanted: replacement.implanted,
+    exhaustedRobots: replacement.exhaustedRobots,
     conditions: const [],
     alive: true,
     stats: replacement.stats,
@@ -968,6 +969,7 @@ GameState _storeTripwireOwnerReward(
           equipped: rewardedOwner.equipped,
           carriedMods: rewardedOwner.carriedMods,
           implanted: rewardedOwner.implanted,
+          exhaustedRobots: rewardedOwner.exhaustedRobots,
         );
   return _copyState(
     state,

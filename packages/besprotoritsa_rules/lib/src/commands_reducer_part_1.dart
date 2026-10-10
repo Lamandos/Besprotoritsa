@@ -307,10 +307,13 @@ final class KeepRollChoice extends DecisionChoice {
 
 /// Rerolls the specified dice. An empty [diceIndexes] means all dice.
 final class RerollChoice extends DecisionChoice {
-  RerollChoice({Iterable<int> diceIndexes = const []})
-    : diceIndexes = List.unmodifiable(diceIndexes);
+  RerollChoice({
+    Iterable<int> diceIndexes = const [],
+    this.sourceCardId,
+  }) : diceIndexes = List.unmodifiable(diceIndexes);
 
   final List<int> diceIndexes;
+  final CardId? sourceCardId;
 }
 
 final class DodgeChoice extends DecisionChoice {
