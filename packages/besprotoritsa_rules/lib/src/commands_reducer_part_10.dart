@@ -187,8 +187,19 @@ PersonalTaskEvent? _personalTaskObservation(
       }
       if (value == null) return null;
     case 'robot_reloaded':
-      // Robot exhaust/reload state is not modeled by the current game rules.
-      return null;
+      final ownedRobotIds = _ownedCardCounts(player).keys
+          .where(
+            (cardId) => after.cardDefinitions[cardId]?.type == ItemType.robot,
+          )
+          .toSet();
+      amount = previous.exhaustedRobots
+          .where(
+            (robotId) =>
+                !player.exhaustedRobots.contains(robotId) &&
+                ownedRobotIds.contains(robotId),
+          )
+          .length;
+      if (amount == 0) return null;
     default:
       return null;
   }

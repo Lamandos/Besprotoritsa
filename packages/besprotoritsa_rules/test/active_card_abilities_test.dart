@@ -2,6 +2,24 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('BUG074 discarding an exhausted robot clears its exhaustion', () {
+    final state = _state(
+      equippedRobot: 'h3-al',
+      exhaustedRobots: const ['h3-al'],
+      itemDeckDrawPile: const [],
+    );
+
+    final result = step(
+      state,
+      const DiscardCardCommand('h3-al'),
+      SeededDiceRoller(148),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.first.equipped.robot, isNull);
+    expect(result.state.players.first.exhaustedRobots, isEmpty);
+  });
+
   test('BUG069 PROT2-CT cannot activate outside combat', () {
     final state = _state(equippedRobot: 'prot2-ct');
 
@@ -1125,6 +1143,7 @@ GameState _state({
   int actionsLeft = 2,
   int roundNumber = 1,
   Iterable<CardId> supplyDeckDrawPile = const [],
+  Iterable<CardId>? itemDeckDrawPile,
   String activePlayerId = 'hero-1',
   Iterable<CardId> conditions = const [],
   Iterable<CardId> secondConditions = const [],
@@ -1191,6 +1210,8 @@ GameState _state({
     'supplies': DeckState(drawPile: supplyDeckDrawPile),
     'monsters': DeckState(drawPile: const []),
     'conditions': DeckState(drawPile: const []),
+    if (itemDeckDrawPile != null)
+      'items': DeckState(drawPile: itemDeckDrawPile),
   },
   conditionCards: {
     'infection': ConditionCard(id: 'infection'),

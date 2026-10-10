@@ -2911,6 +2911,82 @@ void main() {
     );
   });
 
+  test('BUG075 recharging a robot advances the Robot Owner task', () {
+    const targetRobotId = 'r69-nic3';
+    final state = _mvpState(
+      playerBackpack: const ['power-cell', 'power-cell'],
+      playerEquipment: const EquippedGear(robot: targetRobotId),
+      personalTasksByPlayer: const {
+        'ada': ['robot-owner-test'],
+      },
+      taskDefinitions: {
+        'robot-owner-test': {
+          'id': 'robot-owner-test',
+          'targetType': 'metric',
+          'metric': 'robot_reloaded',
+          'targetValue': 2,
+          'window': 'game',
+          'aggregation': 'sum',
+          'rewardCredits': 5,
+          'nameKey': 'task.robot-owner.name',
+          'descKey': 'task.robot-owner.description',
+        },
+      },
+      cardDefinitions: {
+        targetRobotId: CardDefinition(
+          id: targetRobotId,
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'items',
+          behaviorIds: const ['robot.exhaust', 'robot.ignoreEnemyFeatures'],
+        ),
+        'power-cell': CardDefinition(
+          id: 'power-cell',
+          type: ItemType.supply,
+          slots: const [],
+          cost: 7,
+          staticEffects: CardStaticEffects(const {}),
+          sourceDeck: 'supplies',
+          behaviorIds: const ['card.discardCost', 'robot.ready'],
+        ),
+      },
+      additionalDecks: {
+        'supplies': DeckState(drawPile: const []),
+      },
+    );
+
+    var reloaded = state;
+    for (var cycle = 0; cycle < 2; cycle++) {
+      reloaded = step(
+        reloaded,
+        const UseCardAbilityCommand(targetRobotId),
+        FixedDiceRoller([]),
+      ).state;
+      expect(reloaded.players.single.exhaustedRobots, contains(targetRobotId));
+
+      reloaded = step(
+        reloaded,
+        const UseCardAbilityCommand('power-cell', targetCardId: targetRobotId),
+        FixedDiceRoller([]),
+      ).state;
+      expect(
+        reloaded.players.single.exhaustedRobots,
+        isNot(contains(targetRobotId)),
+      );
+    }
+
+    expect(reloaded.quests.statusOf('robot-owner-test'), QuestStatus.completed);
+    expect(
+      reloaded
+          .quests
+          .conditionProgress['robot-owner-test']?['personal-task-value'],
+      2,
+    );
+    expect(reloaded.players.single.credits, 5);
+  });
+
   test('BUG047 gas cylinder kill completes the hunter personal task', () {
     final gasCylinder = CardDefinition(
       id: 'gas-cylinder',
