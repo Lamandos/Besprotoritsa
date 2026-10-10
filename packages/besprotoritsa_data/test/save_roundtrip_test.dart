@@ -6,6 +6,34 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('BUG068 saves exhausted carried robots on monsters', () {
+    final restless = RestlessMonster(
+      instanceId: 'restless-ada',
+      coord: const HexCoord(0, 0),
+      attack: 1,
+      defense: 0,
+      carriedGear: const ['r69-nic3'],
+      exhaustedCarriedRobots: const ['r69-nic3'],
+    );
+    final state = GameState(
+      seed: 7,
+      round: 1,
+      phase: GamePhase.eventsPhase,
+      activePlayerId: null,
+      actionsLeft: 0,
+      board: const [],
+      players: const [],
+      monsters: [restless],
+      decks: const {},
+      quests: QuestState(),
+    );
+    final codec = GameStateJsonCodec();
+
+    final restored = codec.decode(codec.encode(state));
+
+    expect(restored.monsters.single.exhaustedCarriedRobots, ['r69-nic3']);
+  });
+
   test(
     'round-trips every field while a reroll decision is pending',
     () async {

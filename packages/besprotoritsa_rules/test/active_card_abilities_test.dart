@@ -2,6 +2,45 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('BUG069 PROT2-CT cannot activate outside combat', () {
+    final state = _state(equippedRobot: 'prot2-ct');
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand('prot2-ct'),
+      SeededDiceRoller(150),
+    );
+
+    expect(result.rejection, isNotNull);
+    expect(result.state.players.first.monsterDefenseBonusRound, isNull);
+    expect(result.state.players.first.exhaustedRobots, isEmpty);
+  });
+
+  test('BUG069 PROT2-CT can activate during combat', () {
+    final state = _state(
+      equippedRobot: 'prot2-ct',
+      monsters: [
+        MonsterInstance(
+          instanceId: 'ghoul-1',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          health: 3,
+        ),
+      ],
+    );
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand('prot2-ct'),
+      SeededDiceRoller(151),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.first.monsterDefenseBonusRound, 1);
+    expect(result.state.players.first.exhaustedRobots, ['prot2-ct']);
+  });
+
   test('BUG056 GTU-B1c4 cannot bank a hit before combat', () {
     final state = _state(equippedRobot: 'gtu-b1c4');
 
@@ -1166,6 +1205,15 @@ GameState _state({
       staticEffects: CardStaticEffects(const {}),
       sourceDeck: 'items',
       behaviorIds: const ['robot.exhaust', 'combat.addHit'],
+    ),
+    'prot2-ct': CardDefinition(
+      id: 'prot2-ct',
+      type: ItemType.robot,
+      slots: const [ItemSlot.robot],
+      cost: 0,
+      staticEffects: CardStaticEffects(const {}),
+      sourceDeck: 'items',
+      behaviorIds: const ['robot.exhaust', 'combat.addDefense'],
     ),
     'prot3-ct': CardDefinition(
       id: 'prot3-ct',

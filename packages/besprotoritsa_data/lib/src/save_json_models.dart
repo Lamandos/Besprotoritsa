@@ -201,6 +201,7 @@ abstract final class SaveJsonModels {
     'attack': monster.attack,
     'movement': monster.movement,
     'carried_gear': monster.carriedGear,
+    'exhausted_carried_robots': monster.exhaustedCarriedRobots,
     'returns_to_monster_deck': monster.returnsToMonsterDeck,
     'defeat_reward_deck_id': monster.defeatRewardDeckId,
   };
@@ -215,6 +216,10 @@ abstract final class SaveJsonModels {
         attack: _int(json, 'attack'),
         movement: _int(json, 'movement'),
         carriedGear: _strings(json, 'carried_gear'),
+        exhaustedCarriedRobots: _stringsFromValue(
+          json['exhausted_carried_robots'] ?? const <String>[],
+          'exhausted_carried_robots',
+        ),
         returnsToMonsterDeck: json['returns_to_monster_deck'] == true,
         defeatRewardDeckId: json['defeat_reward_deck_id'] as String?,
       );

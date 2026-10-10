@@ -104,6 +104,12 @@ CommandRejection? _validateCardAbility(
         'GTU-B1c4 можно применить только в бою перед атакой.',
       );
     }
+    if (command.cardId == 'prot2-ct' &&
+        !state.monsters.any((monster) => monster.coord == player.coord)) {
+      return const InventoryCommandRejected(
+        'PROT2-CT можно применить только в бою.',
+      );
+    }
     if (command.cardId == 'h3-al') {
       final target = _playerById(state, command.targetPlayerId ?? player.id);
       if (target == null || !target.alive || target.damage == 0) {
