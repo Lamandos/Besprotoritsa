@@ -172,6 +172,7 @@ MonsterInstance _copyMonster(
   attack: monster.attack,
   movement: monster.movement,
   carriedGear: monster.carriedGear,
+  exhaustedCarriedRobots: monster.exhaustedCarriedRobots,
   returnsToMonsterDeck: monster.returnsToMonsterDeck,
   defeatRewardDeckId: monster.defeatRewardDeckId,
 );

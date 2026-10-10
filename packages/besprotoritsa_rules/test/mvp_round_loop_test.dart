@@ -108,6 +108,44 @@ void main() {
     expect(context.difficulty, 2);
   });
 
+  test('BUG066 tripwire kill resets movement for the next monster', () {
+    final state = _mvpState(
+      playerCoord: const HexCoord(0, 2),
+      corridorOpened: true,
+      crewMessOpened: true,
+      monsters: [
+        MonsterInstance(
+          instanceId: 'tripwire-target',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          movement: 2,
+        ),
+        MonsterInstance(
+          instanceId: 'movement-follower',
+          monsterId: 'ghoul',
+          coord: const HexCoord(0, 0),
+          damage: 0,
+          movement: 2,
+        ),
+      ],
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'bug066-tripwire',
+          coord: HexCoord(0, 1),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+    );
+
+    final result = step(state, const EndTurnCommand(), FixedDiceRoller([]));
+
+    expect(result.state.monsters, hasLength(1));
+    expect(result.state.monsters.single.instanceId, 'movement-follower');
+    expect(result.state.monsters.single.coord, const HexCoord(0, 2));
+  });
+
   test('BUG065 ready robots event preserves exhaustion in the chest', () {
     var state = _mvpState(
       eventId: 'ready-robots-event',
@@ -3632,6 +3670,7 @@ GameState _mvpState({
   PlayerStats playerStats = const PlayerStats(science: 1, agility: 1),
   VentColor corridorVentColor = VentColor.none,
   bool corridorOpened = false,
+  bool crewMessOpened = false,
 }) => GameState(
   seed: 17,
   round: 1,
@@ -3658,7 +3697,7 @@ GameState _mvpState({
       id: 'crew-mess',
       coord: const HexCoord(0, 2),
       type: HexTileType.compartment,
-      opened: false,
+      opened: crewMessOpened,
       exits: const {HexEdge.north},
       locationId: 'crew-mess',
     ),

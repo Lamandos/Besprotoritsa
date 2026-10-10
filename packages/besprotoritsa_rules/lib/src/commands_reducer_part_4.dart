@@ -658,9 +658,10 @@ _awardRestlessTrophies(
   for (final cardId in restless.carriedGear) {
     try {
       awarded = InventoryRules.receive(awarded, cardId, state.cardDefinitions);
-      if (state.players.any(
-        (owner) => !owner.alive && owner.exhaustedRobots.contains(cardId),
-      )) {
+      if (restless.exhaustedCarriedRobots.contains(cardId) ||
+          state.players.any(
+            (owner) => !owner.alive && owner.exhaustedRobots.contains(cardId),
+          )) {
         exhaustedRobots.add(cardId);
         if (!awarded.exhaustedRobots.contains(cardId)) {
           awarded = _copyPlayer(

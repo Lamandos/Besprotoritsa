@@ -22,6 +22,9 @@ GameState resolveHeroDeaths(GameState state) {
 
   for (final deceased in newlyDead) {
     final carriedGear = _restlessGear(deceased, state.cardDefinitions);
+    final exhaustedCarriedRobots = deceased.exhaustedRobots
+        .where(carriedGear.contains)
+        .toSet();
     final bonuses = _restlessBonuses(deceased, state.cardDefinitions);
     final instanceId = _nextRestlessInstanceId(state, deceased.id, monsters);
     monsters.add(
@@ -31,6 +34,7 @@ GameState resolveHeroDeaths(GameState state) {
         attack: RestlessMonster.baseAttack + bonuses.strength,
         defense: RestlessMonster.baseDefense + bonuses.defense,
         carriedGear: carriedGear,
+        exhaustedCarriedRobots: exhaustedCarriedRobots,
       ),
     );
     final deadIndex = players.indexWhere((player) => player.id == deceased.id);
@@ -45,6 +49,9 @@ GameState resolveHeroDeaths(GameState state) {
       retainedEventCards: const [],
       alive: false,
       weaponModifier: 0,
+      exhaustedRobots: deceased.exhaustedRobots.where(
+        (cardId) => !exhaustedCarriedRobots.contains(cardId),
+      ),
     );
     final conditionDeck = decks['conditions'];
     if (conditionDeck != null && deceased.conditions.isNotEmpty) {

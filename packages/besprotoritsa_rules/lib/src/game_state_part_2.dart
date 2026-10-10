@@ -20,7 +20,9 @@ class MonsterInstance {
     this.returnsToMonsterDeck = false,
     this.defeatRewardDeckId,
     Iterable<CardId> carriedGear = const [],
-  }) : carriedGear = List.unmodifiable(carriedGear) {
+    Iterable<CardId> exhaustedCarriedRobots = const [],
+  }) : carriedGear = List.unmodifiable(carriedGear),
+       exhaustedCarriedRobots = List.unmodifiable(exhaustedCarriedRobots) {
     _requireId(instanceId, 'instanceId');
     _requireId(monsterId, 'monsterId');
     _requireNonNegative(damage, 'damage');
@@ -43,6 +45,9 @@ class MonsterInstance {
   final bool returnsToMonsterDeck;
   final DeckId? defeatRewardDeckId;
   final List<CardId> carriedGear;
+
+  /// Robot cards carried by this monster that have not yet become ready.
+  final List<CardId> exhaustedCarriedRobots;
 }
 
 /// The infected form created in the sector where a hero dies.
@@ -57,6 +62,7 @@ final class RestlessMonster extends MonsterInstance {
     required super.attack,
     required super.defense,
     required super.carriedGear,
+    super.exhaustedCarriedRobots = const [],
   }) : super(
          monsterId: restlessMonsterId,
          damage: 0,

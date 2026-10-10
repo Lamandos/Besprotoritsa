@@ -138,6 +138,7 @@ final class ProjectedGameStateCodec {
     attack: _int(json, 'attack'),
     movement: _int(json, 'movement'),
     carriedGear: _strings(json['carriedGear']),
+    exhaustedCarriedRobots: _strings(json['exhaustedCarriedRobots']),
   );
 
   QuestState _quests(Map<String, Object?> json) {

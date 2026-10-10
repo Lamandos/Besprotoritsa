@@ -162,6 +162,57 @@ void main() {
     },
   );
 
+  test(
+    'BUG067 replacement preserves exhaustion on a Restless robot trophy',
+    () {
+      final state = _state(
+        player: _hero(
+          damage: 3,
+          equipped: const EquippedGear(robot: 'r69-nic3'),
+          exhaustedRobots: const ['r69-nic3'],
+        ),
+        reserveHeroes: [
+          ReserveHero(
+            characterId: 'scientist',
+            health: 8,
+            stats: const PlayerStats(strength: 1),
+          ),
+        ],
+      );
+
+      var died = resolveHeroDeaths(state);
+      died = step(
+        died,
+        const ResolvePendingDecisionCommand(
+          SelectReplacementHeroChoice('scientist'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+      final nextTurn = step(
+        died,
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      ).state;
+      expect(nextTurn.players.single.alive, isTrue);
+      expect(nextTurn.players.single.characterId, 'scientist');
+      expect(
+        nextTurn.monsters.single.exhaustedCarriedRobots,
+        contains('r69-nic3'),
+      );
+
+      final result = step(
+        nextTurn,
+        AttackCommand(nextTurn.monsters.single.instanceId),
+        FixedDiceRoller([6]),
+      );
+
+      expect(result.rejection, isNull);
+      expect(result.state.monsters, isEmpty);
+      expect(result.state.players.single.backpack, contains('r69-nic3'));
+      expect(result.state.players.single.exhaustedRobots, contains('r69-nic3'));
+    },
+  );
+
   test('a full backpack does not make defeating a Restless throw', () {
     final hero = _hero(
       backpack: const ['supply', 'supply', 'supply'],
