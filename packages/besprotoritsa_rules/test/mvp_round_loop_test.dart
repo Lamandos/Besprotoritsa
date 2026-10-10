@@ -257,6 +257,127 @@ void main() {
     expect(state.decks['monsters']!.discardPile, contains('ghoul'));
   });
 
+  test('BUG062 move-and-spawn event resolves its destination tripwire', () {
+    var state = _mvpState(
+      eventId: 'pack-tripwire',
+      corridorOpened: true,
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'pack-event-tripwire',
+          coord: HexCoord(0, 1),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+      eventDefinitions: {
+        'pack-tripwire': {
+          'id': 'pack-tripwire',
+          'options': [
+            {
+              'skillCheck': {'skill': 'endurance', 'difficulty': 1},
+              'successEffects': [
+                {'type': 'move_to_neighbor'},
+              ],
+              'failureEffects': [
+                {'type': 'move_to_neighbor_and_spawn_monster'},
+              ],
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 1,
+          'movement': 0,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+        'supplies': DeckState(drawPile: const []),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([1]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        EventOptionChoice('move_spawn:1:0:1'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.tripwires, isEmpty);
+    expect(state.pendingDecision, isNull);
+    expect(state.decks['supplies']!.discardPile, contains('tripwire'));
+    expect(state.decks['monsters']!.discardPile, contains('ghoul'));
+  });
+
+  test('BUG062 adjacent event spawns resolve each tripwire arrival', () {
+    var state = _mvpState(
+      eventId: 'adjacent-tripwire',
+      corridorOpened: true,
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'adjacent-event-tripwire',
+          coord: HexCoord(0, 1),
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+      eventDefinitions: {
+        'adjacent-tripwire': {
+          'id': 'adjacent-tripwire',
+          'options': [
+            {
+              'skillCheck': null,
+              'autoOutcome': 'failure',
+              'failureEffects': [
+                {'type': 'spawn_monsters_adjacent'},
+              ],
+            },
+          ],
+        },
+      },
+      monsterDefinitions: {
+        'ghoul': {
+          'health': 2,
+          'defense': 0,
+          'attack': 1,
+          'movement': 1,
+          'features': <String>[],
+        },
+      },
+      additionalDecks: {
+        'monsters': DeckState(drawPile: const ['ghoul']),
+        'supplies': DeckState(drawPile: const []),
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.monsters, isEmpty);
+    expect(state.tripwires, isEmpty);
+    expect(state.decks['supplies']!.discardPile, contains('tripwire'));
+    expect(state.decks['monsters']!.discardPile, contains('ghoul'));
+  });
+
   test('invasion lets the player choose any closed fallback sector', () {
     var state = _mvpState(
       eventId: 'location-invasion',
@@ -2947,6 +3068,95 @@ void main() {
     expect(state.quests.statusOf('quest-05'), QuestStatus.active);
     expect(state.quests.statusOf('quest-06'), QuestStatus.completed);
     expect(state.players.map((player) => player.damage), [2, 2]);
+  });
+
+  test('BUG063 quest completion damage respects any-damage immunity', () {
+    final sharedQuests = <String, Map<String, Object?>>{
+      'quest-05': {
+        'id': 'quest-05',
+        'number': 5,
+        'chapter': 4,
+        'conditions': [
+          {'id': 'medicine', 'type': 'collect_item', 'itemId': 'medicine'},
+        ],
+        'reward': {'credits': 0, 'items': <Object?>[]},
+        'nextQuestIds': <Object?>[],
+        'nameKey': 'quest-05.name',
+        'descKey': 'quest-05.description',
+      },
+      'quest-06': {
+        'id': 'quest-06',
+        'number': 6,
+        'chapter': 5,
+        'conditions': [
+          {
+            'id': 'engine-check',
+            'type': 'skill_check',
+            'skill': 'science',
+            'locationId': 'crew-mess',
+          },
+        ],
+        'completionEffects': [
+          {
+            'type': 'damage_all_players_if_quest_active',
+            'questId': 'quest-05',
+            'amount': 2,
+          },
+        ],
+        'reward': {'credits': 0, 'items': <Object?>[]},
+        'nextQuestIds': <Object?>[],
+        'nameKey': 'quest-06.name',
+        'descKey': 'quest-06.description',
+      },
+    };
+    final shields = <({String id, bool robot})>[
+      (id: 'prot3-ct', robot: true),
+      (id: 'proton-shield', robot: false),
+    ];
+    final damageTaken = <int>[];
+    for (final shield in shields) {
+      final card = CardDefinition(
+        id: shield.id,
+        type: shield.robot ? ItemType.robot : ItemType.supply,
+        slots: shield.robot ? const [ItemSlot.robot] : const [],
+        cost: 0,
+        staticEffects: CardStaticEffects(const {}),
+        sourceDeck: shield.robot ? 'items' : 'supplies',
+        behaviorIds: shield.robot
+            ? const ['robot.exhaust', 'damage.ignoreAnyUntilRoundEnd']
+            : const ['card.discardCost', 'damage.preventUntilRoundEnd'],
+      );
+      var state = _mvpState(
+        playerCoord: const HexCoord(0, 2),
+        playerHealth: 10,
+        playerBackpack: shield.robot ? const [] : [shield.id],
+        playerEquipment: shield.robot
+            ? EquippedGear(robot: shield.id)
+            : const EquippedGear(),
+        storyQuestIds: const ['quest-05', 'quest-06'],
+        questDefinitions: sharedQuests,
+        cardDefinitions: {shield.id: card},
+        additionalDecks: {'supplies': DeckState(drawPile: const [])},
+      );
+      state = step(
+        state,
+        UseCardAbilityCommand(shield.id),
+        FixedDiceRoller([]),
+      ).state;
+      state = step(
+        state,
+        const SkillCheckCommand(StatType.science),
+        FixedDiceRoller([6]),
+      ).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(KeepRollChoice()),
+        FixedDiceRoller([]),
+      ).state;
+      damageTaken.add(state.players.single.damage);
+    }
+
+    expect(damageTaken, [0, 0]);
   });
 
   test('killing a monster advances damage-token quest counters', () {

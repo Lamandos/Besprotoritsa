@@ -697,7 +697,13 @@ GameState _spawnEventOptionMonster(
     decks: Map<DeckId, DeckState>.of(state.decks)..['monsters'] = draw.deck,
     logEntry: 'event-monster-spawn:${event['id']}:$monsterId:$coord',
   );
-  return _startImmediateMonsterAttack(spawned, playerId, monster, dice);
+  final arrived = _resolveTripwireArrival(spawned, monster);
+  if (!arrived.monsters.any(
+    (candidate) => candidate.instanceId == monster.instanceId,
+  )) {
+    return arrived;
+  }
+  return _startImmediateMonsterAttack(arrived, playerId, monster, dice);
 }
 
 bool? _eventAutomaticOutcome(
@@ -1989,6 +1995,9 @@ GameState _resolveEventOutcome(
           logEntry:
               'event-monsters-adjacent:${definition['id']}:${monsters.length}',
         );
+        for (final monster in monsters) {
+          current = _resolveTripwireArrival(current, monster);
+        }
       case 'move_to_neighbor':
       case 'move_to_neighbor_and_spawn_monster':
         final targets = _eventMoveTargets(current, playerId);
@@ -2678,7 +2687,7 @@ GameState _applyFullQuestEvent(
       if (statuses[effect.questId] != QuestStatus.active) continue;
       players = [
         for (final player in players)
-          if (player.alive)
+          if (player.alive && !_ignoresAnyDamage(state, player))
             _copyPlayer(player, damage: player.damage + effect.amount)
           else
             player,
