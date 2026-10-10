@@ -387,7 +387,15 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
       coord: destination,
       playerId: targetId,
     );
-    return _exhaustRobot(triggered, player, command.cardId);
+    final locationId = triggered.tileAt(destination)?.locationId;
+    final questResolved = locationId == null
+        ? triggered
+        : _applyFullQuestEvent(
+            triggered,
+            QuestArrived(locationId),
+            playerId: targetId,
+          );
+    return _exhaustRobot(questResolved, player, command.cardId);
   }
 
   if (command.cardId == 'sc0-u7') {

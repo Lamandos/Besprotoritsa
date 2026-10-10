@@ -15,6 +15,7 @@ GameState resolveHeroDeaths(GameState state) {
 
   final players = List<PlayerState>.of(state.players);
   final monsters = List<MonsterInstance>.of(state.monsters);
+  final spawnedRestless = <RestlessMonster>[];
   final decks = Map<DeckId, DeckState>.of(state.decks);
   final events = List<GameEvent>.of(state.gameEvents);
   final noReserve =
@@ -27,16 +28,16 @@ GameState resolveHeroDeaths(GameState state) {
         .toSet();
     final bonuses = _restlessBonuses(deceased, state.cardDefinitions);
     final instanceId = _nextRestlessInstanceId(state, deceased.id, monsters);
-    monsters.add(
-      RestlessMonster(
-        instanceId: instanceId,
-        coord: deceased.coord,
-        attack: RestlessMonster.baseAttack + bonuses.strength,
-        defense: RestlessMonster.baseDefense + bonuses.defense,
-        carriedGear: carriedGear,
-        exhaustedCarriedRobots: exhaustedCarriedRobots,
-      ),
+    final restless = RestlessMonster(
+      instanceId: instanceId,
+      coord: deceased.coord,
+      attack: RestlessMonster.baseAttack + bonuses.strength,
+      defense: RestlessMonster.baseDefense + bonuses.defense,
+      carriedGear: carriedGear,
+      exhaustedCarriedRobots: exhaustedCarriedRobots,
     );
+    monsters.add(restless);
+    spawnedRestless.add(restless);
     final deadIndex = players.indexWhere((player) => player.id == deceased.id);
     players[deadIndex] = _copyPlayer(
       deceased,
@@ -87,7 +88,7 @@ GameState resolveHeroDeaths(GameState state) {
           remainingPlayerIds: newlyDead.skip(1).map((hero) => hero.id),
         );
 
-  return _copyState(
+  var resolved = _copyState(
     state,
     players: players,
     monsters: monsters,
@@ -103,6 +104,10 @@ GameState resolveHeroDeaths(GameState state) {
     clearPendingDecision: noReserve,
     logEntry: 'hero-died:${newlyDead.map((hero) => hero.id).join(',')}',
   );
+  for (final restless in spawnedRestless) {
+    resolved = _resolveTripwireArrival(resolved, restless);
+  }
+  return resolved;
 }
 
 List<CardId> _restlessGear(

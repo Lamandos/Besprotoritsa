@@ -78,6 +78,64 @@ void main() {
     },
   );
 
+  test('BUG072 GHB-DTN movement advances an arrive objective', () {
+    const destination = HexCoord(0, 2);
+    final state = _mvpState(
+      corridorOpened: true,
+      crewMessOpened: true,
+      playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+      storyQuestIds: const ['arrive-crew-mess'],
+      questDefinitions: {
+        'arrive-crew-mess': {
+          'id': 'arrive-crew-mess',
+          'number': 1,
+          'chapter': 1,
+          'conditions': [
+            {
+              'id': 'reach-crew-mess',
+              'type': 'arrive',
+              'locationId': 'crew-mess',
+            },
+          ],
+          'reward': {'credits': 0, 'items': <Object?>[]},
+          'nextQuestIds': <Object?>[],
+          'nameKey': 'arrive-crew-mess.name',
+          'descKey': 'arrive-crew-mess.description',
+        },
+      },
+      cardDefinitions: {
+        'ghb-dtn': CardDefinition(
+          id: 'ghb-dtn',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+        ),
+      },
+    );
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand('ghb-dtn', targetCoord: destination),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.players.single.coord, destination);
+    expect(
+      result
+          .state
+          .quests
+          .conditionProgress['arrive-crew-mess']?['reach-crew-mess'],
+      1,
+    );
+    expect(
+      result.state.quests.statusOf('arrive-crew-mess'),
+      QuestStatus.completed,
+    );
+  });
+
   test('runtime event definitions drive options and skill checks', () {
     var state = _mvpState(
       eventId: 'runtime-event',
@@ -144,6 +202,30 @@ void main() {
     expect(result.state.monsters, hasLength(1));
     expect(result.state.monsters.single.instanceId, 'movement-follower');
     expect(result.state.monsters.single.coord, const HexCoord(0, 2));
+  });
+
+  test('BUG073 tripwire triggers on a Restless spawned by hero death', () {
+    final state = _mvpState(
+      playerDamage: 1,
+      playerHealth: 1,
+      heroCount: 2,
+      additionalDecks: {'supplies': DeckState(drawPile: const [])},
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'bug073-tripwire',
+          coord: HexCoord(0, 0),
+          ownerId: 'hero-2',
+          cardId: 'tripwire',
+        ),
+      ],
+    );
+
+    final result = resolveHeroDeaths(state);
+
+    expect(result.monsters, isEmpty);
+    expect(result.tripwires, isEmpty);
+    expect(result.decks['supplies']!.discardPile, contains('tripwire'));
+    expect(result.log, contains('tripwire-triggered:hero-2:restless'));
   });
 
   test('BUG065 ready robots event preserves exhaustion in the chest', () {
@@ -3666,6 +3748,7 @@ GameState _mvpState({
   Iterable<TripwireTrap> tripwires = const [],
   Map<String, Map<String, Object?>> monsterDefinitions = const {},
   int heroCount = 1,
+  int playerDamage = 0,
   int secondHeroDamage = 0,
   Iterable<ReserveHero> reserveHeroes = const [],
   int initialCredits = 0,
@@ -3711,7 +3794,11 @@ GameState _mvpState({
         id: index == 0 ? 'ada' : 'hero-${index + 1}',
         characterId: index == 0 ? 'engineer' : 'guard',
         coord: playerCoord,
-        damage: index == 1 ? secondHeroDamage : 0,
+        damage: index == 0
+            ? playerDamage
+            : index == 1
+            ? secondHeroDamage
+            : 0,
         credits: initialCredits,
         health: playerHealth,
         backpack: playerBackpack,
