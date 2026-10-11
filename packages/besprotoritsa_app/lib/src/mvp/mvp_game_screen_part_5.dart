@@ -177,6 +177,15 @@ class _PendingDecisionModal extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Text(prompt),
+                        if (rerollSources.isNotEmpty) Text(sourceCopy),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         GameCardSurface(
                           material: GameCardMaterial.event,
                           overlayColor: const Color(0xD91B1510),
@@ -186,8 +195,7 @@ class _PendingDecisionModal extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                eventDescription ??
-                                    _decisionPrompt(decision, strings),
+                                eventDescription ?? prompt,
                                 style: const TextStyle(
                                   color: Color(0xFFFFF0D1),
                                   fontSize: 16,
@@ -200,7 +208,7 @@ class _PendingDecisionModal extends ConsumerWidget {
                                 child: TextButton.icon(
                                   onPressed: () => showGameCardScan(
                                     context,
-                                    cardId: eventId!,
+                                    cardId: eventId,
                                     title: eventTitle ?? eventId,
                                     kind: GameCardArtworkKind.event,
                                   ),
@@ -216,22 +224,7 @@ class _PendingDecisionModal extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(prompt),
-                        if (rerollSources.isNotEmpty)
-                          Text(
-                            sourceCopy,
-                          ),
-                      ],
-                    ),
-                  )
-                : SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(prompt),
-                        if (rerollSources.isNotEmpty)
-                          Text(
-                            sourceCopy,
-                          ),
+                        if (rerollSources.isNotEmpty) Text(sourceCopy),
                         if (coordinateOptions.isNotEmpty) ...[
                           Text(
                             _coordinateOptionPrompt(coordinateOptions.values),

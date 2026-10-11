@@ -26,14 +26,93 @@ void main() {
     });
     await _mount(tester, state);
 
+    final eventDialog = find.byType(AlertDialog);
     final intro = tester.getTopLeft(
-      find.text('Проходя мимо каюты, вы слышите в ней какую-то возню.').last,
+      find.descendant(
+        of: eventDialog,
+        matching: find.text(
+          'Проходя мимо каюты, вы слышите в ней какую-то возню.',
+        ),
+      ),
     );
     final firstChoice = tester.getTopLeft(
-      find.text('Проверить, что там происходит.'),
+      find.descendant(
+        of: eventDialog,
+        matching: find.text('Проверить, что там происходит.'),
+      ),
     );
 
     expect(intro.dy, lessThan(firstChoice.dy));
+  });
+
+  testWidgets('BUG098 event introduction appears for event choice', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1', 'option-2'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'cabin-noise',
+      };
+    });
+    await _mount(tester, state);
+
+    final intro = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.text(
+        'Проходя мимо каюты, вы слышите в ней какую-то возню.',
+      ),
+    );
+    final firstChoice = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.text('Проверить, что там происходит.'),
+    );
+
+    expect(intro, findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Вся карта'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      tester.getTopLeft(intro).dy,
+      lessThan(tester.getTopLeft(firstChoice).dy),
+    );
+  });
+
+  testWidgets('BUG098 generic reroll has no event card action', (tester) async {
+    final state = _scenario((doc) {
+      (_player(doc)['backpack']! as List).add('defibrillator');
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller([6, 1, 1, 1, 2, 2, 2, 2]),
+    );
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const SkillCheckCommand(StatType.science)),
+      isTrue,
+    );
+    await tester.pump();
+
+    expect(
+      container.read(gameControllerProvider).pendingDecision,
+      isA<AwaitingRerollChoice>(),
+    );
+    expect(find.text('Выбрать кубики'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Вся карта'),
+      ),
+      findsNothing,
+    );
   });
 
   test('BUG025 character portraits follow the printed character cards', () {
