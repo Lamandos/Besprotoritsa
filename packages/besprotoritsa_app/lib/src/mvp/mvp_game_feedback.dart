@@ -11,43 +11,213 @@ class _GameFeedbackOverlay extends ConsumerStatefulWidget {
 
 class _GameFeedbackOverlayState extends ConsumerState<_GameFeedbackOverlay> {
   final List<_GameResult> _results = [];
+  final List<_EquipmentOffer> _equipmentOffers = [];
 
   @override
   Widget build(BuildContext context) {
     ref.listen(gameControllerProvider, (before, after) {
       if (before == null) return;
       final results = _transitionResults(before, after);
-      if (results.isNotEmpty) setState(() => _results.addAll(results));
+      final offers = _newEquipmentOffers(before, after);
+      if (results.isNotEmpty || offers.isNotEmpty) {
+        setState(() {
+          _results.addAll(results);
+          _equipmentOffers.addAll(offers);
+        });
+      }
     });
     final queue = ref.read(eventQueueProvider);
     return ListenableBuilder(
       listenable: queue,
       builder: (context, _) {
-        if (_results.isEmpty || queue.isPlaying) return const SizedBox.shrink();
-        final result = _results.first;
-        return Positioned.fill(
-          child: ColoredBox(
-            color: Colors.black54,
-            child: Center(
-              child: AlertDialog(
-                title: Text(result.title),
-                content: SizedBox(
-                  width: 480,
-                  child: SingleChildScrollView(child: Text(result.body)),
-                ),
-                actions: [
-                  FilledButton(
-                    onPressed: () => setState(() => _results.removeAt(0)),
-                    child: const Text('Продолжить'),
+        if (queue.isPlaying) return const SizedBox.shrink();
+        if (_results.isNotEmpty) {
+          final result = _results.first;
+          return Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black54,
+              child: Center(
+                child: AlertDialog(
+                  title: Text(result.title),
+                  content: SizedBox(
+                    width: 480,
+                    child: SingleChildScrollView(child: Text(result.body)),
                   ),
-                ],
+                  actions: [
+                    FilledButton(
+                      onPressed: () => setState(() => _results.removeAt(0)),
+                      child: const Text('Продолжить'),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          );
+        }
+        if (_equipmentOffers.isEmpty) return const SizedBox.shrink();
+        return _equipmentOfferDialog(
+          context,
+          ref,
+          _equipmentOffers.first,
+          () => setState(() => _equipmentOffers.removeAt(0)),
         );
       },
     );
   }
+}
+
+class _EquipmentOffer {
+  const _EquipmentOffer({required this.playerId, required this.cardId});
+
+  final String playerId;
+  final String cardId;
+}
+
+List<_EquipmentOffer> _newEquipmentOffers(
+  GameState before,
+  GameState after,
+) {
+  final playerId = after.activePlayerId;
+  if (playerId == null) return const [];
+  final player = after.players
+      .where((entry) => entry.id == playerId)
+      .firstOrNull;
+  if (player == null) return const [];
+  final previous = before.players
+      .where((entry) => entry.id == playerId)
+      .firstOrNull;
+  // A newly observed player can be part of the first authoritative snapshot
+  // after connecting or recreating a multiplayer controller. Their existing
+  // inventory establishes the baseline; it is not a newly received reward.
+  if (previous == null) return const [];
+  final beforeBackpack = _countCards(previous.backpack);
+  final afterBackpack = _countCards(player.backpack);
+  final beforeOwned = _countCards(_ownedCards(previous));
+  final afterOwned = _countCards(_ownedCards(player));
+  final offers = <_EquipmentOffer>[];
+  for (final cardId in afterBackpack.keys) {
+    final definition = after.cardDefinitions[cardId];
+    if (definition == null ||
+        !const {
+          ItemType.weapon,
+          ItemType.armor,
+          ItemType.clothing,
+          ItemType.robot,
+        }.contains(definition.type)) {
+      continue;
+    }
+    final newlyBackpacked =
+        (afterBackpack[cardId] ?? 0) - (beforeBackpack[cardId] ?? 0);
+    final newlyOwned = (afterOwned[cardId] ?? 0) - (beforeOwned[cardId] ?? 0);
+    final receivedCount = math.min(newlyBackpacked, newlyOwned);
+    for (var index = 0; index < receivedCount; index++) {
+      offers.add(_EquipmentOffer(playerId: playerId, cardId: cardId));
+    }
+  }
+  return offers;
+}
+
+Iterable<String> _ownedCards(PlayerState? player) => player == null
+    ? const []
+    : [
+        ...player.backpack,
+        ...player.equipped.weapons,
+        if (player.equipped.armor case final card?) card,
+        if (player.equipped.clothing case final card?) card,
+        if (player.equipped.robot case final card?) card,
+        ...player.carriedMods,
+        ...player.implanted,
+      ];
+
+Map<String, int> _countCards(Iterable<String> cards) {
+  final counts = <String, int>{};
+  for (final card in cards) {
+    counts.update(card, (count) => count + 1, ifAbsent: () => 1);
+  }
+  return counts;
+}
+
+Widget _equipmentOfferDialog(
+  BuildContext context,
+  WidgetRef ref,
+  _EquipmentOffer offer,
+  VoidCallback dismiss,
+) {
+  final state = ref.watch(gameControllerProvider);
+  final player = state.players
+      .where((entry) => entry.id == offer.playerId)
+      .firstOrNull;
+  final definition = state.cardDefinitions[offer.cardId];
+  if (player == null || definition == null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => dismiss());
+    return const SizedBox.shrink();
+  }
+  final slotIndex =
+      definition.type == ItemType.weapon &&
+          player.equipped.weapons.length <
+              InventoryRules.weaponCapacity(player, state.cardDefinitions)
+      ? player.equipped.weapons.length
+      : 0;
+  final replacedCard = switch (definition.type) {
+    ItemType.weapon =>
+      player.equipped.weapons.length > slotIndex
+          ? player.equipped.weapons[slotIndex]
+          : null,
+    ItemType.armor => player.equipped.armor,
+    ItemType.clothing => player.equipped.clothing,
+    ItemType.robot => player.equipped.robot,
+    _ => null,
+  };
+  final cardName = _inventoryCardName(state, offer.cardId);
+  final replacementName = replacedCard == null
+      ? null
+      : _inventoryCardName(state, replacedCard);
+  return Positioned.fill(
+    child: ColoredBox(
+      color: Colors.black54,
+      child: Center(
+        child: AlertDialog(
+          title: const Text('Получена экипировка'),
+          content: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Карта «$cardName» уже добавлена в рюкзак.'),
+                  if (replacementName != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'При экипировке она заменит «$replacementName». '
+                      'Старая карта переместится в рюкзак.',
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: dismiss,
+              child: const Text('В рюкзак'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final accepted = ref
+                    .read(gameControllerProvider.notifier)
+                    .dispatch(
+                      EquipCommand(offer.cardId, weaponSlot: slotIndex),
+                    );
+                if (accepted) dismiss();
+              },
+              child: const Text('Экипировать'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _GameResult {
@@ -296,11 +466,19 @@ List<String> _stateConsequences(
       final name = key is String
           ? after.contentTranslations[key] ?? monster.monsterId
           : monster.monsterId;
+      final isPublic = after.tileAt(monster.coord)?.opened ?? false;
       if (previous == null) {
-        changes.add('Появился монстр: $name');
+        changes.add(
+          isPublic
+              ? 'Появился монстр: $name'
+              : 'В закрытом секторе появилась неизвестная угроза.',
+        );
       } else if (monster.damage > previous.damage) {
         changes.add(
-          '$name — Нанесено урона: ${monster.damage - previous.damage}',
+          isPublic
+              ? '$name — Нанесено урона: ${monster.damage - previous.damage}'
+              : 'Неизвестная угроза получила урон: '
+                    '${monster.damage - previous.damage}',
         );
       }
     }

@@ -6,6 +6,9 @@
 
 part of 'game_state.dart';
 
+/// Monster id used in player projections for a threat in an unopened sector.
+const String unknownMonsterMarkerId = 'unknown-monster';
+
 @immutable
 class MonsterInstance {
   MonsterInstance({

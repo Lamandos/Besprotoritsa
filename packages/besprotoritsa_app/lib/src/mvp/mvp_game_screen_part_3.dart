@@ -525,32 +525,70 @@ class _MonsterToken extends StatelessWidget {
     final monsterName = nameKey is String
         ? state.contentTranslations[nameKey] ?? monster.monsterId
         : monster.monsterId;
+    final hidden =
+        monster.monsterId == unknownMonsterMarkerId ||
+        state.tileAt(monster.coord)?.opened != true;
     return Positioned(
       left: position.dx,
       top: position.dy,
       child: Semantics(
-        button: true,
-        label: AppStrings.of(
-          context,
-        ).monsterLabel(monster.monsterId, monster.coord.q, monster.coord.r),
+        button: !hidden,
+        label: hidden
+            ? 'Неизвестный монстр в секторе ${monster.coord.q}, ${monster.coord.r}'
+            : AppStrings.of(
+                context,
+              ).monsterLabel(
+                monster.monsterId,
+                monster.coord.q,
+                monster.coord.r,
+              ),
         child: Tooltip(
-          message: 'Карточка монстра: $monsterName',
+          message: hidden
+              ? 'Неизвестная угроза'
+              : 'Карточка монстра: $monsterName',
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => _showMonsterCard(context, state, monster, monsterName),
+            onTap: hidden
+                ? null
+                : () => _showMonsterCard(
+                    context,
+                    state,
+                    monster,
+                    monsterName,
+                  ),
             child: SizedBox(
               width: size.width,
               height: size.height,
-              child: GameCardArtwork(
-                cardId: monster.monsterId,
-                assetPath:
-                    gameMonsterTokenArtworkAsset(monster.monsterId) ??
-                    gameCardArtworkAsset(monster.monsterId),
-                width: size.width,
-                height: size.height,
-                borderRadius: BorderRadius.zero,
-                fit: BoxFit.contain,
-                fallbackIcon: Icons.bug_report,
+              child: Container(
+                key: ValueKey<String>(
+                  'monster-token-outline-${monster.instanceId}',
+                ),
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFFE53935), width: 2),
+                ),
+                child: hidden
+                    ? Center(
+                        child: Text(
+                          '☠',
+                          style: TextStyle(
+                            color: const Color(0xFFFFF0D1),
+                            fontSize: math.max(18, size.width * .58),
+                            height: 1,
+                          ),
+                        ),
+                      )
+                    : GameCardArtwork(
+                        cardId: monster.monsterId,
+                        assetPath:
+                            gameMonsterTokenArtworkAsset(monster.monsterId) ??
+                            gameCardArtworkAsset(monster.monsterId),
+                        width: size.width - 4,
+                        height: size.height - 4,
+                        borderRadius: BorderRadius.zero,
+                        fit: BoxFit.contain,
+                        fallbackIcon: Icons.bug_report,
+                      ),
               ),
             ),
           ),

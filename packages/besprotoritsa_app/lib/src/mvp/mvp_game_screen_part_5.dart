@@ -178,10 +178,7 @@ class _PendingDecisionModal extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(prompt),
-                        if (rerollSources.isNotEmpty)
-                          Text(
-                            sourceCopy,
-                          ),
+                        if (rerollSources.isNotEmpty) Text(sourceCopy),
                       ],
                     ),
                   )
@@ -189,11 +186,45 @@ class _PendingDecisionModal extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(prompt),
-                        if (rerollSources.isNotEmpty)
-                          Text(
-                            sourceCopy,
+                        GameCardSurface(
+                          material: GameCardMaterial.event,
+                          overlayColor: const Color(0xD91B1510),
+                          padding: const EdgeInsets.all(14),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                eventDescription ?? prompt,
+                                style: const TextStyle(
+                                  color: Color(0xFFFFF0D1),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.4,
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: () => showGameCardScan(
+                                    context,
+                                    cardId: eventId,
+                                    title: eventTitle ?? eventId,
+                                    kind: GameCardArtworkKind.event,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.open_in_full,
+                                    size: 16,
+                                  ),
+                                  label: const Text('Вся карта'),
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(prompt),
+                        if (rerollSources.isNotEmpty) Text(sourceCopy),
                         if (coordinateOptions.isNotEmpty) ...[
                           Text(
                             _coordinateOptionPrompt(coordinateOptions.values),
@@ -236,43 +267,6 @@ class _PendingDecisionModal extends ConsumerWidget {
                               eventId,
                               option,
                             ),
-                        GameCardSurface(
-                          material: GameCardMaterial.event,
-                          overlayColor: const Color(0xD91B1510),
-                          padding: const EdgeInsets.all(14),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                eventDescription ??
-                                    _decisionPrompt(decision, strings),
-                                style: const TextStyle(
-                                  color: Color(0xFFFFF0D1),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.4,
-                                ),
-                              ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton.icon(
-                                  onPressed: () => showGameCardScan(
-                                    context,
-                                    cardId: eventId,
-                                    title: eventTitle ?? eventId,
-                                    kind: GameCardArtworkKind.event,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.open_in_full,
-                                    size: 16,
-                                  ),
-                                  label: const Text('Вся карта'),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                   ),

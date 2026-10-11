@@ -207,6 +207,30 @@ PlayerGameState projectFor(GameState fullState, PlayerId viewerId) {
   };
   final viewerTasks =
       fullState.quests.personalTasksByPlayer[viewerId] ?? const <QuestId>[];
+  final hiddenMonsterOrdinals = <HexCoord, int>{};
+  final projectedMonsters = <MonsterInstance>[];
+  for (final monster in fullState.monsters) {
+    if (fullState.tileAt(monster.coord)?.opened ?? false) {
+      projectedMonsters.add(monster);
+      continue;
+    }
+    final ordinal = hiddenMonsterOrdinals.update(
+      monster.coord,
+      (value) => value + 1,
+      ifAbsent: () => 0,
+    );
+    projectedMonsters.add(
+      MonsterInstance(
+        instanceId:
+            'unknown-monster-${monster.coord.q}-${monster.coord.r}-$ordinal',
+        monsterId: unknownMonsterMarkerId,
+        coord: monster.coord,
+        damage: 0,
+        health: 0,
+        movement: 0,
+      ),
+    );
+  }
 
   return PlayerGameState(
     schemaVersion: fullState.schemaVersion,
@@ -228,12 +252,9 @@ PlayerGameState projectFor(GameState fullState, PlayerId viewerId) {
         isViewer: player.id == viewerId,
       ),
     ),
-    // A token in an unopened sector would disclose both the contents and the
-    // position of fogged map space.  Monsters become public only once their
-    // sector has been opened, just like the tile that contains them.
-    monsters: fullState.monsters.where(
-      (monster) => fullState.tileAt(monster.coord)?.opened ?? false,
-    ),
+    // Preserve the known threat marker without disclosing its card, stats,
+    // carried gear, or authoritative instance id.
+    monsters: projectedMonsters,
     tripwires: fullState.tripwires.where(
       (trap) => fullState.tileAt(trap.coord)?.opened ?? false,
     ),
