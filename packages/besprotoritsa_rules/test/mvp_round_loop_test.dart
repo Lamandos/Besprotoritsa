@@ -390,6 +390,90 @@ void main() {
     },
   );
 
+  test('BUG091 GHB-DTN stops when an intermediate arrival wins the game', () {
+    const anabiosis = HexCoord(0, 0);
+    const destination = HexCoord(0, -1);
+    final state = _mvpState(
+      playerCoord: const HexCoord(0, 1),
+      corridorOpened: true,
+      anabiosisExits: const {HexEdge.north, HexEdge.south},
+      anabiosisLocationId: 'anabiosis',
+      extraBoardTiles: [
+        _tile(
+          id: 'north-compartment',
+          coord: destination,
+          type: HexTileType.compartment,
+          opened: true,
+          exits: const {HexEdge.south},
+        ),
+      ],
+      playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+      monsters: [
+        MonsterInstance(
+          instanceId: 'post-victory-monster',
+          monsterId: 'ghoul',
+          coord: destination,
+          damage: 0,
+          attack: 1,
+          movement: 0,
+        ),
+      ],
+      storyQuestIds: const ['quest-28'],
+      questDefinitions: {
+        'quest-28': {
+          'id': 'quest-28',
+          'number': 28,
+          'chapter': 9,
+          'targetLocation': 'anabiosis',
+          'conditions': [
+            {
+              'id': 'return-anabiosis',
+              'type': 'arrive',
+              'locationId': 'anabiosis',
+            },
+          ],
+          'reward': {'credits': 0, 'items': <Object?>[]},
+          'nextQuestIds': ['quest-29'],
+          'nameKey': 'quest-28.name',
+          'descKey': 'quest-28.description',
+        },
+        'quest-29': {
+          'id': 'quest-29',
+          'number': 29,
+          'chapter': 9,
+          'conditions': <Object?>[],
+          'reward': {'credits': 0, 'items': <Object?>[]},
+          'nextQuestIds': <Object?>[],
+          'endsGame': true,
+          'nameKey': 'quest-29.name',
+          'descKey': 'quest-29.description',
+        },
+      },
+      cardDefinitions: {
+        'ghb-dtn': CardDefinition(
+          id: 'ghb-dtn',
+          type: ItemType.robot,
+          slots: const [ItemSlot.robot],
+          cost: 0,
+          staticEffects: CardStaticEffects(const {}),
+          behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+        ),
+      },
+    );
+
+    final result = step(
+      state,
+      const UseCardAbilityCommand('ghb-dtn', targetCoord: destination),
+      FixedDiceRoller([]),
+    );
+
+    expect(result.rejection, isNull);
+    expect(result.state.isComplete, isTrue);
+    expect(result.state.quests.statusOf('quest-29'), QuestStatus.completed);
+    expect(result.state.players.first.coord, anabiosis);
+    expect(result.state.pendingDecision, isNull);
+  });
+
   test('runtime event definitions drive options and skill checks', () {
     var state = _mvpState(
       eventId: 'runtime-event',
@@ -4470,6 +4554,9 @@ GameState _mvpState({
   bool playerAlive = true,
   int secondHeroDamage = 0,
   HexCoord? secondHeroCoord,
+  Set<HexEdge> anabiosisExits = const {HexEdge.south},
+  String? anabiosisLocationId,
+  Iterable<HexTile> extraBoardTiles = const [],
   Iterable<ReserveHero> reserveHeroes = const [],
   Map<PlayerId, ReserveHero> queuedReplacements = const {},
   int initialCredits = 0,
@@ -4490,7 +4577,8 @@ GameState _mvpState({
       coord: const HexCoord(0, 0),
       type: HexTileType.start,
       opened: true,
-      exits: const {HexEdge.south},
+      exits: anabiosisExits,
+      locationId: anabiosisLocationId,
     ),
     _tile(
       id: 'corridor',
@@ -4508,6 +4596,7 @@ GameState _mvpState({
       exits: const {HexEdge.north},
       locationId: 'crew-mess',
     ),
+    ...extraBoardTiles,
   ],
   players: [
     for (var index = 0; index < heroCount; index++)

@@ -678,6 +678,7 @@ GameState _continueGhbDtnMovement(
       );
     }
 
+    if (moved.isComplete) return moved;
     final pendingDecision = moved.pendingDecision;
     if (pendingDecision != null) {
       final remainingPath = continuation.remainingPath.skip(index + 1);
