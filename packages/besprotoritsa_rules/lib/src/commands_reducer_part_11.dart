@@ -712,6 +712,45 @@ AwaitingDodge _withGhbDtnContinuation(
   ghbDtnContinuation: continuation,
 );
 
+AwaitingHeroReplacement _withGhbDtnReplacementContinuation(
+  AwaitingHeroReplacement pending,
+  GhbDtnMovementContinuation continuation,
+) => AwaitingHeroReplacement(
+  playerId: pending.playerId,
+  characterIds: pending.characterIds,
+  remainingPlayerIds: pending.remainingPlayerIds,
+  counterAttackMonsterInstanceId: pending.counterAttackMonsterInstanceId,
+  counterAttackPlayerId: pending.counterAttackPlayerId,
+  ghbDtnContinuation: continuation,
+);
+
+GameState _continueOrPreserveGhbDtnMovement(
+  GameState state,
+  GhbDtnMovementContinuation? continuation,
+) {
+  if (continuation == null) return state;
+  final pending = state.pendingDecision;
+  if (pending is AwaitingDodge) {
+    return _copyState(
+      state,
+      pendingDecision: _withGhbDtnContinuation(pending, continuation),
+    );
+  }
+  if (pending is AwaitingHeroReplacement) {
+    return _copyState(
+      state,
+      pendingDecision: _withGhbDtnReplacementContinuation(
+        pending,
+        continuation,
+      ),
+    );
+  }
+  if (pending != null) return state;
+  final mover = _playerById(state, continuation.playerId);
+  if (mover == null || !mover.alive) return state;
+  return _continueGhbDtnMovement(state, continuation);
+}
+
 List<HexCoord>? _heroPath(GameState state, HexCoord start, HexCoord target) {
   if (start == target) return [start];
   final paths = <List<HexCoord>>[

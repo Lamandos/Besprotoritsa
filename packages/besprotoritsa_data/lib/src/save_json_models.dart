@@ -411,6 +411,9 @@ abstract final class SaveJsonModels {
           'counter_attack_monster_instance_id':
               decision.counterAttackMonsterInstanceId,
           'counter_attack_player_id': decision.counterAttackPlayerId,
+          'ghb_dtn_continuation': _ghbDtnContinuationToJson(
+            decision.ghbDtnContinuation,
+          ),
         },
         AwaitingOtherPlayerDecision() => {
           'type': 'other_player',
@@ -477,6 +480,9 @@ abstract final class SaveJsonModels {
         counterAttackPlayerId: _nullableString(
           json['counter_attack_player_id'],
           'counter_attack_player_id',
+        ),
+        ghbDtnContinuation: _ghbDtnContinuationFromJson(
+          json['ghb_dtn_continuation'],
         ),
       ),
       'other_player' => AwaitingOtherPlayerDecision(

@@ -143,6 +143,7 @@ GameStepResult _resolveHeroReplacement(
             counterAttackMonsterInstanceId:
                 pending.counterAttackMonsterInstanceId,
             counterAttackPlayerId: pending.counterAttackPlayerId,
+            ghbDtnContinuation: pending.ghbDtnContinuation,
           ),
         ),
       );
@@ -155,7 +156,14 @@ GameStepResult _resolveHeroReplacement(
     counterAttackMonsterInstanceId: pending.counterAttackMonsterInstanceId,
     counterAttackPlayerId: pending.counterAttackPlayerId,
   );
-  if (queued.pendingDecision != null) return GameStepResult(state: queued);
+  if (queued.pendingDecision != null) {
+    return GameStepResult(
+      state: _continueOrPreserveGhbDtnMovement(
+        queued,
+        pending.ghbDtnContinuation,
+      ),
+    );
+  }
   final counterAttackId = pending.counterAttackMonsterInstanceId;
   final counterAttackPlayerId = pending.counterAttackPlayerId;
   final monster = counterAttackId == null
@@ -172,9 +180,13 @@ GameStepResult _resolveHeroReplacement(
           dice,
         )
       : queued;
+  final resumed = _resumeAutomaticPhase(
+    _resumePendingEventMonsterSpawn(continued, dice),
+  );
   return GameStepResult(
-    state: _resumeAutomaticPhase(
-      _resumePendingEventMonsterSpawn(continued, dice),
+    state: _continueOrPreserveGhbDtnMovement(
+      resumed,
+      pending.ghbDtnContinuation,
     ),
   );
 }
@@ -453,15 +465,23 @@ GameStepResult _resolveDodge(
   final counterAttackPlayerId = pending.counterAttackPlayerId ?? targetId;
   final awaitingReplacement = withCondition.pendingDecision;
   final withContinuation =
-      counterAttackId != null && awaitingReplacement is AwaitingHeroReplacement
+      awaitingReplacement is AwaitingHeroReplacement &&
+          (counterAttackId != null || pending.ghbDtnContinuation != null)
       ? _copyState(
           withCondition,
           pendingDecision: AwaitingHeroReplacement(
             playerId: awaitingReplacement.playerId,
             characterIds: awaitingReplacement.characterIds,
             remainingPlayerIds: awaitingReplacement.remainingPlayerIds,
-            counterAttackMonsterInstanceId: counterAttackId,
-            counterAttackPlayerId: counterAttackPlayerId,
+            counterAttackMonsterInstanceId:
+                counterAttackId ??
+                awaitingReplacement.counterAttackMonsterInstanceId,
+            counterAttackPlayerId: counterAttackId == null
+                ? awaitingReplacement.counterAttackPlayerId
+                : counterAttackPlayerId,
+            ghbDtnContinuation:
+                pending.ghbDtnContinuation ??
+                awaitingReplacement.ghbDtnContinuation,
           ),
         )
       : withCondition;
@@ -474,16 +494,24 @@ GameStepResult _resolveDodge(
       counterAttackPlayerId: counterAttackPlayerId,
     );
     if (queued.pendingDecision != null) {
-      return GameStepResult(state: queued);
+      return GameStepResult(
+        state: _continueOrPreserveGhbDtnMovement(
+          queued,
+          pending.ghbDtnContinuation,
+        ),
+      );
     }
     final monster = _monsterById(queued, counterAttackId);
     if (monster != null) {
       return GameStepResult(
-        state: _startImmediateCounterAttack(
-          queued,
-          counterAttackPlayerId,
-          monster,
-          dice,
+        state: _continueOrPreserveGhbDtnMovement(
+          _startImmediateCounterAttack(
+            queued,
+            counterAttackPlayerId,
+            monster,
+            dice,
+          ),
+          pending.ghbDtnContinuation,
         ),
       );
     }
@@ -499,25 +527,10 @@ GameStepResult _resolveDodge(
       dice,
     ),
   );
-  final movementContinuation = pending.ghbDtnContinuation;
-  if (movementContinuation == null) return GameStepResult(state: resumed);
-  final nextDecision = resumed.pendingDecision;
-  if (nextDecision is AwaitingDodge) {
-    return GameStepResult(
-      state: _copyState(
-        resumed,
-        pendingDecision: _withGhbDtnContinuation(
-          nextDecision,
-          movementContinuation,
-        ),
-      ),
-    );
-  }
-  final mover = _playerById(resumed, movementContinuation.playerId);
-  if (mover == null || !mover.alive || nextDecision != null) {
-    return GameStepResult(state: resumed);
-  }
   return GameStepResult(
-    state: _continueGhbDtnMovement(resumed, movementContinuation),
+    state: _continueOrPreserveGhbDtnMovement(
+      resumed,
+      pending.ghbDtnContinuation,
+    ),
   );
 }

@@ -208,6 +208,7 @@ final class AwaitingHeroReplacement extends PendingDecision {
     Iterable<PlayerId> remainingPlayerIds = const <PlayerId>[],
     this.counterAttackMonsterInstanceId,
     this.counterAttackPlayerId,
+    this.ghbDtnContinuation,
   }) : characterIds = List.unmodifiable(characterIds),
        remainingPlayerIds = List.unmodifiable(remainingPlayerIds) {
     _requireId(playerId, 'playerId');
@@ -225,6 +226,7 @@ final class AwaitingHeroReplacement extends PendingDecision {
   final List<PlayerId> remainingPlayerIds;
   final String? counterAttackMonsterInstanceId;
   final PlayerId? counterAttackPlayerId;
+  final GhbDtnMovementContinuation? ghbDtnContinuation;
 }
 
 /// A privacy-preserving projection that another hero must make a decision.

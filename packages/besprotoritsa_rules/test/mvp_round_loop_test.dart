@@ -318,6 +318,78 @@ void main() {
     },
   );
 
+  test(
+    'BUG090 GHB-DTN continues after another hero is replaced',
+    () {
+      const intermediate = HexCoord(0, 1);
+      const destination = HexCoord(0, 2);
+      var state = _mvpState(
+        corridorOpened: true,
+        crewMessOpened: true,
+        heroCount: 2,
+        secondHeroCoord: intermediate,
+        secondHeroDamage: 2,
+        playerEquipment: const EquippedGear(robot: 'ghb-dtn'),
+        boils: const [
+          BoilToken(instanceId: 'shared-boil', coord: intermediate),
+        ],
+        reserveHeroes: [
+          ReserveHero(
+            characterId: 'scientist',
+            health: 3,
+            stats: const PlayerStats(),
+          ),
+        ],
+        cardDefinitions: {
+          'ghb-dtn': CardDefinition(
+            id: 'ghb-dtn',
+            type: ItemType.robot,
+            slots: const [ItemSlot.robot],
+            cost: 0,
+            staticEffects: CardStaticEffects(const {}),
+            behaviorIds: const ['robot.exhaust', 'map.forceMove'],
+          ),
+        },
+      );
+
+      state = step(
+        state,
+        const UseCardAbilityCommand('ghb-dtn', targetCoord: destination),
+        FixedDiceRoller([]),
+      ).state;
+      expect((state.pendingDecision! as AwaitingDodge).targetPlayerId, 'ada');
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([6]),
+      ).state;
+      expect(
+        (state.pendingDecision! as AwaitingDodge).targetPlayerId,
+        'hero-2',
+      );
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([1]),
+      ).state;
+      expect(state.pendingDecision, isA<AwaitingHeroReplacement>());
+      expect(state.players.first.coord, intermediate);
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(
+          SelectReplacementHeroChoice('scientist'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(state.queuedReplacements, contains('hero-2'));
+      expect(state.players.first.coord, destination);
+    },
+  );
+
   test('runtime event definitions drive options and skill checks', () {
     var state = _mvpState(
       eventId: 'runtime-event',
@@ -4397,6 +4469,7 @@ GameState _mvpState({
   int playerDamage = 0,
   bool playerAlive = true,
   int secondHeroDamage = 0,
+  HexCoord? secondHeroCoord,
   Iterable<ReserveHero> reserveHeroes = const [],
   Map<PlayerId, ReserveHero> queuedReplacements = const {},
   int initialCredits = 0,
@@ -4441,7 +4514,7 @@ GameState _mvpState({
       PlayerState(
         id: index == 0 ? 'ada' : 'hero-${index + 1}',
         characterId: index == 0 ? 'engineer' : 'guard',
-        coord: playerCoord,
+        coord: index == 1 ? (secondHeroCoord ?? playerCoord) : playerCoord,
         damage: index == 0
             ? playerDamage
             : index == 1

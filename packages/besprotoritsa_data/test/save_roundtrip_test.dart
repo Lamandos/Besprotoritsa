@@ -308,6 +308,10 @@ void main() {
       remainingPlayerIds: const ['hero-3'],
       counterAttackMonsterInstanceId: 'event-ghoul',
       counterAttackPlayerId: 'ada',
+      ghbDtnContinuation: GhbDtnMovementContinuation(
+        playerId: 'ada',
+        remainingPath: const [HexCoord(0, 2)],
+      ),
     );
     final restoredReplacement =
         codec
@@ -323,6 +327,11 @@ void main() {
     );
     expect(restoredReplacement.counterAttackPlayerId, 'ada');
     expect(restoredReplacement.remainingPlayerIds, ['hero-3']);
+    expect(restoredReplacement.ghbDtnContinuation?.playerId, 'ada');
+    expect(
+      restoredReplacement.ghbDtnContinuation?.remainingPath,
+      const [HexCoord(0, 2)],
+    );
     expect(
       (restoredAttack.context! as AttackRollContext).resumeAutomaticPhase,
       isTrue,
