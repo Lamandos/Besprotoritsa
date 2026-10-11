@@ -254,7 +254,7 @@ void main() {
   );
 
   test(
-    'does not send monsters in fog or carried gear on visible monsters',
+    'projects fog monsters as anonymous markers and hides carried gear',
     () async {
       final privateRoom = manager.createRoom(
         state: _twoHeroState(
@@ -307,9 +307,27 @@ void main() {
           .map((monster) => Map<String, Object?>.from(monster! as Map))
           .toList();
 
-      expect(monsters.map((monster) => monster['instanceId']), ['visible']);
-      expect(monsters.single.containsKey('carriedGear'), isFalse);
-      expect(jsonEncode(envelope), isNot(contains('private-gear')));
+      expect(
+        monsters.map((monster) => monster['instanceId']),
+        ['visible', 'unknown-monster-0-1-0'],
+      );
+      expect(monsters.first['monsterId'], 'restless');
+      expect(monsters.first.containsKey('carriedGear'), isFalse);
+      expect(monsters.last['monsterId'], 'unknown-monster');
+      expect(monsters.last['coord'], {'q': 0, 'r': 1});
+      for (final stat in const [
+        'damage',
+        'health',
+        'defense',
+        'attack',
+        'movement',
+      ]) {
+        expect(monsters.last[stat], 0);
+      }
+      final serializedEnvelope = jsonEncode(envelope);
+      expect(serializedEnvelope, isNot(contains('private-gear')));
+      expect(serializedEnvelope, isNot(contains('ghoul')));
+      expect(serializedEnvelope, isNot(contains('"hidden"')));
     },
   );
 
