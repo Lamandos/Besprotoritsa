@@ -1559,6 +1559,39 @@ void main() {
     expect(player.backpack, contains('pistol'));
   });
 
+  testWidgets('BUG099 authoritative snapshot establishes equipment baseline', (
+    tester,
+  ) async {
+    final placeholder = createMvpGameState();
+    final codec = GameStateJsonCodec();
+    final authoritative = _scenarioWithCharacters(
+      const ['engineer', 'guard'],
+      (doc) {
+        final engineer = _player(doc);
+        (engineer['backpack']! as List).add('gu4-rd');
+        (engineer['equipped']! as Map<String, dynamic>)['robot'] = null;
+      },
+    );
+    final controller = _SnapshotGameController(placeholder);
+    final container = await _mountWithController(tester, controller);
+
+    controller.publish(authoritative);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Получена экипировка'), findsNothing);
+    expect(find.text('Экипировать'), findsNothing);
+
+    final nextDocument =
+        jsonDecode(codec.encode(authoritative)) as Map<String, dynamic>;
+    (_player(nextDocument)['backpack']! as List).add('knife');
+    controller.publish(codec.fromJson(nextDocument));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(container.read(gameControllerProvider).players.first.id, 'hero-1');
+    expect(find.text('Получена экипировка'), findsOneWidget);
+    expect(find.text('Экипировать'), findsOneWidget);
+  });
+
   testWidgets('BUG097 monster tokens have a red outline', (tester) async {
     final state = _scenario((doc) {
       final start = _player(doc)['coord']! as Map<String, dynamic>;
@@ -1684,6 +1717,52 @@ Future<ProviderContainer> _mount(
   );
   await tester.pump(const Duration(milliseconds: 300));
   return container;
+}
+
+Future<ProviderContainer> _mountWithController(
+  WidgetTester tester,
+  GameSessionController controller,
+) async {
+  final events = EventQueue(eventDuration: Duration.zero);
+  final container = ProviderContainer(
+    overrides: [
+      eventQueueProvider.overrideWithValue(events),
+      gameControllerProvider.overrideWith(() => controller),
+    ],
+  );
+  addTearDown(container.dispose);
+  addTearDown(events.dispose);
+  tester.view.physicalSize = const Size(1280, 800);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: DefaultAssetBundle(
+        bundle: _TransparentAssetBundle(),
+        child: const MaterialApp(home: MvpGameScreen()),
+      ),
+    ),
+  );
+  await tester.pump(const Duration(milliseconds: 300));
+  return container;
+}
+
+class _SnapshotGameController extends GameSessionController {
+  _SnapshotGameController(this._initialState);
+
+  final GameState _initialState;
+
+  @override
+  GameState build() => _initialState;
+
+  @override
+  bool dispatch(GameCommand command) => false;
+
+  // This test helper models a server pushing a new state snapshot.
+  // ignore: use_setters_to_change_properties
+  void publish(GameState snapshot) => state = snapshot;
 }
 
 String _rosterText(WidgetTester tester) =>

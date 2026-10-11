@@ -86,7 +86,11 @@ List<_EquipmentOffer> _newEquipmentOffers(
   final previous = before.players
       .where((entry) => entry.id == playerId)
       .firstOrNull;
-  final beforeBackpack = _countCards(previous?.backpack ?? const []);
+  // A newly observed player can be part of the first authoritative snapshot
+  // after connecting or recreating a multiplayer controller. Their existing
+  // inventory establishes the baseline; it is not a newly received reward.
+  if (previous == null) return const [];
+  final beforeBackpack = _countCards(previous.backpack);
   final afterBackpack = _countCards(player.backpack);
   final beforeOwned = _countCards(_ownedCards(previous));
   final afterOwned = _countCards(_ownedCards(player));
