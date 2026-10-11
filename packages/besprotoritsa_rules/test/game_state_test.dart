@@ -2,6 +2,66 @@ import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('projectFor exposes a generic marker for a hidden monster', () {
+    final state = GameState(
+      seed: 5,
+      round: 1,
+      phase: GamePhase.playersTurn,
+      activePlayerId: 'ada',
+      actionsLeft: 2,
+      board: [
+        HexTile(
+          id: 'start',
+          coord: const HexCoord(0, 0),
+          type: HexTileType.start,
+          opened: true,
+          exits: const {HexEdge.southEast},
+          hasTerminal: false,
+          ventColor: VentColor.none,
+        ),
+        HexTile(
+          id: 'fogged-room',
+          coord: const HexCoord(1, 0),
+          type: HexTileType.compartment,
+          opened: false,
+          exits: const {HexEdge.northWest},
+          locationId: 'secret-room',
+          hasTerminal: true,
+          ventColor: VentColor.red,
+        ),
+      ],
+      players: [_player('ada')],
+      monsters: [
+        MonsterInstance(
+          instanceId: 'secret-instance-id',
+          monsterId: 'plagued',
+          coord: const HexCoord(1, 0),
+          damage: 1,
+          health: 4,
+          attack: 3,
+          defense: 1,
+          movement: 2,
+          carriedGear: const ['secret-gear'],
+        ),
+      ],
+      decks: const {},
+      quests: QuestState(),
+    );
+
+    final projected = projectFor(state, 'ada');
+
+    expect(projected.monsters, hasLength(1));
+    expect(projected.monsters.single.instanceId, 'unknown-monster-1-0-0');
+    expect(projected.monsters.single.monsterId, 'unknown-monster');
+    expect(projected.monsters.single.coord, const HexCoord(1, 0));
+    expect(projected.monsters.single.damage, 0);
+    expect(projected.monsters.single.health, 0);
+    expect(projected.monsters.single.attack, 0);
+    expect(projected.monsters.single.defense, 0);
+    expect(projected.monsters.single.movement, 0);
+    expect(projected.monsters.single.carriedGear, isEmpty);
+  });
+
   test('projectFor hides fog, deck order, and another player private data', () {
     final state = GameState(
       seed: 42,
@@ -101,8 +161,9 @@ void main() {
     expect(view.quests.hiddenPersonalTaskCounts, {'boris': 1});
     expect(view.monsters.map((monster) => monster.instanceId), [
       'visible-ghoul',
+      'unknown-monster-1-0-0',
     ]);
-    expect(view.monsters.single.carriedGear, ['secret-gear']);
+    expect(view.monsters.first.carriedGear, ['secret-gear']);
   });
 
   test('state collections cannot be changed through their public API', () {

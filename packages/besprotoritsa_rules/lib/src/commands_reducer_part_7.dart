@@ -695,7 +695,7 @@ GameState _spawnEventOptionMonster(
     state,
     monsters: [...state.monsters, monster],
     decks: Map<DeckId, DeckState>.of(state.decks)..['monsters'] = draw.deck,
-    logEntry: 'event-monster-spawn:${event['id']}:$monsterId:$coord',
+    logEntry: 'event-monster-spawn:${event['id']}:$coord',
   );
   final arrived = _resolveTripwireArrival(spawned, monster);
   if (!arrived.monsters.any(
@@ -794,7 +794,7 @@ GameState _resolveEventMonsterSpawn(
     state,
     monsters: [...state.monsters, monster],
     decks: monsters,
-    logEntry: 'event-monster-spawn:${event['id']}:$monsterId:$coord',
+    logEntry: 'event-monster-spawn:${event['id']}:$coord',
   );
   final arrived = _resolveTripwireArrival(spawned, monster);
   if (!arrived.monsters.any(
@@ -1874,8 +1874,7 @@ GameState _resolveEventOutcome(
           current,
           monsters: [...current.monsters, monster],
           decks: decks,
-          logEntry:
-              'event-monster-spawn:${definition['id']}:$drawnMonsterId:$coord',
+          logEntry: 'event-monster-spawn:${definition['id']}:$coord',
         );
         current = _resolveTripwireArrival(current, monster);
         final survivingMonster = _monsterById(current, monster.instanceId);

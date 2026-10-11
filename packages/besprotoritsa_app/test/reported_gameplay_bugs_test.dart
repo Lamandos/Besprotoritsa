@@ -12,6 +12,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('BUG093 event introduction appears above choices', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1', 'option-2'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'cabin-noise',
+      };
+    });
+    await _mount(tester, state);
+
+    final intro = tester.getTopLeft(
+      find.text('Проходя мимо каюты, вы слышите в ней какую-то возню.').last,
+    );
+    final firstChoice = tester.getTopLeft(
+      find.text('Проверить, что там происходит.'),
+    );
+
+    expect(intro.dy, lessThan(firstChoice.dy));
+  });
+
   test('BUG025 character portraits follow the printed character cards', () {
     expect(
       characterPortraitAssets['worker'],
@@ -1233,6 +1257,7 @@ void main() {
             final coord = tile['coord']! as Map<String, dynamic>;
             return coord['q'] != start['q'] || coord['r'] != start['r'];
           });
+      otherTile['opened'] = true;
       final coord = otherTile['coord']! as Map<String, dynamic>;
       doc['monsters'] = [
         _monsterJson(
@@ -1275,6 +1300,213 @@ void main() {
           scrollViewport.contains(reasonBounds.bottomRight),
       isTrue,
     );
+  });
+
+  testWidgets('BUG094 closed-sector event monster stays unknown', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'invasion-escape-pods-1',
+      };
+    });
+    final container = await _mount(tester, state);
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+          ),
+      isTrue,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final placement =
+        container.read(gameControllerProvider).pendingDecision!
+            as AwaitingEventOption;
+    expect(placement.options, isNotEmpty);
+    expect(
+      placement.options.every((option) => option.startsWith('sector:')),
+      isTrue,
+    );
+    for (final option in placement.options) {
+      final parts = option.split(':');
+      final coord = HexCoord(int.parse(parts[1]), int.parse(parts[2]));
+      expect(
+        container.read(gameControllerProvider).tileAt(coord)!.opened,
+        isFalse,
+      );
+    }
+
+    await tester.tap(find.text('Продолжить'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(
+      find.byKey(const ValueKey('event-target-board-map')),
+      findsOneWidget,
+    );
+    final choice = placement.options.first;
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            ResolvePendingDecisionCommand(EventOptionChoice(choice)),
+          ),
+      isTrue,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final after = container.read(gameControllerProvider);
+    final monster = after.monsters.single;
+    expect(after.tileAt(monster.coord)!.opened, isFalse);
+    final nameKey =
+        after.monsterDefinitions[monster.monsterId]!['nameKey']! as String;
+    final monsterName = after.contentTranslations[nameKey]!;
+    expect(find.textContaining(monsterName), findsNothing);
+    expect(find.byTooltip('Карточка монстра: $monsterName'), findsNothing);
+
+    await tester.tap(find.text('Продолжить'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('☠'), findsOneWidget);
+    expect(find.byTooltip('Неизвестная угроза'), findsOneWidget);
+    expect(find.text(monsterName), findsNothing);
+  });
+
+  testWidgets('BUG094 monster in a closed sector uses an unknown skull token', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      final closed = (doc['board']! as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere((tile) => tile['opened'] != true);
+      final coord = closed['coord']! as Map<String, dynamic>;
+      doc['monsters'] = [
+        _monsterJson(
+          MonsterInstance(
+            instanceId: 'hidden-monster',
+            monsterId: 'plagued',
+            coord: HexCoord(coord['q']! as int, coord['r']! as int),
+            damage: 0,
+            health: 4,
+            defense: 1,
+            attack: 3,
+            movement: 2,
+          ),
+        ),
+      ];
+    });
+    await _mount(tester, state);
+
+    expect(find.text('☠'), findsOneWidget);
+    expect(find.byTooltip('Карточка монстра: Чумной'), findsNothing);
+  });
+
+  testWidgets('BUG095 open-sector monster card shows all stats and attacks', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'playersTurn';
+      doc['actions_left'] = 2;
+      final start = _player(doc)['coord']! as Map<String, dynamic>;
+      doc['monsters'] = [
+        _monsterJson(
+          MonsterInstance(
+            instanceId: 'open-monster-target',
+            monsterId: 'plagued',
+            coord: HexCoord(start['q']! as int, start['r']! as int),
+            damage: 0,
+            health: 4,
+            defense: 1,
+            attack: 3,
+            movement: 2,
+          ),
+        ),
+      ];
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller(List.filled(20, 6)),
+    );
+    await tester.tap(find.byTooltip('Карточка монстра: Чумной'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    for (final stat in const [
+      'Здоровье: 4/4',
+      'Защита: 1',
+      'Атака: 3',
+      'Движение: 2',
+    ]) {
+      expect(find.text(stat), findsOneWidget);
+    }
+    final attack = find.widgetWithText(TextButton, 'Атаковать');
+    expect(tester.widget<TextButton>(attack).onPressed, isNotNull);
+    await tester.tap(attack);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(container.read(gameControllerProvider).actionsLeft, 1);
+  });
+
+  testWidgets('BUG096 received equipment offers backpack or equip', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      (_player(doc)['equipped']! as Map<String, dynamic>)['weapon'] = 'pistol';
+      (_player(doc)['backpack']! as List).remove('pistol');
+    });
+    final container = await _mount(tester, state);
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            const ReceiveCardCommand('knife'),
+          ),
+      isTrue,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('В рюкзак'), findsOneWidget);
+    expect(find.text('Экипировать'), findsOneWidget);
+    expect(find.textContaining('заменит'), findsOneWidget);
+    expect(find.textContaining('переместится в рюкзак'), findsOneWidget);
+    await tester.tap(find.text('Экипировать'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final player = container.read(gameControllerProvider).players.first;
+    expect(player.equipped.weapon, 'knife');
+    expect(player.backpack, contains('pistol'));
+  });
+
+  testWidgets('BUG097 monster tokens have a red outline', (tester) async {
+    final state = _scenario((doc) {
+      final start = _player(doc)['coord']! as Map<String, dynamic>;
+      doc['monsters'] = [
+        _monsterJson(
+          MonsterInstance(
+            instanceId: 'outlined-monster',
+            monsterId: 'plagued',
+            coord: HexCoord(start['q']! as int, start['r']! as int),
+            damage: 0,
+            health: 4,
+            defense: 1,
+            attack: 3,
+            movement: 2,
+          ),
+        ),
+      ];
+    });
+    await _mount(tester, state);
+
+    final outlineFinder = find.byKey(
+      const ValueKey('monster-token-outline-outlined-monster'),
+    );
+    expect(outlineFinder, findsOneWidget);
+    final outline = tester.widget<Container>(outlineFinder);
+    final decoration = outline.decoration! as BoxDecoration;
+    expect(decoration.border!.top.color, const Color(0xFFE53935));
   });
 }
 
