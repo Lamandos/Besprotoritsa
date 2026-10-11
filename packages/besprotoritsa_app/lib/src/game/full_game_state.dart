@@ -296,6 +296,21 @@ final Map<String, Object?> _content = Map<String, Object?>.from(
   jsonDecode(fullRuntimeContentJson) as Map<String, dynamic>,
 );
 
+final Map<CardId, CardDefinition> _fullRuntimeCardDefinitions =
+    Map.unmodifiable(_allCards());
+final Map<String, String> _fullRuntimeContentTranslations = Map.unmodifiable({
+  for (final entry in _object(_content['contentTranslations']).entries)
+    if (entry.value is String) entry.key: entry.value! as String,
+});
+
+/// Public item facts shared by local and projected multiplayer views.
+Map<CardId, CardDefinition> get fullRuntimeCardDefinitions =>
+    _fullRuntimeCardDefinitions;
+
+/// Public UI copy shared by local and projected multiplayer views.
+Map<String, String> get fullRuntimeContentTranslations =>
+    _fullRuntimeContentTranslations;
+
 Map<String, CardDefinition> _allCards() {
   final cards = <String, CardDefinition>{};
   for (final catalogName in ['items', 'special_items']) {

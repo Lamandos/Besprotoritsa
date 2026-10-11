@@ -23,7 +23,9 @@ final class AwaitingRerollChoice extends PendingDecision {
     required this.window,
     this.context,
     this.maxDicePerReroll = 999,
-  }) : dice = List.unmodifiable(dice) {
+    Iterable<CardId> rerollSources = const [],
+  }) : dice = List.unmodifiable(dice),
+       rerollSources = List.unmodifiable(rerollSources) {
     _requireNonNegative(availableRerolls, 'availableRerolls');
     if (maxDicePerReroll < 1) {
       throw ArgumentError.value(
@@ -44,6 +46,7 @@ final class AwaitingRerollChoice extends PendingDecision {
   final DecisionWindow window;
   final RollContext? context;
   final int maxDicePerReroll;
+  final List<CardId> rerollSources;
 
   /// Alias retained for UI code which calls these values rolls.
   List<int> get rolls => dice;
@@ -79,12 +82,15 @@ final class AttackRollContext extends RollContext {
     required this.playerId,
     required this.targetInstanceId,
     this.preAttackDamage = 0,
+    this.bonusHits = 0,
     this.resumeAutomaticPhase = false,
-  }) : super();
+  }) : assert(bonusHits >= 0, 'bonusHits must not be negative.'),
+       super();
 
   final PlayerId playerId;
   final String targetInstanceId;
   final int preAttackDamage;
+  final int bonusHits;
   final bool resumeAutomaticPhase;
 }
 
@@ -98,6 +104,7 @@ final class AwaitingDodge extends PendingDecision {
     this.source = DamageSource.monster,
     this.counterAttackMonsterInstanceId,
     this.counterAttackPlayerId,
+    this.ghbDtnContinuation,
   }) : assert(monsterDamage >= 0, 'monsterDamage must not be negative.'),
        assert(
          requiredAgilitySuccesses >= 0,
@@ -110,9 +117,22 @@ final class AwaitingDodge extends PendingDecision {
   final DamageSource source;
   final String? counterAttackMonsterInstanceId;
   final PlayerId? counterAttackPlayerId;
+  final GhbDtnMovementContinuation? ghbDtnContinuation;
 
   /// Short name convenient for generic decision views.
   int get requiredSuccesses => requiredAgilitySuccesses;
+}
+
+/// The remaining GHB-DTN path to continue after its current dodge is resolved.
+@immutable
+final class GhbDtnMovementContinuation {
+  GhbDtnMovementContinuation({
+    required this.playerId,
+    required Iterable<HexCoord> remainingPath,
+  }) : remainingPath = List.unmodifiable(remainingPath);
+
+  final PlayerId playerId;
+  final List<HexCoord> remainingPath;
 }
 
 /// A pending choice between event branches, normally the A and B options.
@@ -188,6 +208,7 @@ final class AwaitingHeroReplacement extends PendingDecision {
     Iterable<PlayerId> remainingPlayerIds = const <PlayerId>[],
     this.counterAttackMonsterInstanceId,
     this.counterAttackPlayerId,
+    this.ghbDtnContinuation,
   }) : characterIds = List.unmodifiable(characterIds),
        remainingPlayerIds = List.unmodifiable(remainingPlayerIds) {
     _requireId(playerId, 'playerId');
@@ -205,6 +226,7 @@ final class AwaitingHeroReplacement extends PendingDecision {
   final List<PlayerId> remainingPlayerIds;
   final String? counterAttackMonsterInstanceId;
   final PlayerId? counterAttackPlayerId;
+  final GhbDtnMovementContinuation? ghbDtnContinuation;
 }
 
 /// A privacy-preserving projection that another hero must make a decision.

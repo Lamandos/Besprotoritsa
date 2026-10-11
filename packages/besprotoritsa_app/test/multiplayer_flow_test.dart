@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:besprotoritsa_app/besprotoritsa_app.dart';
+import 'package:besprotoritsa_app/src/game/full_game_state.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 import 'package:besprotoritsa_server/besprotoritsa_server.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,6 +99,59 @@ void main() {
       expect(boris.read(eventQueueProvider).history, hasLength(2));
     },
   );
+
+  test(
+    'BUG085 multiplayer reroll preserves the selected source card',
+    () async {
+      final manager = RoomManager();
+      final room = manager.createRoom(
+        state: _stateWithPendingReroll(),
+        started: true,
+      );
+      final server = await shelf_io.serve(
+        manager.handler,
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      addTearDown(() => server.close(force: true));
+
+      final endpoint = Uri(
+        scheme: 'http',
+        host: InternetAddress.loopbackIPv4.address,
+        port: server.port,
+      );
+      final ada = _container(endpoint, room.code, 'ada-client');
+      addTearDown(ada.dispose);
+      ada.read(gameControllerProvider);
+      final controller =
+          ada.read(gameControllerProvider.notifier)
+              as MultiplayerGameController;
+      await controller.connected.timeout(const Duration(seconds: 3));
+
+      expect(
+        controller.dispatch(
+          ResolvePendingDecisionCommand(
+            RerollChoice(
+              diceIndexes: const [0],
+              sourceCardId: 'science-stimulant',
+            ),
+          ),
+        ),
+        isTrue,
+      );
+      await _until(() => room.revision == 1);
+
+      final player = room.state.players.firstWhere(
+        (player) => player.id == 'hero-1',
+      );
+      expect(player.backpack, contains('defibrillator'));
+      expect(player.backpack, isNot(contains('science-stimulant')));
+      expect(
+        (room.state.pendingDecision! as AwaitingRerollChoice).rerollSources,
+        ['defibrillator'],
+      );
+    },
+  );
 }
 
 ProviderContainer _container(
@@ -127,4 +181,84 @@ Future<void> _until(bool Function() condition) async {
     }
     await Future<void>.delayed(const Duration(milliseconds: 10));
   }
+}
+
+GameState _stateWithPendingReroll() {
+  final source = createFullGameState(characterIds: const ['engineer', 'guard']);
+  final player = source.players.first;
+  final rerollPlayer = PlayerState(
+    id: player.id,
+    characterId: player.characterId,
+    coord: player.coord,
+    damage: player.damage,
+    health: player.health,
+    credits: player.credits,
+    backpack: const ['defibrillator', 'science-stimulant'],
+    equipped: player.equipped,
+    carriedMods: player.carriedMods,
+    implanted: player.implanted,
+    conditions: player.conditions,
+    retainedEventCards: player.retainedEventCards,
+    alive: player.alive,
+    stats: player.stats,
+    weaponModifier: player.weaponModifier,
+    actionPoints: player.actionPoints,
+    nextTurnActionDelta: player.nextTurnActionDelta,
+    monsterDamageImmuneThroughRound: player.monsterDamageImmuneThroughRound,
+    monsterDefenseBonusRound: player.monsterDefenseBonusRound,
+    monsterDefenseBonus: player.monsterDefenseBonus,
+    damageImmuneThroughRound: player.damageImmuneThroughRound,
+    enemyFeaturesIgnoredThroughRound: player.enemyFeaturesIgnoredThroughRound,
+    nextAttackBonusHits: player.nextAttackBonusHits,
+    exhaustedRobots: player.exhaustedRobots,
+  );
+  return GameState(
+    schemaVersion: source.schemaVersion,
+    seed: source.seed,
+    prngState: source.prngState,
+    contentSetId: source.contentSetId,
+    contentSetVersion: source.contentSetVersion,
+    difficulty: source.difficulty,
+    round: source.round,
+    phase: source.phase,
+    activePlayerId: source.activePlayerId,
+    actionsLeft: source.actionsLeft,
+    board: source.board,
+    players: [rerollPlayer, ...source.players.skip(1)],
+    monsters: source.monsters,
+    decks: source.decks,
+    quests: source.quests,
+    chestCards: source.chestCards,
+    exhaustedChestRobots: source.exhaustedChestRobots,
+    boils: source.boils,
+    tripwires: source.tripwires,
+    reserveHeroes: source.reserveHeroes,
+    queuedReplacements: source.queuedReplacements,
+    conditionCards: source.conditionCards,
+    cardDefinitions: source.cardDefinitions,
+    eventDefinitions: source.eventDefinitions,
+    questDefinitions: source.questDefinitions,
+    taskDefinitions: source.taskDefinitions,
+    monsterDefinitions: source.monsterDefinitions,
+    contentTranslations: source.contentTranslations,
+    pendingDamage: source.pendingDamage,
+    log: source.log,
+    gameEvents: source.gameEvents,
+    isComplete: source.isComplete,
+    monsterTurnIndex: source.monsterTurnIndex,
+    monsterStepsRemaining: source.monsterStepsRemaining,
+    eventTurnIndex: source.eventTurnIndex,
+    actionsTakenThisTurn: source.actionsTakenThisTurn,
+    pendingDecision: AwaitingRerollChoice(
+      dice: const [1, 2, 3],
+      availableRerolls: 2,
+      window: const DecisionWindow(remainingTicks: 1),
+      context: SkillCheckContext(
+        playerId: player.id,
+        stat: StatType.science,
+      ),
+      rerollSources: const ['defibrillator', 'science-stimulant'],
+    ),
+    pendingEventMonsterSpawn: source.pendingEventMonsterSpawn,
+  );
 }

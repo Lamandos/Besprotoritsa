@@ -226,16 +226,27 @@ abstract final class _InventoryChanges {
         'An implanted modification cannot be discarded.',
       );
     }
+    final exhaustedRobots = player.exhaustedRobots.where(
+      (robotId) => robotId != cardId,
+    );
     final backpack = List<CardId>.of(player.backpack);
     PlayerState updated;
     if (backpack.remove(cardId)) {
-      updated = _copy(player, backpack: backpack);
+      updated = _copy(
+        player,
+        backpack: backpack,
+        exhaustedRobots: exhaustedRobots,
+      );
       _requireBackpackFits(updated, definitions);
       return updated;
     }
     final carried = List<CardId>.of(player.carriedMods);
     if (carried.remove(cardId)) {
-      updated = _copy(player, carriedMods: carried);
+      updated = _copy(
+        player,
+        carriedMods: carried,
+        exhaustedRobots: exhaustedRobots,
+      );
       _requireBackpackFits(updated, definitions);
       return updated;
     }
@@ -249,6 +260,7 @@ abstract final class _InventoryChanges {
           clothing: gear.clothing,
           robot: gear.robot,
         ),
+        exhaustedRobots: exhaustedRobots,
       );
     } else if (gear.armor == cardId ||
         gear.clothing == cardId ||
@@ -261,6 +273,7 @@ abstract final class _InventoryChanges {
           clothing: gear.clothing == cardId ? null : gear.clothing,
           robot: gear.robot == cardId ? null : gear.robot,
         ),
+        exhaustedRobots: exhaustedRobots,
       );
     } else {
       throw const InventoryRuleViolation(
@@ -417,6 +430,7 @@ abstract final class _InventoryChanges {
     EquippedGear? equipped,
     Iterable<CardId>? carriedMods,
     Iterable<CardId>? implanted,
+    Iterable<CardId>? exhaustedRobots,
   }) => PlayerState(
     id: player.id,
     characterId: player.characterId,
@@ -437,5 +451,10 @@ abstract final class _InventoryChanges {
     nextTurnActionDelta: player.nextTurnActionDelta,
     monsterDamageImmuneThroughRound: player.monsterDamageImmuneThroughRound,
     monsterDefenseBonusRound: player.monsterDefenseBonusRound,
+    monsterDefenseBonus: player.monsterDefenseBonus,
+    damageImmuneThroughRound: player.damageImmuneThroughRound,
+    enemyFeaturesIgnoredThroughRound: player.enemyFeaturesIgnoredThroughRound,
+    nextAttackBonusHits: player.nextAttackBonusHits,
+    exhaustedRobots: exhaustedRobots ?? player.exhaustedRobots,
   );
 }

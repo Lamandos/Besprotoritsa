@@ -147,9 +147,64 @@ void main() {
       expect(confirm.onPressed, isNotNull);
     },
   );
+
+  testWidgets(
+    'BUG036 authoritative multiplayer can submit a card ability '
+    'from a partial projection',
+    (tester) async {
+      final source = createFullGameState(
+        characterIds: const ['scientist', 'guard'],
+        seed: 74,
+      );
+      final projection = _partialProjection(
+        source,
+        players: [
+          _copyPlayerWithBackpack(source.players.first, const ['medkit']),
+          source.players.last,
+        ],
+      );
+      final controller = _AuthoritativeProjectionController(projection);
+      final queue = EventQueue(eventDuration: Duration.zero);
+      final container = ProviderContainer(
+        overrides: [
+          eventQueueProvider.overrideWithValue(queue),
+          gameControllerProvider.overrideWith(() => controller),
+        ],
+      );
+      addTearDown(container.dispose);
+      addTearDown(queue.dispose);
+      tester.view.physicalSize = const Size(1280, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: MvpGameScreen()),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(
+        find.byKey(const ValueKey<String>('mvp-inventory-button')),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.scrollUntilVisible(
+        find.text('Аптечка'),
+        180,
+        scrollable: find.byType(Scrollable).last,
+      );
+      final useButton = find.widgetWithText(FilledButton, 'Использовать');
+      expect(useButton, findsOneWidget);
+      expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+    },
+  );
 }
 
-GameState _partialProjection(GameState source) => GameState(
+GameState _partialProjection(
+  GameState source, {
+  Iterable<PlayerState>? players,
+}) => GameState(
   seed: source.seed,
   contentSetId: source.contentSetId,
   contentSetVersion: source.contentSetVersion,
@@ -159,7 +214,7 @@ GameState _partialProjection(GameState source) => GameState(
   activePlayerId: source.activePlayerId,
   actionsLeft: source.actionsLeft,
   board: source.board,
-  players: source.players,
+  players: players ?? source.players,
   monsters: source.monsters,
   decks: source.decks,
   quests: source.quests,
@@ -168,6 +223,36 @@ GameState _partialProjection(GameState source) => GameState(
   taskDefinitions: source.taskDefinitions,
   monsterDefinitions: source.monsterDefinitions,
   contentTranslations: source.contentTranslations,
+);
+
+PlayerState _copyPlayerWithBackpack(
+  PlayerState player,
+  Iterable<CardId> backpack,
+) => PlayerState(
+  id: player.id,
+  characterId: player.characterId,
+  coord: player.coord,
+  damage: player.damage,
+  health: player.health,
+  credits: player.credits,
+  backpack: backpack,
+  equipped: player.equipped,
+  carriedMods: player.carriedMods,
+  implanted: player.implanted,
+  conditions: player.conditions,
+  retainedEventCards: player.retainedEventCards,
+  alive: player.alive,
+  stats: player.stats,
+  weaponModifier: player.weaponModifier,
+  actionPoints: player.actionPoints,
+  nextTurnActionDelta: player.nextTurnActionDelta,
+  monsterDamageImmuneThroughRound: player.monsterDamageImmuneThroughRound,
+  monsterDefenseBonusRound: player.monsterDefenseBonusRound,
+  monsterDefenseBonus: player.monsterDefenseBonus,
+  damageImmuneThroughRound: player.damageImmuneThroughRound,
+  enemyFeaturesIgnoredThroughRound: player.enemyFeaturesIgnoredThroughRound,
+  nextAttackBonusHits: player.nextAttackBonusHits,
+  exhaustedRobots: player.exhaustedRobots,
 );
 
 class _AuthoritativeProjectionController extends GameSessionController {

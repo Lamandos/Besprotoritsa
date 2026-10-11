@@ -111,6 +111,108 @@ void main() {
     );
   });
 
+  test(
+    'BUG049 defeating a Restless preserves exhaustion on its robot trophy',
+    () {
+      final deceased = _hero(
+        damage: 3,
+        alive: false,
+        equipped: const EquippedGear(robot: 'r69-nic3'),
+        exhaustedRobots: const ['r69-nic3'],
+      );
+      final victor = _hero(
+        id: 'boris',
+        coord: const HexCoord(0, 1),
+        stats: const PlayerStats(strength: 1),
+      );
+      final state = _state(
+        player: deceased,
+        additionalPlayers: [victor],
+        activePlayerId: 'boris',
+        monsters: [
+          RestlessMonster(
+            instanceId: 'restless-robot',
+            coord: victor.coord,
+            attack: 1,
+            defense: 0,
+            carriedGear: const ['r69-nic3'],
+          ),
+        ],
+      );
+
+      final result = step(
+        state,
+        const AttackCommand('restless-robot'),
+        FixedDiceRoller([6]),
+      );
+
+      expect(result.rejection, isNull);
+      expect(result.state.monsters, isEmpty);
+      final recipient = result.state.players.singleWhere(
+        (player) => player.id == 'boris',
+      );
+      expect(recipient.backpack, contains('r69-nic3'));
+      expect(recipient.exhaustedRobots, contains('r69-nic3'));
+      expect(
+        result.state.players
+            .singleWhere((player) => player.id == 'ada')
+            .exhaustedRobots,
+        isNot(contains('r69-nic3')),
+      );
+    },
+  );
+
+  test(
+    'BUG067 replacement preserves exhaustion on a Restless robot trophy',
+    () {
+      final state = _state(
+        player: _hero(
+          damage: 3,
+          equipped: const EquippedGear(robot: 'r69-nic3'),
+          exhaustedRobots: const ['r69-nic3'],
+        ),
+        reserveHeroes: [
+          ReserveHero(
+            characterId: 'scientist',
+            health: 8,
+            stats: const PlayerStats(strength: 1),
+          ),
+        ],
+      );
+
+      var died = resolveHeroDeaths(state);
+      died = step(
+        died,
+        const ResolvePendingDecisionCommand(
+          SelectReplacementHeroChoice('scientist'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+      final nextTurn = step(
+        died,
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      ).state;
+      expect(nextTurn.players.single.alive, isTrue);
+      expect(nextTurn.players.single.characterId, 'scientist');
+      expect(
+        nextTurn.monsters.single.exhaustedCarriedRobots,
+        contains('r69-nic3'),
+      );
+
+      final result = step(
+        nextTurn,
+        AttackCommand(nextTurn.monsters.single.instanceId),
+        FixedDiceRoller([6]),
+      );
+
+      expect(result.rejection, isNull);
+      expect(result.state.monsters, isEmpty);
+      expect(result.state.players.single.backpack, contains('r69-nic3'));
+      expect(result.state.players.single.exhaustedRobots, contains('r69-nic3'));
+    },
+  );
+
   test('a full backpack does not make defeating a Restless throw', () {
     final hero = _hero(
       backpack: const ['supply', 'supply', 'supply'],
@@ -175,19 +277,21 @@ void main() {
 
 GameState _state({
   PlayerState? player,
+  Iterable<PlayerState> additionalPlayers = const [],
+  String activePlayerId = 'ada',
   Iterable<MonsterInstance> monsters = const [],
   Iterable<ReserveHero> reserveHeroes = const [],
 }) => GameState(
   seed: 1,
   round: 1,
   phase: GamePhase.playersTurn,
-  activePlayerId: 'ada',
+  activePlayerId: activePlayerId,
   actionsLeft: 2,
   board: [
     _tile('anabiosis', const HexCoord(0, 0), HexTileType.start),
     _tile('sector', const HexCoord(0, 1), HexTileType.corridor),
   ],
-  players: [player ?? _hero()],
+  players: [player ?? _hero(), ...additionalPlayers],
   monsters: monsters,
   reserveHeroes: reserveHeroes,
   decks: const {},
@@ -206,6 +310,7 @@ GameState _state({
       CardStat.science: 5,
     }),
     'supply': _card('supply', ItemType.supply, const {}),
+    'r69-nic3': _card('r69-nic3', ItemType.robot, const {}),
   },
   quests: QuestState(),
 );
@@ -227,15 +332,18 @@ CardDefinition _card(String id, ItemType type, Map<CardStat, int> modifiers) =>
     );
 
 PlayerState _hero({
+  String id = 'ada',
   HexCoord coord = const HexCoord(0, 0),
   int damage = 0,
   int health = 3,
   int credits = 0,
+  bool alive = true,
   Iterable<String> backpack = const [],
   EquippedGear equipped = const EquippedGear(),
+  Iterable<String> exhaustedRobots = const [],
   PlayerStats stats = const PlayerStats(),
 }) => PlayerState(
-  id: 'ada',
+  id: id,
   characterId: 'guard',
   coord: coord,
   damage: damage,
@@ -246,8 +354,9 @@ PlayerState _hero({
   carriedMods: const [],
   implanted: const [],
   conditions: const [],
-  alive: true,
+  alive: alive,
   stats: stats,
+  exhaustedRobots: exhaustedRobots,
 );
 
 HexTile _tile(String id, HexCoord coord, HexTileType type) => HexTile(

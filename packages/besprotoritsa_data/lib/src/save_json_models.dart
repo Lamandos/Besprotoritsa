@@ -91,6 +91,12 @@ abstract final class SaveJsonModels {
     'monster_damage_immune_through_round':
         player.monsterDamageImmuneThroughRound,
     'monster_defense_bonus_round': player.monsterDefenseBonusRound,
+    'monster_defense_bonus': player.monsterDefenseBonus,
+    'damage_immune_through_round': player.damageImmuneThroughRound,
+    'enemy_features_ignored_through_round':
+        player.enemyFeaturesIgnoredThroughRound,
+    'next_attack_bonus_hits': player.nextAttackBonusHits,
+    'exhausted_robots': player.exhaustedRobots,
   };
   static PlayerState playerFromJson(Map<String, Object?> json) {
     final equipped = _object(json, 'equipped');
@@ -131,6 +137,19 @@ abstract final class SaveJsonModels {
         json,
         'monster_defense_bonus_round',
       ),
+      monsterDefenseBonus: _optionalInt(json, 'monster_defense_bonus') ?? 1,
+      damageImmuneThroughRound: _optionalInt(
+        json,
+        'damage_immune_through_round',
+      ),
+      enemyFeaturesIgnoredThroughRound: _optionalInt(
+        json,
+        'enemy_features_ignored_through_round',
+      ),
+      nextAttackBonusHits: _optionalInt(json, 'next_attack_bonus_hits') ?? 0,
+      exhaustedRobots: json.containsKey('exhausted_robots')
+          ? _strings(json, 'exhausted_robots')
+          : const <String>[],
     );
   }
 
@@ -148,6 +167,7 @@ abstract final class SaveJsonModels {
     },
     'carried_mods': hero.carriedMods,
     'implanted': hero.implanted,
+    'exhausted_robots': hero.exhaustedRobots,
     'stats': _statsToJson(hero.stats),
   };
 
@@ -170,6 +190,9 @@ abstract final class SaveJsonModels {
       ),
       carriedMods: _strings(json, 'carried_mods'),
       implanted: _strings(json, 'implanted'),
+      exhaustedRobots: json.containsKey('exhausted_robots')
+          ? _strings(json, 'exhausted_robots')
+          : const <String>[],
       stats: _statsFromJson(_object(json, 'stats')),
     );
   }
@@ -184,6 +207,7 @@ abstract final class SaveJsonModels {
     'attack': monster.attack,
     'movement': monster.movement,
     'carried_gear': monster.carriedGear,
+    'exhausted_carried_robots': monster.exhaustedCarriedRobots,
     'returns_to_monster_deck': monster.returnsToMonsterDeck,
     'defeat_reward_deck_id': monster.defeatRewardDeckId,
   };
@@ -198,6 +222,10 @@ abstract final class SaveJsonModels {
         attack: _int(json, 'attack'),
         movement: _int(json, 'movement'),
         carriedGear: _strings(json, 'carried_gear'),
+        exhaustedCarriedRobots: _stringsFromValue(
+          json['exhausted_carried_robots'] ?? const <String>[],
+          'exhausted_carried_robots',
+        ),
         returnsToMonsterDeck: json['returns_to_monster_deck'] == true,
         defeatRewardDeckId: json['defeat_reward_deck_id'] as String?,
       );
@@ -209,6 +237,19 @@ abstract final class SaveJsonModels {
     instanceId: _string(json, 'instance_id'),
     coord: _coordFromJson(_object(json, 'coord')),
   );
+  static Map<String, Object?> tripwireToJson(TripwireTrap trap) => {
+    'instance_id': trap.instanceId,
+    'coord': _coordToJson(trap.coord),
+    'owner_id': trap.ownerId,
+    'card_id': trap.cardId,
+  };
+  static TripwireTrap tripwireFromJson(Map<String, Object?> json) =>
+      TripwireTrap(
+        instanceId: _string(json, 'instance_id'),
+        coord: _coordFromJson(_object(json, 'coord')),
+        ownerId: _string(json, 'owner_id'),
+        cardId: _string(json, 'card_id'),
+      );
   static Map<String, Object?> conditionToJson(ConditionCard condition) => {
     'id': condition.id,
     'stat_modifiers': {
@@ -333,6 +374,7 @@ abstract final class SaveJsonModels {
           'dice': decision.dice,
           'available_rerolls': decision.availableRerolls,
           'max_dice_per_reroll': decision.maxDicePerReroll,
+          'reroll_sources': decision.rerollSources,
           'window': {'remaining_ticks': decision.window.remainingTicks},
           'context': _contextToJson(decision.context),
         },
@@ -345,6 +387,9 @@ abstract final class SaveJsonModels {
           'counter_attack_monster_instance_id':
               decision.counterAttackMonsterInstanceId,
           'counter_attack_player_id': decision.counterAttackPlayerId,
+          'ghb_dtn_continuation': _ghbDtnContinuationToJson(
+            decision.ghbDtnContinuation,
+          ),
         },
         AwaitingEventOption() => {
           'type': 'event_option',
@@ -366,6 +411,9 @@ abstract final class SaveJsonModels {
           'counter_attack_monster_instance_id':
               decision.counterAttackMonsterInstanceId,
           'counter_attack_player_id': decision.counterAttackPlayerId,
+          'ghb_dtn_continuation': _ghbDtnContinuationToJson(
+            decision.ghbDtnContinuation,
+          ),
         },
         AwaitingOtherPlayerDecision() => {
           'type': 'other_player',
@@ -381,6 +429,9 @@ abstract final class SaveJsonModels {
         dice: _ints(json, 'dice'),
         availableRerolls: _int(json, 'available_rerolls'),
         maxDicePerReroll: _optionalInt(json, 'max_dice_per_reroll') ?? 999,
+        rerollSources: json.containsKey('reroll_sources')
+            ? _strings(json, 'reroll_sources')
+            : const <String>[],
         window: DecisionWindow(
           remainingTicks: _int(_object(json, 'window'), 'remaining_ticks'),
         ),
@@ -401,6 +452,9 @@ abstract final class SaveJsonModels {
         counterAttackPlayerId: _nullableString(
           json['counter_attack_player_id'],
           'counter_attack_player_id',
+        ),
+        ghbDtnContinuation: _ghbDtnContinuationFromJson(
+          json['ghb_dtn_continuation'],
         ),
       ),
       'event_option' => AwaitingEventOption(
@@ -426,6 +480,9 @@ abstract final class SaveJsonModels {
         counterAttackPlayerId: _nullableString(
           json['counter_attack_player_id'],
           'counter_attack_player_id',
+        ),
+        ghbDtnContinuation: _ghbDtnContinuationFromJson(
+          json['ghb_dtn_continuation'],
         ),
       ),
       'other_player' => AwaitingOtherPlayerDecision(

@@ -10,25 +10,32 @@ GameStepResult _startRoll(
   int diceCount = 1,
   RollContext? context,
   bool consumesAction = true,
-}) => GameStepResult(
-  state: _copyState(
-    state,
-    actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
-    pendingDecision: AwaitingRerollChoice(
-      dice: dice.rollDice(diceCount),
-      availableRerolls: context is SkillCheckContext
-          ? skillRerollSources(
-              state,
-              _playerById(state, context.playerId)!,
-              context.stat,
-            ).length
-          : 0,
-      window: const DecisionWindow(remainingTicks: 1),
-      context: context,
+}) {
+  final sources = context is SkillCheckContext
+      ? skillRerollSources(
+          state,
+          _playerById(state, context.playerId)!,
+          context.stat,
+        )
+      : const <CardId>[];
+  return GameStepResult(
+    state: _copyState(
+      state,
+      actionsLeft: consumesAction ? state.actionsLeft - 1 : state.actionsLeft,
+      pendingDecision: AwaitingRerollChoice(
+        dice: dice.rollDice(diceCount),
+        availableRerolls: sources.length,
+        maxDicePerReroll: sources.isEmpty
+            ? 999
+            : maxDicePerReroll(state, sources.first),
+        rerollSources: sources,
+        window: const DecisionWindow(remainingTicks: 1),
+        context: context,
+      ),
+      logEntry: logEntry,
     ),
-    logEntry: logEntry,
-  ),
-);
+  );
+}
 
 GameStepResult _resolveDecision(
   GameState state,
@@ -81,9 +88,21 @@ GameStepResult _resolveHeroReplacement(
     );
   }
   final selectedReserve = reserve;
+  final deceased = _playerById(state, pending.playerId);
+  final inherited = deceased == null
+      ? (reserve: selectedReserve, unclaimed: const <CardId>[])
+      : _reserveWithPosthumousInventory(
+          state,
+          selectedReserve,
+          deceased,
+        );
+  final reserveForQueue = inherited.reserve;
   final queuedReplacements = Map<PlayerId, ReserveHero>.of(
     state.queuedReplacements,
-  )..[pending.playerId] = selectedReserve;
+  )..[pending.playerId] = reserveForQueue;
+  final unclaimedLog = inherited.unclaimed.isEmpty
+      ? ''
+      : ':unclaimed:${inherited.unclaimed.join(',')}';
   final selected = _copyState(
     state,
     reserveHeroes: state.reserveHeroes.where(
@@ -93,7 +112,8 @@ GameStepResult _resolveHeroReplacement(
     clearPendingDecision: true,
     logEntry:
         'replacement-selected:'
-        '${pending.playerId}:${selectedReserve.characterId}',
+        '${pending.playerId}:${selectedReserve.characterId}'
+        '$unclaimedLog',
   );
   if (pending.remainingPlayerIds.isNotEmpty) {
     if (selected.reserveHeroes.isEmpty) {
@@ -123,6 +143,7 @@ GameStepResult _resolveHeroReplacement(
             counterAttackMonsterInstanceId:
                 pending.counterAttackMonsterInstanceId,
             counterAttackPlayerId: pending.counterAttackPlayerId,
+            ghbDtnContinuation: pending.ghbDtnContinuation,
           ),
         ),
       );
@@ -135,7 +156,14 @@ GameStepResult _resolveHeroReplacement(
     counterAttackMonsterInstanceId: pending.counterAttackMonsterInstanceId,
     counterAttackPlayerId: pending.counterAttackPlayerId,
   );
-  if (queued.pendingDecision != null) return GameStepResult(state: queued);
+  if (queued.pendingDecision != null) {
+    return GameStepResult(
+      state: _continueOrPreserveGhbDtnMovement(
+        queued,
+        pending.ghbDtnContinuation,
+      ),
+    );
+  }
   final counterAttackId = pending.counterAttackMonsterInstanceId;
   final counterAttackPlayerId = pending.counterAttackPlayerId;
   final monster = counterAttackId == null
@@ -152,10 +180,72 @@ GameStepResult _resolveHeroReplacement(
           dice,
         )
       : queued;
+  final resumed = _resumeAutomaticPhase(
+    _resumePendingEventMonsterSpawn(continued, dice),
+  );
   return GameStepResult(
-    state: _resumeAutomaticPhase(
-      _resumePendingEventMonsterSpawn(continued, dice),
+    state: _continueOrPreserveGhbDtnMovement(
+      resumed,
+      pending.ghbDtnContinuation,
     ),
+  );
+}
+
+({ReserveHero reserve, List<CardId> unclaimed}) _reserveWithPosthumousInventory(
+  GameState state,
+  ReserveHero reserve,
+  PlayerState deceased,
+) {
+  var recipient = PlayerState(
+    id: deceased.id,
+    characterId: reserve.characterId,
+    coord: deceased.coord,
+    damage: 0,
+    health: reserve.health,
+    credits: reserve.credits + deceased.credits,
+    backpack: reserve.backpack,
+    equipped: reserve.equipped,
+    carriedMods: reserve.carriedMods,
+    implanted: reserve.implanted,
+    exhaustedRobots: reserve.exhaustedRobots,
+    conditions: const [],
+    alive: true,
+    stats: reserve.stats,
+  );
+  final unclaimed = <CardId>[];
+  for (final cardId in deceased.backpack) {
+    try {
+      recipient = InventoryRules.receive(
+        recipient,
+        cardId,
+        state.cardDefinitions,
+      );
+      if (deceased.exhaustedRobots.contains(cardId) &&
+          !recipient.exhaustedRobots.contains(cardId)) {
+        recipient = _copyPlayer(
+          recipient,
+          exhaustedRobots: [...recipient.exhaustedRobots, cardId],
+        );
+      }
+    } on BackpackCapacityExceeded {
+      unclaimed.add(cardId);
+    } on InventoryRuleViolation {
+      unclaimed.add(cardId);
+    }
+  }
+  return (
+    reserve: ReserveHero(
+      characterId: reserve.characterId,
+      health: reserve.health,
+      stats: reserve.stats,
+      credits: recipient.credits,
+      backpack: recipient.backpack,
+      equipped: recipient.equipped,
+      carriedMods: [...recipient.carriedMods, ...deceased.carriedMods],
+      implanted: [...recipient.implanted, ...deceased.implanted],
+      exhaustedRobots: recipient.exhaustedRobots,
+    ),
+    unclaimed: unclaimed,
   );
 }
 
@@ -282,7 +372,22 @@ GameStepResult _resolveReroll(
       rejection: const ActionBlockedByPendingDecision(),
     );
   }
-  if (indexes.length > pending.maxDicePerReroll) {
+  final sourceIndex = choice.sourceCardId == null
+      ? (pending.rerollSources.isEmpty ? -1 : 0)
+      : pending.rerollSources.indexOf(choice.sourceCardId!);
+  if (choice.sourceCardId != null && sourceIndex < 0) {
+    return GameStepResult(
+      state: state,
+      rejection: const ActionBlockedByPendingDecision(),
+    );
+  }
+  final usedSource = sourceIndex < 0
+      ? null
+      : pending.rerollSources[sourceIndex];
+  final maxDice = usedSource == null
+      ? pending.maxDicePerReroll
+      : maxDicePerReroll(state, usedSource);
+  if (indexes.length > maxDice) {
     return GameStepResult(
       state: state,
       rejection: const ActionBlockedByPendingDecision(),
@@ -293,13 +398,22 @@ GameStepResult _resolveReroll(
   for (var index = 0; index < indexes.length; index++) {
     rerolled[indexes[index]] = newRolls[index];
   }
+  var rerolledState = state;
+  if (usedSource != null) {
+    rerolledState = _consumeRerollSource(rerolledState, pending, usedSource);
+  }
+  final remainingSources = List<CardId>.of(pending.rerollSources);
+  if (sourceIndex >= 0) remainingSources.removeAt(sourceIndex);
   return GameStepResult(
     state: _copyState(
-      state,
+      rerolledState,
       pendingDecision: AwaitingRerollChoice(
         dice: rerolled,
         availableRerolls: pending.availableRerolls - 1,
-        maxDicePerReroll: pending.maxDicePerReroll,
+        maxDicePerReroll: remainingSources.isEmpty
+            ? pending.maxDicePerReroll
+            : maxDicePerReroll(rerolledState, remainingSources.first),
+        rerollSources: remainingSources,
         window: pending.window,
         context: pending.context,
       ),
@@ -351,15 +465,23 @@ GameStepResult _resolveDodge(
   final counterAttackPlayerId = pending.counterAttackPlayerId ?? targetId;
   final awaitingReplacement = withCondition.pendingDecision;
   final withContinuation =
-      counterAttackId != null && awaitingReplacement is AwaitingHeroReplacement
+      awaitingReplacement is AwaitingHeroReplacement &&
+          (counterAttackId != null || pending.ghbDtnContinuation != null)
       ? _copyState(
           withCondition,
           pendingDecision: AwaitingHeroReplacement(
             playerId: awaitingReplacement.playerId,
             characterIds: awaitingReplacement.characterIds,
             remainingPlayerIds: awaitingReplacement.remainingPlayerIds,
-            counterAttackMonsterInstanceId: counterAttackId,
-            counterAttackPlayerId: counterAttackPlayerId,
+            counterAttackMonsterInstanceId:
+                counterAttackId ??
+                awaitingReplacement.counterAttackMonsterInstanceId,
+            counterAttackPlayerId: counterAttackId == null
+                ? awaitingReplacement.counterAttackPlayerId
+                : counterAttackPlayerId,
+            ghbDtnContinuation:
+                pending.ghbDtnContinuation ??
+                awaitingReplacement.ghbDtnContinuation,
           ),
         )
       : withCondition;
@@ -372,31 +494,43 @@ GameStepResult _resolveDodge(
       counterAttackPlayerId: counterAttackPlayerId,
     );
     if (queued.pendingDecision != null) {
-      return GameStepResult(state: queued);
+      return GameStepResult(
+        state: _continueOrPreserveGhbDtnMovement(
+          queued,
+          pending.ghbDtnContinuation,
+        ),
+      );
     }
     final monster = _monsterById(queued, counterAttackId);
     if (monster != null) {
       return GameStepResult(
-        state: _startImmediateCounterAttack(
-          queued,
-          counterAttackPlayerId,
-          monster,
-          dice,
+        state: _continueOrPreserveGhbDtnMovement(
+          _startImmediateCounterAttack(
+            queued,
+            counterAttackPlayerId,
+            monster,
+            dice,
+          ),
+          pending.ghbDtnContinuation,
         ),
       );
     }
   }
-  return GameStepResult(
-    state: _resumeAutomaticPhase(
-      _resumePendingEventMonsterSpawn(
-        _startNextIncomingDamage(
-          _copyState(
-            withContinuation,
-            logEntry: 'dodge:$targetId:$remainingDamage',
-          ),
+  final resumed = _resumeAutomaticPhase(
+    _resumePendingEventMonsterSpawn(
+      _startNextIncomingDamage(
+        _copyState(
+          withContinuation,
+          logEntry: 'dodge:$targetId:$remainingDamage',
         ),
-        dice,
       ),
+      dice,
+    ),
+  );
+  return GameStepResult(
+    state: _continueOrPreserveGhbDtnMovement(
+      resumed,
+      pending.ghbDtnContinuation,
     ),
   );
 }

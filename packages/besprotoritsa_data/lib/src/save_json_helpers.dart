@@ -79,6 +79,37 @@ Map<String, Object?> _coordToJson(HexCoord coord) => {
 HexCoord _coordFromJson(Map<String, Object?> json) =>
     HexCoord(_int(json, 'q'), _int(json, 'r'));
 
+Map<String, Object?>? _ghbDtnContinuationToJson(
+  GhbDtnMovementContinuation? continuation,
+) => continuation == null
+    ? null
+    : {
+        'player_id': continuation.playerId,
+        'remaining_path': continuation.remainingPath.map(_coordToJson).toList(),
+      };
+
+GhbDtnMovementContinuation? _ghbDtnContinuationFromJson(Object? value) {
+  if (value == null) return null;
+  final json = _asObject(value, 'pending_decision.ghb_dtn_continuation');
+  final path = json['remaining_path'];
+  if (path is! List) {
+    throw const FormatException(
+      'pending_decision.ghb_dtn_continuation.remaining_path must be a list.',
+    );
+  }
+  return GhbDtnMovementContinuation(
+    playerId: _string(json, 'player_id'),
+    remainingPath: path.map(
+      (coord) => _coordFromJson(
+        _asObject(
+          coord,
+          'pending_decision.ghb_dtn_continuation.remaining_path',
+        ),
+      ),
+    ),
+  );
+}
+
 Map<String, Object?> _statsToJson(PlayerStats stats) => {
   'strength': stats.strength,
   'combat_strength': stats.combatStrength,
@@ -114,6 +145,7 @@ Map<String, Object?>? _contextToJson(RollContext? context) => switch (context) {
     'player_id': context.playerId,
     'target_instance_id': context.targetInstanceId,
     'pre_attack_damage': context.preAttackDamage,
+    'bonus_hits': context.bonusHits,
     'resume_automatic_phase': context.resumeAutomaticPhase,
   },
 };
@@ -126,6 +158,7 @@ RollContext? _contextFromJson(Object? value) {
       playerId: _string(json, 'player_id'),
       targetInstanceId: _string(json, 'target_instance_id'),
       preAttackDamage: _optionalInt(json, 'pre_attack_damage') ?? 0,
+      bonusHits: _optionalInt(json, 'bonus_hits') ?? 0,
       resumeAutomaticPhase: json['resume_automatic_phase'] == true,
     ),
     'skill' || null => SkillCheckContext(

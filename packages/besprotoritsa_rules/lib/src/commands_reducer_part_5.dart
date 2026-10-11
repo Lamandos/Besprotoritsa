@@ -15,6 +15,7 @@ GameState resolveHeroDeaths(GameState state) {
 
   final players = List<PlayerState>.of(state.players);
   final monsters = List<MonsterInstance>.of(state.monsters);
+  final spawnedRestless = <RestlessMonster>[];
   final decks = Map<DeckId, DeckState>.of(state.decks);
   final events = List<GameEvent>.of(state.gameEvents);
   final noReserve =
@@ -22,17 +23,21 @@ GameState resolveHeroDeaths(GameState state) {
 
   for (final deceased in newlyDead) {
     final carriedGear = _restlessGear(deceased, state.cardDefinitions);
+    final exhaustedCarriedRobots = deceased.exhaustedRobots
+        .where(carriedGear.contains)
+        .toSet();
     final bonuses = _restlessBonuses(deceased, state.cardDefinitions);
     final instanceId = _nextRestlessInstanceId(state, deceased.id, monsters);
-    monsters.add(
-      RestlessMonster(
-        instanceId: instanceId,
-        coord: deceased.coord,
-        attack: RestlessMonster.baseAttack + bonuses.strength,
-        defense: RestlessMonster.baseDefense + bonuses.defense,
-        carriedGear: carriedGear,
-      ),
+    final restless = RestlessMonster(
+      instanceId: instanceId,
+      coord: deceased.coord,
+      attack: RestlessMonster.baseAttack + bonuses.strength,
+      defense: RestlessMonster.baseDefense + bonuses.defense,
+      carriedGear: carriedGear,
+      exhaustedCarriedRobots: exhaustedCarriedRobots,
     );
+    monsters.add(restless);
+    spawnedRestless.add(restless);
     final deadIndex = players.indexWhere((player) => player.id == deceased.id);
     players[deadIndex] = _copyPlayer(
       deceased,
@@ -45,6 +50,9 @@ GameState resolveHeroDeaths(GameState state) {
       retainedEventCards: const [],
       alive: false,
       weaponModifier: 0,
+      exhaustedRobots: deceased.exhaustedRobots.where(
+        (cardId) => !exhaustedCarriedRobots.contains(cardId),
+      ),
     );
     final conditionDeck = decks['conditions'];
     if (conditionDeck != null && deceased.conditions.isNotEmpty) {
@@ -80,7 +88,7 @@ GameState resolveHeroDeaths(GameState state) {
           remainingPlayerIds: newlyDead.skip(1).map((hero) => hero.id),
         );
 
-  return _copyState(
+  var resolved = _copyState(
     state,
     players: players,
     monsters: monsters,
@@ -96,6 +104,10 @@ GameState resolveHeroDeaths(GameState state) {
     clearPendingDecision: noReserve,
     logEntry: 'hero-died:${newlyDead.map((hero) => hero.id).join(',')}',
   );
+  for (final restless in spawnedRestless) {
+    resolved = _resolveTripwireArrival(resolved, restless);
+  }
+  return resolved;
 }
 
 List<CardId> _restlessGear(
@@ -180,13 +192,19 @@ String _attackLog(
     '${defeated ? ':defeated' : ''}'
     '${unclaimedLoot.isEmpty ? '' : ':unclaimed:${unclaimedLoot.join(',')}'}';
 
-int _heroAttackDice(PlayerState player, GameState state) =>
-    (_statDice(player, state, StatType.strength) +
-            (player.stats.combatStrength == 0
-                ? 0
-                : player.stats.combatStrength - player.stats.strength))
-        .clamp(1, 999) +
-    player.weaponModifier;
+int _heroAttackDice(
+  PlayerState player,
+  GameState state, {
+  MonsterInstance? target,
+}) =>
+    ((_statDice(player, state, StatType.strength) +
+                    (player.stats.combatStrength == 0
+                        ? 0
+                        : player.stats.combatStrength - player.stats.strength))
+                .clamp(1, 999) +
+            player.weaponModifier -
+            _enemyCombatStrengthPenalty(state, player, target))
+        .clamp(1, 999);
 
 List<EffectHook> _activeEffectHooks(GameState state, PlayerState player) {
   final registry = EffectRegistry.standard();
@@ -194,7 +212,9 @@ List<EffectHook> _activeEffectHooks(GameState state, PlayerState player) {
     for (final cardId in _activeCardIds(player))
       for (final behaviorId
           in state.cardDefinitions[cardId]?.behaviorIds ?? const <String>[])
-        if (registry[behaviorId] case final EffectHook hook) hook,
+        if (!player.exhaustedRobots.contains(cardId) ||
+            !behaviorId.startsWith('dice.reroll.'))
+          if (registry[behaviorId] case final EffectHook hook) hook,
   ];
 }
 
@@ -233,7 +253,8 @@ List<CardId> skillRerollSources(
   StatType stat,
 ) => [
   for (final id in _activeCardIds(player))
-    if ((state.cardDefinitions[id]?.behaviorIds.contains(
+    if (!player.exhaustedRobots.contains(id) &&
+        (state.cardDefinitions[id]?.behaviorIds.contains(
               id == 'drg-4u' ? 'dice.reroll.all' : 'dice.reroll.allForSkill',
             ) ??
             false) &&
@@ -245,7 +266,21 @@ List<CardId> skillRerollSources(
           _ => false,
         })
       id,
+  if (state.phase == GamePhase.playersTurn &&
+      player.backpack.contains('defibrillator'))
+    'defibrillator',
+  for (final id in player.backpack)
+    if (_stimulantMatchesSkill(id, stat)) id,
 ];
+
+bool _stimulantMatchesSkill(String cardId, StatType stat) => switch (cardId) {
+  'science-stimulant' => stat == StatType.science,
+  'agility-stimulant' => stat == StatType.agility,
+  'endurance-stimulant' => stat == StatType.endurance,
+  'repair-stimulant' => stat == StatType.repair,
+  'strength-stimulant' => stat == StatType.strength,
+  _ => false,
+};
 
 int _cardStatModifier(GameState state, PlayerState player, StatType stat) {
   final cardStat = switch (stat) {
@@ -268,6 +303,7 @@ Iterable<String> _activeCardIds(PlayerState player) sync* {
 
 GameState _heal(GameState state, int amount) {
   final player = _activePlayer(state)!;
+  final healing = amount + _healingBonus(state, player);
   final conditionDeck = state.decks['conditions'];
   final decks = Map<DeckId, DeckState>.of(state.decks);
   if (conditionDeck != null && player.conditions.isNotEmpty) {
@@ -283,7 +319,7 @@ GameState _heal(GameState state, int amount) {
       state,
       (current) => _copyPlayer(
         current,
-        damage: (current.damage - amount).clamp(0, current.damage),
+        damage: (current.damage - healing).clamp(0, current.damage),
         conditions: const [],
       ),
     ),

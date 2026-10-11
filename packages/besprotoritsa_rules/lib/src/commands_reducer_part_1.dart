@@ -95,6 +95,26 @@ final class DiscardCardCommand extends GameCommand {
   final CardId cardId;
 }
 
+/// Uses an active ability printed on a carried or equipped card.
+/// Optional fields identify the affected player, monster, tile, or amount.
+final class UseCardAbilityCommand extends GameCommand {
+  const UseCardAbilityCommand(
+    this.cardId, {
+    this.targetPlayerId,
+    this.targetMonsterInstanceId,
+    this.targetCoord,
+    this.targetCardId,
+    this.amount,
+  });
+
+  final CardId cardId;
+  final PlayerId? targetPlayerId;
+  final String? targetMonsterInstanceId;
+  final HexCoord? targetCoord;
+  final CardId? targetCardId;
+  final int? amount;
+}
+
 /// Gives the active player a card. A received modification may be implanted
 /// immediately, including after the player has already taken an action.
 final class ReceiveCardCommand extends GameCommand {
@@ -287,10 +307,13 @@ final class KeepRollChoice extends DecisionChoice {
 
 /// Rerolls the specified dice. An empty [diceIndexes] means all dice.
 final class RerollChoice extends DecisionChoice {
-  RerollChoice({Iterable<int> diceIndexes = const []})
-    : diceIndexes = List.unmodifiable(diceIndexes);
+  RerollChoice({
+    Iterable<int> diceIndexes = const [],
+    this.sourceCardId,
+  }) : diceIndexes = List.unmodifiable(diceIndexes);
 
   final List<int> diceIndexes;
+  final CardId? sourceCardId;
 }
 
 final class DodgeChoice extends DecisionChoice {

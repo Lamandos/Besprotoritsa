@@ -1,6 +1,7 @@
 // Public data is documented on the containing types; member names are direct.
 // ignore_for_file: public_member_api_docs
 
+import 'package:besprotoritsa_app/src/game/full_game_state.dart';
 import 'package:besprotoritsa_rules/besprotoritsa_rules.dart';
 
 /// Rehydrates the intentionally limited state projection sent to one player.
@@ -20,9 +21,19 @@ final class ProjectedGameStateCodec {
     activePlayerId: json['activePlayerId'] as String?,
     actionsLeft: _int(json, 'actionsLeft'),
     chestCards: _strings(json['chestCards']),
+    exhaustedChestRobots: _strings(json['exhaustedChestRobots']),
     board: _list(json, 'board').map(_tile),
     players: _list(json, 'players').map(_player),
     monsters: _list(json, 'monsters').map(_monster),
+    tripwires: _optionalList(json['tripwires']).map((entry) {
+      final trap = _map(entry);
+      return TripwireTrap(
+        instanceId: _string(trap, 'instanceId'),
+        coord: _coord(_object(trap, 'coord')),
+        ownerId: _string(trap, 'ownerId'),
+        cardId: _string(trap, 'cardId'),
+      );
+    }),
     decks: _object(json, 'decks').map(
       (id, count) => MapEntry(
         id,
@@ -35,6 +46,8 @@ final class ProjectedGameStateCodec {
       ),
     ),
     quests: _quests(_object(json, 'quests')),
+    cardDefinitions: fullRuntimeCardDefinitions,
+    contentTranslations: fullRuntimeContentTranslations,
     log: _strings(json['log']),
     isComplete: json['isComplete'] == true,
     pendingDecision: _pendingDecision(json['pendingDecision']),
@@ -104,6 +117,16 @@ final class ProjectedGameStateCodec {
       monsterDefenseBonusRound: json['monsterDefenseBonusRound'] is int
           ? json['monsterDefenseBonusRound']! as int
           : null,
+      monsterDefenseBonus: _int(json, 'monsterDefenseBonus', fallback: 1),
+      damageImmuneThroughRound: json['damageImmuneThroughRound'] is int
+          ? json['damageImmuneThroughRound']! as int
+          : null,
+      enemyFeaturesIgnoredThroughRound:
+          json['enemyFeaturesIgnoredThroughRound'] is int
+          ? json['enemyFeaturesIgnoredThroughRound']! as int
+          : null,
+      nextAttackBonusHits: _int(json, 'nextAttackBonusHits', fallback: 0),
+      exhaustedRobots: _strings(json['exhaustedRobots']),
     );
   }
 
@@ -117,6 +140,7 @@ final class ProjectedGameStateCodec {
     attack: _int(json, 'attack'),
     movement: _int(json, 'movement'),
     carriedGear: _strings(json['carriedGear']),
+    exhaustedCarriedRobots: _strings(json['exhaustedCarriedRobots']),
   );
 
   QuestState _quests(Map<String, Object?> json) {
@@ -143,6 +167,7 @@ final class ProjectedGameStateCodec {
         dice: _ints(json['dice']),
         availableRerolls: _int(json, 'availableRerolls'),
         maxDicePerReroll: _int(json, 'maxDicePerReroll', fallback: 999),
+        rerollSources: _strings(json['rerollSources']),
         window: const DecisionWindow(remainingTicks: 1),
       ),
       'dodge' => AwaitingDodge(
@@ -217,6 +242,9 @@ List<Object?> _values(Map<String, Object?> json, String key) {
   if (value is! List<Object?>) throw FormatException('$key must be an array.');
   return value;
 }
+
+List<Object?> _optionalList(Object? value) =>
+    value == null ? const <Object?>[] : value as List<Object?>;
 
 String _string(Map<String, Object?> json, String key) {
   final value = json[key];

@@ -110,6 +110,13 @@ GameState _runMonstersTurn(GameState state) {
       monsterStepsRemaining: current.monsterStepsRemaining - 1,
     );
     current = moveMonsterOneStep(current, monster.instanceId, stepTarget);
+    if (!current.monsters.any(
+      (candidate) => candidate.instanceId == monster.instanceId,
+    )) {
+      current = _copyState(current, monsterStepsRemaining: 0);
+      if (current.pendingDecision != null) return current;
+      continue;
+    }
     if (current.pendingDecision != null) return current;
     if (current.monsterStepsRemaining == 0) {
       current = _copyState(
@@ -280,6 +287,7 @@ GameState _activateQueuedReplacements(GameState state) {
             equipped: replacement.equipped,
             carriedMods: replacement.carriedMods,
             implanted: replacement.implanted,
+            exhaustedRobots: replacement.exhaustedRobots,
             conditions: const [],
             alive: true,
             stats: replacement.stats,
