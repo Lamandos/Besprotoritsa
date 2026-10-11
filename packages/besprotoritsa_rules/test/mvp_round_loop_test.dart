@@ -709,6 +709,76 @@ void main() {
     expect(replaced.players.single.backpack, contains('medkit'));
   });
 
+  test('BUG092 tripwire task reward survives queued replacement', () {
+    const sector = HexCoord(0, 0);
+    final state = _mvpState(
+      playerDamage: 3,
+      playerAlive: false,
+      queuedReplacements: {
+        'ada': ReserveHero(
+          characterId: 'guard-reserve',
+          health: 3,
+          stats: const PlayerStats(science: 1, agility: 1),
+          credits: 3,
+        ),
+      },
+      personalTasksByPlayer: const {
+        'ada': ['hunter'],
+      },
+      conditionProgress: const {
+        'hunter': {
+          'personal-task-value': 1,
+          'personal-task-turn': 1,
+        },
+      },
+      taskDefinitions: {
+        'hunter': {
+          'id': 'hunter',
+          'targetType': 'metric',
+          'metric': 'enemies_killed',
+          'targetValue': 2,
+          'window': 'perTurn',
+          'aggregation': 'sum',
+          'rewardCredits': 5,
+          'nameKey': 'task.hunter.name',
+          'descKey': 'task.hunter.description',
+        },
+      },
+      tripwires: const [
+        TripwireTrap(
+          instanceId: 'hunter-tripwire',
+          coord: sector,
+          ownerId: 'ada',
+          cardId: 'tripwire',
+        ),
+      ],
+      monsters: [
+        MonsterInstance(
+          instanceId: 'hunter-target',
+          monsterId: 'ghoul',
+          coord: sector,
+          damage: 0,
+        ),
+      ],
+    );
+
+    final triggered = resolveColocation(
+      state,
+      coord: sector,
+      monsterInstanceId: 'hunter-target',
+    );
+    expect(triggered.quests.statusOf('hunter'), QuestStatus.completed);
+
+    final replaced = step(
+      triggered,
+      const EndTurnCommand(),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(replaced.players.single.characterId, 'guard-reserve');
+    expect(replaced.players.single.credits, 8);
+  });
+
   test(
     'BUG083 tripwire replacement keeps exhausted Restless robot exhausted',
     () {

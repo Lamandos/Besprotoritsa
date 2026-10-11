@@ -265,6 +265,7 @@ GameState _recordPersonalTaskEvent(
     statuses[completion.taskId] = QuestStatus.completed;
   }
   var players = state.players;
+  var queuedReplacements = state.queuedReplacements;
   final rewardCredits = transition.completed.fold<int>(
     0,
     (sum, completion) => sum + completion.rewardCredits,
@@ -277,10 +278,29 @@ GameState _recordPersonalTaskEvent(
         else
           player,
     ];
+    final replacement = state.queuedReplacements[event.playerId];
+    if (replacement != null) {
+      queuedReplacements =
+          Map<PlayerId, ReserveHero>.of(
+              state.queuedReplacements,
+            )
+            ..[event.playerId] = ReserveHero(
+              characterId: replacement.characterId,
+              health: replacement.health,
+              stats: replacement.stats,
+              credits: replacement.credits + rewardCredits,
+              backpack: replacement.backpack,
+              equipped: replacement.equipped,
+              carriedMods: replacement.carriedMods,
+              implanted: replacement.implanted,
+              exhaustedRobots: replacement.exhaustedRobots,
+            );
+    }
   }
   return _copyState(
     state,
     players: players,
+    queuedReplacements: queuedReplacements,
     quests: QuestState(
       storyQuestIds: quests.storyQuestIds,
       personalTasksByPlayer: quests.personalTasksByPlayer,
