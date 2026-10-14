@@ -507,6 +507,13 @@ Widget _eventOptionDetails(
   final check = _eventOptionSkillCheck(state, eventId, 'option-$optionIndex');
   final success = _eventOptionText(state, eventId, optionIndex, 'successKey');
   final failure = _eventOptionText(state, eventId, optionIndex, 'failureKey');
+  final autoOutcome = _eventOptionDefinition(
+    state,
+    eventId,
+    optionIndex,
+  )?['autoOutcome'];
+  final showBothOutcomes = check != null || autoOutcome == 'condition';
+  final automaticFailure = check == null && autoOutcome == 'failure';
   final checkLabel = check == null
       ? null
       : 'Проверка ${_eventStatGenitive(check.$1)} · сложность ${check.$2}';
@@ -523,9 +530,10 @@ Widget _eventOptionDetails(
       children: [
         if (showAction && action != null) Text(action),
         if (showCheck && checkLabel != null) Text(checkLabel),
-        if (success != null)
-          Text('${check == null ? 'Результат' : 'Успех'}: $success'),
-        if (check != null && failure != null) Text('Провал: $failure'),
+        if (success != null && !automaticFailure)
+          Text('${showBothOutcomes ? 'Успех' : 'Результат'}: $success'),
+        if (failure != null && (showBothOutcomes || automaticFailure))
+          Text('${showBothOutcomes ? 'Провал' : 'Результат'}: $failure'),
       ],
     ),
   );

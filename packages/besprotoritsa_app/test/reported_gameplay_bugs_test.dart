@@ -273,6 +273,60 @@ void main() {
     },
   );
 
+  testWidgets('BUG114 condition event choices show both outcomes', (
+    tester,
+  ) async {
+    final cases = [
+      (
+        eventId: 'huge-crate',
+        option: 'option-2',
+        success:
+            'Успех: Сбросьте карту робота. Возьмите оружие и 1 карту припасов.',
+        failure: 'Провал: Дроид ломается, и вы оставляете ящик.',
+      ),
+      (
+        eventId: 'nest-room',
+        option: 'option-1',
+        success: 'Успех: Если у вас есть огнемёт, гнездо уничтожено.',
+        failure: 'Провал: У вас нет огнемёта или вы не решаетесь тратить его.',
+      ),
+    ];
+
+    for (final testCase in cases) {
+      final state = _scenario((doc) {
+        doc['phase'] = 'eventsPhase';
+        final player = _player(doc);
+        if (testCase.eventId == 'huge-crate') {
+          (player['equipped']! as Map<String, dynamic>)['robot'] = null;
+        } else {
+          (player['backpack']! as List).remove('flamethrower');
+          (player['equipped']! as Map<String, dynamic>).updateAll(
+            (_, cardId) => cardId == 'flamethrower' ? null : cardId,
+          );
+        }
+        doc['pending_decision'] = {
+          'type': 'event_option',
+          'options': [testCase.option],
+          'player_id': player['id'],
+          'event_id': testCase.eventId,
+        };
+      });
+      await _mount(tester, state);
+
+      final dialog = find.byType(AlertDialog);
+      expect(
+        find.descendant(of: dialog, matching: find.text(testCase.success)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: dialog, matching: find.text(testCase.failure)),
+        findsOneWidget,
+      );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
+  });
+
   testWidgets('BUG110 event panel displays each text section separately', (
     tester,
   ) async {
