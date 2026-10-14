@@ -404,7 +404,7 @@ void main() {
       final name = state.contentTranslations[definition['nameKey']! as String]!;
       await tester.tap(find.byTooltip('Карточка монстра: $name'));
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.textContaining('Сила боя'), findsOneWidget);
+      expect(find.textContaining('Ваша сила атаки'), findsOneWidget);
       expect(find.text('Атаковать'), findsOneWidget);
       await tester.tap(find.text('Атаковать'));
       await tester.pump(const Duration(milliseconds: 300));
