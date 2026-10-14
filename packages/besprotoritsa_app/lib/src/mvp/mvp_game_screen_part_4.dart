@@ -607,19 +607,10 @@ String _displayLogLine(GameState state, String entry) {
   }
   final parts = entry.split(':');
   if (parts.length == 4 && parts.first == 'event-result') {
-    final optionIndex = int.tryParse(parts[2]);
-    final outcome = parts[3];
-    final options = state.eventDefinitions[parts[1]]?['options'];
-    if (optionIndex != null &&
-        options is List<Object?> &&
-        optionIndex >= 1 &&
-        optionIndex <= options.length) {
-      final option = options[optionIndex - 1];
-      if (option is Map<String, Object?>) {
-        final key = option['${outcome}Key'];
-        if (key is String) return state.contentTranslations[key] ?? entry;
-      }
-    }
+    final eventTitle =
+        _runtimeEventText(state, parts[1], 'nameKey') ?? parts[1];
+    final outcome = parts[3] == 'success' ? 'Успех' : 'Провал';
+    return 'Событие «$eventTitle»: $outcome.';
   }
   return entry;
 }

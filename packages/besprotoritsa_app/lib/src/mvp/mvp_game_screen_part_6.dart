@@ -189,19 +189,74 @@ String _eventLabel(GameEvent event, AppStrings strings) => switch (event) {
 };
 
 String _decisionPrompt(
+  GameState state,
   PendingDecision decision,
   AppStrings strings,
 ) => switch (decision) {
   AwaitingRerollChoice(:final dice) => strings.dicePrompt(dice.join(', ')),
-  AwaitingDodge(:final monsterDamage, :final requiredAgilitySuccesses) =>
-    'Входящий урон: $monsterDamage\n'
-        'Кубиков ловкости: $requiredAgilitySuccesses\n'
-        'Каждый успех уменьшает урон на 1.',
+  AwaitingDodge(
+    :final monsterDamage,
+    :final requiredAgilitySuccesses,
+    :final targetPlayerId,
+    :final source,
+    :final attackingMonsterInstanceId,
+    :final counterAttackMonsterInstanceId,
+  ) =>
+    _dodgePrompt(
+      state,
+      monsterDamage: monsterDamage,
+      agilityDice: requiredAgilitySuccesses,
+      targetPlayerId: targetPlayerId,
+      source: source,
+      attackingMonsterInstanceId:
+          attackingMonsterInstanceId ?? counterAttackMonsterInstanceId,
+    ),
   AwaitingEventOption() => strings.eventOptionPrompt,
   AwaitingTerminalPick() => strings.terminalPickPrompt,
   AwaitingHeroReplacement() => strings.replacementHeroPrompt,
   AwaitingOtherPlayerDecision() => strings.waitingForOtherPlayer,
 };
+
+String _dodgePrompt(
+  GameState state, {
+  required int monsterDamage,
+  required int agilityDice,
+  required String? targetPlayerId,
+  required DamageSource source,
+  required String? attackingMonsterInstanceId,
+}) {
+  final playerId = targetPlayerId ?? state.activePlayerId;
+  final player = playerId == null
+      ? null
+      : state.players.where((entry) => entry.id == playerId).firstOrNull;
+  final attacker = attackingMonsterInstanceId == null
+      ? null
+      : state.monsters
+            .where((entry) => entry.instanceId == attackingMonsterInstanceId)
+            .firstOrNull;
+  final attackerFeatures = attacker == null
+      ? const <Object?>[]
+      : state.monsterDefinitions[attacker.monsterId]?['features']
+                as List<Object?>? ??
+            const <Object?>[];
+  final attackerIgnoresArmor =
+      source == DamageSource.monster &&
+      attackerFeatures.contains('ignores-defense');
+  final armor = player == null ? null : heroDefense(state, player);
+  final armorName = player?.equipped.armor;
+  final armorLabel = armorName == null
+      ? null
+      : _inventoryCardName(state, armorName);
+  return [
+    if (source == DamageSource.monster && armor != null)
+      'Броня персонажа: $armor${armorLabel == null ? '' : ' ($armorLabel)'}',
+    if (attackerIgnoresArmor) 'Атакующий игнорирует броню.',
+    'Входящий урон: $monsterDamage',
+    'Успехов для полного уклонения: $monsterDamage',
+    'Кубиков ловкости: $agilityDice',
+    'Каждый успех уменьшает урон на 1.',
+  ].join('\n');
+}
 
 class _HexClipper extends CustomClipper<Path> {
   const _HexClipper();

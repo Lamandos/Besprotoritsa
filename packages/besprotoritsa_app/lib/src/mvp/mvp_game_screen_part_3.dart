@@ -559,41 +559,98 @@ class _MonsterToken extends StatelessWidget {
             child: SizedBox(
               width: size.width,
               height: size.height,
-              child: Container(
-                key: ValueKey<String>(
-                  'monster-token-outline-${monster.instanceId}',
-                ),
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFE53935), width: 2),
-                ),
-                child: hidden
-                    ? Center(
-                        child: Text(
+              child: hidden
+                  ? Stack(
+                      key: ValueKey<String>(
+                        'monster-token-silhouette-${monster.instanceId}',
+                      ),
+                      alignment: Alignment.center,
+                      children: [
+                        Text(
                           '☠',
                           style: TextStyle(
-                            color: const Color(0xFFFFF0D1),
+                            foreground: Paint()
+                              ..color = const Color(0xFFE53935)
+                              ..style = PaintingStyle.stroke
+                              ..strokeWidth = 2.5,
                             fontSize: math.max(18, size.width * .58),
                             height: 1,
                           ),
                         ),
-                      )
-                    : GameCardArtwork(
-                        cardId: monster.monsterId,
-                        assetPath:
-                            gameMonsterTokenArtworkAsset(monster.monsterId) ??
-                            gameCardArtworkAsset(monster.monsterId),
-                        width: size.width - 4,
-                        height: size.height - 4,
-                        borderRadius: BorderRadius.zero,
-                        fit: BoxFit.contain,
-                        fallbackIcon: Icons.bug_report,
-                      ),
-              ),
+                        Text(
+                          '☠',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: math.max(18, size.width * .58),
+                            height: 1,
+                          ),
+                        ),
+                      ],
+                    )
+                  : _MonsterSilhouette(
+                      monster: monster,
+                      size: size,
+                    ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MonsterSilhouette extends StatelessWidget {
+  const _MonsterSilhouette({required this.monster, required this.size});
+
+  final MonsterInstance monster;
+  final Size size;
+
+  @override
+  Widget build(BuildContext context) {
+    final asset =
+        gameMonsterTokenArtworkAsset(monster.monsterId) ??
+        gameCardArtworkAsset(monster.monsterId);
+    if (asset == null) {
+      return GameCardArtwork(
+        cardId: monster.monsterId,
+        width: size.width,
+        height: size.height,
+        borderRadius: BorderRadius.zero,
+        fit: BoxFit.contain,
+        fallbackIcon: Icons.bug_report,
+      );
+    }
+    return Stack(
+      key: ValueKey<String>(
+        'monster-token-silhouette-${monster.instanceId}',
+      ),
+      clipBehavior: Clip.none,
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          child: Transform.scale(
+            scale: 1.1,
+            child: ColorFiltered(
+              colorFilter: const ColorFilter.mode(
+                Color(0xFFE53935),
+                BlendMode.srcIn,
+              ),
+              child: Image.asset(asset, fit: BoxFit.contain),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: GameCardArtwork(
+            cardId: monster.monsterId,
+            assetPath: asset,
+            width: size.width,
+            height: size.height,
+            borderRadius: BorderRadius.zero,
+            fit: BoxFit.contain,
+            fallbackIcon: Icons.bug_report,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -604,139 +661,146 @@ void _showMonsterCard(
   MonsterInstance monster,
   String monsterName,
 ) {
+  final gameContainer = ProviderScope.containerOf(context);
   showDialog<void>(
     context: context,
-    builder: (dialogContext) => Consumer(
-      builder: (context, ref, _) {
-        final current = ref.watch(gameControllerProvider);
-        final target = current.monsters
-            .where((entry) => entry.instanceId == monster.instanceId)
-            .firstOrNull;
-        final hero = current.players
-            .where((player) => player.id == current.activePlayerId)
-            .firstOrNull;
-        final definition = current.monsterDefinitions[target?.monsterId];
-        final descriptionKey = definition?['descKey'];
-        final description = descriptionKey is String
-            ? current.contentTranslations[descriptionKey]
-            : null;
-        final queue = ref.read(eventQueueProvider);
-        final artworkHeight = math
-            .min(210, MediaQuery.sizeOf(context).height * 0.16)
-            .toDouble();
-        final artworkWidth = artworkHeight * (1544 / 1019);
-        return ListenableBuilder(
-          listenable: queue,
-          builder: (context, _) {
-            final controller = ref.read(gameControllerProvider.notifier);
-            final command = AttackCommand(monster.instanceId);
-            final mayAttack =
-                target != null &&
-                hero?.coord == target.coord &&
-                !queue.isPlaying &&
-                current.pendingDecision == null &&
-                (!controller.validatesCommandsLocally ||
-                    validate(current, command) == null);
-            return AlertDialog(
-              title: Text(monsterName),
-              content: SizedBox(
-                width: 360,
-                child: SingleChildScrollView(
-                  child: GameCardSurface(
-                    material: GameCardMaterial.monster,
-                    overlayColor: const Color(0x990C0B0A),
-                    padding: const EdgeInsets.all(16),
-                    child: DefaultTextStyle.merge(
-                      style: const TextStyle(
-                        color: Color(0xFFF1E5CA),
-                        height: 1.4,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (gameMonsterTokenArtworkAsset(monster.monsterId)
-                              case final art?)
-                            Image.asset(
-                              art,
-                              width: artworkWidth,
-                              height: artworkHeight,
-                              fit: BoxFit.contain,
-                            ),
-                          const SizedBox(height: 10),
-                          Text(description ?? 'МОНСТР'),
-                          const SizedBox(height: 14),
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 4,
-                            children: [
-                              if (hero != null)
-                                _monsterStat(
-                                  'Сила боя',
-                                  '${heroCombatDiceCount(current, hero)}',
-                                ),
-                              if (target != null) ...[
-                                _monsterStat(
-                                  'Здоровье',
-                                  '${(target.health - target.damage).clamp(0, target.health)}/${target.health}',
-                                ),
-                                _monsterStat('Защита', '${target.defense}'),
-                                _monsterStat('Атака', '${target.attack}'),
-                                _monsterStat('Движение', '${target.movement}'),
-                              ],
-                            ],
-                          ),
-                          if (queue.isPlaying)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 12),
-                              child: Text('Дождитесь завершения анимации.'),
-                            ),
-                          if (!queue.isPlaying &&
-                              current.pendingDecision == null &&
-                              hero != null &&
-                              target != null &&
-                              hero.coord != target.coord)
-                            const Padding(
-                              padding: EdgeInsets.only(top: 12),
-                              child: Text(
-                                'Герой должен быть в одной клетке с монстром.',
+    builder: (dialogContext) => UncontrolledProviderScope(
+      container: gameContainer,
+      child: Consumer(
+        builder: (context, ref, _) {
+          final current = ref.watch(gameControllerProvider);
+          final target = current.monsters
+              .where((entry) => entry.instanceId == monster.instanceId)
+              .firstOrNull;
+          final hero = current.players
+              .where((player) => player.id == current.activePlayerId)
+              .firstOrNull;
+          final definition = current.monsterDefinitions[target?.monsterId];
+          final descriptionKey = definition?['descKey'];
+          final description = descriptionKey is String
+              ? current.contentTranslations[descriptionKey]
+              : null;
+          final queue = ref.read(eventQueueProvider);
+          final artworkHeight = math
+              .min(210, MediaQuery.sizeOf(context).height * 0.16)
+              .toDouble();
+          final artworkWidth = artworkHeight * (1544 / 1019);
+          return ListenableBuilder(
+            listenable: queue,
+            builder: (context, _) {
+              final controller = ref.read(gameControllerProvider.notifier);
+              final command = AttackCommand(monster.instanceId);
+              final mayAttack =
+                  target != null &&
+                  hero?.coord == target.coord &&
+                  !queue.isPlaying &&
+                  current.pendingDecision == null &&
+                  (!controller.validatesCommandsLocally ||
+                      validate(current, command) == null);
+              return AlertDialog(
+                title: Text(monsterName),
+                content: SizedBox(
+                  width: 360,
+                  child: SingleChildScrollView(
+                    child: GameCardSurface(
+                      material: GameCardMaterial.monster,
+                      overlayColor: const Color(0x990C0B0A),
+                      padding: const EdgeInsets.all(16),
+                      child: DefaultTextStyle.merge(
+                        style: const TextStyle(
+                          color: Color(0xFFF1E5CA),
+                          height: 1.4,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (gameMonsterTokenArtworkAsset(monster.monsterId)
+                                case final art?)
+                              Image.asset(
+                                art,
+                                width: artworkWidth,
+                                height: artworkHeight,
+                                fit: BoxFit.contain,
                               ),
+                            const SizedBox(height: 10),
+                            Text(description ?? 'МОНСТР'),
+                            const SizedBox(height: 14),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: [
+                                if (hero != null)
+                                  _monsterStat(
+                                    'Ваша сила атаки',
+                                    '${heroCombatDiceCount(current, hero, target: target)}',
+                                  ),
+                                if (target != null) ...[
+                                  _monsterStat(
+                                    'Здоровье',
+                                    '${(target.health - target.damage).clamp(0, target.health)}/${target.health}',
+                                  ),
+                                  _monsterStat('Защита', '${target.defense}'),
+                                  _monsterStat('Атака', '${target.attack}'),
+                                  _monsterStat(
+                                    'Движение',
+                                    '${target.movement}',
+                                  ),
+                                ],
+                              ],
                             ),
-                        ],
+                            if (queue.isPlaying)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 12),
+                                child: Text('Дождитесь завершения анимации.'),
+                              ),
+                            if (!queue.isPlaying &&
+                                current.pendingDecision == null &&
+                                hero != null &&
+                                target != null &&
+                                hero.coord != target.coord)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 12),
+                                child: Text(
+                                  'Герой должен быть в одной клетке с монстром.',
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              actions: [
-                if (hero != null)
-                  TextButton(
-                    onPressed: mayAttack
-                        ? () {
-                            if (controller.dispatch(command)) {
-                              Navigator.of(dialogContext).pop();
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Атака сейчас недоступна. Завершите ожидающее решение.',
+                actions: [
+                  if (hero != null)
+                    TextButton(
+                      onPressed: mayAttack
+                          ? () {
+                              if (controller.dispatch(command)) {
+                                Navigator.of(dialogContext).pop();
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Атака сейчас недоступна. Завершите ожидающее решение.',
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
                             }
-                          }
-                        : null,
-                    child: const Text('Атаковать'),
+                          : null,
+                      child: const Text('Атаковать'),
+                    ),
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: const Text('Закрыть'),
                   ),
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Закрыть'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+                ],
+              );
+            },
+          );
+        },
+      ),
     ),
   );
 }

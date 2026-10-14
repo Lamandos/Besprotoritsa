@@ -269,19 +269,7 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
     if (parts.first == 'event-result' && parts.length == 4) {
       final id = parts[1];
       final index = int.tryParse(parts[2]);
-      final options = after.eventDefinitions[id]?['options'];
       final success = parts[3] == 'success';
-      String? copy;
-      if (index != null &&
-          options is List &&
-          index > 0 &&
-          index <= options.length) {
-        final option = options[index - 1];
-        if (option is Map) {
-          final key = option[success ? 'successKey' : 'failureKey'];
-          if (key is String) copy = after.contentTranslations[key];
-        }
-      }
       final changes = _stateConsequences(before, after);
       final pending = before.pendingDecision;
       results.add(
@@ -292,7 +280,9 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
             if (success) 'Успех' else 'Провал',
             if (pending is AwaitingRerollChoice)
               'Кубики: ${pending.dice.join(', ')}',
-            if (copy != null) copy,
+            if (index != null) 'Вариант $index',
+            if (fullRuntimeEventSourceText(id) case final sourceText?)
+              sourceText,
             ...changes,
             if (changes.isEmpty) 'Изменений характеристик и инвентаря нет.',
           ].join('\n'),
@@ -321,6 +311,9 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
               'Исход этого варианта ещё не определён в данных карты.'
             else
               'Выбор выполнен.',
+            if (fullRuntimeEventSourceText(decision.eventId!)
+                case final sourceText?)
+              sourceText,
             ...changes,
             if (changes.isEmpty) 'Изменений характеристик и инвентаря нет.',
           ].join('\n'),

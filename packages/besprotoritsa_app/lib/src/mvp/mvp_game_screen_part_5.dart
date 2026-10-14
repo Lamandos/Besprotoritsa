@@ -59,7 +59,8 @@ class _PendingDecisionModal extends ConsumerWidget {
               _eventCardTitle(eventId);
     final eventDescription = eventId == null
         ? null
-        : _runtimeEventText(state, eventId, 'descKey');
+        : fullRuntimeEventSourceText(eventId) ??
+              _runtimeEventText(state, eventId, 'descKey');
     final eventOptions = switch (decision) {
       AwaitingEventOption(:final options) => options,
       _ => const <String>[],
@@ -95,7 +96,7 @@ class _PendingDecisionModal extends ConsumerWidget {
         ? null
         : fullRuntimeCharacterName(targetPlayer.characterId);
     final rerollSources = _decisionRerollSources(state, decision);
-    final prompt = _decisionPrompt(decision, strings);
+    final prompt = _decisionPrompt(state, decision, strings);
     final terminalDecision = decision is AwaitingTerminalPick
         ? decision as AwaitingTerminalPick
         : null;

@@ -64,6 +64,7 @@ final class IncomingDamage {
     required this.amount,
     required this.agilityDice,
     required this.source,
+    this.attackingMonsterInstanceId,
   }) : assert(targetPlayerId != '', 'targetPlayerId must not be empty'),
        assert(amount >= 0, 'amount must not be negative'),
        assert(agilityDice >= 1, 'agilityDice must be at least one');
@@ -72,4 +73,5 @@ final class IncomingDamage {
   final int amount;
   final int agilityDice;
   final DamageSource source;
+  final String? attackingMonsterInstanceId;
 }

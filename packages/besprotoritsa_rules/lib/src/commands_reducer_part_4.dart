@@ -126,6 +126,7 @@ GameState resolveColocation(
             amount: incoming,
             agilityDice: _statDice(player, state, StatType.agility),
             source: DamageSource.monster,
+            attackingMonsterInstanceId: monster.instanceId,
           ),
         );
       }

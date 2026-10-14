@@ -708,6 +708,7 @@ AwaitingDodge _withGhbDtnContinuation(
   requiredAgilitySuccesses: pending.requiredAgilitySuccesses,
   targetPlayerId: pending.targetPlayerId,
   source: pending.source,
+  attackingMonsterInstanceId: pending.attackingMonsterInstanceId,
   counterAttackMonsterInstanceId: pending.counterAttackMonsterInstanceId,
   counterAttackPlayerId: pending.counterAttackPlayerId,
   ghbDtnContinuation: continuation,

@@ -173,6 +173,8 @@ final class ProjectedGameStateCodec {
       'dodge' => AwaitingDodge(
         monsterDamage: _int(json, 'monsterDamage'),
         requiredAgilitySuccesses: _int(json, 'requiredAgilitySuccesses'),
+        attackingMonsterInstanceId:
+            json['attackingMonsterInstanceId'] as String?,
       ),
       'eventOption' => AwaitingEventOption(
         options: _strings(json['options']),

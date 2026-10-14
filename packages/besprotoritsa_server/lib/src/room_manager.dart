@@ -1936,6 +1936,7 @@ Map<String, Object?>? _pendingDecisionToJson(
         'type': 'dodge',
         'monsterDamage': monsterDamage,
         'requiredAgilitySuccesses': requiredAgilitySuccesses,
+        'attackingMonsterInstanceId': decision.attackingMonsterInstanceId,
       },
     AwaitingEventOption(:final options, :final eventId) => <String, Object?>{
       'type': 'eventOption',
