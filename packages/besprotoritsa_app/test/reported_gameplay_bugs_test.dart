@@ -1829,6 +1829,42 @@ void main() {
     }
   });
 
+  test('BUG106 invasion source heading matches the event sector', () {
+    final source =
+        jsonDecode(
+              File(
+                '../../content/event_source_text_ru.json',
+              ).readAsStringSync(),
+            )
+            as Map<String, dynamic>;
+    final sourceCards = source['cards']! as Map<String, dynamic>;
+    final state = _scenario();
+    final invasionTranscriptions = sourceCards.entries.where((entry) {
+      final number = int.tryParse(entry.key.split('-').last);
+      return entry.key.startsWith('invasion-') &&
+          number != null &&
+          number >= 13 &&
+          number <= 24;
+    });
+    String normalizeRussianSpelling(String value) =>
+        value.replaceAll('ё', 'е').replaceAll('Ё', 'Е');
+
+    for (final entry in invasionTranscriptions) {
+      final event = state.eventDefinitions[entry.key]!;
+      final nameKey = event['nameKey']! as String;
+      final eventName = state.contentTranslations[nameKey]!;
+      final sourceHeading = (entry.value as String)
+          .split(' Возьмите карту')
+          .first;
+
+      expect(
+        normalizeRussianSpelling(sourceHeading),
+        normalizeRussianSpelling(eventName),
+        reason: entry.key,
+      );
+    }
+  });
+
   testWidgets('BUG102 monster art outline follows the artwork silhouette', (
     tester,
   ) async {
