@@ -890,6 +890,7 @@ class _MobileActionDock extends StatelessWidget {
       ..._availableTileCommands(state, strings, selectedDestination),
       ..._availableCommands(state, strings),
     ];
+    final conditionIds = _activeConditionIds(state);
     return SafeArea(
       top: false,
       child: Padding(
@@ -901,40 +902,60 @@ class _MobileActionDock extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Color(0xFF8B6B45)),
           ),
-          child: SizedBox(
-            height: 64,
-            child: Row(
-              children: [
-                _TouchIconButton(
-                  buttonKey: mvpInventoryButtonKey,
-                  tooltip: 'Инвентарь',
-                  icon: const Icon(Icons.backpack_outlined),
-                  onPressed: () => _showInventorySheet(context),
-                ),
-                _CompactChestButton(state: state),
-                const VerticalDivider(indent: 10, endIndent: 10),
-                Expanded(
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    itemCount: commands.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(width: 8),
-                    itemBuilder: (context, index) => _CommandButton(
-                      command: commands[index],
-                      compact: true,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (conditionIds.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 2,
+                      children: [
+                        for (final (index, conditionId) in conditionIds.indexed)
+                          _activeConditionChip(state, conditionId, index),
+                      ],
                     ),
                   ),
                 ),
-                const VerticalDivider(indent: 10, endIndent: 10),
-                _TouchIconButton(
-                  buttonKey: mvpJournalButtonKey,
-                  tooltip: 'Журнал заданий',
-                  icon: const Icon(Icons.menu_book_outlined),
-                  onPressed: onOpenLog,
+              SizedBox(
+                height: 64,
+                child: Row(
+                  children: [
+                    _TouchIconButton(
+                      buttonKey: mvpInventoryButtonKey,
+                      tooltip: 'Инвентарь',
+                      icon: const Icon(Icons.backpack_outlined),
+                      onPressed: () => _showInventorySheet(context),
+                    ),
+                    _CompactChestButton(state: state),
+                    const VerticalDivider(indent: 10, endIndent: 10),
+                    Expanded(
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        itemCount: commands.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 8),
+                        itemBuilder: (context, index) => _CommandButton(
+                          command: commands[index],
+                          compact: true,
+                        ),
+                      ),
+                    ),
+                    const VerticalDivider(indent: 10, endIndent: 10),
+                    _TouchIconButton(
+                      buttonKey: mvpJournalButtonKey,
+                      tooltip: 'Журнал заданий',
+                      icon: const Icon(Icons.menu_book_outlined),
+                      onPressed: onOpenLog,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

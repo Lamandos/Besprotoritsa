@@ -174,6 +174,66 @@ void main() {
   });
 
   group('resolveColocation', () {
+    test('BUG107 monster attacks a hero already in its cell at turn start', () {
+      final result = step(
+        _state(monster: _monster(attack: 1)),
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      );
+
+      expect(result.state.pendingDecision, isA<AwaitingDodge>());
+      expect(
+        (result.state.pendingDecision! as AwaitingDodge).targetPlayerId,
+        'ada',
+      );
+    });
+
+    test('BUG107 stationary monster does not repeat its starting attack', () {
+      final attacked = step(
+        _state(monster: _monster(attack: 1, movement: 0)),
+        const EndTurnCommand(),
+        FixedDiceRoller([]),
+      );
+      expect(attacked.state.pendingDecision, isA<AwaitingDodge>());
+
+      final resumed = step(
+        attacked.state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([1]),
+      );
+
+      expect(resumed.state.pendingDecision, isNull);
+      expect(resumed.state.players.single.damage, 1);
+      expect(resumed.state.phase, GamePhase.playersTurn);
+    });
+
+    test(
+      'BUG107 completed movement is not mistaken for a new monster turn',
+      () {
+        final attackedOnArrival = step(
+          _state(
+            monster: _monster(
+              coord: const HexCoord(0, -1),
+              attack: 1,
+            ),
+          ),
+          const EndTurnCommand(),
+          FixedDiceRoller([]),
+        );
+        expect(attackedOnArrival.state.pendingDecision, isA<AwaitingDodge>());
+
+        final resumed = step(
+          attackedOnArrival.state,
+          const ResolvePendingDecisionCommand(DodgeChoice()),
+          FixedDiceRoller([1]),
+        );
+
+        expect(resumed.state.pendingDecision, isNull);
+        expect(resumed.state.players.single.damage, 1);
+        expect(resumed.state.phase, GamePhase.playersTurn);
+      },
+    );
+
     test('only monsters with attack strength block the event phase', () {
       final passive = step(
         _state(
@@ -183,7 +243,7 @@ void main() {
         const EndTurnCommand(),
         FixedDiceRoller([]),
       );
-      final active = step(
+      final activeAttack = step(
         _state(
           monster: _monster(attack: 1, movement: 0),
           events: const ['quiet-event'],
@@ -193,12 +253,18 @@ void main() {
       );
 
       expect(passive.state.pendingDecision, isA<AwaitingEventOption>());
+      expect(activeAttack.state.pendingDecision, isA<AwaitingDodge>());
+      final active = step(
+        activeAttack.state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([1]),
+      );
       expect(active.state.pendingDecision, isNull);
       expect(active.state.phase, GamePhase.playersTurn);
     });
 
     test('event blocking follows monster activity data', () {
-      final passiveByRule = step(
+      final passiveAttack = step(
         _state(
           monster: _monster(attack: 3, movement: 0),
           events: const ['quiet-event'],
@@ -221,6 +287,12 @@ void main() {
         FixedDiceRoller([]),
       );
 
+      expect(passiveAttack.state.pendingDecision, isA<AwaitingDodge>());
+      final passiveByRule = step(
+        passiveAttack.state,
+        const ResolvePendingDecisionCommand(DodgeChoice()),
+        FixedDiceRoller([6]),
+      );
       expect(passiveByRule.state.pendingDecision, isA<AwaitingEventOption>());
       expect(activeByRule.state.pendingDecision, isNull);
       expect(activeByRule.state.phase, GamePhase.playersTurn);

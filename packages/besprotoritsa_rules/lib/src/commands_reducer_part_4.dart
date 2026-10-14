@@ -88,8 +88,9 @@ GameState resolveColocation(
   HexCoord? coord,
   String? monsterInstanceId,
   PlayerId? playerId,
+  bool triggerMonsterArrival = true,
 }) {
-  if (monsterInstanceId != null) {
+  if (triggerMonsterArrival && monsterInstanceId != null) {
     final monster = _monsterById(state, monsterInstanceId);
     if (monster != null) {
       final triggered = _resolveTripwireArrival(state, monster);
@@ -99,6 +100,7 @@ GameState resolveColocation(
           coord: coord,
           monsterInstanceId: monsterInstanceId,
           playerId: playerId,
+          triggerMonsterArrival: triggerMonsterArrival,
         );
       }
     }

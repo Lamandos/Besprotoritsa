@@ -272,6 +272,17 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
       final success = parts[3] == 'success';
       final changes = _stateConsequences(before, after);
       final pending = before.pendingDecision;
+      final action = index == null
+          ? null
+          : _eventOptionText(after, id, index, 'actionKey');
+      final outcome = index == null
+          ? null
+          : _eventOptionText(
+              after,
+              id,
+              index,
+              success ? 'successKey' : 'failureKey',
+            );
       results.add(
         _GameResult(
           'Результат события',
@@ -280,9 +291,8 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
             if (success) 'Успех' else 'Провал',
             if (pending is AwaitingRerollChoice)
               'Кубики: ${pending.dice.join(', ')}',
-            if (index != null) 'Вариант $index',
-            if (fullRuntimeEventSourceText(id) case final sourceText?)
-              sourceText,
+            if (action != null) 'Вариант: $action',
+            if (outcome != null) outcome,
             ...changes,
             if (changes.isEmpty) 'Изменений характеристик и инвентаря нет.',
           ].join('\n'),
@@ -311,9 +321,6 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
               'Исход этого варианта ещё не определён в данных карты.'
             else
               'Выбор выполнен.',
-            if (fullRuntimeEventSourceText(decision.eventId!)
-                case final sourceText?)
-              sourceText,
             ...changes,
             if (changes.isEmpty) 'Изменений характеристик и инвентаря нет.',
           ].join('\n'),

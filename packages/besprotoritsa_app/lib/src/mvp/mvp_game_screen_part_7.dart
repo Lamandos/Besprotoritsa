@@ -275,8 +275,7 @@ class _EventCardPanelState extends State<_EventCardPanel> {
         ? 'Новые карты появятся по ходу партии.'
         : isQuest
         ? _questCardDescription(state, id)
-        : fullRuntimeEventSourceText(id) ??
-              _runtimeEventText(state, id, 'descKey');
+        : _runtimeEventText(state, id, 'descKey');
     final card = GameCardSurface(
       material: isQuest ? GameCardMaterial.story : GameCardMaterial.event,
       overlayColor: const Color(0xB91B1510),
@@ -334,6 +333,16 @@ class _EventCardPanelState extends State<_EventCardPanel> {
                       height: 1.35,
                     ),
                   ),
+                  if (!isQuest && id != null)
+                    for (final (index, option)
+                        in (state.eventDefinitions[id]?['options']
+                                    as List<Object?>? ??
+                                const <Object?>[])
+                            .indexed)
+                      if (option is Map<String, Object?>) ...[
+                        const SizedBox(height: 8),
+                        _eventOptionDetails(state, id, index + 1),
+                      ],
                   if (isQuest && id != null) ...[
                     const SizedBox(height: 12),
                     if (id == 'chapter-1-awakening')
@@ -462,6 +471,74 @@ String? _runtimeEventText(GameState state, String eventId, String field) {
   return key is String ? state.contentTranslations[key] : null;
 }
 
+Map<String, Object?>? _eventOptionDefinition(
+  GameState state,
+  String eventId,
+  int optionIndex,
+) {
+  final rawOptions = state.eventDefinitions[eventId]?['options'];
+  if (rawOptions is! List<Object?> ||
+      optionIndex < 1 ||
+      optionIndex > rawOptions.length) {
+    return null;
+  }
+  final option = rawOptions[optionIndex - 1];
+  return option is Map<String, Object?> ? option : null;
+}
+
+String? _eventOptionText(
+  GameState state,
+  String eventId,
+  int optionIndex,
+  String field,
+) {
+  final key = _eventOptionDefinition(state, eventId, optionIndex)?[field];
+  return key is String ? state.contentTranslations[key] : null;
+}
+
+Widget _eventOptionDetails(
+  GameState state,
+  String eventId,
+  int optionIndex, {
+  bool showAction = true,
+  bool showCheck = true,
+}) {
+  final action = _eventOptionText(state, eventId, optionIndex, 'actionKey');
+  final check = _eventOptionSkillCheck(state, eventId, 'option-$optionIndex');
+  final success = _eventOptionText(state, eventId, optionIndex, 'successKey');
+  final failure = _eventOptionText(state, eventId, optionIndex, 'failureKey');
+  final autoOutcome = _eventOptionDefinition(
+    state,
+    eventId,
+    optionIndex,
+  )?['autoOutcome'];
+  final showBothOutcomes = check != null || autoOutcome == 'condition';
+  final automaticFailure = check == null && autoOutcome == 'failure';
+  final checkLabel = check == null
+      ? null
+      : 'Проверка ${_eventStatGenitive(check.$1)} · сложность ${check.$2}';
+  return Container(
+    key: ValueKey<String>('event-option-details-$eventId-$optionIndex'),
+    padding: const EdgeInsets.all(8),
+    decoration: BoxDecoration(
+      color: const Color(0x24120E0B),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: const Color(0x667D6043)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showAction && action != null) Text(action),
+        if (showCheck && checkLabel != null) Text(checkLabel),
+        if (success != null && !automaticFailure)
+          Text('${showBothOutcomes ? 'Успех' : 'Результат'}: $success'),
+        if (failure != null && (showBothOutcomes || automaticFailure))
+          Text('${showBothOutcomes ? 'Провал' : 'Результат'}: $failure'),
+      ],
+    ),
+  );
+}
+
 String _eventOptionLabel(GameState state, String? eventId, String option) {
   if (option == 'horde|discard') return 'Сбросить весь рюкзак';
   if (option == 'horde|keep') return 'Оставить карты и получить урон';
@@ -533,7 +610,10 @@ String _eventOptionLabel(GameState state, String? eventId, String option) {
   }
   final rawOption = rawOptions[index - 1];
   if (rawOption is! Map<String, Object?>) return option;
-  return 'Вариант $index';
+  final actionKey = rawOption['actionKey'];
+  return actionKey is String
+      ? state.contentTranslations[actionKey] ?? 'Вариант $index'
+      : 'Вариант $index';
 }
 
 String _questCardLabel(GameState state, String id) {
@@ -637,6 +717,39 @@ String _questConditionLabel(GameState state, Map<String, Object?> condition) {
   };
 }
 
+List<String> _activeConditionIds(GameState state) {
+  final activePlayer = state.players
+      .where((player) => player.id == state.activePlayerId)
+      .firstOrNull;
+  return activePlayer?.conditions ?? const <String>[];
+}
+
+Widget _activeConditionChip(GameState state, String conditionId, int index) {
+  final name =
+      state.contentTranslations['mvp.condition.$conditionId.name'] ??
+      state.contentTranslations['content.condition.$conditionId.name'] ??
+      conditionId;
+  final description =
+      state.contentTranslations['mvp.condition.$conditionId.description'] ??
+      state.contentTranslations['content.condition.$conditionId.description'] ??
+      name;
+  return Tooltip(
+    message: description,
+    child: Chip(
+      key: ValueKey<String>('active-condition-$conditionId-$index'),
+      avatar: const Icon(Icons.warning_amber_rounded, size: 16),
+      label: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      visualDensity: VisualDensity.compact,
+      side: const BorderSide(color: Color(0xFFC79B62)),
+      backgroundColor: const Color(0xFF493522),
+      labelStyle: const TextStyle(
+        color: Color(0xFFFFE0AD),
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+  );
+}
+
 class _WideActionDock extends StatelessWidget {
   const _WideActionDock({
     required this.state,
@@ -669,6 +782,7 @@ class _WideActionDock extends StatelessWidget {
           command.command is! OpenCorridorCommand &&
           command.command is! CloseCorridorCommand,
     );
+    final conditionIds = _activeConditionIds(state);
     return Container(
       height: 146,
       padding: const EdgeInsets.fromLTRB(12, 10, 14, 12),
@@ -689,14 +803,27 @@ class _WideActionDock extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: tileCommands.length + actions.length,
+              itemCount:
+                  conditionIds.length + tileCommands.length + actions.length,
               separatorBuilder: (_, _) => const SizedBox(width: 6),
               itemBuilder: (context, index) {
-                if (index < tileCommands.length) {
-                  return _WideCommandButton(command: tileCommands[index]);
+                if (index < conditionIds.length) {
+                  return _activeConditionChip(
+                    state,
+                    conditionIds[index],
+                    index,
+                  );
+                }
+                final commandIndex = index - conditionIds.length;
+                if (commandIndex < tileCommands.length) {
+                  return _WideCommandButton(
+                    command: tileCommands[commandIndex],
+                  );
                 }
                 return _WideCommandButton(
-                  command: actions.elementAt(index - tileCommands.length),
+                  command: actions.elementAt(
+                    commandIndex - tileCommands.length,
+                  ),
                 );
               },
             ),
