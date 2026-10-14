@@ -81,17 +81,22 @@ GameState _runMonstersTurn(GameState state) {
     }
     final monster = current.monsters[current.monsterTurnIndex];
     if (current.monsterStepsRemaining == 0) {
+      final stationary = monster.movement == 0;
       current = _copyState(
         current,
         monsterStepsRemaining: monster.movement,
+        monsterTurnIndex: stationary
+            ? current.monsterTurnIndex + 1
+            : current.monsterTurnIndex,
       );
-      if (monster.movement == 0) {
-        current = _copyState(
-          current,
-          monsterTurnIndex: current.monsterTurnIndex + 1,
-        );
-        continue;
-      }
+      current = resolveColocation(
+        current,
+        coord: monster.coord,
+        monsterInstanceId: monster.instanceId,
+        triggerMonsterArrival: false,
+      );
+      if (current.pendingDecision != null) return current;
+      if (stationary) continue;
     }
     final targets = nearestTargets(current, monster);
     final stepTarget = targets.isEmpty
@@ -117,7 +122,15 @@ GameState _runMonstersTurn(GameState state) {
       if (current.pendingDecision != null) return current;
       continue;
     }
-    if (current.pendingDecision != null) return current;
+    if (current.pendingDecision != null) {
+      if (current.monsterStepsRemaining == 0) {
+        current = _copyState(
+          current,
+          monsterTurnIndex: current.monsterTurnIndex + 1,
+        );
+      }
+      return current;
+    }
     if (current.monsterStepsRemaining == 0) {
       current = _copyState(
         current,

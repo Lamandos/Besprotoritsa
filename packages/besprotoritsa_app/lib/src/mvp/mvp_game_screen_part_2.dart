@@ -219,6 +219,21 @@ class _WideGameLayoutState extends State<_WideGameLayout>
                             ),
                           ),
                         ),
+                        if (state.pendingDecision != null && !queue.isPlaying)
+                          Positioned(
+                            left: 356,
+                            top: 146,
+                            width: 816,
+                            height: 564,
+                            child: Stack(
+                              children: [
+                                _PendingDecisionModal(
+                                  decision: state.pendingDecision!,
+                                  state: state,
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   ),

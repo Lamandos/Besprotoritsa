@@ -13,7 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('BUG093 event introduction appears above choices', (
+  testWidgets('BUG093 event description appears above choices', (
     tester,
   ) async {
     final state = _scenario((doc) {
@@ -28,17 +28,17 @@ void main() {
     await _mount(tester, state);
 
     final eventDialog = find.byType(AlertDialog);
-    final sourceText = fullRuntimeEventSourceText('cabin-noise')!;
+    const description = 'Проходя мимо каюты, вы слышите в ней какую-то возню.';
     final intro = tester.getTopLeft(
       find.descendant(
         of: eventDialog,
-        matching: find.text(sourceText),
+        matching: find.text(description),
       ),
     );
     final firstChoice = tester.getTopLeft(
       find.descendant(
         of: eventDialog,
-        matching: find.text('Вариант 1'),
+        matching: find.text('Проверить, что там происходит.'),
       ),
     );
 
@@ -59,14 +59,14 @@ void main() {
     });
     await _mount(tester, state);
 
-    final sourceText = fullRuntimeEventSourceText('cabin-noise')!;
+    const description = 'Проходя мимо каюты, вы слышите в ней какую-то возню.';
     final intro = find.descendant(
       of: find.byType(AlertDialog),
-      matching: find.text(sourceText),
+      matching: find.text(description),
     );
     final firstChoice = find.descendant(
       of: find.byType(AlertDialog),
-      matching: find.text('Вариант 1'),
+      matching: find.text('Проверить, что там происходит.'),
     );
 
     expect(intro, findsOneWidget);
@@ -109,6 +109,256 @@ void main() {
       find.descendant(
         of: find.byType(AlertDialog),
         matching: find.text('Вся карта'),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('BUG108 reroll updates the displayed die result', (tester) async {
+    final state = _scenario((doc) {
+      (_player(doc)['backpack']! as List).add('defibrillator');
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller([1, 1, 1, 1, 6]),
+    );
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const SkillCheckCommand(StatType.science)),
+      isTrue,
+    );
+    await tester.pump();
+
+    expect(find.text('Кубики: 1, 1, 1, 1'), findsOneWidget);
+    await tester.tap(find.text('Выбрать кубики'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.byKey(const ValueKey('reroll-die-0')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('reroll-selected-dice')));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Кубики: 6, 1, 1, 1'), findsOneWidget);
+    expect(find.text('Кубики: 1, 1, 1, 1'), findsNothing);
+  });
+
+  testWidgets('BUG108 guard pistol reroll updates the attack dice', (
+    tester,
+  ) async {
+    final state = _scenarioWithCharacters(['scientist', 'guard'], (doc) {
+      final player = _player(doc, 1);
+      doc['active_player_id'] = player['id'];
+      (player['equipped']! as Map<String, dynamic>)['weapon'] = 'pistol';
+      (player['backpack']! as List).remove('pistol');
+      final coord = player['coord']! as Map<String, dynamic>;
+      doc['monsters'] = [
+        _monsterJson(
+          _monster(
+            'guard-pistol-test',
+            HexCoord(coord['q']! as int, coord['r']! as int),
+          ),
+        ),
+      ];
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller([1, 1, 1, 1, 1, 6]),
+    );
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const AttackCommand('guard-pistol-test')),
+      isTrue,
+    );
+    await tester.pump();
+
+    expect(find.text('Кубики: 1, 1, 1, 1, 1'), findsOneWidget);
+    await tester.tap(find.text('Перебросить: 1').first);
+    await tester.pump();
+
+    expect(find.text('Кубики: 6, 1, 1, 1, 1'), findsOneWidget);
+    expect(find.text('Кубики: 1, 1, 1, 1, 1'), findsNothing);
+  });
+
+  testWidgets('BUG109 event dialog stays within the game board area', (
+    tester,
+  ) async {
+    const viewport = Size(1280, 800);
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1', 'option-2'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'cabin-noise',
+      };
+    });
+    await _mount(tester, state);
+
+    final dialogSurface = find
+        .descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(Material),
+        )
+        .first;
+    final dialog = tester.getRect(dialogSurface);
+    final scale = (viewport.width / 1664).clamp(0.1, viewport.height / 928);
+    final boardLeft = (viewport.width - 1664 * scale) / 2 + 356 * scale;
+    final boardRight = boardLeft + 816 * scale;
+    expect(dialog.left, greaterThanOrEqualTo(boardLeft));
+    expect(dialog.right, lessThanOrEqualTo(boardRight));
+  });
+
+  testWidgets(
+    'BUG110 event chooser separates source description and option text',
+    (tester) async {
+      final state = _scenario((doc) {
+        doc['phase'] = 'eventsPhase';
+        doc['pending_decision'] = {
+          'type': 'event_option',
+          'options': ['option-1', 'option-2'],
+          'player_id': _player(doc)['id'],
+          'event_id': 'cabin-noise',
+        };
+      });
+      await _mount(tester, state);
+
+      final dialog = find.byType(AlertDialog);
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.text(
+            'Проходя мимо каюты, вы слышите в ней какую-то возню.',
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.text(fullRuntimeEventSourceText('cabin-noise')!),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.text('Проверить, что там происходит.'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.text('Проверка ловкости · сложность 1'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.textContaining('Успех: вы открываете дверь каюты'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: dialog,
+          matching: find.textContaining('Провал: вы открываете дверь каюты'),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('BUG110 event panel displays each text section separately', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      _player(doc)['retained_event_cards'] = ['cabin-noise'];
+    });
+    await _mount(tester, state);
+    await tester.tap(
+      find.byKey(const ValueKey('active-event-tab-cabin-noise')),
+    );
+    await tester.pump();
+
+    expect(find.text(fullRuntimeEventSourceText('cabin-noise')!), findsNothing);
+    expect(
+      find.text('Проходя мимо каюты, вы слышите в ней какую-то возню.'),
+      findsOneWidget,
+    );
+    expect(find.text('Проверить, что там происходит.'), findsOneWidget);
+    expect(
+      find.textContaining('Успех: вы открываете дверь каюты'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Провал: вы открываете дверь каюты'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('BUG110 event result contains only the selected branch', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['event_turn_index'] = 2;
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'cabin-noise',
+      };
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller(List.filled(100, 6)),
+    );
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+          ),
+      isTrue,
+    );
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Продолжить'));
+    await tester.pump(const Duration(seconds: 1));
+
+    final resultDialog = find.byType(AlertDialog);
+    expect(
+      find.descendant(
+        of: resultDialog,
+        matching: find.text('Результат события'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: resultDialog,
+        matching: find.textContaining('вы открываете дверь каюты и видите'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: resultDialog,
+        matching: find.textContaining('разозленный монстр'),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: resultDialog,
+        matching: find.textContaining(
+          fullRuntimeEventSourceText('cabin-noise')!,
+        ),
       ),
       findsNothing,
     );
@@ -237,7 +487,13 @@ void main() {
       };
     });
     await _mount(tester, state);
-    expect(find.textContaining('Проверка силы'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.textContaining('Проверка силы'),
+      ),
+      findsOneWidget,
+    );
     expect(find.textContaining('Ваша сила — 2'), findsOneWidget);
   });
 
@@ -717,6 +973,30 @@ void main() {
     expect(_rosterText(tester), contains('ВЫН 1'));
   });
 
+  testWidgets('BUG113 action panel shows all active condition cards', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      _player(doc)['conditions'] = ['malaise', 'concussion'];
+    });
+    await _mount(tester, state);
+
+    expect(find.text('Недомогание'), findsOneWidget);
+    expect(find.text('Контузия'), findsOneWidget);
+  });
+
+  testWidgets('BUG113 compact action panel shows active condition cards', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      _player(doc)['conditions'] = ['malaise', 'concussion'];
+    });
+    await _mount(tester, state, viewport: const Size(390, 844));
+
+    expect(find.text('Недомогание'), findsOneWidget);
+    expect(find.text('Контузия'), findsOneWidget);
+  });
+
   testWidgets('BUG016 roster follows conditions until healing', (tester) async {
     final state = _scenario((doc) {
       _player(doc)['conditions'] = ['fracture', 'fracture'];
@@ -872,7 +1152,10 @@ void main() {
   testWidgets('BUG020 event description is readable without truncation', (
     tester,
   ) async {
-    final sourceText = fullRuntimeEventSourceText('scientist-report')!;
+    final sourceState = _scenario();
+    final descriptionKey =
+        sourceState.eventDefinitions['scientist-report']!['descKey']! as String;
+    final description = sourceState.contentTranslations[descriptionKey]!;
     final state = _scenario((doc) {
       _player(doc)['retained_event_cards'] = ['scientist-report'];
     });
@@ -882,7 +1165,7 @@ void main() {
     );
     await tester.pump();
     final paragraph = tester.renderObject<RenderParagraph>(
-      find.text(sourceText),
+      find.text(description),
     );
     expect(paragraph.didExceedMaxLines, isFalse);
   });
@@ -919,7 +1202,17 @@ void main() {
         );
         expect(
           find.textContaining(fullRuntimeEventSourceText('alcohol-crate')!),
-          findsOneWidget,
+          findsNothing,
+        );
+        final options =
+            (state.eventDefinitions['alcohol-crate']!['options']!
+                    as List<Object?>)
+                .cast<Map<String, Object?>>();
+        final outcomeKey =
+            options[1][succeeded ? 'successKey' : 'failureKey']! as String;
+        expect(
+          find.textContaining(state.contentTranslations[outcomeKey]!),
+          findsWidgets,
         );
         final result = container.read(gameControllerProvider);
         final player = result.players
@@ -1774,7 +2067,7 @@ void main() {
     );
   });
 
-  testWidgets('BUG101 event result shows the verbatim source card text', (
+  testWidgets('BUG101 event result shows the selected verbatim outcome text', (
     tester,
   ) async {
     final source =
@@ -1809,7 +2102,14 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('Результат события'), findsOneWidget);
-    expect(find.textContaining(sourceText), findsOneWidget);
+    expect(find.textContaining(sourceText), findsNothing);
+    expect(
+      find.textContaining(
+        'Вы предпочитаете проигнорировать эти звуки, '
+        'чтобы не нарваться на проблемы.',
+      ),
+      findsWidgets,
+    );
   });
 
   test('BUG101 every event card has the exact source transcription', () {

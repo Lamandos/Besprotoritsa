@@ -59,8 +59,14 @@ class _PendingDecisionModal extends ConsumerWidget {
               _eventCardTitle(eventId);
     final eventDescription = eventId == null
         ? null
-        : fullRuntimeEventSourceText(eventId) ??
-              _runtimeEventText(state, eventId, 'descKey');
+        : _runtimeEventText(state, eventId, 'descKey');
+    final selectedEventOptionIndex = switch (decision) {
+      AwaitingRerollChoice(
+        context: SkillCheckContext(eventOptionIndex: final index?),
+      ) =>
+        index,
+      _ => null,
+    };
     final eventOptions = switch (decision) {
       AwaitingEventOption(:final options) => options,
       _ => const <String>[],
@@ -225,6 +231,14 @@ class _PendingDecisionModal extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(prompt),
+                        if (selectedEventOptionIndex != null) ...[
+                          const SizedBox(height: 8),
+                          _eventOptionDetails(
+                            state,
+                            eventId,
+                            selectedEventOptionIndex,
+                          ),
+                        ],
                         if (rerollSources.isNotEmpty) Text(sourceCopy),
                         if (coordinateOptions.isNotEmpty) ...[
                           Text(
@@ -612,6 +626,15 @@ Widget _eventOptionControl(
           ),
           if (pool != null) Text('Ваша $statName — $pool'),
         ],
+        if (int.tryParse(option.replaceFirst('option-', ''))
+            case final optionIndex?)
+          _eventOptionDetails(
+            state,
+            eventId,
+            optionIndex,
+            showAction: false,
+            showCheck: false,
+          ),
       ],
     ),
   );
