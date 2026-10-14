@@ -28,6 +28,13 @@ String fullRuntimeCharacterDescription(String id) {
   return '';
 }
 
+/// Returns the complete Russian transcription printed on an event card.
+String? fullRuntimeEventSourceText(String id) {
+  final texts = _object(_content['eventSourceTextRu']);
+  final text = texts[id];
+  return text is String && text.isNotEmpty ? text : null;
+}
+
 /// Returns the Russian display name for an item in the checked runtime set.
 String fullRuntimeItemName(String id) {
   for (final catalogName in ['items', 'special_items', 'supplies']) {

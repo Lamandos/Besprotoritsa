@@ -301,6 +301,8 @@ abstract final class SaveJsonModels {
     'amount': damage.amount,
     'agility_dice': damage.agilityDice,
     'source': damage.source.name,
+    if (damage.attackingMonsterInstanceId != null)
+      'attacking_monster_instance_id': damage.attackingMonsterInstanceId,
   };
 
   static IncomingDamage incomingDamageFromJson(Map<String, Object?> json) =>
@@ -309,6 +311,10 @@ abstract final class SaveJsonModels {
         amount: _int(json, 'amount'),
         agilityDice: _int(json, 'agility_dice'),
         source: _enum(DamageSource.values, _string(json, 'source'), 'source'),
+        attackingMonsterInstanceId: _nullableString(
+          json['attacking_monster_instance_id'],
+          'attacking_monster_instance_id',
+        ),
       );
 
   static Map<String, Object?> deckToJson(DeckState deck) => {
@@ -384,6 +390,7 @@ abstract final class SaveJsonModels {
           'required_agility_successes': decision.requiredAgilitySuccesses,
           'target_player_id': decision.targetPlayerId,
           'source': decision.source.name,
+          'attacking_monster_instance_id': decision.attackingMonsterInstanceId,
           'counter_attack_monster_instance_id':
               decision.counterAttackMonsterInstanceId,
           'counter_attack_player_id': decision.counterAttackPlayerId,
@@ -445,6 +452,10 @@ abstract final class SaveJsonModels {
           'target_player_id',
         ),
         source: _enum(DamageSource.values, _string(json, 'source'), 'source'),
+        attackingMonsterInstanceId: _nullableString(
+          json['attacking_monster_instance_id'],
+          'attacking_monster_instance_id',
+        ),
         counterAttackMonsterInstanceId: _nullableString(
           json['counter_attack_monster_instance_id'],
           'counter_attack_monster_instance_id',

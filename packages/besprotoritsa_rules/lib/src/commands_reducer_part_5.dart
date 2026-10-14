@@ -238,9 +238,12 @@ int playerStatValue(GameState state, PlayerState player, StatType stat) {
 int _statDice(PlayerState player, GameState state, StatType stat) =>
     playerStatValue(state, player, stat).clamp(1, 999);
 
-/// The exact pool used by the attack reducer.
-int heroCombatDiceCount(GameState state, PlayerState player) =>
-    _heroAttackDice(player, state);
+/// The exact pool used by the attack reducer against [target], if supplied.
+int heroCombatDiceCount(
+  GameState state,
+  PlayerState player, {
+  MonsterInstance? target,
+}) => _heroAttackDice(player, state, target: target);
 
 /// Active monster defense, including a temporary bonus for this round.
 int heroDefense(GameState state, PlayerState player) =>

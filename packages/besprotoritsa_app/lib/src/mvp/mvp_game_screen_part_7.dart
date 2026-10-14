@@ -275,7 +275,8 @@ class _EventCardPanelState extends State<_EventCardPanel> {
         ? 'Новые карты появятся по ходу партии.'
         : isQuest
         ? _questCardDescription(state, id)
-        : _runtimeEventText(state, id, 'descKey');
+        : fullRuntimeEventSourceText(id) ??
+              _runtimeEventText(state, id, 'descKey');
     final card = GameCardSurface(
       material: isQuest ? GameCardMaterial.story : GameCardMaterial.event,
       overlayColor: const Color(0xB91B1510),
@@ -532,9 +533,7 @@ String _eventOptionLabel(GameState state, String? eventId, String option) {
   }
   final rawOption = rawOptions[index - 1];
   if (rawOption is! Map<String, Object?>) return option;
-  final key = rawOption['actionKey'];
-  if (key is! String) return option;
-  return state.contentTranslations[key] ?? option;
+  return 'Вариант $index';
 }
 
 String _questCardLabel(GameState state, String id) {

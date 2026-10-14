@@ -102,6 +102,7 @@ final class AwaitingDodge extends PendingDecision {
     required this.requiredAgilitySuccesses,
     this.targetPlayerId,
     this.source = DamageSource.monster,
+    this.attackingMonsterInstanceId,
     this.counterAttackMonsterInstanceId,
     this.counterAttackPlayerId,
     this.ghbDtnContinuation,
@@ -115,6 +116,7 @@ final class AwaitingDodge extends PendingDecision {
   final int requiredAgilitySuccesses;
   final PlayerId? targetPlayerId;
   final DamageSource source;
+  final String? attackingMonsterInstanceId;
   final String? counterAttackMonsterInstanceId;
   final PlayerId? counterAttackPlayerId;
   final GhbDtnMovementContinuation? ghbDtnContinuation;

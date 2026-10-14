@@ -50,7 +50,8 @@ Future<void> main() async {
     '// Source of truth: content/mvp/*.json.\n'
     '// ignore_for_file: lines_longer_than_80_chars\n'
     '/// Embedded, checked JSON snapshot of the deterministic MVP runtime set.\n'
-    "const mvpRuntimeContentJson = '$encoded';\n",
+    'const mvpRuntimeContentJson =\n'
+    "    '$encoded';\n",
   );
   final full = <String, Object?>{};
   for (final name in [
@@ -89,6 +90,20 @@ Future<void> main() async {
     translations['content'],
     'content',
   );
+  final eventSourceText =
+      jsonDecode(await File('content/event_source_text_ru.json').readAsString())
+          as Map<String, Object?>;
+  final sourceCards = eventSourceText['cards'];
+  final eventIds = {
+    for (final card in (full['events'] as Map)['cards'] as List)
+      card['id'] as String,
+  };
+  if (sourceCards is! Map<String, dynamic> ||
+      sourceCards.keys.toSet().difference(eventIds).isNotEmpty ||
+      eventIds.difference(sourceCards.keys.toSet()).isNotEmpty) {
+    throw StateError('Event source text must match every event card ID.');
+  }
+  full['eventSourceTextRu'] = sourceCards;
   full['characterNames'] =
       (translations['content'] as Map<String, dynamic>)['character'];
   final fullEncoded = jsonEncode(full);
@@ -100,7 +115,8 @@ Future<void> main() async {
     '// ignore_for_file: lines_longer_than_80_chars\n'
     '// ignore_for_file: avoid_escaping_inner_quotes, prefer_single_quotes\n'
     '/// Embedded snapshot of the validated full content set.\n'
-    'const fullRuntimeContentJson = '
+    'const fullRuntimeContentJson =\n'
+    '    '
     '${jsonEncode(fullEncoded.replaceAll(r'$', r'\$'))};\n',
   );
 }
