@@ -1958,9 +1958,17 @@ GameState _resolveEventOutcome(
         final monsterDefinition = current.monsterDefinitions[drawnMonsterId];
         if (monsterDefinition == null) continue;
         final coord = player.coord;
-        final instanceId =
+        final instanceIdBase =
             'event-${current.round}-${current.eventTurnIndex}-'
-            '$eventId-$optionIndex-$drawnMonsterId';
+            '$eventId-$optionIndex-$drawnMonsterId-$playerId';
+        var instanceId = instanceIdBase;
+        var duplicateIndex = 1;
+        while (current.monsters.any(
+          (monster) => monster.instanceId == instanceId,
+        )) {
+          duplicateIndex++;
+          instanceId = '$instanceIdBase-$duplicateIndex';
+        }
         final monster = MonsterInstance(
           instanceId: instanceId,
           monsterId: drawnMonsterId,

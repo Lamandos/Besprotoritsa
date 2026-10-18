@@ -2313,6 +2313,71 @@ void main() {
     );
   });
 
+  test(
+    'BUG117 team monster spawns have unique instance ids',
+    () {
+      var state = _mvpState(
+        eventId: 'monster-horde',
+        heroCount: 2,
+        eventDefinitions: {
+          'monster-horde': {
+            'id': 'monster-horde',
+            'choiceScope': 'allLivingPlayers',
+            'options': [
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'spawn_monster', 'immediateCombat': false},
+                ],
+                'failureEffects': [
+                  {'type': 'spawn_monster', 'immediateCombat': false},
+                ],
+              },
+            ],
+          },
+        },
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 2,
+            'defense': 0,
+            'attack': 0,
+            'movement': 0,
+          },
+        },
+        additionalDecks: {
+          'monsters': DeckState(drawPile: const ['ghoul', 'ghoul']),
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      for (final playerId in ['ada', 'hero-2']) {
+        state = step(
+          state,
+          ResolvePendingDecisionCommand(
+            TeamEventPlayerChoice(playerId: playerId, option: 'option-1'),
+          ),
+          FixedDiceRoller([]),
+        ).state;
+      }
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(ConfirmTeamEventChoices()),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(state.monsters, hasLength(2));
+      expect(state.monsters.map((monster) => monster.monsterId), [
+        'ghoul',
+        'ghoul',
+      ]);
+      expect(
+        state.monsters.map((monster) => monster.instanceId).toSet(),
+        hasLength(2),
+      );
+    },
+  );
+
   test('BUG116 team checks settle before the combined result is shown', () {
     var state = _mvpState(
       eventId: 'fire',
