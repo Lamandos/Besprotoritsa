@@ -264,12 +264,14 @@ void main() {
     expect(useButton, findsOneWidget);
     expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
     expect(
-      container.read(gameControllerProvider.notifier).dispatch(
-        UseCardAbilityCommand(
-          'nanobots',
-          playerId: state.players[1].id,
-        ),
-      ),
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            UseCardAbilityCommand(
+              'nanobots',
+              playerId: state.players[1].id,
+            ),
+          ),
       isTrue,
     );
     await tester.pump(const Duration(milliseconds: 300));
