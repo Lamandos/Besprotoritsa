@@ -3,13 +3,199 @@
 
 part of 'commands_reducer.dart';
 
-GameState _resumeAutomaticPhase(GameState state) {
+GameState _resumeAutomaticPhase(GameState state, [DiceRoller? dice]) {
   if (state.pendingDecision != null || state.isComplete) return state;
+  if (state.pendingTeamEventResolution != null) {
+    return _resumeTeamEventResolution(
+      state,
+      dice ?? SeededDiceRoller(state.seed, checkpoint: state.prngState),
+    );
+  }
   return switch (state.phase) {
     GamePhase.monstersTurn => _runMonstersTurn(state),
     GamePhase.eventsPhase => _advanceEvents(state),
     GamePhase.playersTurn => state,
   };
+}
+
+GameState _resumeTeamEventResolution(GameState state, DiceRoller dice) {
+  var current = state;
+  while (current.pendingDecision == null && !current.isComplete) {
+    final resolution = current.pendingTeamEventResolution;
+    if (resolution == null) return _resumeAutomaticPhase(current, dice);
+    if (resolution.nextChoiceIndex >= resolution.choices.length) {
+      var finished = current;
+      for (final choice in resolution.choices) {
+        finished = _copyState(
+          finished,
+          logEntry:
+              'event-team-result:${resolution.eventId}:${choice.playerId}:'
+              '${choice.option}:'
+              '${resolution.outcomes[choice.playerId] ?? 'unresolved'}',
+        );
+      }
+      finished = _copyState(
+        finished,
+        clearPendingTeamEventResolution: true,
+      );
+      return _advanceEvents(finished);
+    }
+
+    final choice = resolution.choices[resolution.nextChoiceIndex];
+    final outcomes = Map<PlayerId, String>.of(resolution.outcomes);
+    current = _copyState(
+      current,
+      activePlayerId: choice.playerId,
+      pendingTeamEventResolution: resolution.advance(
+        nextChoiceIndex: resolution.nextChoiceIndex + 1,
+        outcomes: outcomes,
+      ),
+    );
+    final player = _playerById(current, choice.playerId);
+    if (player == null ||
+        !player.alive ||
+        player.characterId != choice.characterId) {
+      outcomes[choice.playerId] = 'skipped';
+      current = _updateTeamOutcome(current, choice.playerId, 'skipped');
+      continue;
+    }
+
+    if (choice.option == 'horde|discard' || choice.option == 'horde|keep') {
+      current = _resolveTeamHordeChoice(current, choice);
+      current = _updateTeamOutcome(current, choice.playerId, 'success');
+      current = resolveHeroDeaths(current);
+      if (current.pendingDecision != null) return current;
+      continue;
+    }
+
+    final definition = current.eventDefinitions[resolution.eventId];
+    final optionIndex = int.tryParse(
+      choice.option.replaceFirst('option-', ''),
+    );
+    final rawOptions = definition?['options'];
+    if (definition == null ||
+        optionIndex == null ||
+        rawOptions is! List<Object?> ||
+        optionIndex < 1 ||
+        optionIndex > rawOptions.length) {
+      current = _updateTeamOutcome(current, choice.playerId, 'unresolved');
+      continue;
+    }
+    final rawOptionValue = rawOptions[optionIndex - 1];
+    if (rawOptionValue is! Map<String, dynamic>) {
+      current = _updateTeamOutcome(current, choice.playerId, 'unresolved');
+      continue;
+    }
+    final rawOption = rawOptionValue;
+    final check = rawOption['skillCheck'];
+    if (check != null) {
+      if (check is! Map<String, dynamic>) {
+        current = _updateTeamOutcome(current, choice.playerId, 'unresolved');
+        continue;
+      }
+      final skillName = check['skill'];
+      final difficulty = check['difficulty'];
+      if (skillName is! String || difficulty is! int) {
+        current = _updateTeamOutcome(current, choice.playerId, 'unresolved');
+        continue;
+      }
+      final skill = StatType.values.byName(skillName);
+      return _startRoll(
+        current,
+        dice,
+        'event-skill:${choice.playerId}:${resolution.eventId}:$optionIndex',
+        diceCount: _statDice(player, current, skill),
+        context: SkillCheckContext(
+          playerId: choice.playerId,
+          stat: skill,
+          difficulty: difficulty,
+          eventId: resolution.eventId,
+          eventBehaviorId: rawOption['behaviorId'] as String?,
+          eventOptionIndex: optionIndex,
+        ),
+        consumesAction: false,
+      ).state;
+    }
+
+    final automaticOutcome = _eventAutomaticOutcome(rawOption, player);
+    if (automaticOutcome == null &&
+        !_sameEventEffectPlan(
+          rawOption['successEffects'],
+          rawOption['failureEffects'],
+        )) {
+      current = _updateTeamOutcome(current, choice.playerId, 'unresolved');
+      continue;
+    }
+    current = _resolveEventOutcome(
+      current,
+      definition,
+      choice.playerId,
+      optionIndex,
+      succeeded: automaticOutcome ?? true,
+      dice: dice,
+    );
+    if (current.pendingDecision != null) return current;
+  }
+  return current;
+}
+
+GameState _updateTeamOutcome(
+  GameState state,
+  PlayerId playerId,
+  String outcome,
+) {
+  final resolution = state.pendingTeamEventResolution;
+  if (resolution == null) return state;
+  return _copyState(
+    state,
+    pendingTeamEventResolution: resolution.advance(
+      nextChoiceIndex: resolution.nextChoiceIndex,
+      outcomes: {...resolution.outcomes, playerId: outcome},
+    ),
+  );
+}
+
+GameState _resolveTeamHordeChoice(GameState state, TeamEventChoice choice) {
+  final player = _playerById(state, choice.playerId);
+  if (player == null || player.backpack.isEmpty) return state;
+  final decks = Map<DeckId, DeckState>.of(state.decks);
+  if (choice.option == 'horde|discard') {
+    for (final cardId in player.backpack) {
+      final definition = state.cardDefinitions[cardId];
+      if (definition == null) continue;
+      final deckId = _cardSourceDeck(state, definition);
+      final deck = deckId == null ? null : decks[deckId];
+      if (deckId != null && deck != null) {
+        decks[deckId] = DeckState(
+          drawPile: deck.drawPile,
+          discardPile: [...deck.discardPile, cardId],
+        );
+      }
+    }
+    return _copyState(
+      state,
+      decks: decks,
+      players: _replacePlayer(
+        state,
+        choice.playerId,
+        (hero) => _copyPlayer(hero, backpack: const []),
+      ),
+      logEntry:
+          'event-horde-discard:${choice.playerId}:${player.backpack.length}',
+    );
+  }
+  final damage = player.backpack.length * 2;
+  return _copyState(
+    state,
+    players: _replacePlayer(
+      state,
+      choice.playerId,
+      (hero) => _ignoresAnyDamage(state, hero)
+          ? hero
+          : _copyPlayer(hero, damage: hero.damage + damage),
+    ),
+    logEntry: 'event-horde-damage:${choice.playerId}:$damage',
+  );
 }
 
 GameState _resumePendingEventMonsterSpawn(GameState state, DiceRoller dice) {
@@ -208,6 +394,8 @@ GameState _copyState(
   bool clearPendingDecision = false,
   PendingEventMonsterSpawn? pendingEventMonsterSpawn,
   bool clearPendingEventMonsterSpawn = false,
+  PendingTeamEventResolution? pendingTeamEventResolution,
+  bool clearPendingTeamEventResolution = false,
   String? logEntry,
 }) => GameState(
   schemaVersion: state.schemaVersion,
@@ -215,6 +403,7 @@ GameState _copyState(
   prngState: state.prngState,
   contentSetId: state.contentSetId,
   contentSetVersion: state.contentSetVersion,
+  viewerPlayerId: state.viewerPlayerId,
   difficulty: state.difficulty,
   round: round ?? state.round,
   phase: phase ?? state.phase,
@@ -254,4 +443,7 @@ GameState _copyState(
   pendingEventMonsterSpawn: clearPendingEventMonsterSpawn
       ? null
       : pendingEventMonsterSpawn ?? state.pendingEventMonsterSpawn,
+  pendingTeamEventResolution: clearPendingTeamEventResolution
+      ? null
+      : pendingTeamEventResolution ?? state.pendingTeamEventResolution,
 );

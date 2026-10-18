@@ -144,7 +144,16 @@ final class AwaitingEventOption extends PendingDecision {
     required Iterable<String> options,
     this.playerId,
     this.eventId,
-  }) : options = List.unmodifiable(options) {
+    Iterable<PlayerId> teamPlayerIds = const [],
+    Map<PlayerId, Iterable<String>> teamOptionsByPlayer = const {},
+    Map<PlayerId, String> teamChoices = const {},
+  }) : options = List.unmodifiable(options),
+       teamPlayerIds = List.unmodifiable(teamPlayerIds),
+       teamOptionsByPlayer = Map.unmodifiable({
+         for (final entry in teamOptionsByPlayer.entries)
+           entry.key: List<String>.unmodifiable(entry.value),
+       }),
+       teamChoices = Map.unmodifiable(teamChoices) {
     if (this.options.isEmpty) {
       throw ArgumentError.value(
         options,
@@ -157,6 +166,57 @@ final class AwaitingEventOption extends PendingDecision {
   final List<String> options;
   final PlayerId? playerId;
   final CardId? eventId;
+  final List<PlayerId> teamPlayerIds;
+  final Map<PlayerId, List<String>> teamOptionsByPlayer;
+  final Map<PlayerId, String> teamChoices;
+
+  bool get isTeamChoice => teamPlayerIds.isNotEmpty;
+}
+
+@immutable
+final class TeamEventChoice {
+  const TeamEventChoice({
+    required this.playerId,
+    required this.characterId,
+    required this.option,
+  });
+
+  final PlayerId playerId;
+  final CharacterId characterId;
+  final String option;
+}
+
+/// Saved continuation for resolving every hero's selection before the next
+/// event is drawn. It remains present while a check, dodge, or replacement is
+/// awaiting a player decision.
+@immutable
+final class PendingTeamEventResolution {
+  PendingTeamEventResolution({
+    required this.eventId,
+    required Iterable<TeamEventChoice> choices,
+    this.nextChoiceIndex = 0,
+    Map<PlayerId, String> outcomes = const {},
+  }) : choices = List.unmodifiable(choices),
+       outcomes = Map.unmodifiable(outcomes) {
+    if (nextChoiceIndex < 0 || nextChoiceIndex > this.choices.length) {
+      throw ArgumentError.value(nextChoiceIndex, 'nextChoiceIndex');
+    }
+  }
+
+  final CardId eventId;
+  final List<TeamEventChoice> choices;
+  final int nextChoiceIndex;
+  final Map<PlayerId, String> outcomes;
+
+  PendingTeamEventResolution advance({
+    required int nextChoiceIndex,
+    Map<PlayerId, String>? outcomes,
+  }) => PendingTeamEventResolution(
+    eventId: eventId,
+    choices: choices,
+    nextChoiceIndex: nextChoiceIndex,
+    outcomes: outcomes ?? this.outcomes,
+  );
 }
 
 /// A monster fight that resumes after forced-movement threats are resolved.

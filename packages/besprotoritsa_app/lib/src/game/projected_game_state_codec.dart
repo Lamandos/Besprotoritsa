@@ -19,6 +19,7 @@ final class ProjectedGameStateCodec {
     round: _int(json, 'round'),
     phase: _enum(GamePhase.values, _string(json, 'phase')),
     activePlayerId: json['activePlayerId'] as String?,
+    viewerPlayerId: json['viewerPlayerId'] as String?,
     actionsLeft: _int(json, 'actionsLeft'),
     chestCards: _strings(json['chestCards']),
     exhaustedChestRobots: _strings(json['exhaustedChestRobots']),
@@ -179,6 +180,9 @@ final class ProjectedGameStateCodec {
       'eventOption' => AwaitingEventOption(
         options: _strings(json['options']),
         eventId: json['eventId'] as String?,
+        teamPlayerIds: _strings(json['teamPlayerIds']),
+        teamOptionsByPlayer: _stringListMap(json['teamOptionsByPlayer']),
+        teamChoices: _stringMap(json['teamChoices']),
       ),
       'terminalPick' => AwaitingTerminalPick(
         offeredCards: _strings(json['offeredCards']),
@@ -267,6 +271,23 @@ List<String> _strings(Object? value) {
     throw const FormatException('Expected string array.');
   }
   return value.cast<String>();
+}
+
+Map<String, List<String>> _stringListMap(Object? value) {
+  if (value is! Map<Object?, Object?>) return const {};
+  return {
+    for (final entry in value.entries)
+      if (entry.key is String) entry.key! as String: _strings(entry.value),
+  };
+}
+
+Map<String, String> _stringMap(Object? value) {
+  if (value is! Map<Object?, Object?>) return const {};
+  return {
+    for (final entry in value.entries)
+      if (entry.key is String && entry.value is String)
+        entry.key! as String: entry.value! as String,
+  };
 }
 
 List<int> _ints(Object? value) {

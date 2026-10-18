@@ -79,6 +79,74 @@ GameStepResult _resolveEventOption(
   DecisionChoice choice,
   DiceRoller dice,
 ) {
+  if (pending.isTeamChoice && choice is TeamEventPlayerChoice) {
+    final allowedOptions = pending.teamOptionsByPlayer[choice.playerId];
+    if (!pending.teamPlayerIds.contains(choice.playerId) ||
+        allowedOptions == null ||
+        !allowedOptions.contains(choice.option)) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
+    return GameStepResult(
+      state: _copyState(
+        state,
+        pendingDecision: AwaitingEventOption(
+          options: pending.options,
+          eventId: pending.eventId,
+          teamPlayerIds: pending.teamPlayerIds,
+          teamOptionsByPlayer: pending.teamOptionsByPlayer,
+          teamChoices: {...pending.teamChoices, choice.playerId: choice.option},
+        ),
+      ),
+    );
+  }
+  if (pending.isTeamChoice && choice is ConfirmTeamEventChoices) {
+    if (pending.eventId == null ||
+        pending.teamChoices.length != pending.teamPlayerIds.length) {
+      return GameStepResult(
+        state: state,
+        rejection: const ActionBlockedByPendingDecision(),
+      );
+    }
+    final participants = <TeamEventChoice>[];
+    for (final playerId in pending.teamPlayerIds) {
+      final player = _playerById(state, playerId);
+      final option = pending.teamChoices[playerId];
+      final allowedOptions = pending.teamOptionsByPlayer[playerId];
+      if (player == null ||
+          !player.alive ||
+          option == null ||
+          allowedOptions == null ||
+          !allowedOptions.contains(option)) {
+        return GameStepResult(
+          state: state,
+          rejection: const ActionBlockedByPendingDecision(),
+        );
+      }
+      participants.add(
+        TeamEventChoice(
+          playerId: playerId,
+          characterId: player.characterId,
+          option: option,
+        ),
+      );
+    }
+    return GameStepResult(
+      state: _resumeAutomaticPhase(
+        _copyState(
+          state,
+          clearPendingDecision: true,
+          pendingTeamEventResolution: PendingTeamEventResolution(
+            eventId: pending.eventId!,
+            choices: participants,
+          ),
+        ),
+        dice,
+      ),
+    );
+  }
   if (choice is! EventOptionChoice ||
       !pending.options.contains(choice.option)) {
     return GameStepResult(
@@ -94,7 +162,13 @@ GameStepResult _resolveEventOption(
     );
   }
   if (choice.option.startsWith('market|')) {
-    return _resolveEventMarketChoice(state, pending, playerId, choice.option);
+    return _resolveEventMarketChoice(
+      state,
+      pending,
+      playerId,
+      choice.option,
+      dice,
+    );
   }
   final selected = _copyState(
     state,
@@ -133,7 +207,7 @@ GameStepResult _resolveEventOption(
       ),
       logEntry: 'event-discard:$playerId:$cardId',
     );
-    return GameStepResult(state: _resumeAutomaticPhase(discarded));
+    return GameStepResult(state: _resumeAutomaticPhase(discarded, dice));
   }
   if (choice.option.startsWith('horde|')) {
     final hero = _playerById(selected, playerId);
@@ -186,7 +260,7 @@ GameStepResult _resolveEventOption(
           : 'event-horde-damage:$playerId:${hero.backpack.length * 2}',
     );
     return GameStepResult(
-      state: _resumeAutomaticPhase(resolveHeroDeaths(resolved)),
+      state: _resumeAutomaticPhase(resolveHeroDeaths(resolved), dice),
     );
   }
   if (choice.option.startsWith('reveal:')) {
@@ -203,7 +277,7 @@ GameStepResult _resolveEventOption(
       board: _openTile(selected.board, target),
       logEntry: 'event-reveal:$playerId:$coord',
     );
-    return GameStepResult(state: _resumeAutomaticPhase(revealed));
+    return GameStepResult(state: _resumeAutomaticPhase(revealed, dice));
   }
   if (choice.option.startsWith('place:')) {
     final parts = choice.option.split(':');
@@ -251,6 +325,7 @@ GameStepResult _resolveEventOption(
           coord: target.coord,
           monsterInstanceId: monster.instanceId,
         ),
+        dice,
       ),
     );
   }
@@ -314,7 +389,7 @@ GameStepResult _resolveEventOption(
       ),
       logEntry: 'event-picked:$playerId:$cardId',
     );
-    return GameStepResult(state: _resumeAutomaticPhase(picked));
+    return GameStepResult(state: _resumeAutomaticPhase(picked, dice));
   }
   if (choice.option.startsWith('kill:')) {
     final instanceId = choice.option.substring('kill:'.length);
@@ -373,7 +448,7 @@ GameStepResult _resolveEventOption(
       );
     }
     killed = _recordPersonalTaskKillProgress(state, killed, playerId);
-    return GameStepResult(state: _resumeAutomaticPhase(killed));
+    return GameStepResult(state: _resumeAutomaticPhase(killed, dice));
   }
   if (choice.option.startsWith('move:')) {
     final coord = _parseEventMoveOption(choice.option);
@@ -411,7 +486,7 @@ GameStepResult _resolveEventOption(
             QuestArrived(locationId),
             playerId: playerId,
           );
-    return GameStepResult(state: _resumeAutomaticPhase(withQuestEvent));
+    return GameStepResult(state: _resumeAutomaticPhase(withQuestEvent, dice));
   }
   if (choice.option.startsWith('move_spawn:')) {
     final parts = choice.option.split(':');
@@ -484,10 +559,10 @@ GameStepResult _resolveEventOption(
       target.coord,
       dice,
     );
-    return GameStepResult(state: _resumeAutomaticPhase(spawned));
+    return GameStepResult(state: _resumeAutomaticPhase(spawned, dice));
   }
   if (pending.eventId == null) {
-    return GameStepResult(state: _resumeAutomaticPhase(selected));
+    return GameStepResult(state: _resumeAutomaticPhase(selected, dice));
   }
   final definition = selected.eventDefinitions[pending.eventId];
   if (definition != null) {
@@ -512,7 +587,7 @@ GameStepResult _resolveEventOption(
         dice,
         spawnCoord: coord,
       );
-      return GameStepResult(state: _resumeAutomaticPhase(resolved));
+      return GameStepResult(state: _resumeAutomaticPhase(resolved, dice));
     }
     final optionIndex = int.tryParse(choice.option.replaceFirst('option-', ''));
     final rawOptions = definition['options'];
@@ -568,7 +643,7 @@ GameStepResult _resolveEventOption(
             dice,
             spawnCoord: sectors.single,
           );
-          return GameStepResult(state: _resumeAutomaticPhase(resolved));
+          return GameStepResult(state: _resumeAutomaticPhase(resolved, dice));
         }
       }
       final automaticOutcome = _eventAutomaticOutcome(
@@ -587,6 +662,7 @@ GameStepResult _resolveEventOption(
               logEntry:
                   'event-result-unresolved:${definition['id']}:$optionIndex',
             ),
+            dice,
           ),
         );
       }
@@ -611,7 +687,7 @@ GameStepResult _resolveEventOption(
               succeeded: automaticOutcome ?? true,
               dice: dice,
             );
-      return GameStepResult(state: _resumeAutomaticPhase(resolved));
+      return GameStepResult(state: _resumeAutomaticPhase(resolved, dice));
     }
     if (check is! Map<String, dynamic> ||
         check['skill'] is! String ||
@@ -976,7 +1052,7 @@ GameState _startImmediateCounterAttack(
   final player = _playerById(state, playerId);
   final target = _monsterById(state, monster.instanceId);
   if (player == null || !player.alive || target == null) {
-    return _resumeAutomaticPhase(state);
+    return _resumeAutomaticPhase(state, dice);
   }
   final hooks = _activeEffectHooks(state, player);
   final preAttackHooks = hooks.whereType<PreAttackDamageHook>();
@@ -1022,6 +1098,7 @@ GameState _startImmediateCounterAttack(
       consumesAction: false,
       preAttackDamage: preAttackDamage,
     ),
+    dice,
   );
 }
 
@@ -1031,7 +1108,7 @@ GameState _completeRoll(
   DiceRoller dice,
 ) {
   final context = pending.context;
-  if (context == null) return _resumeAutomaticPhase(state);
+  if (context == null) return _resumeAutomaticPhase(state, dice);
   if (context case AttackRollContext()) {
     final resolved = _resolveAttackRoll(
       state,
@@ -1043,10 +1120,10 @@ GameState _completeRoll(
       bonusHits: context.bonusHits,
     );
     return context.resumeAutomaticPhase
-        ? _resumeAutomaticPhase(resolved)
+        ? _resumeAutomaticPhase(resolved, dice)
         : resolved;
   }
-  if (context is! SkillCheckContext) return _resumeAutomaticPhase(state);
+  if (context is! SkillCheckContext) return _resumeAutomaticPhase(state, dice);
   final succeeded = countHits(pending.dice) >= context.difficulty;
   if (context.eventId != null && context.eventOptionIndex != null) {
     final definition = state.eventDefinitions[context.eventId];
@@ -1060,6 +1137,7 @@ GameState _completeRoll(
           succeeded: succeeded,
           dice: dice,
         ),
+        dice,
       );
     }
   }
@@ -1100,10 +1178,11 @@ GameState _completeRoll(
           ),
           playerId: context.playerId,
         ),
+        dice,
       );
     }
   }
-  return _resumeAutomaticPhase(stateAfterCounters);
+  return _resumeAutomaticPhase(stateAfterCounters, dice);
 }
 
 bool _ignoresAnyDamage(GameState state, PlayerState player) =>
@@ -1132,9 +1211,32 @@ GameState _resolveEventOutcome(
   final rawOption = rawOptions[optionIndex - 1];
   if (rawOption is! Map<String, dynamic>) return state;
   final outcomeName = succeeded ? 'success' : 'failure';
+  final teamResolution = state.pendingTeamEventResolution;
+  final teamChoice =
+      teamResolution == null || teamResolution.nextChoiceIndex < 1
+      ? null
+      : teamResolution.choices[teamResolution.nextChoiceIndex - 1];
+  final resolvesTeamChoice =
+      teamResolution != null &&
+      teamChoice != null &&
+      teamResolution.eventId == eventId &&
+      teamChoice.playerId == playerId &&
+      teamChoice.option == 'option-$optionIndex';
+  final outcomes = Map<PlayerId, String>.of(
+    teamResolution?.outcomes ?? const <PlayerId, String>{},
+  );
+  if (resolvesTeamChoice) outcomes[playerId] = outcomeName;
   final resolvedState = _copyState(
     state,
-    logEntry: 'event-result:${definition['id']}:$optionIndex:$outcomeName',
+    pendingTeamEventResolution: resolvesTeamChoice
+        ? teamResolution.advance(
+            nextChoiceIndex: teamResolution.nextChoiceIndex,
+            outcomes: outcomes,
+          )
+        : null,
+    logEntry: resolvesTeamChoice
+        ? null
+        : 'event-result:${definition['id']}:$optionIndex:$outcomeName',
   );
   final rawEffects = rawOption[succeeded ? 'successEffects' : 'failureEffects'];
   if (rawEffects is! List<Object?>) return resolvedState;
@@ -1856,9 +1958,17 @@ GameState _resolveEventOutcome(
         final monsterDefinition = current.monsterDefinitions[drawnMonsterId];
         if (monsterDefinition == null) continue;
         final coord = player.coord;
-        final instanceId =
+        final instanceIdBase =
             'event-${current.round}-${current.eventTurnIndex}-'
-            '$eventId-$optionIndex-$drawnMonsterId';
+            '$eventId-$optionIndex-$drawnMonsterId-$playerId';
+        var instanceId = instanceIdBase;
+        var duplicateIndex = 1;
+        while (current.monsters.any(
+          (monster) => monster.instanceId == instanceId,
+        )) {
+          duplicateIndex++;
+          instanceId = '$instanceIdBase-$duplicateIndex';
+        }
         final monster = MonsterInstance(
           instanceId: instanceId,
           monsterId: drawnMonsterId,
@@ -2129,6 +2239,7 @@ GameStepResult _resolveEventMarketChoice(
   AwaitingEventOption pending,
   PlayerId playerId,
   String option,
+  DiceRoller dice,
 ) {
   final parts = option.split('|');
   if (parts.length != 9 || parts[0] != 'market') {
@@ -2186,6 +2297,7 @@ GameStepResult _resolveEventMarketChoice(
           clearPendingDecision: true,
           logEntry: 'event-market-done:$playerId:$eventId',
         ),
+        dice,
       ),
     );
   }

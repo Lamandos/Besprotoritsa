@@ -242,6 +242,24 @@ List<String> _stringsFromValue(Object? value, String key) {
   return List<String>.from(value);
 }
 
+Map<String, List<String>> _stringListMap(Object? value, String key) {
+  if (value == null) return const {};
+  final json = _asObject(value, key);
+  return {
+    for (final entry in json.entries)
+      entry.key: _stringsFromValue(entry.value, '$key.${entry.key}'),
+  };
+}
+
+Map<String, String> _stringMapOrDefault(Object? value, String key) {
+  if (value == null) return const {};
+  final json = _asObject(value, key);
+  if (json.values.any((entry) => entry is! String)) {
+    throw FormatException('$key must contain only strings.');
+  }
+  return json.cast<String, String>();
+}
+
 List<int> _ints(Map<String, Object?> json, String key) {
   final value = json[key];
   if (value is! List<dynamic> || value.any((entry) => entry is! int)) {

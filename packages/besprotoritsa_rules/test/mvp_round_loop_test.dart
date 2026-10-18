@@ -2096,6 +2096,398 @@ void main() {
     expect(state.decks['supplies']!.discardPile.toSet(), {'ration', 'flare'});
   });
 
+  test('BUG116 horde carry choice includes every living hero', () {
+    var state = _mvpState(
+      eventId: 'horde-carry',
+      heroCount: 2,
+      playerBackpack: const ['ration'],
+      eventDefinitions: {
+        'horde-carry': {
+          'id': 'horde-carry',
+          'choiceScope': 'allLivingPlayers',
+          'playerOptions': ['horde|discard', 'horde|keep'],
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+              'failureEffects': [
+                {'type': 'horde_backpack_choice'},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    final decision = state.pendingDecision! as AwaitingEventOption;
+    expect(decision.isTeamChoice, isTrue);
+    expect(decision.teamPlayerIds, ['ada', 'hero-2']);
+    expect(decision.teamChoices, isEmpty);
+
+    expect(
+      step(
+        state,
+        const ResolvePendingDecisionCommand(
+          TeamEventPlayerChoice(
+            playerId: 'not-a-participant',
+            option: 'option-1',
+          ),
+        ),
+        FixedDiceRoller([]),
+      ).isAccepted,
+      isFalse,
+    );
+    expect(
+      step(
+        state,
+        const ResolvePendingDecisionCommand(
+          TeamEventPlayerChoice(playerId: 'ada', option: 'option-3'),
+        ),
+        FixedDiceRoller([]),
+      ).isAccepted,
+      isFalse,
+    );
+
+    final incompleteConfirmation = step(
+      state,
+      const ResolvePendingDecisionCommand(ConfirmTeamEventChoices()),
+      FixedDiceRoller([]),
+    );
+    expect(incompleteConfirmation.isAccepted, isFalse);
+
+    expect(decision.options, ['horde|discard', 'horde|keep']);
+    expect(decision.playerId, isNull);
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        TeamEventPlayerChoice(playerId: 'ada', option: 'horde|discard'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        TeamEventPlayerChoice(playerId: 'hero-2', option: 'horde|keep'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.players.first.backpack, ['ration']);
+    expect(state.players.last.damage, 0);
+
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(ConfirmTeamEventChoices()),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.players.first.backpack, isEmpty);
+    expect(state.players.last.damage, 2);
+    expect(
+      state.log.where((line) => line.startsWith('event-team-result:')),
+      hasLength(2),
+    );
+  });
+
+  test('BUG116 fire resolves a different chosen action for each hero', () {
+    var state = _mvpState(
+      eventId: 'fire',
+      heroCount: 2,
+      playerHealth: 10,
+      eventDefinitions: {
+        'fire': {
+          'id': 'fire',
+          'choiceScope': 'allLivingPlayers',
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'damage_roll_die'},
+              ],
+              'failureEffects': [
+                {'type': 'damage_roll_die'},
+              ],
+            },
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'damage', 'amount': 3},
+              ],
+              'failureEffects': [
+                {'type': 'damage', 'amount': 3},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        TeamEventPlayerChoice(playerId: 'ada', option: 'option-1'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        TeamEventPlayerChoice(playerId: 'hero-2', option: 'option-2'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.players.map((hero) => hero.damage), [0, 0]);
+
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(ConfirmTeamEventChoices()),
+      FixedDiceRoller([4]),
+    ).state;
+    expect(state.players.map((hero) => hero.damage), [4, 3]);
+    expect(
+      state.log.where((line) => line.startsWith('event-team-result:')),
+      hasLength(2),
+    );
+  });
+
+  test("BUG116 monster horde applies each hero's selection", () {
+    var state = _mvpState(
+      eventId: 'monster-horde',
+      heroCount: 2,
+      playerHealth: 10,
+      eventDefinitions: {
+        'monster-horde': {
+          'id': 'monster-horde',
+          'choiceScope': 'allLivingPlayers',
+          'options': [
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'spawn_monster'},
+              ],
+              'failureEffects': [
+                {'type': 'spawn_monster'},
+              ],
+            },
+            {
+              'skillCheck': null,
+              'successEffects': [
+                {'type': 'damage', 'amount': 2},
+              ],
+              'failureEffects': [
+                {'type': 'damage', 'amount': 2},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        TeamEventPlayerChoice(playerId: 'ada', option: 'option-2'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(
+        TeamEventPlayerChoice(playerId: 'hero-2', option: 'option-2'),
+      ),
+      FixedDiceRoller([]),
+    ).state;
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(ConfirmTeamEventChoices()),
+      FixedDiceRoller([]),
+    ).state;
+
+    expect(state.players.map((hero) => hero.damage), [2, 2]);
+    expect(
+      state.log.where((line) => line.startsWith('event-team-result:')),
+      hasLength(2),
+    );
+  });
+
+  test(
+    'BUG117 team monster spawns have unique instance ids',
+    () {
+      var state = _mvpState(
+        eventId: 'monster-horde',
+        heroCount: 2,
+        eventDefinitions: {
+          'monster-horde': {
+            'id': 'monster-horde',
+            'choiceScope': 'allLivingPlayers',
+            'options': [
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'spawn_monster', 'immediateCombat': false},
+                ],
+                'failureEffects': [
+                  {'type': 'spawn_monster', 'immediateCombat': false},
+                ],
+              },
+            ],
+          },
+        },
+        monsterDefinitions: {
+          'ghoul': {
+            'health': 2,
+            'defense': 0,
+            'attack': 0,
+            'movement': 0,
+          },
+        },
+        additionalDecks: {
+          'monsters': DeckState(drawPile: const ['ghoul', 'ghoul']),
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      for (final playerId in ['ada', 'hero-2']) {
+        state = step(
+          state,
+          ResolvePendingDecisionCommand(
+            TeamEventPlayerChoice(playerId: playerId, option: 'option-1'),
+          ),
+          FixedDiceRoller([]),
+        ).state;
+      }
+
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(ConfirmTeamEventChoices()),
+        FixedDiceRoller([]),
+      ).state;
+
+      expect(state.monsters, hasLength(2));
+      expect(state.monsters.map((monster) => monster.monsterId), [
+        'ghoul',
+        'ghoul',
+      ]);
+      expect(
+        state.monsters.map((monster) => monster.instanceId).toSet(),
+        hasLength(2),
+      );
+    },
+  );
+
+  test('BUG116 team checks settle before the combined result is shown', () {
+    var state = _mvpState(
+      eventId: 'fire',
+      heroCount: 2,
+      playerHealth: 10,
+      playerStats: const PlayerStats(science: 1, endurance: 1, agility: 1),
+      eventDefinitions: {
+        'fire': {
+          'id': 'fire',
+          'choiceScope': 'allLivingPlayers',
+          'options': [
+            {
+              'skillCheck': {'skill': 'science', 'difficulty': 1},
+              'successEffects': [
+                {'type': 'damage', 'amount': 1},
+              ],
+              'failureEffects': [
+                {'type': 'damage', 'amount': 4},
+              ],
+            },
+          ],
+        },
+      },
+    );
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+    for (final playerId in ['ada', 'hero-2']) {
+      state = step(
+        state,
+        ResolvePendingDecisionCommand(
+          TeamEventPlayerChoice(playerId: playerId, option: 'option-1'),
+        ),
+        FixedDiceRoller([]),
+      ).state;
+    }
+
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(ConfirmTeamEventChoices()),
+      FixedDiceRoller([5]),
+    ).state;
+    expect(state.pendingDecision, isA<AwaitingRerollChoice>());
+    expect(
+      state.log.where((line) => line.startsWith('event-team-result:')),
+      isEmpty,
+    );
+
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([1]),
+    ).state;
+    expect(state.pendingDecision, isA<AwaitingRerollChoice>());
+    expect(state.players.map((hero) => hero.damage), [1, 0]);
+    expect(
+      state.log.where((line) => line.startsWith('event-team-result:')),
+      isEmpty,
+    );
+
+    state = step(
+      state,
+      const ResolvePendingDecisionCommand(KeepRollChoice()),
+      FixedDiceRoller([]),
+    ).state;
+    expect(state.players.map((hero) => hero.damage), [1, 4]);
+    expect(
+      (state.pendingDecision! as AwaitingEventOption).isTeamChoice,
+      isTrue,
+    );
+    expect(
+      state.log.where((line) => line.startsWith('event-team-result:')),
+      hasLength(2),
+    );
+  });
+
+  test(
+    'BUG116 meteor stream still damages every living hero automatically',
+    () {
+      var state = _mvpState(
+        eventId: 'meteor-stream',
+        heroCount: 2,
+        playerHealth: 10,
+        eventDefinitions: {
+          'meteor-stream': {
+            'options': [
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'damage_each_player_roll_die'},
+                ],
+                'failureEffects': [
+                  {'type': 'damage_each_player_roll_die'},
+                ],
+              },
+            ],
+          },
+        },
+      );
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(state, const EndTurnCommand(), FixedDiceRoller([])).state;
+      state = step(
+        state,
+        const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        FixedDiceRoller([2, 5]),
+      ).state;
+
+      expect(state.players.map((hero) => hero.damage), [2, 5]);
+    },
+  );
+
   test('horde carry damage scales with the cards kept', () {
     var state = _mvpState(
       eventId: 'horde-carry',

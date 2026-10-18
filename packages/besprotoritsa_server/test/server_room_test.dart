@@ -429,6 +429,163 @@ void main() {
     });
   });
 
+  test('each participant records only their own team event choice', () async {
+    room = manager.createRoom(
+      state: _twoHeroState(
+        pendingDecision: AwaitingEventOption(
+          options: const ['option-1', 'option-2'],
+          eventId: 'fire',
+          teamPlayerIds: const ['ada', 'boris'],
+          teamOptionsByPlayer: const {
+            'ada': ['option-1', 'option-2'],
+            'boris': ['option-1', 'option-2'],
+          },
+        ),
+        eventDefinitions: {
+          'fire': {
+            'id': 'fire',
+            'options': [
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'no_effect'},
+                ],
+                'failureEffects': [
+                  {'type': 'no_effect'},
+                ],
+              },
+              {
+                'skillCheck': null,
+                'successEffects': [
+                  {'type': 'no_effect'},
+                ],
+                'failureEffects': [
+                  {'type': 'no_effect'},
+                ],
+              },
+            ],
+          },
+        },
+        log: const ['private-action:seed:secret'],
+      ),
+      started: true,
+    );
+    final ada = await _connect(server, room.code, 'ada-participant');
+    final boris = await _connect(server, room.code, 'boris-participant');
+    addTearDown(ada.sink.close);
+    addTearDown(boris.sink.close);
+    final adaInbox = _Inbox(ada);
+    final borisInbox = _Inbox(boris);
+    addTearDown(adaInbox.close);
+    addTearDown(borisInbox.close);
+    await adaInbox.next();
+    final adaInitial = await adaInbox.next();
+    await borisInbox.next();
+    final borisInitial = await borisInbox.next();
+    final adaProjection = Map<String, Object?>.from(
+      adaInitial['state']! as Map,
+    );
+    final borisProjection = Map<String, Object?>.from(
+      borisInitial['state']! as Map,
+    );
+    expect(adaProjection['viewerPlayerId'], 'ada');
+    expect(borisProjection['viewerPlayerId'], 'boris');
+    expect(
+      Map<String, Object?>.from(
+        adaProjection['pendingDecision']! as Map,
+      )['teamPlayerIds'],
+      ['ada', 'boris'],
+    );
+    expect(adaProjection['log'], isEmpty);
+
+    boris.sink.add(
+      jsonEncode({
+        'type': 'command',
+        'commandId': 'boris-cannot-select-ada',
+        'expectedRevision': 0,
+        'command': {
+          'type': 'resolveDecision',
+          'choice': {
+            'type': 'teamEventPlayer',
+            'playerId': 'ada',
+            'option': 'option-1',
+          },
+        },
+      }),
+    );
+    expect((await borisInbox.next())['type'], 'error');
+    expect(room.revision, 0);
+
+    ada.sink.add(
+      jsonEncode({
+        'type': 'command',
+        'commandId': 'ada-team-choice',
+        'expectedRevision': 0,
+        'command': {
+          'type': 'resolveDecision',
+          'choice': {
+            'type': 'teamEventPlayer',
+            'playerId': 'ada',
+            'option': 'option-1',
+          },
+        },
+      }),
+    );
+    await adaInbox.next();
+    await borisInbox.next();
+    expect(room.revision, 1);
+
+    boris.sink.add(
+      jsonEncode({
+        'type': 'command',
+        'commandId': 'boris-team-choice',
+        'expectedRevision': 1,
+        'command': {
+          'type': 'resolveDecision',
+          'choice': {
+            'type': 'teamEventPlayer',
+            'playerId': 'boris',
+            'option': 'option-2',
+          },
+        },
+      }),
+    );
+    await adaInbox.next();
+    await borisInbox.next();
+    expect(room.revision, 2);
+
+    ada.sink.add(
+      jsonEncode({
+        'type': 'command',
+        'commandId': 'ada-confirms-team-choices',
+        'expectedRevision': 2,
+        'command': {
+          'type': 'resolveDecision',
+          'choice': {'type': 'confirmTeamEvent'},
+        },
+      }),
+    );
+    final adaResolved = await adaInbox.next();
+    final borisResolved = await borisInbox.next();
+    final expectedResults = [
+      'event-team-result:fire:ada:option-1:success',
+      'event-team-result:fire:boris:option-2:success',
+    ];
+    expect(
+      (adaResolved['state']! as Map<String, Object?>)['log'],
+      expectedResults,
+    );
+    expect(
+      (borisResolved['state']! as Map<String, Object?>)['log'],
+      expectedResults,
+    );
+    expect(
+      jsonEncode(adaResolved),
+      isNot(contains('private-action:seed:secret')),
+    );
+    expect(room.revision, 3);
+  });
+
   test('only the pending-decision owner can resolve a dodge', () async {
     final manager = RoomManager();
     final decisionRoom = manager.createRoom(
@@ -756,6 +913,8 @@ GameState _twoHeroState({
   Iterable<PlayerState>? players,
   Iterable<HexTile>? board,
   Iterable<MonsterInstance> monsters = const [],
+  Map<String, Map<String, Object?>> eventDefinitions = const {},
+  Iterable<String> log = const [],
 }) => GameState(
   seed: 8,
   round: 1,
@@ -784,6 +943,8 @@ GameState _twoHeroState({
   monsters: monsters,
   decks: const {},
   quests: QuestState(),
+  eventDefinitions: eventDefinitions,
+  log: log,
   pendingDecision: pendingDecision,
 );
 

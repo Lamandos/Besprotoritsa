@@ -6,6 +6,132 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('team event window gathers every hero selection before confirm', (
+    tester,
+  ) async {
+    final source = createFullGameState(
+      characterIds: const ['scientist', 'guard'],
+      seed: 55,
+    );
+    final eventDefinitions = Map<String, Map<String, Object?>>.of(
+      source.eventDefinitions,
+    );
+    final fireDefinition = Map<String, Object?>.of(eventDefinitions['fire']!);
+    final fireOptions = (fireDefinition['options']! as List<Object?>)
+        .map(
+          (option) => Map<String, Object?>.from(
+            option! as Map<Object?, Object?>,
+          ),
+        )
+        .toList();
+    fireOptions[0] = {
+      ...fireOptions[0],
+      'skillCheck': {'skill': 'science', 'difficulty': 2},
+    };
+    fireDefinition['options'] = fireOptions;
+    eventDefinitions['fire'] = fireDefinition;
+    final playerIds = source.players.map((player) => player.id).toList();
+    final state = GameState(
+      seed: source.seed,
+      difficulty: source.difficulty,
+      round: source.round,
+      phase: source.phase,
+      activePlayerId: source.activePlayerId,
+      actionsLeft: source.actionsLeft,
+      board: source.board,
+      players: source.players,
+      monsters: source.monsters,
+      decks: source.decks,
+      quests: source.quests,
+      conditionCards: source.conditionCards,
+      cardDefinitions: source.cardDefinitions,
+      questDefinitions: source.questDefinitions,
+      taskDefinitions: source.taskDefinitions,
+      monsterDefinitions: source.monsterDefinitions,
+      eventDefinitions: eventDefinitions,
+      contentTranslations: source.contentTranslations,
+      pendingDecision: AwaitingEventOption(
+        options: const ['option-1', 'option-2'],
+        eventId: 'fire',
+        teamPlayerIds: playerIds,
+        teamOptionsByPlayer: {
+          for (final playerId in playerIds)
+            playerId: const ['option-1', 'option-2'],
+        },
+      ),
+    );
+    final queue = EventQueue(eventDuration: Duration.zero);
+    final container = ProviderContainer(
+      overrides: [
+        eventQueueProvider.overrideWithValue(queue),
+        gameControllerProvider.overrideWith(
+          () => GameController(
+            initialState: state,
+            dice: FixedDiceRoller([]),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(queue.dispose);
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: MvpGameScreen()),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final confirmFinder = find.byKey(
+      const ValueKey<String>('confirm-team-event-choices'),
+    );
+    expect(confirmFinder, findsOneWidget);
+    expect(tester.widget<FilledButton>(confirmFinder).onPressed, isNull);
+    expect(
+      find.byKey(const ValueKey<String>('team-event-hero-1-option-1')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('team-event-hero-2-option-2')),
+      findsOneWidget,
+    );
+    expect(find.text('Успех'), findsNothing);
+    expect(find.text('Провал'), findsNothing);
+    for (final playerId in playerIds) {
+      expect(
+        find.byKey(ValueKey<String>('team-event-check-$playerId-option-1')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(ValueKey<String>('team-event-stat-$playerId-option-1')),
+        findsOneWidget,
+      );
+    }
+
+    final firstChoiceFinder = find.byKey(
+      const ValueKey<String>('team-event-hero-1-option-1'),
+    );
+    await tester.ensureVisible(firstChoiceFinder);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(firstChoiceFinder);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.widget<FilledButton>(confirmFinder).onPressed, isNull);
+
+    final secondChoiceFinder = find.byKey(
+      const ValueKey<String>('team-event-hero-2-option-2'),
+    );
+    await tester.ensureVisible(secondChoiceFinder);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(secondChoiceFinder);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.widget<FilledButton>(confirmFinder).onPressed, isNotNull);
+  });
+
   testWidgets('co-located monster cards remain individually reachable', (
     tester,
   ) async {

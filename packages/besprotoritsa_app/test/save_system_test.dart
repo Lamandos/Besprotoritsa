@@ -168,9 +168,63 @@ void main() {
       ]);
     },
   );
+
+  test('saves team selections and an interrupted team outcome queue', () {
+    final decision = AwaitingEventOption(
+      options: const ['option-1', 'option-2'],
+      eventId: 'fire',
+      teamPlayerIds: const ['ada', 'hero-2'],
+      teamOptionsByPlayer: const {
+        'ada': ['option-1', 'option-2'],
+        'hero-2': ['option-1', 'option-2'],
+      },
+      teamChoices: const {'ada': 'option-1'},
+    );
+    final codec = GameStateJsonCodec();
+    final restoredDecision = codec.decode(
+      codec.encode(_state(decision: decision)),
+    );
+    final restoredTeamDecision =
+        restoredDecision.pendingDecision! as AwaitingEventOption;
+    expect(restoredTeamDecision.teamChoices, {'ada': 'option-1'});
+    expect(restoredTeamDecision.teamPlayerIds, ['ada', 'hero-2']);
+
+    final continuation = PendingTeamEventResolution(
+      eventId: 'fire',
+      choices: const [
+        TeamEventChoice(
+          playerId: 'ada',
+          characterId: 'engineer',
+          option: 'option-1',
+        ),
+        TeamEventChoice(
+          playerId: 'hero-2',
+          characterId: 'guard',
+          option: 'option-2',
+        ),
+      ],
+      nextChoiceIndex: 1,
+      outcomes: const {'ada': 'success'},
+    );
+    final restored = codec.decode(
+      codec.encode(_state(pendingTeamEventResolution: continuation)),
+    );
+    expect(restored.pendingTeamEventResolution!.nextChoiceIndex, 1);
+    expect(restored.pendingTeamEventResolution!.outcomes, {'ada': 'success'});
+    expect(
+      restored.pendingTeamEventResolution!.choices.map(
+        (choice) => choice.option,
+      ),
+      ['option-1', 'option-2'],
+    );
+  });
 }
 
-GameState _state({int round = 1, PendingDecision? decision}) {
+GameState _state({
+  int round = 1,
+  PendingDecision? decision,
+  PendingTeamEventResolution? pendingTeamEventResolution,
+}) {
   final source = createMvpGameState();
   return GameState(
     seed: source.seed,
@@ -198,5 +252,6 @@ GameState _state({int round = 1, PendingDecision? decision}) {
     eventTurnIndex: source.eventTurnIndex,
     actionsTakenThisTurn: source.actionsTakenThisTurn,
     pendingDecision: decision,
+    pendingTeamEventResolution: pendingTeamEventResolution,
   );
 }

@@ -918,7 +918,21 @@ final class GameRoom {
               _state.activePlayerId,
             )
           : _state.activePlayerId;
-      if (controller != participant.heroId) {
+      final decision = _state.pendingDecision;
+      final teamChoiceAllowed =
+          command is ResolvePendingDecisionCommand &&
+          decision is AwaitingEventOption &&
+          decision.isTeamChoice &&
+          (switch (command.choice) {
+            TeamEventPlayerChoice(:final playerId) =>
+              playerId == participant.heroId &&
+                  decision.teamPlayerIds.contains(playerId),
+            ConfirmTeamEventChoices() =>
+              decision.teamPlayerIds.contains(participant.heroId) &&
+                  decision.teamChoices.length == decision.teamPlayerIds.length,
+            _ => false,
+          });
+      if (!teamChoiceAllowed && controller != participant.heroId) {
         _sendError(
           participant,
           command is ResolvePendingDecisionCommand
@@ -1774,6 +1788,11 @@ DecisionChoice _choiceFromJson(Map<String, Object?> json) {
     ),
     'dodge' => const DodgeChoice(),
     'eventOption' => EventOptionChoice(_requiredString(json, 'option')),
+    'teamEventPlayer' => TeamEventPlayerChoice(
+      playerId: _requiredString(json, 'playerId'),
+      option: _requiredString(json, 'option'),
+    ),
+    'confirmTeamEvent' => const ConfirmTeamEventChoices(),
     'terminalPick' => TerminalPickChoice(_requiredString(json, 'cardId')),
     'declineTerminalPick' => const DeclineTerminalPickChoice(),
     'selectReplacementHero' => SelectReplacementHeroChoice(
@@ -1793,6 +1812,7 @@ Map<String, Object?> _projectedStateToJson(
   'round': state.round,
   'phase': state.phase.name,
   'activePlayerId': state.activePlayerId,
+  'viewerPlayerId': viewerId,
   'actionsLeft': state.actionsLeft,
   'chestCards': state.chestCards,
   'exhaustedChestRobots': state.exhaustedChestRobots,
@@ -1833,7 +1853,12 @@ Map<String, Object?> _projectedStateToJson(
         .toList(),
     'hiddenPersonalTaskCounts': state.quests.hiddenPersonalTaskCounts,
   },
-  'log': const <String>[],
+  'log': [
+    for (final line in fullState.log)
+      if (line.startsWith('event-result:') ||
+          line.startsWith('event-team-result:'))
+        line,
+  ],
   'pendingDecision': _pendingDecisionToJson(
     state.pendingDecision,
     viewerId,
@@ -1942,6 +1967,9 @@ Map<String, Object?>? _pendingDecisionToJson(
       'type': 'eventOption',
       'options': options,
       'eventId': eventId,
+      'teamPlayerIds': decision.teamPlayerIds,
+      'teamOptionsByPlayer': decision.teamOptionsByPlayer,
+      'teamChoices': decision.teamChoices,
     },
     AwaitingTerminalPick(:final playerId, :final offeredCards) =>
       <String, Object?>{
@@ -1986,7 +2014,8 @@ PlayerId? _pendingDecisionOwner(
       null => activePlayerId,
     },
     AwaitingDodge(:final targetPlayerId) => targetPlayerId ?? activePlayerId,
-    AwaitingEventOption(:final playerId) => playerId ?? activePlayerId,
+    AwaitingEventOption(:final playerId, :final teamPlayerIds) =>
+      teamPlayerIds.isNotEmpty ? null : playerId ?? activePlayerId,
     AwaitingTerminalPick(:final playerId) => playerId,
     AwaitingHeroReplacement(:final playerId) => playerId,
     AwaitingOtherPlayerDecision(:final awaitingPlayerId) => awaitingPlayerId,

@@ -3244,6 +3244,7 @@
       "id": "fire",
       "importBatch": 6,
       "kind": "global",
+      "choiceScope": "allLivingPlayers",
       "nameKey": "content.event.fire.name",
       "descKey": "content.event.fire.description",
       "options": [
@@ -3293,6 +3294,7 @@
       "id": "monster-horde",
       "importBatch": 6,
       "kind": "global",
+      "choiceScope": "allLivingPlayers",
       "nameKey": "content.event.monster-horde.name",
       "descKey": "content.event.monster-horde.description",
       "options": [
@@ -3372,6 +3374,8 @@
       "id": "horde-carry",
       "importBatch": 7,
       "kind": "global",
+      "choiceScope": "allLivingPlayers",
+      "playerOptions": ["horde|discard", "horde|keep"],
       "nameKey": "content.event.horde-carry.name",
       "descKey": "content.event.horde-carry.description",
       "options": [
