@@ -100,6 +100,7 @@ final class DiscardCardCommand extends GameCommand {
 final class UseCardAbilityCommand extends GameCommand {
   const UseCardAbilityCommand(
     this.cardId, {
+    this.playerId,
     this.targetPlayerId,
     this.targetMonsterInstanceId,
     this.targetCoord,
@@ -108,6 +109,7 @@ final class UseCardAbilityCommand extends GameCommand {
   });
 
   final CardId cardId;
+  final PlayerId? playerId;
   final PlayerId? targetPlayerId;
   final String? targetMonsterInstanceId;
   final HexCoord? targetCoord;

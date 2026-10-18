@@ -890,7 +890,7 @@ class _MobileActionDock extends StatelessWidget {
       ..._availableTileCommands(state, strings, selectedDestination),
       ..._availableCommands(state, strings),
     ];
-    final conditionIds = _activeConditionIds(state);
+    final conditionIds = _activeConditionIds(state, state.activePlayerId);
     return SafeArea(
       top: false,
       child: Padding(

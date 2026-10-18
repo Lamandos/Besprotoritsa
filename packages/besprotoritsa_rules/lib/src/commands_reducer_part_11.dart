@@ -17,7 +17,12 @@ CommandRejection? _validateCardAbility(
   GameState state,
   UseCardAbilityCommand command,
 ) {
-  final player = _activePlayer(state);
+  final playerId = command.playerId ?? state.activePlayerId;
+  final isActivePlayer = playerId == state.activePlayerId;
+  if (!isActivePlayer && !canUseCardAbilityOutsideActiveTurn(state, command)) {
+    return const ActionUnavailableInPhase();
+  }
+  final player = playerId == null ? null : _playerById(state, playerId);
   if (player == null) return const ActionUnavailableInPhase();
   final definition = state.cardDefinitions[command.cardId];
   if (definition == null) {
@@ -269,13 +274,17 @@ bool _isBossForAbility(GameState state, MonsterInstance monster) {
 }
 
 GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
-  final player = _activePlayer(state)!;
+  final player = _playerById(
+    state,
+    command.playerId ?? state.activePlayerId!,
+  )!;
   if (const {'r69-nic3', 'alarm-bot'}.contains(command.cardId)) {
     return _exhaustRobot(
       _copyState(
         state,
-        players: _replaceActivePlayer(
+        players: _replacePlayer(
           state,
+          player.id,
           (current) => _copyPlayer(
             current,
             enemyFeaturesIgnoredThroughRound: state.round,
@@ -450,8 +459,9 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
     return _exhaustRobot(
       _copyState(
         state,
-        players: _replaceActivePlayer(
+        players: _replacePlayer(
           state,
+          player.id,
           (current) => _copyPlayer(
             current,
             damageImmuneThroughRound: state.round,
@@ -563,7 +573,7 @@ GameState _useCardAbility(GameState state, UseCardAbilityCommand command) {
   final withDefense = command.cardId == 'nanobots'
       ? _grantMonsterDefenseBonus(consumed, player.id, state.round)
       : consumed;
-  final updatedPlayer = _activePlayer(withDefense)!;
+  final updatedPlayer = _playerById(withDefense, player.id)!;
   final effect = switch (command.cardId) {
     'nanobots' => (heal: 1, credits: 0, actions: 0),
     'dry-rations' => (heal: 4, credits: 0, actions: 0),

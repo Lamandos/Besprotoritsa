@@ -3,6 +3,30 @@
 
 part of 'commands_reducer.dart';
 
+/// Whether an authenticated non-active hero may play this ability at any time.
+/// Only cards whose printed timing permits this are accepted here.
+bool canUseCardAbilityOutsideActiveTurn(
+  GameState state,
+  UseCardAbilityCommand command,
+) {
+  final playerId = command.playerId;
+  if (playerId == null ||
+      playerId == state.activePlayerId ||
+      state.isComplete ||
+      state.pendingDecision != null ||
+      !const {'nanobots', 'prot3-ct'}.contains(command.cardId) ||
+      _cardAbilityConsumesAction(state, command)) {
+    return false;
+  }
+  final player = _playerById(state, playerId);
+  final definition = state.cardDefinitions[command.cardId];
+  return player != null &&
+      player.alive &&
+      definition != null &&
+      (player.backpack.contains(command.cardId) ||
+          InventoryRules.activeCardIds(player).contains(command.cardId));
+}
+
 /// Reports why [command] cannot be applied to [state], or null when it can.
 CommandRejection? validate(GameState state, GameCommand command) {
   if (state.isComplete) {
@@ -19,7 +43,10 @@ CommandRejection? validate(GameState state, GameCommand command) {
         : null;
   }
 
-  if (state.phase != GamePhase.playersTurn) {
+  final anytimeOffTurnAbility =
+      command is UseCardAbilityCommand &&
+      canUseCardAbilityOutsideActiveTurn(state, command);
+  if (state.phase != GamePhase.playersTurn && !anytimeOffTurnAbility) {
     return const ActionUnavailableInPhase();
   }
 
@@ -30,7 +57,7 @@ CommandRejection? validate(GameState state, GameCommand command) {
   // A fallen hero stays in the turn order until the replacement transition
   // reaches its normal end-turn boundary.  It may end that turn, but can
   // never issue another game action while dead.
-  if (_activePlayer(state)?.alive != true) {
+  if (_activePlayer(state)?.alive != true && !anytimeOffTurnAbility) {
     return const ActionUnavailableInPhase();
   }
 

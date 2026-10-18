@@ -692,7 +692,9 @@ class _InventoryPanel extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.only(bottom: 8),
                     child: Text(
-                      'Действия доступны только для активного персонажа.',
+                      'Обычные действия доступны только активному персонажу. '
+                      'Карты, которые можно применять в любой момент, '
+                      'используются без ожидания своего хода.',
                       style: TextStyle(color: Color(0xFFD3AD75)),
                     ),
                   ),
@@ -733,6 +735,7 @@ class _InventoryPanel extends ConsumerWidget {
                   _equippedInventoryRow(
                     context,
                     state,
+                    selectedPlayer,
                     isActivePlayer,
                     item,
                     'Броня',
@@ -742,6 +745,7 @@ class _InventoryPanel extends ConsumerWidget {
                   _equippedInventoryRow(
                     context,
                     state,
+                    selectedPlayer,
                     isActivePlayer,
                     item,
                     'Одежда',
@@ -751,6 +755,7 @@ class _InventoryPanel extends ConsumerWidget {
                   _equippedInventoryRow(
                     context,
                     state,
+                    selectedPlayer,
                     isActivePlayer,
                     item,
                     'Робот',
@@ -802,30 +807,27 @@ class _InventoryPanel extends ConsumerWidget {
                       title: _inventoryCardName(state, item),
                       cardId: item,
                       icon: Icons.inventory_2_outlined,
-                      actions: isActivePlayer
-                          ? [
-                              if (_inventoryAbilityCommand(
-                                    state,
-                                    selectedPlayer,
-                                    item,
-                                  )
-                                  case final ability?)
-                                _InventoryAction('Использовать', ability),
-                              if (state
-                                      .cardDefinitions[item]
-                                      ?.slots
-                                      .isNotEmpty ??
-                                  false)
-                                _InventoryAction(
-                                  'Экипировать',
-                                  EquipCommand(item),
-                                ),
-                              _InventoryAction(
-                                'Сбросить',
-                                DiscardCardCommand(item),
-                              ),
-                            ]
-                          : const [],
+                      actions: [
+                        if (_inventoryAbilityCommandForPlayer(
+                              state,
+                              selectedPlayer,
+                              item,
+                            )
+                            case final ability?)
+                          _InventoryAction('Использовать', ability),
+                        if (isActivePlayer) ...[
+                          if (state.cardDefinitions[item]?.slots.isNotEmpty ??
+                              false)
+                            _InventoryAction(
+                              'Экипировать',
+                              EquipCommand(item),
+                            ),
+                          _InventoryAction(
+                            'Сбросить',
+                            DiscardCardCommand(item),
+                          ),
+                        ],
+                      ],
                     ),
                 const SizedBox(height: 8),
                 const Text(
@@ -1413,6 +1415,7 @@ Widget _inventoryTransferWindow({
 Widget _equippedInventoryRow(
   BuildContext context,
   GameState state,
+  PlayerState player,
   bool isActivePlayer,
   String item,
   String slot,
@@ -1423,21 +1426,42 @@ Widget _equippedInventoryRow(
   cardId: item,
   subtitle: slot,
   icon: Icons.shield_outlined,
-  actions: isActivePlayer
-      ? [
-          if (_inventoryAbilityCommand(
-                state,
-                state.players.firstWhere(
-                  (player) => player.id == state.activePlayerId,
-                ),
-                item,
-              )
-              case final ability?)
-            _InventoryAction('Использовать', ability),
-          _InventoryAction('Снять', UnequipCommand(itemSlot)),
-          _InventoryAction('Сбросить', DiscardCardCommand(item)),
-        ]
-      : const [],
+  actions: [
+    if (_inventoryAbilityCommandForPlayer(state, player, item)
+        case final ability?)
+      _InventoryAction('Использовать', ability),
+    if (isActivePlayer) ...[
+      _InventoryAction('Снять', UnequipCommand(itemSlot)),
+      _InventoryAction('Сбросить', DiscardCardCommand(item)),
+    ],
+  ],
+);
+
+UseCardAbilityCommand? _inventoryAbilityCommandForPlayer(
+  GameState state,
+  PlayerState player,
+  String cardId,
+) {
+  final ability = _inventoryAbilityCommand(state, player, cardId);
+  if (ability == null) return null;
+  final playerCommand = _withAbilityPlayer(ability, player.id);
+  return player.id == state.activePlayerId ||
+          canUseCardAbilityOutsideActiveTurn(state, playerCommand)
+      ? playerCommand
+      : null;
+}
+
+UseCardAbilityCommand _withAbilityPlayer(
+  UseCardAbilityCommand command,
+  String playerId,
+) => UseCardAbilityCommand(
+  command.cardId,
+  playerId: playerId,
+  targetPlayerId: command.targetPlayerId,
+  targetMonsterInstanceId: command.targetMonsterInstanceId,
+  targetCoord: command.targetCoord,
+  targetCardId: command.targetCardId,
+  amount: command.amount,
 );
 
 class _InventoryAction {
@@ -1463,11 +1487,15 @@ class _InventoryActionButton extends ConsumerWidget {
       onPressed: !enabled
           ? null
           : () async {
-              if (action.command case UseCardAbilityCommand(:final cardId)) {
+              if (action.command case UseCardAbilityCommand(
+                :final cardId,
+                :final playerId,
+              )) {
                 final command = await _chooseCardAbility(
                   context,
                   state,
                   cardId,
+                  playerId: playerId,
                 );
                 if (command == null || !context.mounted) return;
                 await _dispatchWithFeedback(context, ref, command);
@@ -1547,16 +1575,19 @@ UseCardAbilityCommand? _inventoryAbilityCommand(
 Future<UseCardAbilityCommand?> _chooseCardAbility(
   BuildContext context,
   GameState state,
-  String cardId,
-) async {
+  String cardId, {
+  String? playerId,
+}) async {
   final player = state.players.firstWhere(
-    (candidate) => candidate.id == state.activePlayerId,
+    (candidate) => candidate.id == (playerId ?? state.activePlayerId),
   );
   if (cardId != 'medic-bag') {
     final choices = _cardAbilityChoices(state, player, cardId);
     if (choices.isEmpty) return null;
-    if (choices.length == 1) return choices.single;
-    return showDialog<UseCardAbilityCommand>(
+    if (choices.length == 1) {
+      return _withAbilityPlayer(choices.single, player.id);
+    }
+    final selected = await showDialog<UseCardAbilityCommand>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(_inventoryCardName(state, cardId)),
@@ -1581,6 +1612,7 @@ Future<UseCardAbilityCommand?> _chooseCardAbility(
         ],
       ),
     );
+    return selected == null ? null : _withAbilityPlayer(selected, player.id);
   }
 
   final targets = [
@@ -1592,13 +1624,14 @@ Future<UseCardAbilityCommand?> _chooseCardAbility(
         candidate,
   ].where((candidate) => candidate.damage > 0).toList();
   if (targets.isEmpty || player.credits == 0) return null;
-  return showDialog<UseCardAbilityCommand>(
+  final selected = await showDialog<UseCardAbilityCommand>(
     context: context,
     builder: (dialogContext) => _MedicBagDialog(
       player: player,
       targets: targets,
     ),
   );
+  return selected == null ? null : _withAbilityPlayer(selected, player.id);
 }
 
 List<UseCardAbilityCommand> _cardAbilityChoices(

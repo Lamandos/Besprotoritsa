@@ -43,6 +43,148 @@ void main() {
     expect(await response.transform(utf8.decoder).join(), 'ok\n');
   });
 
+  test('BUG119 accepts an anytime ability from its non-active owner', () async {
+    room = manager.createRoom(
+      state: _twoHeroState(
+        players: [
+          _player('ada', card: 'ada-private-card'),
+          _player('boris', card: 'nanobots', equippedRobot: 'prot3-ct'),
+        ],
+        cardDefinitions: {
+          'nanobots': CardDefinition(
+            id: 'nanobots',
+            type: ItemType.supply,
+            slots: const [],
+            cost: 0,
+            staticEffects: CardStaticEffects(const {}),
+            sourceDeck: 'supplies',
+            behaviorIds: const ['card.discardCost', 'health.restore'],
+          ),
+          'prot3-ct': CardDefinition(
+            id: 'prot3-ct',
+            type: ItemType.robot,
+            slots: const [ItemSlot.robot],
+            cost: 0,
+            staticEffects: CardStaticEffects(const {}),
+            sourceDeck: 'items',
+            behaviorIds: const [
+              'robot.exhaust',
+              'damage.ignoreAnyUntilRoundEnd',
+            ],
+          ),
+        },
+      ),
+      started: true,
+    );
+    final ada = await _connect(server, room.code, 'ada-participant');
+    final boris = await _connect(server, room.code, 'boris-participant');
+    addTearDown(ada.sink.close);
+    addTearDown(boris.sink.close);
+    final adaInbox = _Inbox(ada);
+    final borisInbox = _Inbox(boris);
+    addTearDown(adaInbox.close);
+    addTearDown(borisInbox.close);
+    await adaInbox.next();
+    await adaInbox.next();
+    await borisInbox.next();
+    await borisInbox.next();
+
+    boris.sink.add(
+      jsonEncode({
+        'type': 'command',
+        'commandId': 'boris-nanobots',
+        'expectedRevision': 0,
+        'command': {'type': 'useCardAbility', 'cardId': 'nanobots'},
+      }),
+    );
+
+    final response = await borisInbox.next();
+    expect(response['type'], 'state');
+    expect(response['revision'], 1);
+    await adaInbox.next();
+    final borisAfter = room.state.players.singleWhere(
+      (player) => player.id == 'boris',
+    );
+    expect(borisAfter.backpack, isEmpty);
+    expect(borisAfter.monsterDefenseBonusRound, room.state.round);
+    expect(room.state.activePlayerId, 'ada');
+    expect(room.state.actionsLeft, 2);
+
+    boris.sink.add(
+      jsonEncode({
+        'type': 'command',
+        'commandId': 'boris-prot3',
+        'expectedRevision': 1,
+        'command': {'type': 'useCardAbility', 'cardId': 'prot3-ct'},
+      }),
+    );
+
+    final robotResponse = await borisInbox.next();
+    expect(robotResponse['type'], 'state');
+    expect(robotResponse['revision'], 2);
+    await adaInbox.next();
+    final borisAfterRobot = room.state.players.singleWhere(
+      (player) => player.id == 'boris',
+    );
+    expect(borisAfterRobot.damageImmuneThroughRound, room.state.round);
+    expect(borisAfterRobot.exhaustedRobots, ['prot3-ct']);
+    expect(room.state.activePlayerId, 'ada');
+    expect(room.state.actionsLeft, 2);
+  });
+
+  test(
+    'BUG119 keeps in-your-turn cards restricted to the active hero',
+    () async {
+      room = manager.createRoom(
+        state: _twoHeroState(
+          players: [
+            _player('ada', card: 'ada-private-card'),
+            _player('boris', card: 'dry-rations'),
+          ],
+          cardDefinitions: {
+            'dry-rations': CardDefinition(
+              id: 'dry-rations',
+              type: ItemType.supply,
+              slots: const [],
+              cost: 0,
+              staticEffects: CardStaticEffects(const {}),
+              sourceDeck: 'supplies',
+              behaviorIds: const ['card.discardCost', 'health.restore'],
+            ),
+          },
+        ),
+        started: true,
+      );
+      final ada = await _connect(server, room.code, 'ada-participant');
+      final boris = await _connect(server, room.code, 'boris-participant');
+      addTearDown(ada.sink.close);
+      addTearDown(boris.sink.close);
+      final adaInbox = _Inbox(ada);
+      final borisInbox = _Inbox(boris);
+      addTearDown(adaInbox.close);
+      addTearDown(borisInbox.close);
+      await adaInbox.next();
+      await adaInbox.next();
+      await borisInbox.next();
+      await borisInbox.next();
+
+      boris.sink.add(
+        jsonEncode({
+          'type': 'command',
+          'commandId': 'boris-dry-rations',
+          'expectedRevision': 0,
+          'command': {'type': 'useCardAbility', 'cardId': 'dry-rations'},
+        }),
+      );
+
+      final response = await borisInbox.next();
+      expect(response['type'], 'error');
+      expect(response['reason'], 'Only the active hero may issue commands.');
+      expect(room.revision, 0);
+      expect(room.state.players.last.backpack, ['dry-rations']);
+    },
+  );
+
   test('applies a chest batch once when two requests race', () async {
     room = manager.createRoom(
       state: _twoHeroState(
@@ -914,6 +1056,7 @@ GameState _twoHeroState({
   Iterable<HexTile>? board,
   Iterable<MonsterInstance> monsters = const [],
   Map<String, Map<String, Object?>> eventDefinitions = const {},
+  Map<String, CardDefinition> cardDefinitions = const {},
   Iterable<String> log = const [],
 }) => GameState(
   seed: 8,
@@ -944,6 +1087,7 @@ GameState _twoHeroState({
   decks: const {},
   quests: QuestState(),
   eventDefinitions: eventDefinitions,
+  cardDefinitions: cardDefinitions,
   log: log,
   pendingDecision: pendingDecision,
 );
@@ -970,6 +1114,7 @@ GameState _threeHeroState() {
 PlayerState _player(
   String id, {
   required String card,
+  String? equippedRobot,
   int damage = 0,
   int? monsterDefenseBonusRound,
   int monsterDefenseBonus = 1,
@@ -980,7 +1125,7 @@ PlayerState _player(
   damage: damage,
   credits: 0,
   backpack: [card],
-  equipped: const EquippedGear(),
+  equipped: EquippedGear(robot: equippedRobot),
   carriedMods: const [],
   implanted: const [],
   conditions: const ['private-condition'],

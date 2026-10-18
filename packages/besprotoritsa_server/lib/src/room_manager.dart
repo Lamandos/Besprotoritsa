@@ -932,7 +932,12 @@ final class GameRoom {
                   decision.teamChoices.length == decision.teamPlayerIds.length,
             _ => false,
           });
-      if (!teamChoiceAllowed && controller != participant.heroId) {
+      final anytimeAbilityAllowed =
+          command is UseCardAbilityCommand &&
+          canUseCardAbilityOutsideActiveTurn(_state, command);
+      if (!teamChoiceAllowed &&
+          !anytimeAbilityAllowed &&
+          controller != participant.heroId) {
         _sendError(
           participant,
           command is ResolvePendingDecisionCommand
@@ -1698,6 +1703,7 @@ GameCommand _commandFromJson(
     ),
     'useCardAbility' => UseCardAbilityCommand(
       _requiredString(json, 'cardId'),
+      playerId: player.id,
       targetPlayerId: _optionalString(json, 'targetPlayerId'),
       targetMonsterInstanceId: _optionalString(
         json,
