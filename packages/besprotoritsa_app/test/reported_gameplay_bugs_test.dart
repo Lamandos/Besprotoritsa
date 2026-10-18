@@ -261,19 +261,19 @@ void main() {
           of: dialog,
           matching: find.textContaining('Успех: вы открываете дверь каюты'),
         ),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         find.descendant(
           of: dialog,
           matching: find.textContaining('Провал: вы открываете дверь каюты'),
         ),
-        findsOneWidget,
+        findsNothing,
       );
     },
   );
 
-  testWidgets('BUG114 condition event choices show both outcomes', (
+  testWidgets('BUG115 condition event outcomes are hidden before choice', (
     tester,
   ) async {
     final cases = [
@@ -316,16 +316,68 @@ void main() {
       final dialog = find.byType(AlertDialog);
       expect(
         find.descendant(of: dialog, matching: find.text(testCase.success)),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         find.descendant(of: dialog, matching: find.text(testCase.failure)),
-        findsOneWidget,
+        findsNothing,
       );
 
       await tester.pumpWidget(const SizedBox.shrink());
     }
   });
+
+  for (final succeeded in [true, false]) {
+    testWidgets(
+      succeeded
+          ? 'BUG115 event outcome is hidden until the success check resolves'
+          : 'BUG115 event outcome is hidden until the failure check resolves',
+      (tester) async {
+        final state = _eventCheckState();
+        final options =
+            (state.eventDefinitions['alcohol-crate']!['options']!
+                    as List<Object?>)
+                .cast<Map<String, Object?>>();
+        final success =
+            state.contentTranslations[options[1]['successKey']! as String]!;
+        final failure =
+            state.contentTranslations[options[1]['failureKey']! as String]!;
+        final container = await _mount(
+          tester,
+          state,
+          dice: FixedDiceRoller(List.filled(12, succeeded ? 6 : 1)),
+        );
+
+        expect(find.textContaining('Проверка выносливости'), findsWidgets);
+        expect(find.textContaining(success), findsNothing);
+        expect(find.textContaining(failure), findsNothing);
+
+        expect(
+          container
+              .read(gameControllerProvider.notifier)
+              .dispatch(
+                const ResolvePendingDecisionCommand(
+                  EventOptionChoice('option-2'),
+                ),
+              ),
+          isTrue,
+        );
+        await tester.pump(const Duration(seconds: 1));
+        await tester.tap(find.text('Продолжить'));
+        await tester.pump(const Duration(seconds: 1));
+
+        expect(find.text('Результат события'), findsOneWidget);
+        expect(
+          find.textContaining(succeeded ? success : failure),
+          findsWidgets,
+        );
+        expect(
+          find.textContaining(succeeded ? failure : success),
+          findsNothing,
+        );
+      },
+    );
+  }
 
   testWidgets('BUG110 event panel displays each text section separately', (
     tester,
@@ -347,11 +399,11 @@ void main() {
     expect(find.text('Проверить, что там происходит.'), findsOneWidget);
     expect(
       find.textContaining('Успех: вы открываете дверь каюты'),
-      findsOneWidget,
+      findsNothing,
     );
     expect(
       find.textContaining('Провал: вы открываете дверь каюты'),
-      findsOneWidget,
+      findsNothing,
     );
   });
 
