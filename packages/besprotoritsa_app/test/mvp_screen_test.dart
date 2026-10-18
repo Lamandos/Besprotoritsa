@@ -132,6 +132,156 @@ void main() {
     expect(tester.widget<FilledButton>(confirmFinder).onPressed, isNotNull);
   });
 
+  testWidgets('BUG118 condition chips follow the selected hero', (
+    tester,
+  ) async {
+    final source = createFullGameState(
+      characterIds: const ['scientist', 'guard'],
+      seed: 57,
+    );
+    final conditionIds = source.conditionCards.keys.take(2).toList();
+    final players = [
+      _playerWithConditions(source.players[0], [conditionIds[0]]),
+      _playerWithConditions(source.players[1], [conditionIds[1]]),
+    ];
+    final state = GameState(
+      seed: source.seed,
+      difficulty: source.difficulty,
+      round: source.round,
+      phase: source.phase,
+      activePlayerId: source.activePlayerId,
+      actionsLeft: source.actionsLeft,
+      board: source.board,
+      players: players,
+      monsters: source.monsters,
+      decks: source.decks,
+      quests: source.quests,
+      conditionCards: source.conditionCards,
+      cardDefinitions: source.cardDefinitions,
+      eventDefinitions: source.eventDefinitions,
+      questDefinitions: source.questDefinitions,
+      taskDefinitions: source.taskDefinitions,
+      monsterDefinitions: source.monsterDefinitions,
+      contentTranslations: source.contentTranslations,
+    );
+    final queue = EventQueue(eventDuration: Duration.zero);
+    final container = ProviderContainer(
+      overrides: [
+        eventQueueProvider.overrideWithValue(queue),
+        gameControllerProvider.overrideWith(
+          () => GameController(initialState: state),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(queue.dispose);
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: MvpGameScreen()),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(
+      find.byKey(ValueKey<String>('active-condition-${conditionIds[0]}-0')),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Охранник').first);
+    await tester.pump();
+
+    expect(
+      find.byKey(ValueKey<String>('active-condition-${conditionIds[1]}-0')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(ValueKey<String>('active-condition-${conditionIds[0]}-0')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('BUG119 selected inactive hero can use an anytime card', (
+    tester,
+  ) async {
+    final source = createFullGameState(
+      characterIds: const ['scientist', 'guard'],
+      seed: 58,
+    );
+    final players = [
+      source.players[0],
+      _playerWithConditions(
+        source.players[1],
+        source.players[1].conditions,
+        backpack: const ['nanobots'],
+      ),
+    ];
+    final state = _gameStateWithPlayers(source, players);
+    final queue = EventQueue(eventDuration: Duration.zero);
+    final container = ProviderContainer(
+      overrides: [
+        eventQueueProvider.overrideWithValue(queue),
+        gameControllerProvider.overrideWith(
+          () => GameController(initialState: state),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    addTearDown(queue.dispose);
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: MvpGameScreen()),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('Охранник').first);
+    await tester.pump();
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 300));
+    final inventoryScroll = find
+        .ancestor(
+          of: find.text('Наноботы'),
+          matching: find.byType(Scrollable),
+        )
+        .first;
+    await tester.scrollUntilVisible(
+      find.text('Наноботы'),
+      180,
+      scrollable: inventoryScroll,
+    );
+
+    final useButton = find.widgetWithText(FilledButton, 'Использовать');
+    expect(useButton, findsOneWidget);
+    expect(tester.widget<FilledButton>(useButton).onPressed, isNotNull);
+    expect(
+      container.read(gameControllerProvider.notifier).dispatch(
+        UseCardAbilityCommand(
+          'nanobots',
+          playerId: state.players[1].id,
+        ),
+      ),
+      isTrue,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final resolved = container.read(gameControllerProvider);
+    final inactiveHero = resolved.players[1];
+    expect(inactiveHero.backpack, isEmpty);
+    expect(inactiveHero.monsterDefenseBonusRound, resolved.round);
+    expect(resolved.activePlayerId, state.activePlayerId);
+    expect(resolved.actionsLeft, state.actionsLeft);
+  });
+
   testWidgets('co-located monster cards remain individually reachable', (
     tester,
   ) async {
@@ -475,6 +625,61 @@ void main() {
     },
   );
 }
+
+PlayerState _playerWithConditions(
+  PlayerState player,
+  Iterable<String> conditions, {
+  Iterable<String>? backpack,
+}) => PlayerState(
+  id: player.id,
+  characterId: player.characterId,
+  coord: player.coord,
+  damage: player.damage,
+  health: player.health,
+  credits: player.credits,
+  backpack: backpack ?? player.backpack,
+  equipped: player.equipped,
+  carriedMods: player.carriedMods,
+  implanted: player.implanted,
+  conditions: conditions,
+  retainedEventCards: player.retainedEventCards,
+  alive: player.alive,
+  stats: player.stats,
+  weaponModifier: player.weaponModifier,
+  actionPoints: player.actionPoints,
+  nextTurnActionDelta: player.nextTurnActionDelta,
+  monsterDamageImmuneThroughRound: player.monsterDamageImmuneThroughRound,
+  monsterDefenseBonusRound: player.monsterDefenseBonusRound,
+  monsterDefenseBonus: player.monsterDefenseBonus,
+  damageImmuneThroughRound: player.damageImmuneThroughRound,
+  enemyFeaturesIgnoredThroughRound: player.enemyFeaturesIgnoredThroughRound,
+  nextAttackBonusHits: player.nextAttackBonusHits,
+  exhaustedRobots: player.exhaustedRobots,
+);
+
+GameState _gameStateWithPlayers(
+  GameState source,
+  Iterable<PlayerState> players,
+) => GameState(
+  seed: source.seed,
+  difficulty: source.difficulty,
+  round: source.round,
+  phase: source.phase,
+  activePlayerId: source.activePlayerId,
+  actionsLeft: source.actionsLeft,
+  board: source.board,
+  players: players,
+  monsters: source.monsters,
+  decks: source.decks,
+  quests: source.quests,
+  conditionCards: source.conditionCards,
+  cardDefinitions: source.cardDefinitions,
+  eventDefinitions: source.eventDefinitions,
+  questDefinitions: source.questDefinitions,
+  taskDefinitions: source.taskDefinitions,
+  monsterDefinitions: source.monsterDefinitions,
+  contentTranslations: source.contentTranslations,
+);
 
 GameState _stateWithoutMonsters() {
   final state = createMvpGameState();

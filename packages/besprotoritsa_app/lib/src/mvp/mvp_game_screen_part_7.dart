@@ -704,11 +704,11 @@ String _questConditionLabel(GameState state, Map<String, Object?> condition) {
   };
 }
 
-List<String> _activeConditionIds(GameState state) {
-  final activePlayer = state.players
-      .where((player) => player.id == state.activePlayerId)
+List<String> _activeConditionIds(GameState state, String? playerId) {
+  final player = state.players
+      .where((player) => player.id == playerId)
       .firstOrNull;
-  return activePlayer?.conditions ?? const <String>[];
+  return player?.conditions ?? const <String>[];
 }
 
 Widget _activeConditionChip(GameState state, String conditionId, int index) {
@@ -769,7 +769,7 @@ class _WideActionDock extends StatelessWidget {
           command.command is! OpenCorridorCommand &&
           command.command is! CloseCorridorCommand,
     );
-    final conditionIds = _activeConditionIds(state);
+    final conditionIds = _activeConditionIds(state, selectedPlayerId);
     return Container(
       height: 146,
       padding: const EdgeInsets.fromLTRB(12, 10, 14, 12),
