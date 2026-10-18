@@ -329,6 +329,14 @@ Map<String, Object?> _choiceToJson(DecisionChoice choice) => switch (choice) {
     'type': 'eventOption',
     'option': option,
   },
+  TeamEventPlayerChoice(:final playerId, :final option) => <String, Object?>{
+    'type': 'teamEventPlayer',
+    'playerId': playerId,
+    'option': option,
+  },
+  ConfirmTeamEventChoices() => const <String, Object?>{
+    'type': 'confirmTeamEvent',
+  },
   TerminalPickChoice(:final cardId) => <String, Object?>{
     'type': 'terminalPick',
     'cardId': cardId,

@@ -9,6 +9,7 @@
     "id": { "$ref": "#/$defs/id" },
     "importBatch": { "type": "integer", "minimum": 1 },
     "kind": { "enum": ["narrative", "global", "invasion"] },
+    "choiceScope": { "enum": ["currentPlayer", "allLivingPlayers"] },
     "immediateCombat": { "type": "boolean" },
     "locationId": {
       "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }]
@@ -24,6 +25,12 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/option" }
+    },
+    "playerOptions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
     },
     "nameKey": { "$ref": "#/$defs/localizationKey" },
     "descKey": { "$ref": "#/$defs/localizationKey" }

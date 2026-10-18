@@ -182,6 +182,7 @@ GameStepResult _resolveHeroReplacement(
       : queued;
   final resumed = _resumeAutomaticPhase(
     _resumePendingEventMonsterSpawn(continued, dice),
+    dice,
   );
   return GameStepResult(
     state: _continueOrPreserveGhbDtnMovement(
@@ -526,6 +527,7 @@ GameStepResult _resolveDodge(
       ),
       dice,
     ),
+    dice,
   );
   return GameStepResult(
     state: _continueOrPreserveGhbDtnMovement(

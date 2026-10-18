@@ -14,6 +14,7 @@ final class GameState {
     this.prngState,
     this.contentSetId = 'mvp',
     this.contentSetVersion = '1',
+    this.viewerPlayerId,
     this.difficulty = 1,
     required this.round,
     required this.phase,
@@ -47,6 +48,7 @@ final class GameState {
     this.actionsTakenThisTurn = 0,
     this.pendingDecision,
     this.pendingEventMonsterSpawn,
+    this.pendingTeamEventResolution,
   }) : board = List.unmodifiable(board),
        players = List.unmodifiable([
          for (final player in players)
@@ -154,6 +156,10 @@ final class GameState {
   final String contentSetId;
   final String contentSetVersion;
 
+  /// Recipient identity for recipient-specific UI projections; null in the
+  /// authoritative state and in local games.
+  final PlayerId? viewerPlayerId;
+
   /// Required successful hits for skill checks in this game.
   final int difficulty;
   final int round;
@@ -204,6 +210,7 @@ final class GameState {
   final int actionsTakenThisTurn;
   final PendingDecision? pendingDecision;
   final PendingEventMonsterSpawn? pendingEventMonsterSpawn;
+  final PendingTeamEventResolution? pendingTeamEventResolution;
 
   /// The immutable player list is also the saved turn order. The first player
   /// is the leader for setup and reads the opening prologue.
@@ -228,6 +235,7 @@ final class GameState {
     prngState: value,
     contentSetId: contentSetId,
     contentSetVersion: contentSetVersion,
+    viewerPlayerId: viewerPlayerId,
     difficulty: difficulty,
     round: round,
     phase: phase,
@@ -261,6 +269,7 @@ final class GameState {
     eventTurnIndex: eventTurnIndex,
     pendingDecision: pendingDecision,
     pendingEventMonsterSpawn: pendingEventMonsterSpawn,
+    pendingTeamEventResolution: pendingTeamEventResolution,
   );
 }
 

@@ -83,6 +83,10 @@ class GameStateJsonCodec {
         SaveJsonModels.pendingEventMonsterSpawnToJson(
           state.pendingEventMonsterSpawn,
         ),
+    'pending_team_event_resolution':
+        SaveJsonModels.pendingTeamEventResolutionToJson(
+          state.pendingTeamEventResolution,
+        ),
   };
 
   /// Migrates [document] to the current version and reconstructs its state.
@@ -215,6 +219,10 @@ class GameStateJsonCodec {
       pendingEventMonsterSpawn: SaveJsonModels.pendingEventMonsterSpawnFromJson(
         json['pending_event_monster_spawn'],
       ),
+      pendingTeamEventResolution:
+          SaveJsonModels.pendingTeamEventResolutionFromJson(
+            json['pending_team_event_resolution'],
+          ),
     );
   }
 }

@@ -326,6 +326,19 @@ final class EventOptionChoice extends DecisionChoice {
   final String option;
 }
 
+/// Records a single hero's selection in a shared team event.
+final class TeamEventPlayerChoice extends DecisionChoice {
+  const TeamEventPlayerChoice({required this.playerId, required this.option});
+
+  final PlayerId playerId;
+  final String option;
+}
+
+/// Confirms the shared event after every participating hero has selected.
+final class ConfirmTeamEventChoices extends DecisionChoice {
+  const ConfirmTeamEventChoices();
+}
+
 /// Buys one of the supplies currently offered by [AwaitingTerminalPick].
 final class TerminalPickChoice extends DecisionChoice {
   const TerminalPickChoice(this.cardId);

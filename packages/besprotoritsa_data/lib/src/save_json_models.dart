@@ -7,6 +7,48 @@ part 'save_json_helpers.dart';
 
 /// JSON primitives for the nested rule models used in a save document.
 abstract final class SaveJsonModels {
+  static Map<String, Object?>? pendingTeamEventResolutionToJson(
+    PendingTeamEventResolution? pending,
+  ) => pending == null
+      ? null
+      : {
+          'event_id': pending.eventId,
+          'choices': [
+            for (final choice in pending.choices)
+              {
+                'player_id': choice.playerId,
+                'character_id': choice.characterId,
+                'option': choice.option,
+              },
+          ],
+          'next_choice_index': pending.nextChoiceIndex,
+          'outcomes': pending.outcomes,
+        };
+
+  static PendingTeamEventResolution? pendingTeamEventResolutionFromJson(
+    Object? value,
+  ) {
+    if (value == null) return null;
+    final json = _asObject(value, 'pending_team_event_resolution');
+    final choices = json['choices'];
+    if (choices is! List<dynamic>) {
+      throw const FormatException('choices must be an array.');
+    }
+    return PendingTeamEventResolution(
+      eventId: _string(json, 'event_id'),
+      choices: choices.map((entry) {
+        final choice = _asObject(entry, 'choice');
+        return TeamEventChoice(
+          playerId: _string(choice, 'player_id'),
+          characterId: _string(choice, 'character_id'),
+          option: _string(choice, 'option'),
+        );
+      }),
+      nextChoiceIndex: _int(json, 'next_choice_index'),
+      outcomes: _stringMapOrDefault(json['outcomes'], 'outcomes'),
+    );
+  }
+
   static Map<String, Object?>? pendingEventMonsterSpawnToJson(
     PendingEventMonsterSpawn? pending,
   ) => pending == null
@@ -403,6 +445,9 @@ abstract final class SaveJsonModels {
           'options': decision.options,
           'player_id': decision.playerId,
           'event_id': decision.eventId,
+          'team_player_ids': decision.teamPlayerIds,
+          'team_options_by_player': decision.teamOptionsByPlayer,
+          'team_choices': decision.teamChoices,
         },
         AwaitingTerminalPick() => {
           'type': 'terminal_pick',
@@ -472,6 +517,14 @@ abstract final class SaveJsonModels {
         options: _strings(json, 'options'),
         playerId: _nullableString(json['player_id'], 'player_id'),
         eventId: _nullableString(json['event_id'], 'event_id'),
+        teamPlayerIds: json['team_player_ids'] == null
+            ? const <String>[]
+            : _strings(json, 'team_player_ids'),
+        teamOptionsByPlayer: _stringListMap(
+          json['team_options_by_player'],
+          'team_options_by_player',
+        ),
+        teamChoices: _stringMapOrDefault(json['team_choices'], 'team_choices'),
       ),
       'terminal_pick' => AwaitingTerminalPick(
         offeredCards: _strings(json, 'offered_cards'),

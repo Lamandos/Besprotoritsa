@@ -230,8 +230,69 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
   if (after.log.length <= before.log.length) return const [];
   final results = <_GameResult>[];
   final lines = after.log.skip(before.log.length).toList();
+  final teamResultLines = lines
+      .where((line) => line.startsWith('event-team-result:'))
+      .toList();
+  if (teamResultLines.isNotEmpty) {
+    final eventId = teamResultLines.first.split(':').elementAtOrNull(1);
+    final details = <String>[];
+    for (final line in teamResultLines) {
+      final parts = line.split(':');
+      if (parts.length != 5 || parts.first != 'event-team-result') continue;
+      final id = parts[1];
+      final playerId = parts[2];
+      final option = parts[3];
+      final outcome = parts[4];
+      final player = after.players
+          .where((hero) => hero.id == playerId)
+          .firstOrNull;
+      final displayOptionIndex = option.startsWith('horde|')
+          ? 1
+          : int.tryParse(option.replaceFirst('option-', ''));
+      final outcomeText = switch (outcome) {
+        'success' => 'Успех',
+        'failure' => 'Провал',
+        'skipped' => 'Не применено: герой выбыл до разрешения выбора.',
+        _ => 'Исход варианта не определён.',
+      };
+      final playerName = player == null
+          ? playerId
+          : fullRuntimeCharacterName(player.characterId);
+      details.add(
+        [
+          '$playerName: ${_eventOptionLabel(after, id, option)}',
+          outcomeText,
+          if (displayOptionIndex != null && outcome != 'skipped')
+            _eventOptionText(
+                  after,
+                  id,
+                  displayOptionIndex,
+                  outcome == 'failure' ? 'failureKey' : 'successKey',
+                ) ??
+                '',
+          for (final detail in _teamEventEffectDetails(
+            lines,
+            playerId,
+            option,
+          ))
+            detail,
+        ].where((line) => line.isNotEmpty).join('\n'),
+      );
+    }
+    results.add(
+      _GameResult(
+        'Результат события',
+        [
+          if (eventId != null)
+            _runtimeEventText(after, eventId, 'nameKey') ?? eventId,
+          ...details,
+        ].join('\n\n'),
+      ),
+    );
+  }
   for (final line in lines) {
     final parts = line.split(':');
+    if (parts.first == 'event-team-result') continue;
     if (parts.first == 'combat-roll' && parts.length == 6) {
       final attack = parts[1] == 'attack';
       final player = after.players
@@ -304,6 +365,7 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
   // Sector placement, trading and picking loot may finish on a later command
   // than the success/failure check. Report the changes made by that choice too.
   if (!lines.any((line) => line.startsWith('event-result:')) &&
+      teamResultLines.isEmpty &&
       decision is AwaitingEventOption &&
       decision.eventId != null &&
       after.pendingDecision is! AwaitingRerollChoice) {
@@ -329,6 +391,35 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
     }
   }
   return results;
+}
+
+List<String> _teamEventEffectDetails(
+  List<String> lines,
+  String playerId,
+  String option,
+) {
+  final details = <String>[];
+  for (final line in lines) {
+    final parts = line.split(':');
+    if (parts.first == 'event-damage-roll' &&
+        parts.length == 3 &&
+        parts[1] == playerId) {
+      details.add('Получено ${parts[2]} урона.');
+    } else if (parts.first == 'event-damage' &&
+        parts.length == 3 &&
+        parts[1] == playerId) {
+      details.add('Получено ${parts[2]} урона.');
+    } else if (parts.first == 'event-horde-damage' &&
+        parts.length == 3 &&
+        parts[1] == playerId) {
+      details.add('Получено ${parts[2]} урона.');
+    } else if (parts.first == 'event-horde-discard' &&
+        parts.length == 3 &&
+        parts[1] == playerId) {
+      details.add('Сброшено карт: ${parts[2]}.');
+    }
+  }
+  return details;
 }
 
 List<String> _stateConsequences(

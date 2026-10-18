@@ -60,6 +60,13 @@ class _PendingDecisionModal extends ConsumerWidget {
     final eventDescription = eventId == null
         ? null
         : _runtimeEventText(state, eventId, 'descKey');
+    final eventOptionDecision = decision is AwaitingEventOption
+        ? decision as AwaitingEventOption
+        : null;
+    final teamDecision =
+        eventOptionDecision != null && eventOptionDecision.isTeamChoice
+        ? eventOptionDecision
+        : null;
     final selectedEventOptionIndex = switch (decision) {
       AwaitingRerollChoice(
         context: SkillCheckContext(eventOptionIndex: final index?),
@@ -67,10 +74,10 @@ class _PendingDecisionModal extends ConsumerWidget {
         index,
       _ => null,
     };
-    final eventOptions = switch (decision) {
-      AwaitingEventOption(:final options) => options,
-      _ => const <String>[],
-    };
+    final eventOptions =
+        eventOptionDecision != null && !eventOptionDecision.isTeamChoice
+        ? eventOptionDecision.options
+        : const <String>[];
     final coordinateOptions = switch (decision) {
       AwaitingEventOption(:final options) => _eventCoordinateOptions(
         state,
@@ -87,7 +94,9 @@ class _PendingDecisionModal extends ConsumerWidget {
         playerId,
       _ => null,
     };
-    final targetPlayerId = eventTargetPlayerId ?? state.activePlayerId;
+    final targetPlayerId = teamDecision == null
+        ? eventTargetPlayerId ?? state.activePlayerId
+        : null;
     final targetPlayer = targetPlayerId == null
         ? null
         : state.players
@@ -115,6 +124,9 @@ class _PendingDecisionModal extends ConsumerWidget {
         color: Colors.black54,
         child: Center(
           child: AlertDialog(
+            constraints: BoxConstraints(
+              maxWidth: teamDecision == null ? 560 : 1050,
+            ),
             title: targetPlayer != null
                 ? Row(
                     children: [
@@ -231,6 +243,16 @@ class _PendingDecisionModal extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(prompt),
+                        if (teamDecision != null) ...[
+                          const SizedBox(height: 12),
+                          _teamEventChoiceRows(
+                            context,
+                            ref,
+                            state,
+                            eventId,
+                            teamDecision,
+                          ),
+                        ],
                         if (selectedEventOptionIndex != null) ...[
                           const SizedBox(height: 8),
                           _eventOptionDetails(
@@ -409,6 +431,25 @@ List<Widget> _decisionActions(
       child: Text(strings.dodge),
     ),
   ],
+  AwaitingEventOption(:final teamPlayerIds) when teamPlayerIds.isNotEmpty => [
+    FilledButton.icon(
+      key: const ValueKey<String>('confirm-team-event-choices'),
+      onPressed: decision.teamChoices.length == teamPlayerIds.length
+          ? () => ref
+                .read(gameControllerProvider.notifier)
+                .dispatch(
+                  const ResolvePendingDecisionCommand(
+                    ConfirmTeamEventChoices(),
+                  ),
+                )
+          : null,
+      icon: const Icon(Icons.check),
+      label: Text(
+        'Подтвердить выборы '
+        '(${decision.teamChoices.length}/${teamPlayerIds.length})',
+      ),
+    ),
+  ],
   AwaitingEventOption() => const [],
   AwaitingTerminalPick() => [
     TextButton(
@@ -583,6 +624,152 @@ Widget _terminalOfferCard(
           ),
         ],
       ),
+    ),
+  );
+}
+
+Widget _teamEventChoiceRows(
+  BuildContext context,
+  WidgetRef ref,
+  GameState state,
+  String eventId,
+  AwaitingEventOption decision,
+) => SizedBox(
+  width: 970,
+  child: SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final playerId in decision.teamPlayerIds)
+          _teamEventPlayerChoiceCard(
+            context,
+            ref,
+            state,
+            eventId,
+            decision,
+            playerId,
+          ),
+      ],
+    ),
+  ),
+);
+
+Widget _teamEventPlayerChoiceCard(
+  BuildContext context,
+  WidgetRef ref,
+  GameState state,
+  String eventId,
+  AwaitingEventOption decision,
+  String playerId,
+) {
+  final player = state.players
+      .where((entry) => entry.id == playerId)
+      .firstOrNull;
+  if (player == null) return const SizedBox.shrink();
+  final selectedOption = decision.teamChoices[playerId];
+  final canChoose =
+      state.viewerPlayerId == null || state.viewerPlayerId == playerId;
+  return Container(
+    width: 188,
+    margin: const EdgeInsets.only(right: 10),
+    padding: const EdgeInsets.all(10),
+    decoration: BoxDecoration(
+      color: const Color(0xFF382D22),
+      border: Border.all(
+        color: selectedOption == null
+            ? const Color(0xFF806A4D)
+            : const Color(0xFFD5AD69),
+      ),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CharacterPortrait(
+          characterId: player.characterId,
+          size: const Size(66, 78),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          fullRuntimeCharacterName(player.characterId),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (selectedOption != null)
+          const Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Text('Выбор отмечен', style: TextStyle(fontSize: 12)),
+          ),
+        const SizedBox(height: 6),
+        for (final option
+            in decision.teamOptionsByPlayer[playerId] ?? decision.options)
+          _teamEventPlayerOption(
+            ref,
+            state,
+            eventId,
+            player,
+            option,
+            canChoose: canChoose,
+          ),
+      ],
+    ),
+  );
+}
+
+Widget _teamEventPlayerOption(
+  WidgetRef ref,
+  GameState state,
+  String eventId,
+  PlayerState player,
+  String option, {
+  required bool canChoose,
+}) {
+  final check = _eventOptionSkillCheck(state, eventId, option);
+  return Padding(
+    padding: const EdgeInsets.only(top: 5),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (check != null) ...[
+          Text(
+            'Проверка ${_eventStatGenitive(check.$1)} · сложность ${check.$2}',
+            key: ValueKey<String>('team-event-check-${player.id}-$option'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12),
+          ),
+          Text(
+            'Ваша ${_eventStatName(check.$1)} — '
+            '${playerStatValue(state, player, check.$1)}',
+            key: ValueKey<String>('team-event-stat-${player.id}-$option'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 12),
+          ),
+        ],
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.tonal(
+            key: ValueKey<String>('team-event-${player.id}-$option'),
+            onPressed: canChoose
+                ? () => ref
+                      .read(gameControllerProvider.notifier)
+                      .dispatch(
+                        ResolvePendingDecisionCommand(
+                          TeamEventPlayerChoice(
+                            playerId: player.id,
+                            option: option,
+                          ),
+                        ),
+                      )
+                : null,
+            child: Text(
+              _eventOptionLabel(state, eventId, option),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ],
     ),
   );
 }

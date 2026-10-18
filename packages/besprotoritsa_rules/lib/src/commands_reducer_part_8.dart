@@ -173,6 +173,43 @@ GameState _advanceEvents(GameState state) {
     final rawOptions = eventDefinition?['options'];
     final optionList = rawOptions is List<Object?> ? rawOptions : null;
     final optionCount = optionList?.length ?? 0;
+    if (eventDefinition?['choiceScope'] == 'allLivingPlayers') {
+      final participants = current.players.where((hero) => hero.alive).toList();
+      if (participants.isEmpty) continue;
+      final optionsByPlayer = <PlayerId, List<String>>{};
+      final customOptions = eventDefinition?['playerOptions'];
+      for (final participant in participants) {
+        final teamOptions = customOptions is List<Object?>
+            ? customOptions.whereType<String>().toList()
+            : optionList == null || optionCount == 0
+            ? const ['investigate']
+            : [
+                for (var index = 0; index < optionCount; index++)
+                  if (_eventOptionIsAvailable(participant, optionList[index]))
+                    'option-${index + 1}',
+              ];
+        if (teamOptions.isEmpty) continue;
+        optionsByPlayer[participant.id] = teamOptions;
+      }
+      if (optionsByPlayer.isEmpty) continue;
+      final decks = Map<DeckId, DeckState>.of(current.decks);
+      decks['events'] = DeckState(
+        drawPile: draw.deck.drawPile,
+        discardPile: [...draw.deck.discardPile, eventId],
+      );
+      return _copyState(
+        current,
+        activePlayerId: player.id,
+        decks: decks,
+        pendingDecision: AwaitingEventOption(
+          options: optionsByPlayer.values.first,
+          eventId: eventId,
+          teamPlayerIds: optionsByPlayer.keys,
+          teamOptionsByPlayer: optionsByPlayer,
+        ),
+        logEntry: 'event:$eventId:${player.id}',
+      );
+    }
     final options = optionCount > 0
         ? [
             for (var index = 0; index < optionCount; index++)
