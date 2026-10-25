@@ -1,5 +1,19 @@
 part of 'mvp_game_screen.dart';
 
+final _gameFeedbackBlockingProvider =
+    NotifierProvider<_GameFeedbackBlockingController, bool>(
+      _GameFeedbackBlockingController.new,
+    );
+
+class _GameFeedbackBlockingController extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  bool get blocked => state;
+
+  set blocked(bool value) => state = value;
+}
+
 /// Present completed transitions separately from the next pending choice.
 class _GameFeedbackOverlay extends ConsumerStatefulWidget {
   const _GameFeedbackOverlay();
@@ -14,6 +28,16 @@ class _GameFeedbackOverlayState extends ConsumerState<_GameFeedbackOverlay> {
   final List<_EquipmentOffer> _equipmentOffers = [];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(_gameFeedbackBlockingProvider.notifier).blocked = false;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     ref.listen(gameControllerProvider, (before, after) {
       if (before == null) return;
@@ -25,7 +49,9 @@ class _GameFeedbackOverlayState extends ConsumerState<_GameFeedbackOverlay> {
           _equipmentOffers.addAll(offers);
         });
       }
+      _syncBlockingState(after);
     });
+    final gameState = ref.watch(gameControllerProvider);
     final queue = ref.read(eventQueueProvider);
     return ListenableBuilder(
       listenable: queue,
@@ -45,7 +71,10 @@ class _GameFeedbackOverlayState extends ConsumerState<_GameFeedbackOverlay> {
                   ),
                   actions: [
                     FilledButton(
-                      onPressed: () => setState(() => _results.removeAt(0)),
+                      onPressed: () {
+                        setState(() => _results.removeAt(0));
+                        _updateBlockingState();
+                      },
                       child: const Text('Продолжить'),
                     ),
                   ],
@@ -54,16 +83,30 @@ class _GameFeedbackOverlayState extends ConsumerState<_GameFeedbackOverlay> {
             ),
           );
         }
-        if (_equipmentOffers.isEmpty) return const SizedBox.shrink();
+        if (_equipmentOffers.isEmpty || gameState.pendingDecision != null) {
+          return const SizedBox.shrink();
+        }
         return _equipmentOfferDialog(
           context,
           ref,
           _equipmentOffers.first,
-          () => setState(() => _equipmentOffers.removeAt(0)),
+          () {
+            setState(() => _equipmentOffers.removeAt(0));
+            _updateBlockingState();
+          },
         );
       },
     );
   }
+
+  void _syncBlockingState(GameState state) {
+    ref.read(_gameFeedbackBlockingProvider.notifier).blocked =
+        _results.isNotEmpty ||
+        (_equipmentOffers.isNotEmpty && state.pendingDecision == null);
+  }
+
+  void _updateBlockingState() =>
+      _syncBlockingState(ref.read(gameControllerProvider));
 }
 
 class _EquipmentOffer {
@@ -200,7 +243,7 @@ Widget _equipmentOfferDialog(
           actions: [
             TextButton(
               onPressed: dismiss,
-              child: const Text('В рюкзак'),
+              child: const Text('Оставить в рюкзаке'),
             ),
             FilledButton(
               onPressed: () {
@@ -211,7 +254,7 @@ Widget _equipmentOfferDialog(
                     );
                 if (accepted) dismiss();
               },
-              child: const Text('Экипировать'),
+              child: const Text('Экипировать сейчас'),
             ),
           ],
         ),
@@ -249,9 +292,14 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
       final displayOptionIndex = option.startsWith('horde|')
           ? 1
           : int.tryParse(option.replaceFirst('option-', ''));
+      final optionHasCheck =
+          displayOptionIndex != null &&
+          _eventOptionSkillCheck(after, id, 'option-$displayOptionIndex') !=
+              null;
       final outcomeText = switch (outcome) {
-        'success' => 'Успех',
-        'failure' => 'Провал',
+        'success' when optionHasCheck => 'Успех',
+        'failure' when optionHasCheck => 'Провал',
+        'success' || 'failure' => '',
         'skipped' => 'Не применено: герой выбыл до разрешения выбора.',
         _ => 'Исход варианта не определён.',
       };
@@ -263,13 +311,15 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
           '$playerName: ${_eventOptionLabel(after, id, option)}',
           outcomeText,
           if (displayOptionIndex != null && outcome != 'skipped')
-            _eventOptionText(
-                  after,
-                  id,
-                  displayOptionIndex,
-                  outcome == 'failure' ? 'failureKey' : 'successKey',
-                ) ??
-                '',
+            _eventResultOutcomeText(
+              _eventOptionText(
+                    after,
+                    id,
+                    displayOptionIndex,
+                    outcome == 'failure' ? 'failureKey' : 'successKey',
+                  ) ??
+                  '',
+            ),
           for (final detail in _teamEventEffectDetails(
             lines,
             playerId,
@@ -299,11 +349,16 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
           .where((hero) => hero.id == parts[2])
           .firstOrNull;
       final damage = int.tryParse(parts[5]) ?? 0;
+      final attackerName = player == null
+          ? null
+          : fullRuntimeCharacterName(player.characterId);
       results.add(
         _GameResult(
-          attack ? 'Результат атаки' : 'Результат уклонения',
+          attack
+              ? 'Результат атаки: ${attackerName ?? 'персонажа'}'
+              : 'Результат уклонения',
           [
-            if (player != null) fullRuntimeCharacterName(player.characterId),
+            if (!attack && attackerName != null) attackerName,
             'Кубики: ${parts[3].split(',').join(', ')}',
             'Успехов: ${parts[4]}',
             if (attack)
@@ -349,11 +404,12 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
           'Результат события',
           [
             _runtimeEventText(after, id, 'nameKey') ?? id,
-            if (success) 'Успех' else 'Провал',
+            if (_eventOptionSkillCheck(after, id, 'option-$index') != null)
+              if (success) 'Успех' else 'Провал',
             if (pending is AwaitingRerollChoice)
               'Кубики: ${pending.dice.join(', ')}',
             if (action != null) 'Вариант: $action',
-            if (outcome != null) outcome,
+            if (outcome != null) _eventResultOutcomeText(outcome),
             ...changes,
             if (changes.isEmpty) 'Изменений характеристик и инвентаря нет.',
           ].join('\n'),
@@ -392,6 +448,14 @@ List<_GameResult> _transitionResults(GameState before, GameState after) {
   }
   return results;
 }
+
+String _eventResultOutcomeText(String source) => source
+    .replaceAll(', остальные замешайте.', '.')
+    .replaceAll(', остальные замешайте', '')
+    .replaceAll(
+      'Возьмите робота из колоды предметов.',
+      'Получите робота из колоды предметов.',
+    );
 
 List<String> _teamEventEffectDetails(
   List<String> lines,

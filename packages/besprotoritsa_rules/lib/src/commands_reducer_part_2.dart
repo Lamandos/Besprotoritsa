@@ -46,7 +46,11 @@ CommandRejection? validate(GameState state, GameCommand command) {
   final anytimeOffTurnAbility =
       command is UseCardAbilityCommand &&
       canUseCardAbilityOutsideActiveTurn(state, command);
-  if (state.phase != GamePhase.playersTurn && !anytimeOffTurnAbility) {
+  final eventRewardEquipment =
+      state.phase == GamePhase.eventsPhase && command is EquipCommand;
+  if (state.phase != GamePhase.playersTurn &&
+      !anytimeOffTurnAbility &&
+      !eventRewardEquipment) {
     return const ActionUnavailableInPhase();
   }
 
@@ -251,7 +255,8 @@ CommandRejection? validate(GameState state, GameCommand command) {
     if (edge == null) {
       return const TargetOutOfRange();
     }
-    if (!source.hasExit(edge) || !destination.hasExit(edge.opposite)) {
+    if (!_isCrewRoomCorridorPair(source, destination) &&
+        (!source.hasExit(edge) || !destination.hasExit(edge.opposite))) {
       return const PortMismatch();
     }
     if (_monsterBlocksHeroExits(state, player)) {
@@ -274,9 +279,6 @@ CommandRejection? validate(GameState state, GameCommand command) {
     }
     final edge = player.coord.edgeTowardOrNull(target);
     if (edge == null) return const TargetOutOfRange();
-    if (!source.hasExit(edge) || !destination.hasExit(edge.opposite)) {
-      return const PortMismatch();
-    }
     if (source.isBlocked || destination.isBlocked || destination.opened) {
       return const PathBlocked();
     }
@@ -313,8 +315,8 @@ CommandRejection? validate(GameState state, GameCommand command) {
         corridor.type != HexTileType.corridor ||
         corridor.isBlocked ||
         occupied ||
-        !source.hasExit(edge) ||
-        !corridor.hasExit(edge.opposite)) {
+        (!_isCrewRoom(source) &&
+            (!source.hasExit(edge) || !corridor.hasExit(edge.opposite)))) {
       return const CorridorCannotBeClosed();
     }
     if (state.actionsLeft < 1) return const NotEnoughActions();
@@ -330,8 +332,8 @@ CommandRejection? validate(GameState state, GameCommand command) {
         edge == null ||
         corridor.type != HexTileType.corridor ||
         !corridor.isBlocked ||
-        !source.hasExit(edge) ||
-        !corridor.hasExit(edge.opposite)) {
+        (!_isCrewRoom(source) &&
+            (!source.hasExit(edge) || !corridor.hasExit(edge.opposite)))) {
       return const CorridorCannotBeClosed();
     }
     if (state.actionsLeft < 1) return const NotEnoughActions();
@@ -347,6 +349,13 @@ CommandRejection? validate(GameState state, GameCommand command) {
 
   return null;
 }
+
+bool _isCrewRoom(HexTile tile) =>
+    tile.type == HexTileType.start || tile.type == HexTileType.compartment;
+
+bool _isCrewRoomCorridorPair(HexTile first, HexTile second) =>
+    (_isCrewRoom(first) && second.type == HexTileType.corridor) ||
+    (_isCrewRoom(second) && first.type == HexTileType.corridor);
 
 /// Applies one command without mutating [state]. Rejected commands return the
 /// original state unchanged and describe their rejection in the result.

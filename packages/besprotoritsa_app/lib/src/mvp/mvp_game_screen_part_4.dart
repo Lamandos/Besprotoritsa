@@ -1424,7 +1424,9 @@ Widget _equippedInventoryRow(
   context: context,
   title: _inventoryCardName(state, item),
   cardId: item,
-  subtitle: slot,
+  subtitle: slot == 'Робот' && player.exhaustedRobots.contains(item)
+      ? 'Робот использован — недоступен до перезарядки'
+      : slot,
   icon: Icons.shield_outlined,
   actions: [
     if (_inventoryAbilityCommandForPlayer(state, player, item)

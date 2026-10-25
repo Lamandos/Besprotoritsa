@@ -248,7 +248,9 @@ class _MvpGameLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final blocked = queue.isPlaying || state.pendingDecision != null;
+    final feedbackBlocking = ref.watch(_gameFeedbackBlockingProvider);
+    final blocked =
+        queue.isPlaying || state.pendingDecision != null || feedbackBlocking;
     final strings = AppStrings.of(context);
     final screenSize = MediaQuery.sizeOf(context);
     final isWide =
@@ -342,6 +344,7 @@ class _MvpGameLayout extends ConsumerWidget {
                       state: state,
                       queue: queue,
                       blocked: blocked,
+                      feedbackBlocking: feedbackBlocking,
                       onOpenLog: openLog,
                       onManualSaveRequested: onManualSaveRequested == null
                           ? null
@@ -360,7 +363,8 @@ class _MvpGameLayout extends ConsumerWidget {
                     ),
                   if (!useWideLayout &&
                       state.pendingDecision != null &&
-                      !queue.isPlaying)
+                      !queue.isPlaying &&
+                      !feedbackBlocking)
                     _PendingDecisionModal(
                       decision: state.pendingDecision!,
                       state: state,

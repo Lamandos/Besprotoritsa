@@ -222,9 +222,10 @@ class _ShipPorthole extends StatelessWidget {
 }
 
 class _EventCardPanel extends StatefulWidget {
-  const _EventCardPanel({required this.state});
+  const _EventCardPanel({required this.state, this.onFocusLocation});
 
   final GameState state;
+  final ValueChanged<String>? onFocusLocation;
 
   @override
   State<_EventCardPanel> createState() => _EventCardPanelState();
@@ -358,11 +359,16 @@ class _EventCardPanelState extends State<_EventCardPanel> {
                                   as List<Object?>? ??
                               const []))
                         if (condition is Map<String, Object?>)
-                          Text(
-                            '${_questConditionLabel(state, condition)} · '
-                            '${state.quests.conditionProgress[id]?[condition['id']] ?? 0}/'
-                            '${condition['targetValue'] ?? 1}',
-                            style: const TextStyle(color: Color(0xFFFFE8BC)),
+                          _questConditionRow(
+                            state,
+                            id,
+                            condition,
+                            state
+                                    .quests
+                                    .conditionProgress[id]?[condition['id']] ??
+                                0,
+                            condition['targetValue'] as int? ?? 1,
+                            widget.onFocusLocation,
                           ),
                   ],
                 ],
@@ -507,7 +513,8 @@ Widget _eventOptionDetails(
   final check = _eventOptionSkillCheck(state, eventId, 'option-$optionIndex');
   final checkLabel = check == null
       ? null
-      : 'Проверка ${_eventStatGenitive(check.$1)} · сложность ${check.$2}';
+      : 'Проверка ${_eventStatGenitive(check.$1)} · '
+            'нужно набрать успехов: ${check.$2}';
   return Container(
     key: ValueKey<String>('event-option-details-$eventId-$optionIndex'),
     padding: const EdgeInsets.all(8),
@@ -704,6 +711,47 @@ String _questConditionLabel(GameState state, Map<String, Object?> condition) {
   };
 }
 
+Widget _questConditionRow(
+  GameState state,
+  String questId,
+  Map<String, Object?> condition,
+  int value,
+  int target,
+  ValueChanged<String>? onFocusLocation,
+) {
+  final locationId = condition['locationId'] as String?;
+  final location = locationId == null
+      ? null
+      : state.board
+            .where(
+              (tile) =>
+                  tile.locationId == locationId &&
+                  tile.opened &&
+                  !tile.isBlocked,
+            )
+            .firstOrNull;
+  final label = '${_questConditionLabel(state, condition)} · $value/$target';
+  final canFocus = location != null && onFocusLocation != null;
+  return Padding(
+    padding: const EdgeInsets.only(top: 3),
+    child: InkWell(
+      key: locationId == null
+          ? null
+          : ValueKey<String>(
+              'quest-location-$questId-${condition['id']}',
+            ),
+      onTap: canFocus ? () => onFocusLocation(locationId!) : null,
+      child: Text(
+        label,
+        style: TextStyle(
+          color: canFocus ? const Color(0xFFFFD58E) : const Color(0xFFFFE8BC),
+          decoration: canFocus ? TextDecoration.underline : null,
+        ),
+      ),
+    ),
+  );
+}
+
 List<String> _activeConditionIds(GameState state, String? playerId) {
   final player = state.players
       .where((player) => player.id == playerId)
@@ -720,8 +768,9 @@ Widget _activeConditionChip(GameState state, String conditionId, int index) {
       state.contentTranslations['mvp.condition.$conditionId.description'] ??
       state.contentTranslations['content.condition.$conditionId.description'] ??
       name;
+  final hint = '$description\nСнимается лечением.';
   return Tooltip(
-    message: description,
+    message: hint,
     child: Chip(
       key: ValueKey<String>('active-condition-$conditionId-$index'),
       avatar: const Icon(Icons.warning_amber_rounded, size: 16),

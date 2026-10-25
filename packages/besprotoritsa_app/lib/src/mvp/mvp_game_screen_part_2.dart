@@ -9,6 +9,7 @@ class _WideGameLayout extends StatefulWidget {
     required this.state,
     required this.queue,
     required this.blocked,
+    required this.feedbackBlocking,
     required this.onOpenLog,
     required this.onManualSaveRequested,
     required this.onExitRequested,
@@ -20,6 +21,7 @@ class _WideGameLayout extends StatefulWidget {
   final GameState state;
   final EventQueue queue;
   final bool blocked;
+  final bool feedbackBlocking;
   final VoidCallback onOpenLog;
   final VoidCallback? onManualSaveRequested;
   final Future<void> Function()? onExitRequested;
@@ -34,6 +36,8 @@ class _WideGameLayoutState extends State<_WideGameLayout>
     with SingleTickerProviderStateMixin {
   String? _selectedPlayerId;
   HexCoord? _selectedDestination;
+  final GlobalKey<_HexBoardWidgetState> _boardKey =
+      GlobalKey<_HexBoardWidgetState>();
   late final AnimationController _ambienceController = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 4),
@@ -51,6 +55,12 @@ class _WideGameLayoutState extends State<_WideGameLayout>
     if (oldWidget.state.activePlayerId != widget.state.activePlayerId) {
       _selectedPlayerId = widget.state.activePlayerId;
       _selectedDestination = null;
+      final activePlayerId = widget.state.activePlayerId;
+      if (activePlayerId != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _boardKey.currentState?.centerOnPlayer(activePlayerId);
+        });
+      }
     }
   }
 
@@ -67,6 +77,24 @@ class _WideGameLayoutState extends State<_WideGameLayout>
       _selectedPlayerId = playerId;
       _selectedDestination = null;
     });
+  }
+
+  void _selectRosterPlayer(String playerId) {
+    _selectPlayer(playerId);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _boardKey.currentState?.centerOnPlayer(playerId);
+    });
+  }
+
+  void _focusQuestLocation(String locationId) {
+    final tile = widget.state.board
+        .where(
+          (tile) =>
+              tile.locationId == locationId && tile.opened && !tile.isBlocked,
+        )
+        .firstOrNull;
+    if (tile == null) return;
+    _boardKey.currentState?.centerOnCoordinate(tile.coord);
   }
 
   void _selectDestination(HexCoord destination) =>
@@ -174,7 +202,7 @@ class _WideGameLayoutState extends State<_WideGameLayout>
                           child: _HeroRosterPanel(
                             state: state,
                             selectedPlayerId: selectedPlayerId,
-                            onSelected: _selectPlayer,
+                            onSelected: _selectRosterPlayer,
                           ),
                         ),
                         Positioned(
@@ -187,6 +215,7 @@ class _WideGameLayoutState extends State<_WideGameLayout>
                               _GameStatus(state: state, queue: queue),
                               Expanded(
                                 child: HexBoardWidget(
+                                  key: _boardKey,
                                   state: state,
                                   selectedPlayerId: selectedPlayerId,
                                   selectedDestination: _selectedDestination,
@@ -202,7 +231,10 @@ class _WideGameLayoutState extends State<_WideGameLayout>
                           top: 142,
                           width: 360,
                           height: 548,
-                          child: _EventCardPanel(state: state),
+                          child: _EventCardPanel(
+                            state: state,
+                            onFocusLocation: _focusQuestLocation,
+                          ),
                         ),
                         Positioned(
                           left: 230,
@@ -220,20 +252,21 @@ class _WideGameLayoutState extends State<_WideGameLayout>
                           ),
                         ),
                         if (state.pendingDecision != null && !queue.isPlaying)
-                          Positioned(
-                            left: 356,
-                            top: 146,
-                            width: 816,
-                            height: 564,
-                            child: Stack(
-                              children: [
-                                _PendingDecisionModal(
-                                  decision: state.pendingDecision!,
-                                  state: state,
-                                ),
-                              ],
+                          if (!widget.feedbackBlocking)
+                            Positioned(
+                              left: 356,
+                              top: 146,
+                              width: 816,
+                              height: 564,
+                              child: Stack(
+                                children: [
+                                  _PendingDecisionModal(
+                                    decision: state.pendingDecision!,
+                                    state: state,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
                       ],
                     ),
                   ),
@@ -393,13 +426,60 @@ class HexBoardWidget extends StatefulWidget {
   State<HexBoardWidget> createState() => _HexBoardWidgetState();
 }
 
-class _HexBoardWidgetState extends State<HexBoardWidget> {
+class _HexBoardWidgetState extends State<HexBoardWidget>
+    with SingleTickerProviderStateMixin {
   final TransformationController _transformationController =
       TransformationController();
+  late final AnimationController _focusController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+  )..addListener(_applyFocusAnimation);
+  Matrix4? _focusStart;
+  Matrix4? _focusEnd;
+  Size _viewport = Size.zero;
   bool _didInitialFit = false;
+
+  void _applyFocusAnimation() {
+    final start = _focusStart;
+    final end = _focusEnd;
+    if (start == null || end == null) return;
+    _transformationController.value = Matrix4Tween(
+      begin: start,
+      end: end,
+    ).transform(Curves.easeInOut.transform(_focusController.value));
+  }
+
+  void centerOnPlayer(String playerId) {
+    final player = widget.state.players
+        .where((entry) => entry.id == playerId)
+        .firstOrNull;
+    if (player != null) centerOnCoordinate(player.coord);
+  }
+
+  void centerOnCoordinate(HexCoord coord) {
+    if (_viewport.isEmpty || !_didInitialFit) return;
+    final scale = _transformationController.value.getMaxScaleOnAxis().clamp(
+      .12,
+      2.25,
+    );
+    final tileTopLeft = _layoutPosition(coord, widget.state.board);
+    final tileCenter = tileTopLeft + const Offset(84, 97);
+    final target = Matrix4.identity()
+      ..translateByDouble(
+        _viewport.width / 2 - tileCenter.dx * scale,
+        _viewport.height / 2 - tileCenter.dy * scale,
+        0,
+        1,
+      )
+      ..scaleByDouble(scale, scale, scale, 1);
+    _focusStart = _transformationController.value.clone();
+    _focusEnd = target;
+    _focusController.forward(from: 0);
+  }
 
   @override
   void dispose() {
+    _focusController.dispose();
     _transformationController.dispose();
     super.dispose();
   }
@@ -434,6 +514,7 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
     child: LayoutBuilder(
       builder: (context, constraints) {
         final viewport = Size(constraints.maxWidth, constraints.maxHeight);
+        _viewport = viewport;
         final boardSize = _boardCanvasSize(widget.state.board);
         if (!_didInitialFit && !viewport.isEmpty && !boardSize.isEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -468,6 +549,7 @@ class _HexBoardWidgetState extends State<HexBoardWidget> {
                 RepaintBoundary(
                   key: mvpBoardStaticRepaintBoundaryKey,
                   child: _StaticBoardLayer(
+                    state: widget.state,
                     board: widget.state.board,
                     contentTranslations: widget.state.contentTranslations,
                     selectedDestination: widget.selectedDestination,

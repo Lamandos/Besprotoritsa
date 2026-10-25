@@ -38,14 +38,30 @@ List<String> _activeQuests(GameState state) => [
     if (state.quests.statusOf(questId) == QuestStatus.active) questId,
 ];
 
-class _PendingDecisionModal extends ConsumerWidget {
+class _PendingDecisionModal extends ConsumerStatefulWidget {
   const _PendingDecisionModal({required this.decision, required this.state});
 
   final PendingDecision decision;
   final GameState state;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PendingDecisionModal> createState() =>
+      _PendingDecisionModalState();
+}
+
+class _PendingDecisionModalState extends ConsumerState<_PendingDecisionModal> {
+  String? _selectedEventOption;
+
+  @override
+  void didUpdateWidget(covariant _PendingDecisionModal oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.decision != widget.decision) _selectedEventOption = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final decision = widget.decision;
+    final state = widget.state;
     final strings = AppStrings.of(context);
     final eventId = switch (decision) {
       AwaitingEventOption(:final eventId) => eventId,
@@ -61,7 +77,7 @@ class _PendingDecisionModal extends ConsumerWidget {
         ? null
         : _runtimeEventText(state, eventId, 'descKey');
     final eventOptionDecision = decision is AwaitingEventOption
-        ? decision as AwaitingEventOption
+        ? decision
         : null;
     final teamDecision =
         eventOptionDecision != null && eventOptionDecision.isTeamChoice
@@ -112,9 +128,7 @@ class _PendingDecisionModal extends ConsumerWidget {
         : fullRuntimeCharacterName(targetPlayer.characterId);
     final rerollSources = _decisionRerollSources(state, decision);
     final prompt = _decisionPrompt(state, decision, strings);
-    final terminalDecision = decision is AwaitingTerminalPick
-        ? decision as AwaitingTerminalPick
-        : null;
+    final terminalDecision = decision is AwaitingTerminalPick ? decision : null;
     final sourceNames = rerollSources
         .map((id) => _inventoryCardName(state, id))
         .join(', ');
@@ -303,11 +317,23 @@ class _PendingDecisionModal extends ConsumerWidget {
                               state,
                               eventId,
                               option,
+                              selectionRequired: eventOptions.length > 1,
+                              selected: _selectedEventOption == option,
+                              onSelect: () => setState(
+                                () => _selectedEventOption = option,
+                              ),
                             ),
                       ],
                     ),
                   ),
-            actions: _decisionActions(context, ref, decision, strings, state),
+            actions: _decisionActions(
+              context,
+              ref,
+              decision,
+              strings,
+              state,
+              selectedEventOption: _selectedEventOption,
+            ),
           ),
         ),
       ),
@@ -320,8 +346,9 @@ List<Widget> _decisionActions(
   WidgetRef ref,
   PendingDecision decision,
   AppStrings strings,
-  GameState state,
-) => switch (decision) {
+  GameState state, {
+  String? selectedEventOption,
+}) => switch (decision) {
   AwaitingRerollChoice(
     :final availableRerolls,
     maxDicePerReroll: final maxDiceLimit,
@@ -450,7 +477,22 @@ List<Widget> _decisionActions(
       ),
     ),
   ],
-  AwaitingEventOption() => const [],
+  AwaitingEventOption() => [
+    if (decision.options.length > 1)
+      FilledButton(
+        key: const ValueKey<String>('confirm-event-option'),
+        onPressed: selectedEventOption == null
+            ? null
+            : () => ref
+                  .read(gameControllerProvider.notifier)
+                  .dispatch(
+                    ResolvePendingDecisionCommand(
+                      EventOptionChoice(selectedEventOption),
+                    ),
+                  ),
+        child: const Text('Подтвердить выбор'),
+      ),
+  ],
   AwaitingTerminalPick() => [
     TextButton(
       onPressed: () => ref
@@ -734,7 +776,8 @@ Widget _teamEventPlayerOption(
       children: [
         if (check != null) ...[
           Text(
-            'Проверка ${_eventStatGenitive(check.$1)} · сложность ${check.$2}',
+            'Проверка ${_eventStatGenitive(check.$1)} · '
+            'нужно набрать успехов: ${check.$2}',
             key: ValueKey<String>('team-event-check-${player.id}-$option'),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 12),
@@ -779,8 +822,11 @@ Widget _eventOptionControl(
   WidgetRef ref,
   GameState state,
   String eventId,
-  String option,
-) {
+  String option, {
+  bool selectionRequired = false,
+  bool selected = false,
+  VoidCallback? onSelect,
+}) {
   final check = _eventOptionSkillCheck(state, eventId, option);
   final playerId = switch (state.pendingDecision) {
     AwaitingEventOption(:final playerId) => playerId,
@@ -793,6 +839,9 @@ Widget _eventOptionControl(
       ? null
       : playerStatValue(state, player, check.$1);
   final statName = check == null ? null : _eventStatName(check.$1);
+  final marketDetails = selected
+      ? _marketEventCardDetails(state, option)
+      : null;
   return Padding(
     padding: const EdgeInsets.only(bottom: 8),
     child: Column(
@@ -800,16 +849,29 @@ Widget _eventOptionControl(
       children: [
         FilledButton(
           key: ValueKey<String>('event-option-$option'),
-          onPressed: () => ref
-              .read(gameControllerProvider.notifier)
-              .dispatch(
-                ResolvePendingDecisionCommand(EventOptionChoice(option)),
-              ),
+          style: selected
+              ? FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF9C7041),
+                  foregroundColor: const Color(0xFFFFE9C1),
+                )
+              : null,
+          onPressed: selectionRequired
+              ? onSelect
+              : () => ref
+                    .read(gameControllerProvider.notifier)
+                    .dispatch(
+                      ResolvePendingDecisionCommand(
+                        EventOptionChoice(option),
+                      ),
+                    ),
           child: Text(_eventOptionLabel(state, eventId, option)),
         ),
+        if (selected) const Text('Выбор отмечен', textAlign: TextAlign.center),
+        if (marketDetails != null) marketDetails,
         if (check != null) ...[
           Text(
-            'Проверка ${_eventStatGenitive(check.$1)} · сложность ${check.$2}',
+            'Проверка ${_eventStatGenitive(check.$1)} · '
+            'нужно набрать успехов: ${check.$2}',
           ),
           if (pool != null) Text('Ваша $statName — $pool'),
         ],
@@ -822,6 +884,47 @@ Widget _eventOptionControl(
             showAction: false,
             showCheck: false,
           ),
+      ],
+    ),
+  );
+}
+
+Widget? _marketEventCardDetails(GameState state, String option) {
+  if (!option.startsWith('market|')) return null;
+  final parts = option.split('|');
+  if (parts.length != 9) return null;
+  final action = parts[7];
+  final cardId = switch (action) {
+    'buy' => parts[8].split(':').last,
+    'sell' => parts[8],
+    _ => null,
+  };
+  if (cardId == null || cardId.isEmpty) return null;
+  final definition = state.cardDefinitions[cardId];
+  final description =
+      state.contentTranslations['content.supply.$cardId.description'] ??
+      state.contentTranslations['content.item.$cardId.description'];
+  final price = action == 'buy' && definition != null
+      ? (definition.cost - (int.tryParse(parts[4]) ?? 0)).clamp(0, 999)
+      : null;
+  return Container(
+    key: ValueKey<String>('market-card-details-$cardId'),
+    margin: const EdgeInsets.only(top: 6),
+    padding: const EdgeInsets.all(8),
+    decoration: BoxDecoration(
+      color: const Color(0x24120E0B),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: const Color(0x667D6043)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          _inventoryCardName(state, cardId),
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        Text(description ?? 'Описание карты недоступно.'),
+        if (price != null) Text('Цена: ₡$price'),
       ],
     ),
   );
