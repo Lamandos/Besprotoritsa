@@ -30,6 +30,17 @@ List<_NamedCommand> _availableTileCommands(
   }
   final tile = state.tileAt(target);
   if (tile == null) return const [];
+  final activePlayer = state.players
+      .where((player) => player.id == state.activePlayerId)
+      .firstOrNull;
+  final source = activePlayer == null ? null : state.tileAt(activePlayer.coord);
+  final ownedCards = activePlayer == null
+      ? const <String>[]
+      : _airlockOwnedCardIds(activePlayer);
+  final hasSpaceSuit = ownedCards.any((id) => id.startsWith('spacesuit'));
+  final hasOxygenTank = ownedCards.any((id) => id.startsWith('oxygen-tank'));
+  final hasAirCanister =
+      activePlayer?.backpack.contains('air-canister') ?? false;
 
   final candidates = <_NamedCommand>[
     if (tile.opened && !tile.isBlocked)
@@ -47,12 +58,56 @@ List<_NamedCommand> _availableTileCommands(
       _NamedCommand('Открыть коридор', OpenCorridorCommand(target)),
     if (tile.type == HexTileType.corridor && tile.opened && !tile.isBlocked)
       _NamedCommand('Закрыть коридор', CloseCorridorCommand(target)),
+    if (source?.type == HexTileType.airlock &&
+        source!.opened &&
+        !source.isBlocked &&
+        tile.type == HexTileType.airlock &&
+        tile.opened &&
+        !tile.isBlocked &&
+        hasSpaceSuit)
+      _NamedCommand(
+        'Перейти со скафандром',
+        AirlockMoveCommand(target, const AirlockEquipment(hasSpaceSuit: true)),
+      ),
+    if (source?.type == HexTileType.airlock &&
+        source!.opened &&
+        !source.isBlocked &&
+        tile.type == HexTileType.airlock &&
+        tile.opened &&
+        !tile.isBlocked &&
+        hasOxygenTank)
+      _NamedCommand(
+        'Перейти с баллоном',
+        AirlockMoveCommand(
+          target,
+          const AirlockEquipment(hasOxygenTank: true),
+        ),
+      ),
+    if (source?.type == HexTileType.airlock &&
+        source!.opened &&
+        !source.isBlocked &&
+        tile.type == HexTileType.airlock &&
+        tile.opened &&
+        !tile.isBlocked &&
+        hasAirCanister)
+      _NamedCommand(
+        'Перейти с воздушным баллоном',
+        UseCardAbilityCommand('air-canister', targetCoord: target),
+      ),
   ];
   return [
     for (final candidate in candidates)
       if (validate(state, candidate.command) == null) candidate,
   ];
 }
+
+List<String> _airlockOwnedCardIds(PlayerState player) => [
+  ...player.backpack,
+  ...player.equipped.weapons,
+  if (player.equipped.armor case final card?) card,
+  if (player.equipped.clothing case final card?) card,
+  if (player.equipped.robot case final card?) card,
+];
 
 List<StatType> _meaningfulSkillChecks(
   GameState state,

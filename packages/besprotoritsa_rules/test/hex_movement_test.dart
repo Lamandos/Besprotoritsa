@@ -76,6 +76,83 @@ void main() {
       expect(result.state.tileAt(const HexCoord(0, 1))!.opened, isTrue);
     });
 
+    test(
+      'BUG132 adjacent corridor actions do not depend on matching room ports',
+      () {
+        const neighbors = [
+          HexCoord(0, -1),
+          HexCoord(1, -1),
+          HexCoord(-1, 0),
+        ];
+        final closed = _mvpState(
+          extraTiles: [
+            for (final (index, coord) in neighbors.indexed)
+              _tile(
+                id: 'extra-corridor-$index',
+                coord: coord,
+                type: HexTileType.corridor,
+                opened: false,
+                exits: const {},
+              ),
+          ],
+        );
+
+        for (final coord in neighbors) {
+          expect(
+            validate(closed, RevealTileCommand(coord)),
+            isNull,
+            reason: 'закрытый соседний коридор $coord можно открыть',
+          );
+        }
+
+        final open = _mvpState(
+          extraTiles: [
+            for (final (index, coord) in neighbors.indexed)
+              _tile(
+                id: 'extra-corridor-$index',
+                coord: coord,
+                type: HexTileType.corridor,
+                opened: true,
+                exits: const {},
+              ),
+          ],
+        );
+        for (final coord in neighbors) {
+          expect(
+            validate(open, MoveCommand(coord)),
+            isNull,
+            reason: 'в соседний коридор $coord можно перейти',
+          );
+          expect(
+            validate(open, CloseCorridorCommand(coord)),
+            isNull,
+            reason: 'соседний коридор $coord можно закрыть',
+          );
+        }
+
+        final blocked = _mvpState(
+          extraTiles: [
+            for (final (index, coord) in neighbors.indexed)
+              _tile(
+                id: 'extra-corridor-$index',
+                coord: coord,
+                type: HexTileType.corridor,
+                opened: true,
+                exits: const {},
+                isBlocked: true,
+              ),
+          ],
+        );
+        for (final coord in neighbors) {
+          expect(
+            validate(blocked, OpenCorridorCommand(coord)),
+            isNull,
+            reason: 'соседний закрытый коридор $coord можно открыть',
+          );
+        }
+      },
+    );
+
     test('cannot move into a closed sector', () {
       final result = step(
         _mvpState(),
@@ -88,17 +165,29 @@ void main() {
       expect(result.state.tileAt(const HexCoord(0, 1))!.opened, isFalse);
     });
 
-    test('rejects a step through a solid wall', () {
-      final state = _mvpState(corridorExits: {HexEdge.south});
+    test('rejects a corridor-to-corridor step through a solid wall', () {
+      final state = _mvpState(
+        corridorOpened: true,
+        playerCoord: const HexCoord(0, 1),
+        extraTiles: [
+          _tile(
+            id: 'wall-corridor',
+            coord: const HexCoord(1, 0),
+            type: HexTileType.corridor,
+            opened: true,
+            exits: const {},
+          ),
+        ],
+      );
 
       final result = step(
         state,
-        const MoveCommand(HexCoord(0, 1)),
+        const MoveCommand(HexCoord(1, 0)),
         FixedDiceRoller([]),
       );
 
       expect(result.rejection, isA<PortMismatch>());
-      expect(result.state.players.single.coord, const HexCoord(0, 0));
+      expect(result.state.players.single.coord, const HexCoord(0, 1));
     });
 
     test('closes an adjacent empty corridor and blocks later movement', () {
@@ -172,6 +261,7 @@ GameState _mvpState({
   bool extraPlayerInCorridor = false,
   HexCoord playerCoord = const HexCoord(0, 0),
   Set<HexEdge> corridorExits = const {HexEdge.north, HexEdge.south},
+  Iterable<HexTile> extraTiles = const <HexTile>[],
   HexTile? extraTile,
 }) => GameState(
   seed: 7,
@@ -202,6 +292,7 @@ GameState _mvpState({
       exits: const {HexEdge.north},
     ),
     if (extraTile != null) extraTile,
+    ...extraTiles,
   ],
   players: [
     PlayerState(
@@ -243,12 +334,14 @@ HexTile _tile({
   required HexTileType type,
   required bool opened,
   required Set<HexEdge> exits,
+  bool isBlocked = false,
 }) => HexTile(
   id: id,
   coord: coord,
   type: type,
   opened: opened,
   exits: exits,
+  isBlocked: isBlocked,
   hasTerminal: false,
   ventColor: VentColor.none,
 );

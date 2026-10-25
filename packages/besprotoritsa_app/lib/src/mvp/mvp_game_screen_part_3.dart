@@ -9,6 +9,7 @@ part of 'mvp_game_screen.dart';
 
 class _StaticBoardLayer extends StatelessWidget {
   const _StaticBoardLayer({
+    required this.state,
     required this.board,
     required this.contentTranslations,
     required this.selectedDestination,
@@ -16,6 +17,7 @@ class _StaticBoardLayer extends StatelessWidget {
     required this.onSelectDestination,
   });
 
+  final GameState state;
   final List<HexTile> board;
   final Map<String, String> contentTranslations;
   final HexCoord? selectedDestination;
@@ -38,6 +40,7 @@ class _StaticBoardLayer extends StatelessWidget {
   );
 
   Widget _tileView(HexTile tile) => _HexTileView(
+    state: state,
     tile: tile,
     contentTranslations: contentTranslations,
     position: _layoutPosition(tile.coord, board),
@@ -186,6 +189,7 @@ List<_TokenSlot> _tokenSlots(
 
 class _HexTileView extends StatelessWidget {
   const _HexTileView({
+    required this.state,
     required this.tile,
     required this.contentTranslations,
     required this.position,
@@ -193,6 +197,7 @@ class _HexTileView extends StatelessWidget {
     required this.onTap,
   });
 
+  final GameState state;
   final HexTile tile;
   final Map<String, String> contentTranslations;
   final Offset position;
@@ -217,6 +222,16 @@ class _HexTileView extends StatelessWidget {
     final title = locationId == null
         ? genericTitle
         : contentTranslations['content.location.$locationId'] ?? genericTitle;
+    final activePlayer = state.players
+        .where((player) => player.id == state.activePlayerId)
+        .firstOrNull;
+    final carriedIds = activePlayer == null
+        ? const <String>[]
+        : _airlockOwnedCardIds(activePlayer);
+    final hasSpaceSuit = carriedIds.any((id) => id.startsWith('spacesuit'));
+    final hasOxygenCanister =
+        carriedIds.any((id) => id.startsWith('oxygen-tank')) ||
+        (activePlayer?.backpack.contains('air-canister') ?? false);
     final tileFace = SizedBox(
       width: isCorridor ? corridorLength : tileWidth,
       height: isCorridor ? corridorHeight : tileHeight,
@@ -253,6 +268,51 @@ class _HexTileView extends StatelessWidget {
                 right: isCorridor ? 4 : 20,
                 bottom: isCorridor ? 0 : null,
                 child: Center(child: _VentMarker(color: tile.ventColor)),
+              ),
+            if (tile.type == HexTileType.airlock)
+              Positioned(
+                top: 10,
+                right: 18,
+                child: Tooltip(
+                  key: ValueKey<String>(
+                    'airlock-travel-info-${tile.coord.q}-${tile.coord.r}',
+                  ),
+                  richMessage: TextSpan(
+                    style: const TextStyle(
+                      color: Color(0xFFFFE8C2),
+                      height: 1.4,
+                    ),
+                    children: [
+                      const TextSpan(
+                        text: 'Для перехода между шлюзами нужен предмет: ',
+                      ),
+                      TextSpan(
+                        text: 'скафандр',
+                        style: TextStyle(
+                          color: hasSpaceSuit
+                              ? const Color(0xFF8FDF80)
+                              : const Color(0xFFF07868),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const TextSpan(text: ' или '),
+                      TextSpan(
+                        text: 'воздушный баллон',
+                        style: TextStyle(
+                          color: hasOxygenCanister
+                              ? const Color(0xFF8FDF80)
+                              : const Color(0xFFF07868),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.info_outline,
+                    size: 19,
+                    color: Color(0xFFF1D4A2),
+                  ),
+                ),
               ),
             if (!isCorridor)
               Positioned(

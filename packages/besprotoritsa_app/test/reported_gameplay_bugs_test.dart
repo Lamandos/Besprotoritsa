@@ -252,7 +252,7 @@ void main() {
       expect(
         find.descendant(
           of: dialog,
-          matching: find.text('Проверка ловкости · сложность 1'),
+          matching: find.text('Проверка ловкости · нужно набрать успехов: 1'),
         ),
         findsOneWidget,
       );
@@ -1534,7 +1534,7 @@ void main() {
     );
     await tester.pump(const Duration(seconds: 1));
     expect(find.text('Результат события'), findsOneWidget);
-    expect(find.textContaining('Успех'), findsOneWidget);
+    expect(find.textContaining('Успех'), findsNothing);
     expect(find.textContaining('Кубики:'), findsNothing);
   });
 
@@ -1654,7 +1654,7 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     expect(container.read(gameControllerProvider).monsters, isEmpty);
     expect(container.read(gameControllerProvider).actionsLeft, 1);
-    expect(find.text('Результат атаки'), findsOneWidget);
+    expect(find.textContaining('Результат атаки:'), findsOneWidget);
   });
 
   testWidgets('BUG035 monster stats fit in the card on a short screen', (
@@ -2368,11 +2368,11 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('В рюкзак'), findsOneWidget);
-    expect(find.text('Экипировать'), findsOneWidget);
+    expect(find.text('Оставить в рюкзаке'), findsOneWidget);
+    expect(find.text('Экипировать сейчас'), findsOneWidget);
     expect(find.textContaining('заменит'), findsOneWidget);
     expect(find.textContaining('переместится в рюкзак'), findsOneWidget);
-    await tester.tap(find.text('Экипировать'));
+    await tester.tap(find.text('Экипировать сейчас'));
     await tester.pump(const Duration(milliseconds: 300));
 
     final player = container.read(gameControllerProvider).players.first;
@@ -2400,7 +2400,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Получена экипировка'), findsNothing);
-    expect(find.text('Экипировать'), findsNothing);
+    expect(find.text('Экипировать сейчас'), findsNothing);
 
     final nextDocument =
         jsonDecode(codec.encode(authoritative)) as Map<String, dynamic>;
@@ -2410,7 +2410,7 @@ void main() {
 
     expect(container.read(gameControllerProvider).players.first.id, 'hero-1');
     expect(find.text('Получена экипировка'), findsOneWidget);
-    expect(find.text('Экипировать'), findsOneWidget);
+    expect(find.text('Экипировать сейчас'), findsOneWidget);
   });
 
   testWidgets('BUG097 monster tokens have a red silhouette', (tester) async {
@@ -2449,6 +2449,606 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('BUG120 automatic event choice does not claim a skill success', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'corpse',
+      };
+    });
+    final container = await _mount(tester, state);
+
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            const ResolvePendingDecisionCommand(
+              EventOptionChoice('option-1'),
+            ),
+          ),
+      isTrue,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.textContaining('Успех'), findsNothing);
+    expect(find.textContaining('старый плащ'), findsOneWidget);
+  });
+
+  testWidgets('BUG121 multi-option event previews a card before confirmation', (
+    tester,
+  ) async {
+    const agilityOffer =
+        'market|corpse|1|1|0|agility-stimulant,'
+        'strength-stimulant|0|buy|0:agility-stimulant';
+    const strengthOffer =
+        'market|corpse|1|1|0|agility-stimulant,'
+        'strength-stimulant|0|buy|1:strength-stimulant';
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': [agilityOffer, strengthOffer],
+        'player_id': _player(doc)['id'],
+        'event_id': 'corpse',
+      };
+    });
+    final container = await _mount(tester, state);
+
+    await tester.tap(
+      find.byKey(
+        const ValueKey('event-option-$agilityOffer'),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Подтвердить выбор'), findsOneWidget);
+    expect(
+      container.read(gameControllerProvider).pendingDecision,
+      isA<AwaitingEventOption>(),
+    );
+    expect(find.text('Выбор отмечен'), findsOneWidget);
+    final agilityDescription = state
+        .contentTranslations['content.supply.agility-stimulant.description']!;
+    expect(find.text(agilityDescription), findsOneWidget);
+  });
+
+  testWidgets('BUG122 ending turn centers the new active hero', (tester) async {
+    final state = _scenario((doc) {
+      final board = (doc['board']! as List).cast<Map<String, dynamic>>();
+      for (final tile in board) {
+        tile['opened'] = true;
+        tile['is_blocked'] = false;
+      }
+      final first = board.first['coord']! as Map<String, dynamic>;
+      final last = board.last['coord']! as Map<String, dynamic>;
+      _player(doc)['coord'] = Map<String, dynamic>.of(first);
+      _player(doc, 1)['coord'] = Map<String, dynamic>.of(last);
+    });
+    final container = await _mount(
+      tester,
+      state,
+      viewport: const Size(1800, 1000),
+    );
+    final viewer = tester.widget<InteractiveViewer>(
+      find.byKey(mvpBoardInteractiveViewerKey),
+    );
+    final beforeX = viewer.transformationController!.value.storage[12];
+    final beforeY = viewer.transformationController!.value.storage[13];
+
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const EndTurnCommand()),
+      isTrue,
+    );
+    await tester.pump();
+    expect(container.read(gameControllerProvider).activePlayerId, 'hero-2');
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+    final after = tester
+        .widget<InteractiveViewer>(find.byKey(mvpBoardInteractiveViewerKey))
+        .transformationController!
+        .value;
+
+    expect(
+      (after.storage[12] - beforeX).abs() + (after.storage[13] - beforeY).abs(),
+      greaterThan(1),
+    );
+  });
+
+  testWidgets('BUG122 selecting a hero from roster centers the board', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      final board = (doc['board']! as List).cast<Map<String, dynamic>>();
+      for (final tile in board) {
+        tile['opened'] = true;
+        tile['is_blocked'] = false;
+      }
+      final first = board.first['coord']! as Map<String, dynamic>;
+      final last = board.last['coord']! as Map<String, dynamic>;
+      _player(doc)['coord'] = Map<String, dynamic>.of(first);
+      _player(doc, 1)['coord'] = Map<String, dynamic>.of(last);
+    });
+    await _mount(tester, state, viewport: const Size(1800, 1000));
+    final viewer = tester.widget<InteractiveViewer>(
+      find.byKey(mvpBoardInteractiveViewerKey),
+    );
+    final beforeX = viewer.transformationController!.value.storage[12];
+    final beforeY = viewer.transformationController!.value.storage[13];
+
+    await tester.tap(find.text('Охранник').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+    final after = tester
+        .widget<InteractiveViewer>(find.byKey(mvpBoardInteractiveViewerKey))
+        .transformationController!
+        .value;
+
+    expect(
+      (after.storage[12] - beforeX).abs() + (after.storage[13] - beforeY).abs(),
+      greaterThan(1),
+    );
+  });
+
+  testWidgets('BUG123 event check displays required successes', (tester) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'cabin-noise',
+      };
+    });
+    await _mount(tester, state);
+
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Проверка ловкости · нужно набрать успехов: 1'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('сложность'), findsNothing);
+  });
+
+  testWidgets('BUG124 attack result title names its attacker', (tester) async {
+    final state = _scenarioWithCharacters(['mechanic', 'guard'], (doc) {
+      final coord = _player(doc)['coord']! as Map<String, dynamic>;
+      doc['monsters'] = [
+        _monsterJson(
+          _monster(
+            'bug124-target',
+            HexCoord(coord['q']! as int, coord['r']! as int),
+          ),
+        ),
+      ];
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller([6, 6, 6, 6, 6]),
+    );
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const AttackCommand('bug124-target')),
+      isTrue,
+    );
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(
+      container
+          .read(gameControllerProvider)
+          .log
+          .any(
+            (line) => line.startsWith('combat-roll:attack:'),
+          ),
+      isTrue,
+    );
+    expect(find.text('Результат атаки: Механик'), findsOneWidget);
+  });
+
+  testWidgets('BUG125 active condition hint explains healing', (tester) async {
+    final state = _scenario((doc) {
+      (_player(doc)['conditions']! as List).add('fracture');
+    });
+    await _mount(tester, state);
+
+    final chip = find.byKey(const ValueKey('active-condition-fracture-0'));
+    expect(chip, findsOneWidget);
+    final tooltip = tester.widget<Tooltip>(
+      find.ancestor(of: chip, matching: find.byType(Tooltip)),
+    );
+    expect(tooltip.message, contains('Снимается лечением.'));
+  });
+
+  testWidgets('BUG126 airlock shows an action for each carried aid', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      final player = _player(doc);
+      (player['backpack']! as List)
+        ..add('spacesuit')
+        ..add('air-canister');
+      final airlocks = (doc['board']! as List)
+          .cast<Map<String, dynamic>>()
+          .where((tile) => tile['type'] == 'airlock')
+          .take(2)
+          .toList();
+      for (final tile in airlocks) {
+        tile['opened'] = true;
+        tile['is_blocked'] = false;
+      }
+      final source = airlocks.first['coord']! as Map<String, dynamic>;
+      player['coord'] = Map<String, dynamic>.of(source);
+    });
+    final stateAirlocks = state.board
+        .where((tile) => tile.type == HexTileType.airlock)
+        .toList();
+    final target = stateAirlocks[1].coord;
+    await _mount(tester, state, viewport: const Size(1800, 1000));
+
+    await tester.tap(
+      find.byKey(ValueKey<String>('hex-${target.q}-${target.r}')),
+    );
+    await tester.pump();
+
+    expect(find.textContaining('СКАФАНДР'), findsOneWidget);
+    expect(find.textContaining('БАЛЛОНОМ'), findsOneWidget);
+  });
+
+  testWidgets('BUG127 equip action closes a duplicate equipment offer', (
+    tester,
+  ) async {
+    final state = _scenarioWithCharacters(['mechanic', 'guard']);
+    final container = await _mount(tester, state);
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const ReceiveCardCommand('hard-hat')),
+      isTrue,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Получена экипировка'), findsOneWidget);
+    await tester.tap(find.text('Экипировать сейчас'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Получена экипировка'), findsNothing);
+    expect(
+      container.read(gameControllerProvider).players.first.equipped.armor,
+      'hard-hat',
+    );
+  });
+
+  testWidgets('BUG127 equip action works for an event-phase reward', (
+    tester,
+  ) async {
+    final before = _scenario((doc) => doc['phase'] = 'eventsPhase');
+    final controller = _MutableGameController(before);
+    final codec = GameStateJsonCodec();
+    final container = await _mountWithController(tester, controller);
+
+    final document = jsonDecode(codec.encode(before)) as Map<String, dynamic>;
+    (_player(document)['backpack']! as List).add('hard-hat');
+    controller.publish(codec.fromJson(document));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Получена экипировка'), findsOneWidget);
+    await tester.tap(find.text('Экипировать сейчас'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Получена экипировка'), findsNothing);
+    expect(
+      container.read(gameControllerProvider).players.first.equipped.armor,
+      'hard-hat',
+    );
+  });
+
+  testWidgets('BUG127 equipment offer waits for a pending event choice', (
+    tester,
+  ) async {
+    final before = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'corpse',
+      };
+    });
+    final controller = _MutableGameController(before);
+    await _mountWithController(tester, controller);
+    final codec = GameStateJsonCodec();
+    final rewardDocument =
+        jsonDecode(codec.encode(before)) as Map<String, dynamic>;
+    (_player(rewardDocument)['backpack']! as List).add('hard-hat');
+    final rewardState = codec.fromJson(rewardDocument);
+    controller.publish(rewardState);
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const ValueKey('event-option-option-1')), findsOneWidget);
+    expect(find.text('Получена экипировка'), findsNothing);
+
+    final resolvedDocument =
+        jsonDecode(codec.encode(rewardState)) as Map<String, dynamic>;
+    resolvedDocument['phase'] = 'playersTurn';
+    resolvedDocument['pending_decision'] = null;
+    controller.publish(codec.fromJson(resolvedDocument));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Получена экипировка'), findsOneWidget);
+  });
+
+  testWidgets('BUG127 equipment offer clearly names its choices', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      (_player(doc)['equipped']! as Map<String, dynamic>)['weapon'] = 'pistol';
+      (_player(doc)['backpack']! as List).remove('pistol');
+    });
+    final container = await _mount(tester, state);
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(const ReceiveCardCommand('knife')),
+      isTrue,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Экипировать сейчас'), findsOneWidget);
+    expect(find.text('Оставить в рюкзаке'), findsOneWidget);
+  });
+
+  testWidgets('BUG128 quest location is an interactive board target', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      final quests = doc['quests']! as Map<String, dynamic>;
+      quests['story_quest_ids'] = ['quest-02'];
+      quests['statuses'] = {'quest-02': 'active'};
+      final tile = (doc['board']! as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere(
+            (entry) => entry['location_id'] == 'engineering-control-post',
+          );
+      tile['opened'] = true;
+      tile['is_blocked'] = false;
+    });
+    await _mount(tester, state, viewport: const Size(1800, 1000));
+
+    final condition =
+        (state.questDefinitions['quest-02']!['conditions']! as List<Object?>)
+            .cast<Map<String, Object?>>()
+            .firstWhere(
+              (condition) =>
+                  condition['locationId'] == 'engineering-control-post',
+            );
+    final location = find.byKey(
+      ValueKey<String>('quest-location-quest-02-${condition['id']}'),
+    );
+    expect(location, findsOneWidget);
+    expect(tester.widget<InkWell>(location).onTap, isNotNull);
+    final viewer = tester.widget<InteractiveViewer>(
+      find.byKey(mvpBoardInteractiveViewerKey),
+    );
+    final before = viewer.transformationController!.value.clone();
+    await tester.ensureVisible(location);
+    await tester.tap(location);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+    final after = tester
+        .widget<InteractiveViewer>(find.byKey(mvpBoardInteractiveViewerKey))
+        .transformationController!
+        .value;
+    expect(
+      (after.storage[12] - before.storage[12]).abs() +
+          (after.storage[13] - before.storage[13]).abs(),
+      greaterThan(1),
+    );
+  });
+
+  testWidgets('BUG129 result closes before next pending decision appears', (
+    tester,
+  ) async {
+    final before = _scenario();
+    final codec = GameStateJsonCodec();
+    final document = jsonDecode(codec.encode(before)) as Map<String, dynamic>;
+    (document['log']! as List).add('event-result:corpse:1:success');
+    document['phase'] = 'eventsPhase';
+    document['pending_decision'] = {
+      'type': 'event_option',
+      'options': ['option-1'],
+      'player_id': _player(document)['id'],
+      'event_id': 'two-crates',
+    };
+    final controller = _SnapshotGameController(before);
+    await _mountWithController(tester, controller);
+
+    controller.publish(codec.fromJson(document));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Результат события'), findsOneWidget);
+    await tester.tap(find.text('Продолжить'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.byKey(const ValueKey('event-option-option-1')), findsOneWidget);
+  });
+
+  testWidgets('BUG130 cache result omits automatic shuffle instruction', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'cache-symbols',
+      };
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller([6, 6, 6, 6, 6]),
+    );
+    expect(
+      container
+          .read(gameControllerProvider.notifier)
+          .dispatch(
+            const ResolvePendingDecisionCommand(
+              EventOptionChoice('option-1'),
+            ),
+          ),
+      isTrue,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    if (container.read(gameControllerProvider).pendingDecision
+        is AwaitingRerollChoice) {
+      await tester.tap(find.text('Продолжить'));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    expect(find.text('Результат события'), findsOneWidget);
+    expect(find.textContaining('Вы находите тайник'), findsOneWidget);
+    expect(find.textContaining('остальные замешайте'), findsNothing);
+  });
+
+  testWidgets('BUG131 robot reward says receive instead of take from deck', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'two-crates',
+      };
+    });
+    final container = await _mount(
+      tester,
+      state,
+      dice: FixedDiceRoller([6, 6, 6, 6, 6]),
+    );
+    container
+        .read(gameControllerProvider.notifier)
+        .dispatch(
+          const ResolvePendingDecisionCommand(EventOptionChoice('option-1')),
+        );
+    await tester.pump(const Duration(milliseconds: 300));
+    if (container.read(gameControllerProvider).pendingDecision
+        is AwaitingRerollChoice) {
+      await tester.tap(find.text('Продолжить'));
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    expect(
+      find.textContaining('Получите робота из колоды предметов.'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Возьмите робота из колоды предметов.'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('BUG132 each adjacent corridor shows an open action', (
+    tester,
+  ) async {
+    const targetCoords = [
+      HexCoord(0, -1),
+      HexCoord(1, -1),
+      HexCoord(-1, 0),
+    ];
+    final state = _scenario((doc) {
+      doc['phase'] = 'playersTurn';
+      doc['actions_left'] = 2;
+      final board = (doc['board']! as List).cast<Map<String, dynamic>>();
+      final playerCoord = _player(doc)['coord']! as Map<String, dynamic>;
+      final sourceKey = '${playerCoord['q']},${playerCoord['r']}';
+      final targetKeys = targetCoords
+          .map((coord) => '${coord.q},${coord.r}')
+          .toSet();
+      final assigned = <Map<String, dynamic>>[];
+
+      String tileKey(Map<String, dynamic> tile) {
+        final coord = tile['coord']! as Map<String, dynamic>;
+        return '${coord['q']},${coord['r']}';
+      }
+
+      for (final target in targetCoords) {
+        final targetKey = '${target.q},${target.r}';
+        final tile =
+            board
+                .where(
+                  (entry) =>
+                      tileKey(entry) == targetKey && !assigned.contains(entry),
+                )
+                .firstOrNull ??
+            board.firstWhere(
+              (entry) =>
+                  tileKey(entry) != sourceKey &&
+                  !targetKeys.contains(tileKey(entry)) &&
+                  !assigned.contains(entry),
+            );
+        assigned.add(tile);
+        tile['coord'] = {'q': target.q, 'r': target.r};
+        tile['type'] = 'corridor';
+        tile['opened'] = false;
+        tile['is_blocked'] = false;
+        tile['exits'] = <int>[];
+      }
+      final source = board.firstWhere((tile) => tileKey(tile) == sourceKey);
+      source['exits'] = <int>[];
+    });
+    await _mount(tester, state, viewport: const Size(1800, 1000));
+
+    for (final target in targetCoords) {
+      await tester.tap(
+        find.byKey(ValueKey<String>('hex-${target.q}-${target.r}')),
+      );
+      await tester.pump();
+
+      expect(
+        find.textContaining('ОТКРЫТЬ КОРИДОР'),
+        findsOneWidget,
+        reason: 'у соседнего коридора $target должна быть команда открытия',
+      );
+    }
+  });
+
+  testWidgets(
+    'BUG133 exhausted robot status appears beside its inventory row',
+    (
+      tester,
+    ) async {
+      final state = _scenario((doc) {
+        (_player(doc)['equipped']! as Map<String, dynamic>)['robot'] =
+            'alarm-bot';
+        (_player(doc)['exhausted_robots']! as List).add('alarm-bot');
+      });
+      await _mount(tester, state, viewport: const Size(1280, 1600));
+      await tester.tap(find.byKey(mvpInventoryButtonKey));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(
+        find.text('Робот использован — недоступен до перезарядки'),
+        findsOneWidget,
+      );
+    },
+  );
 }
 
 GameState _scenario([void Function(Map<String, dynamic>)? edit]) =>
@@ -2588,6 +3188,15 @@ class _SnapshotGameController extends GameSessionController {
 
   @override
   bool dispatch(GameCommand command) => false;
+
+  // This test helper models a server pushing a new state snapshot.
+  // ignore: use_setters_to_change_properties
+  void publish(GameState snapshot) => state = snapshot;
+}
+
+class _MutableGameController extends GameController {
+  _MutableGameController(GameState initialState)
+    : super(initialState: initialState);
 
   // This test helper models a server pushing a new state snapshot.
   // ignore: use_setters_to_change_properties
