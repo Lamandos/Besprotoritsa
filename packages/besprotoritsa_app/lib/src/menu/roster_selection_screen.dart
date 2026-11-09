@@ -229,7 +229,7 @@ class FullPartyReviewScreen extends StatelessWidget {
                       ),
                       FilledButton(
                         onPressed: () => Navigator.pop(dialogContext, true),
-                        child: Text(strings.startGame),
+                        child: Text(strings.startExpedition),
                       ),
                     ],
                   ),

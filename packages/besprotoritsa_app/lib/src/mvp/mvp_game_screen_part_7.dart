@@ -755,6 +755,8 @@ Widget _questConditionRow(
         label,
         style: TextStyle(
           color: canFocus ? const Color(0xFFFFD58E) : const Color(0xFFFFE8BC),
+          fontWeight: FontWeight.bold,
+          fontStyle: FontStyle.italic,
           decoration: canFocus ? TextDecoration.underline : null,
         ),
       ),

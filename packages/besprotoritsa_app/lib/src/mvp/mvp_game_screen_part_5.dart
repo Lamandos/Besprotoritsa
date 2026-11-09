@@ -256,7 +256,9 @@ class _PendingDecisionModalState extends ConsumerState<_PendingDecisionModal> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(prompt),
+                        if (decision is! AwaitingEventOption ||
+                            eventOptions.length > 1)
+                          Text(prompt),
                         if (_marketEventOffers(state, eventOptions)
                             case final marketOffers?) ...[
                           const SizedBox(height: 8),
