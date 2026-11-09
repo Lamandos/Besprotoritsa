@@ -13,6 +13,129 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('BUG144 confirmation button says start', (tester) async {
+    final characterIds = ['scientist', 'guard'];
+    await tester.pumpWidget(
+      MaterialApp(
+        home: FullPartyReviewScreen(
+          characterIds: characterIds,
+          initialState: createFullGameState(
+            characterIds: characterIds,
+            seed: 144,
+          ),
+          storage: InMemoryGameStorage(),
+        ),
+      ),
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('confirm-start-game-button')),
+    );
+    await tester.pumpAndSettle();
+
+    final dialog = find.byType(AlertDialog);
+    expect(
+      find.descendant(of: dialog, matching: find.text('Начать')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: dialog, matching: find.text('Обзор партии')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('BUG145 single event choice has no choice prompt', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      doc['phase'] = 'eventsPhase';
+      doc['pending_decision'] = {
+        'type': 'event_option',
+        'options': ['option-1'],
+        'player_id': _player(doc)['id'],
+        'event_id': 'asteroid-alert',
+      };
+    });
+    await _mount(tester, state);
+
+    expect(find.text('Выберите вариант события.'), findsNothing);
+    expect(find.textContaining('из коридора'), findsWidgets);
+  });
+
+  testWidgets('BUG146 quest objectives are bold italic', (tester) async {
+    final state = _scenario((doc) {
+      final quests = doc['quests']! as Map<String, dynamic>;
+      quests['story_quest_ids'] = ['quest-02'];
+      quests['statuses'] = {'quest-02': 'active'};
+    });
+    await _mount(tester, state, viewport: const Size(1800, 1000));
+
+    final condition =
+        (state.questDefinitions['quest-02']!['conditions']! as List<Object?>)
+            .cast<Map<String, Object?>>()
+            .first;
+    final location = find.byKey(
+      ValueKey<String>('quest-location-quest-02-${condition['id']}'),
+    );
+    await tester.ensureVisible(location);
+    final objective = tester.widget<Text>(
+      find.descendant(of: location, matching: find.byType(Text)),
+    );
+
+    expect(objective.style?.fontWeight, FontWeight.bold);
+    expect(objective.style?.fontStyle, FontStyle.italic);
+  });
+
+  testWidgets(
+    'BUG147 blocked hidden corridor can be reopened from airlock',
+    (tester) async {
+      final state = _scenario((doc) {
+        final player = _player(doc);
+        player['coord'] = {'q': 0, 'r': 0};
+        doc['actions_left'] = 2;
+        final originalBoard = (doc['board']! as List)
+            .cast<Map<String, dynamic>>();
+        final source =
+            Map<String, dynamic>.of(
+                originalBoard.firstWhere((tile) => tile['type'] == 'airlock'),
+              )
+              ..['coord'] = {'q': 0, 'r': 0}
+              ..['opened'] = true
+              ..['is_blocked'] = false
+              ..['exits'] = [0];
+        final corridor =
+            Map<String, dynamic>.of(
+                originalBoard.firstWhere((tile) => tile['type'] == 'corridor'),
+              )
+              ..['coord'] = {'q': 0, 'r': -1}
+              ..['opened'] = false
+              ..['is_blocked'] = true
+              ..['exits'] = [3];
+        doc['board'] = [source, corridor];
+      });
+      final container = await _mount(
+        tester,
+        state,
+        viewport: const Size(1800, 1000),
+      );
+
+      await tester.tap(find.byKey(const ValueKey<String>('hex-0--1')));
+      await tester.pump();
+      final openButton = find.textContaining('ОТКРЫТЬ КОРИДОР');
+      expect(openButton, findsOneWidget);
+      await tester.tap(openButton);
+      await tester.pump();
+
+      expect(
+        container
+            .read(gameControllerProvider)
+            .tileAt(const HexCoord(0, -1))!
+            .isBlocked,
+        isFalse,
+      );
+    },
+  );
+
   testWidgets('BUG093 event description appears above choices', (
     tester,
   ) async {

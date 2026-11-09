@@ -33,6 +33,7 @@ class AppStrings {
   String get fullContentSet => _value('fullContentSet');
   String get contentSetTitle => _value('contentSetTitle');
   String get startGame => _value('startGame');
+  String get startExpedition => _value('startExpedition');
   String get partyReviewTitle => _value('partyReviewTitle');
   String get partyReviewSubtitle => _value('partyReviewSubtitle');
   String get confirmStart => _value('confirmStart');
@@ -175,6 +176,7 @@ const Map<String, String> _ruValues = <String, String>{
   'mvpContentSet': 'MVP · сценарий',
   'fullContentSet': 'Полный набор',
   'startGame': 'Обзор партии',
+  'startExpedition': 'Начать',
   'partyReviewTitle': 'Обзор партии',
   'partyReviewSubtitle': 'Полный набор контента · локальная партия',
   'confirmStart': 'Подтвердить и начать',

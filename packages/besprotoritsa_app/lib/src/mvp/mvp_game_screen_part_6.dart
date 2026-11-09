@@ -48,13 +48,13 @@ List<_NamedCommand> _availableTileCommands(
         'Движение',
         MoveCommand(target),
       ),
-    if (!tile.opened)
+    if (!tile.opened && !(tile.type == HexTileType.corridor && tile.isBlocked))
       _NamedCommand(
         'Открыть '
         '${tile.type == HexTileType.corridor ? 'коридор' : 'отсек'}',
         RevealTileCommand(target),
       ),
-    if (tile.type == HexTileType.corridor && tile.opened && tile.isBlocked)
+    if (tile.type == HexTileType.corridor && tile.isBlocked)
       _NamedCommand('Открыть коридор', OpenCorridorCommand(target)),
     if (tile.type == HexTileType.corridor && tile.opened && !tile.isBlocked)
       _NamedCommand('Закрыть коридор', CloseCorridorCommand(target)),
