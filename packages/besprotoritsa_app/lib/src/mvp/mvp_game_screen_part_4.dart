@@ -25,6 +25,42 @@ class _CommandButton extends ConsumerWidget {
   );
 }
 
+TextSpan _rosterStatSpan(
+  PlayerState player,
+  StatType stat,
+  String label,
+  int value,
+) {
+  final field = switch (stat) {
+    StatType.strength => 'strength',
+    StatType.science => 'science',
+    StatType.repair => 'repair',
+    StatType.endurance => 'endurance',
+    StatType.agility => 'agility',
+    StatType.combatStrength => 'combatStrength',
+  };
+  final character = fullRuntimeCharacters
+      .where((entry) => entry['id'] == player.characterId)
+      .firstOrNull;
+  final baseValue = character?[field] as int? ?? value;
+  final delta = value - baseValue;
+  return TextSpan(
+    children: [
+      TextSpan(text: '$label $value'),
+      if (delta != 0)
+        TextSpan(
+          text: ' (${delta > 0 ? '+' : '-'}${delta.abs()})',
+          style: TextStyle(
+            color: delta > 0
+                ? const Color(0xFF8ED27C)
+                : const Color(0xFFE47769),
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+    ],
+  );
+}
+
 class _HeroRosterPanel extends StatelessWidget {
   const _HeroRosterPanel({
     required this.state,
@@ -61,6 +97,8 @@ class _HeroRosterPanel extends StatelessWidget {
                 0,
                 player.health,
               );
+              final combatDice = heroCombatDiceCount(state, player);
+              final defense = heroDefense(state, player);
               final healthRatio = player.health == 0
                   ? 0.0
                   : currentHealth / player.health;
@@ -140,15 +178,49 @@ class _HeroRosterPanel extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 3),
-                                  Text(
-                                    'СИЛ ${stat(StatType.strength)}  '
-                                    'НАУ ${stat(StatType.science)}  '
-                                    'РЕМ ${stat(StatType.repair)}  '
-                                    'ВЫН ${stat(StatType.endurance)}  '
-                                    'ЛОВ ${stat(StatType.agility)}  '
-                                    'БОЙ '
-                                    '${heroCombatDiceCount(state, player)}  '
-                                    'ЗЩ ${heroDefense(state, player)}',
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        _rosterStatSpan(
+                                          player,
+                                          StatType.strength,
+                                          'СИЛ',
+                                          stat(StatType.strength),
+                                        ),
+                                        const TextSpan(text: '  '),
+                                        _rosterStatSpan(
+                                          player,
+                                          StatType.science,
+                                          'НАУ',
+                                          stat(StatType.science),
+                                        ),
+                                        const TextSpan(text: '  '),
+                                        _rosterStatSpan(
+                                          player,
+                                          StatType.repair,
+                                          'РЕМ',
+                                          stat(StatType.repair),
+                                        ),
+                                        const TextSpan(text: '  '),
+                                        _rosterStatSpan(
+                                          player,
+                                          StatType.endurance,
+                                          'ВЫН',
+                                          stat(StatType.endurance),
+                                        ),
+                                        const TextSpan(text: '  '),
+                                        _rosterStatSpan(
+                                          player,
+                                          StatType.agility,
+                                          'ЛОВ',
+                                          stat(StatType.agility),
+                                        ),
+                                        TextSpan(
+                                          text:
+                                              '  БОЙ $combatDice  ЗЩ $defense',
+                                        ),
+                                      ],
+                                    ),
                                     style: const TextStyle(
                                       color: Color(0xFFCDBA96),
                                       fontSize: 8,
@@ -648,6 +720,7 @@ class _InventoryPanel extends ConsumerWidget {
         activePlayer ??
         state.players.firstOrNull;
     final isActivePlayer = selectedPlayer?.id == state.activePlayerId;
+    final canManageInventory = isActivePlayer && state.pendingDecision == null;
     return _GameBottomSheet(
       key: mvpInventorySheetKey,
       title: 'Инвентарь',
@@ -715,7 +788,7 @@ class _InventoryPanel extends ConsumerWidget {
                     cardId: item,
                     subtitle: 'Оружие ${index + 1}',
                     icon: Icons.shield_outlined,
-                    actions: isActivePlayer
+                    actions: canManageInventory
                         ? [
                             _InventoryAction(
                               'Снять',
@@ -736,7 +809,7 @@ class _InventoryPanel extends ConsumerWidget {
                     context,
                     state,
                     selectedPlayer,
-                    isActivePlayer,
+                    canManageInventory,
                     item,
                     'Броня',
                     ItemSlot.armor,
@@ -746,7 +819,7 @@ class _InventoryPanel extends ConsumerWidget {
                     context,
                     state,
                     selectedPlayer,
-                    isActivePlayer,
+                    canManageInventory,
                     item,
                     'Одежда',
                     ItemSlot.clothing,
@@ -756,7 +829,7 @@ class _InventoryPanel extends ConsumerWidget {
                     context,
                     state,
                     selectedPlayer,
-                    isActivePlayer,
+                    canManageInventory,
                     item,
                     'Робот',
                     ItemSlot.robot,
@@ -768,7 +841,7 @@ class _InventoryPanel extends ConsumerWidget {
                     cardId: item,
                     subtitle: 'Модификация ${index + 1}',
                     icon: Icons.memory_outlined,
-                    actions: isActivePlayer
+                    actions: canManageInventory
                         ? [
                             _InventoryAction(
                               'Вживить',
@@ -786,9 +859,9 @@ class _InventoryPanel extends ConsumerWidget {
                     icon: Icons.memory_outlined,
                   ),
                 const SizedBox(height: 8),
-                const Text(
-                  'РЮКЗАК',
-                  style: TextStyle(
+                Text(
+                  _backpackCapacityLabel(state, selectedPlayer),
+                  style: const TextStyle(
                     color: Color(0xFFD3AD75),
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1,
@@ -808,14 +881,15 @@ class _InventoryPanel extends ConsumerWidget {
                       cardId: item,
                       icon: Icons.inventory_2_outlined,
                       actions: [
-                        if (_inventoryAbilityCommandForPlayer(
-                              state,
-                              selectedPlayer,
-                              item,
-                            )
-                            case final ability?)
-                          _InventoryAction('Использовать', ability),
-                        if (isActivePlayer) ...[
+                        if (state.pendingDecision == null)
+                          if (_inventoryAbilityCommandForPlayer(
+                                state,
+                                selectedPlayer,
+                                item,
+                              )
+                              case final ability?)
+                            _InventoryAction('Использовать', ability),
+                        if (canManageInventory) ...[
                           if (state.cardDefinitions[item]?.slots.isNotEmpty ??
                               false)
                             _InventoryAction(
@@ -826,6 +900,16 @@ class _InventoryPanel extends ConsumerWidget {
                             'Сбросить',
                             DiscardCardCommand(item),
                           ),
+                          if (_canSellSupplyFromInventory(
+                            state,
+                            selectedPlayer,
+                            item,
+                          ))
+                            _InventoryAction(
+                              'Продать за ₡'
+                              '${state.cardDefinitions[item]!.cost ~/ 2}',
+                              SellSupplyCommand(item),
+                            ),
                         ],
                       ],
                     ),
@@ -842,6 +926,11 @@ class _InventoryPanel extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8),
                     child: Text('Обмен доступен только активному персонажу.'),
+                  )
+                else if (state.pendingDecision != null)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Text('Обмен недоступен, пока не завершён выбор.'),
                   )
                 else if (_colocatedPartners(state, selectedPlayer).isEmpty)
                   const Padding(
@@ -1007,17 +1096,23 @@ Widget _transferableCardList(
         child: CheckboxListTile(
           dense: true,
           value: selected.contains(index),
-          onChanged: (_) => onToggle(index),
+          onChanged: state.pendingDecision == null
+              ? (_) => onToggle(index)
+              : null,
           secondary: GameCardArtwork(
             cardId: card.cardId,
             width: 36,
             height: 50,
           ),
-          title: Text(
-            _inventoryCardName(state, card.cardId),
-            style: const TextStyle(
-              color: Color(0xFFFFF1D5),
-              fontWeight: FontWeight.w700,
+          title: Tooltip(
+            message: _inventoryCardDescriptionForState(state, card.cardId),
+            waitDuration: const Duration(milliseconds: 350),
+            child: Text(
+              _inventoryCardName(state, card.cardId),
+              style: const TextStyle(
+                color: Color(0xFFFFF1D5),
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           subtitle: Text(
@@ -1954,12 +2049,16 @@ Widget _itemCardRow({
                     width: 42,
                     height: 58,
                   ),
-            title: Text(
-              title,
-              style: const TextStyle(
-                color: Color(0xFFFFF1D5),
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
+            title: Tooltip(
+              message: _inventoryCardDescription(context, cardId),
+              waitDuration: const Duration(milliseconds: 350),
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFFFFF1D5),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
             subtitle: subtitle == null
@@ -2007,3 +2106,32 @@ String _inventoryCardName(GameState state, String cardId) =>
     state.contentTranslations['content.special_item.$cardId.name'] ??
     state.contentTranslations['content.supply.$cardId.name'] ??
     cardId;
+
+String _backpackCapacityLabel(GameState state, PlayerState player) =>
+    'РЮКЗАК (${player.backpack.length}/'
+    '${InventoryRules.backpackCapacity(player, state.cardDefinitions)})';
+
+String _inventoryCardDescription(BuildContext context, String cardId) {
+  final state = ProviderScope.containerOf(context).read(gameControllerProvider);
+  return _inventoryCardDescriptionForState(state, cardId);
+}
+
+String _inventoryCardDescriptionForState(GameState state, String cardId) =>
+    state.contentTranslations['content.item.$cardId.description'] ??
+    state.contentTranslations['content.special_item.$cardId.description'] ??
+    state.contentTranslations['content.supply.$cardId.description'] ??
+    'Описание карты недоступно.';
+
+bool _canSellSupplyFromInventory(
+  GameState state,
+  PlayerState player,
+  String cardId,
+) {
+  final definition = state.cardDefinitions[cardId];
+  return state.pendingDecision == null &&
+      state.activePlayerId == player.id &&
+      state.actionsLeft > 0 &&
+      definition?.type == ItemType.supply &&
+      state.tileAt(player.coord)?.type == HexTileType.compartment &&
+      !state.monsters.any((monster) => monster.coord == player.coord);
+}

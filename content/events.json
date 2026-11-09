@@ -3032,12 +3032,30 @@
         },
         {
           "actionKey": "content.event.junk-credits.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.junk-credits.option.o2.success",
+          "failureKey": "content.event.junk-credits.option.o2.failure",
+          "behaviorId": "event.successFailure",
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "autoOutcome": "success"
+        },
+        {
+          "actionKey": "content.event.junk-credits.option.o3.action",
           "skillCheck": {
             "skill": "endurance",
             "difficulty": 1
           },
-          "successKey": "content.event.junk-credits.option.o2.success",
-          "failureKey": "content.event.junk-credits.option.o2.failure",
+          "successKey": "content.event.junk-credits.option.o3.success",
+          "failureKey": "content.event.junk-credits.option.o3.failure",
           "behaviorId": "event.successFailure",
           "failureEffects": [
             {
@@ -3081,16 +3099,35 @@
             {
               "type": "no_effect"
             }
-          ]
+          ],
+          "autoOutcome": "success"
         },
         {
           "actionKey": "content.event.junk-guitar.option.o2.action",
+          "skillCheck": null,
+          "successKey": "content.event.junk-guitar.option.o2.success",
+          "failureKey": "content.event.junk-guitar.option.o2.failure",
+          "behaviorId": "event.successFailure",
+          "successEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "failureEffects": [
+            {
+              "type": "no_effect"
+            }
+          ],
+          "autoOutcome": "success"
+        },
+        {
+          "actionKey": "content.event.junk-guitar.option.o3.action",
           "skillCheck": {
             "skill": "endurance",
             "difficulty": 1
           },
-          "successKey": "content.event.junk-guitar.option.o2.success",
-          "failureKey": "content.event.junk-guitar.option.o2.failure",
+          "successKey": "content.event.junk-guitar.option.o3.success",
+          "failureKey": "content.event.junk-guitar.option.o3.failure",
           "behaviorId": "event.successFailure",
           "successEffects": [
             {

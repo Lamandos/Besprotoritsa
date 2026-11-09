@@ -539,9 +539,19 @@ String _eventOptionLabel(GameState state, String? eventId, String option) {
   if (option.startsWith('market|')) {
     final parts = option.split('|');
     if (parts.length == 9) {
+      final cardId = switch (parts[7]) {
+        'buy' => parts[8].split(':').last,
+        'sell' => parts[8],
+        _ => null,
+      };
+      final definition = cardId == null ? null : state.cardDefinitions[cardId];
+      final cardName = cardId == null
+          ? null
+          : _inventoryCardName(state, cardId);
       return switch (parts[7]) {
-        'buy' => 'Купить: ${parts[8].split(':').last}',
-        'sell' => 'Продать: ${parts[8]}',
+        'buy' =>
+          'Купить: $cardName · ₡${definition == null ? '?' : (definition.cost - (int.tryParse(parts[4]) ?? 0)).clamp(0, 999)}',
+        'sell' => 'Продать: $cardName · ₡${definition?.cost ?? '?'}',
         'done' => 'Закончить торговлю',
         _ => option,
       };
@@ -789,12 +799,14 @@ Widget _activeConditionChip(GameState state, String conditionId, int index) {
 class _WideActionDock extends StatelessWidget {
   const _WideActionDock({
     required this.state,
+    required this.blocked,
     required this.onOpenLog,
     required this.selectedDestination,
     required this.selectedPlayerId,
   });
 
   final GameState state;
+  final bool blocked;
   final VoidCallback onOpenLog;
   final HexCoord? selectedDestination;
   final String selectedPlayerId;
@@ -837,31 +849,34 @@ class _WideActionDock extends StatelessWidget {
         children: [
           const SizedBox(width: 78),
           Expanded(
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount:
-                  conditionIds.length + tileCommands.length + actions.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 6),
-              itemBuilder: (context, index) {
-                if (index < conditionIds.length) {
-                  return _activeConditionChip(
-                    state,
-                    conditionIds[index],
-                    index,
-                  );
-                }
-                final commandIndex = index - conditionIds.length;
-                if (commandIndex < tileCommands.length) {
+            child: AbsorbPointer(
+              absorbing: blocked,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount:
+                    conditionIds.length + tileCommands.length + actions.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 6),
+                itemBuilder: (context, index) {
+                  if (index < conditionIds.length) {
+                    return _activeConditionChip(
+                      state,
+                      conditionIds[index],
+                      index,
+                    );
+                  }
+                  final commandIndex = index - conditionIds.length;
+                  if (commandIndex < tileCommands.length) {
+                    return _WideCommandButton(
+                      command: tileCommands[commandIndex],
+                    );
+                  }
                   return _WideCommandButton(
-                    command: tileCommands[commandIndex],
+                    command: actions.elementAt(
+                      commandIndex - tileCommands.length,
+                    ),
                   );
-                }
-                return _WideCommandButton(
-                  command: actions.elementAt(
-                    commandIndex - tileCommands.length,
-                  ),
-                );
-              },
+                },
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -870,14 +885,17 @@ class _WideActionDock extends StatelessWidget {
             selectedPlayerId: selectedPlayerId,
           ),
           const SizedBox(width: 10),
-          SizedBox(
-            width: 338,
-            height: 112,
-            child: _WideCommandButton(
-              command:
-                  endTurnCommand ??
-                  _NamedCommand(strings.next, const EndTurnCommand()),
-              enabled: endTurnCommand != null,
+          AbsorbPointer(
+            absorbing: blocked,
+            child: SizedBox(
+              width: 338,
+              height: 112,
+              child: _WideCommandButton(
+                command:
+                    endTurnCommand ??
+                    _NamedCommand(strings.next, const EndTurnCommand()),
+                enabled: endTurnCommand != null,
+              ),
             ),
           ),
           IconButton(

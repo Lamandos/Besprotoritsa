@@ -261,6 +261,10 @@ Map<String, Object?> _commandToJson(GameCommand command) => switch (command) {
     'cardId': cardId,
   },
   UseTerminalCommand() => const <String, Object?>{'type': 'useTerminal'},
+  SellSupplyCommand(:final cardId) => <String, Object?>{
+    'type': 'sellSupply',
+    'cardId': cardId,
+  },
   DepositIntoChestCommand(:final cardId) => <String, Object?>{
     'type': 'depositIntoChest',
     'cardId': cardId,

@@ -24,10 +24,10 @@ class RosterSelectionScreen extends StatefulWidget {
 }
 
 class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
-  final ValueNotifier<Set<String>> _selected = ValueNotifier(<String>{
+  final ValueNotifier<List<String>> _selected = ValueNotifier(<String>[
     'scientist',
     'guard',
-  });
+  ]);
 
   @override
   void dispose() {
@@ -72,7 +72,7 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          ValueListenableBuilder<Set<String>>(
+                          ValueListenableBuilder<List<String>>(
                             valueListenable: _selected,
                             builder: (context, selected, _) => Text(
                               strings.rosterCount(selected.length),
@@ -104,7 +104,7 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
               ),
               const SizedBox(height: 12),
               Expanded(
-                child: ValueListenableBuilder<Set<String>>(
+                child: ValueListenableBuilder<List<String>>(
                   valueListenable: _selected,
                   builder: (context, selected, _) => _RosterList(
                     selected: selected,
@@ -114,7 +114,7 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              ValueListenableBuilder<Set<String>>(
+              ValueListenableBuilder<List<String>>(
                 valueListenable: _selected,
                 builder: (context, selected, _) => FilledButton(
                   key: const ValueKey<String>('start-game-button'),
@@ -132,16 +132,13 @@ class _RosterSelectionScreenState extends State<RosterSelectionScreen> {
   }
 
   void _toggleHero(String heroId) {
-    final selected = Set<String>.of(_selected.value);
+    final selected = List<String>.of(_selected.value);
     if (!selected.remove(heroId) && selected.length < 4) selected.add(heroId);
     _selected.value = selected;
   }
 
-  void _reviewParty(BuildContext context, Set<String> selected) {
-    final roster = _availableHeroes()
-        .where((hero) => selected.contains(hero.id))
-        .map((hero) => hero.id)
-        .toList(growable: false);
+  void _reviewParty(BuildContext context, List<String> selected) {
+    final roster = List<String>.of(selected, growable: false);
     final initialState = createFullGameState(
       characterIds: roster,
       seed: Random.secure().nextInt(0x7fffffff),
@@ -277,7 +274,7 @@ class _RosterList extends StatelessWidget {
     required this.heroes,
   });
 
-  final Set<String> selected;
+  final List<String> selected;
   final ValueChanged<String> onChanged;
   final List<_HeroOption> heroes;
 
@@ -303,6 +300,7 @@ class _RosterList extends StatelessWidget {
                       key: ValueKey<String>('hero-${hero.id}'),
                       hero: hero,
                       selected: selected.contains(hero.id),
+                      turnNumber: selected.indexOf(hero.id) + 1,
                       onTap: () => onChanged(hero.id),
                       onReadEntry: () => _showCharacterEntry(context, hero),
                     ),
@@ -349,6 +347,7 @@ class _HeroCard extends StatelessWidget {
   const _HeroCard({
     required this.hero,
     required this.selected,
+    required this.turnNumber,
     required this.onTap,
     required this.onReadEntry,
     super.key,
@@ -356,6 +355,7 @@ class _HeroCard extends StatelessWidget {
 
   final _HeroOption hero;
   final bool selected;
+  final int turnNumber;
   final VoidCallback onTap;
   final VoidCallback onReadEntry;
 
@@ -397,6 +397,26 @@ class _HeroCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (selected)
+                    Container(
+                      key: ValueKey<String>('hero-order-${hero.id}'),
+                      width: 24,
+                      height: 24,
+                      alignment: Alignment.center,
+                      margin: const EdgeInsets.only(right: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF243323),
+                        border: Border.all(color: const Color(0xFF79B96B)),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        '$turnNumber',
+                        style: const TextStyle(
+                          color: Color(0xFF9BE18D),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
                   Icon(
                     selected ? Icons.check_circle : Icons.circle_outlined,
                     color: selected

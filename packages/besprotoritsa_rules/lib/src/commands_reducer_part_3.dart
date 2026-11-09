@@ -20,6 +20,7 @@ bool _isActionCommand(GameCommand command) =>
     command is SkillCheckCommand ||
     command is HealCommand ||
     command is UseTerminalCommand ||
+    command is SellSupplyCommand ||
     command is DepositIntoChestCommand ||
     command is WithdrawFromChestCommand ||
     command is TransferChestCardsCommand ||
@@ -111,6 +112,23 @@ GameState _discardCard(GameState state, PlayerState player, CardId cardId) {
     ),
     decks: updatedDecks,
     logEntry: 'discard:${player.id}:$cardId',
+  );
+}
+
+GameState _sellSupply(GameState state, CardId cardId) {
+  final player = _activePlayer(state)!;
+  final definition = state.cardDefinitions[cardId]!;
+  final soldFor = definition.cost ~/ 2;
+  final discarded = _discardCard(state, player, cardId);
+  return _copyState(
+    discarded,
+    actionsLeft: state.actionsLeft - 1,
+    players: _replacePlayer(
+      discarded,
+      player.id,
+      (current) => _copyPlayer(current, credits: current.credits + soldFor),
+    ),
+    logEntry: 'sell-supply:${player.id}:$cardId:$soldFor',
   );
 }
 

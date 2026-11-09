@@ -146,6 +146,13 @@ final class UseTerminalCommand extends GameCommand {
   const UseTerminalCommand();
 }
 
+/// Sells one carried supply for half its printed cost at a clear compartment.
+final class SellSupplyCommand extends GameCommand {
+  const SellSupplyCommand(this.cardId);
+
+  final CardId cardId;
+}
+
 /// Places a carried card into the shared chest in the start sector.
 final class DepositIntoChestCommand extends GameCommand {
   const DepositIntoChestCommand(this.cardId);

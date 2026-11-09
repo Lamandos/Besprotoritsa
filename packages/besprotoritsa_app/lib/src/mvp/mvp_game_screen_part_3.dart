@@ -935,11 +935,13 @@ class _HexRimPainter extends CustomPainter {
 class _MobileActionDock extends StatelessWidget {
   const _MobileActionDock({
     required this.state,
+    required this.blocked,
     required this.onOpenLog,
     required this.selectedDestination,
   });
 
   final GameState state;
+  final bool blocked;
   final VoidCallback onOpenLog;
   final HexCoord? selectedDestination;
 
@@ -993,15 +995,18 @@ class _MobileActionDock extends StatelessWidget {
                     _CompactChestButton(state: state),
                     const VerticalDivider(indent: 10, endIndent: 10),
                     Expanded(
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        itemCount: commands.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: 8),
-                        itemBuilder: (context, index) => _CommandButton(
-                          command: commands[index],
-                          compact: true,
+                      child: AbsorbPointer(
+                        absorbing: blocked,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          itemCount: commands.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(width: 8),
+                          itemBuilder: (context, index) => _CommandButton(
+                            command: commands[index],
+                            compact: true,
+                          ),
                         ),
                       ),
                     ),
