@@ -1363,34 +1363,44 @@
         }
       },
       "junk-credits": {
-        "name": "Waist Pouch",
-        "description": "Among the rubble, junk, and crates, you notice someone’s belt.",
+        "name": "Heap of Rubble",
+        "description": "A pile of rubble, trash, overturned crates, and other junk catches your attention.",
         "option": {
           "o1": {
             "action": "Quickly search the pile.",
-            "success": "There are 5 credits in the pouch.",
-            "failure": "There are 5 credits in the pouch."
+            "success": "Nothing useful catches your eye, except someone’s waist pouch. At least it is something. Take 5 credits.",
+            "failure": "Nothing useful catches your eye, except someone’s waist pouch. At least it is something. Take 5 credits."
           },
           "o2": {
-            "action": "Search the junk for something useful.",
-            "success": "There is an Item card in the far crate.",
-            "failure": "The junk starts to slide, so you retreat."
+            "action": "Take the junk apart in search of something useful.",
+            "success": "You get only disappointment for the time you spent.",
+            "failure": "You get only disappointment for the time you spent."
+          },
+          "o3": {
+            "action": "Make your way to the far crates.",
+            "success": "You manage to open a surviving crate from the storage hold—what luck! Draw 1 card from the items deck.",
+            "failure": "As you grab a beam sticking out of the pile, the trash above starts to slide. Best not climb over it."
           }
         }
       },
       "junk-guitar": {
-        "name": "Heap of Junk",
-        "description": "The stench from the pile of rubble drives even the monsters away.",
+        "name": "Heap of Rubble",
+        "description": "A pile of rubble, trash, overturned crates, and other junk catches your attention.",
         "option": {
           "o1": {
             "action": "Quickly search the pile.",
-            "success": "You find an almost intact guitar and leave.",
-            "failure": "You find an almost intact guitar and leave."
+            "success": "The stench from the pile drives even the monsters away. You cannot bear to go closer, let alone take anything from it.",
+            "failure": "The stench from the pile drives even the monsters away. You cannot bear to go closer, let alone take anything from it."
           },
           "o2": {
+            "action": "Take the junk apart in search of something useful.",
+            "success": "You find nothing useful except an almost intact guitar. Why would you need it now? You strum it, turn around, and leave.",
+            "failure": "You find nothing useful except an almost intact guitar. Why would you need it now? You strum it, turn around, and leave."
+          },
+          "o3": {
             "action": "Make your way to the far crates.",
-            "success": "A stash is tied to the pile. Gain 10 credits.",
-            "failure": "The junk is too slippery, and you decide not to climb over it."
+            "success": "Someone seems to have left a stash near this pile. They probably will not come back for it. Take 10 credits.",
+            "failure": "Everything is smeared with something very slimy. You do not dare climb over it; you might break your neck on the heap of junk."
           }
         }
       },

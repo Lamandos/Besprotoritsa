@@ -257,6 +257,11 @@ class _PendingDecisionModalState extends ConsumerState<_PendingDecisionModal> {
                         ),
                         const SizedBox(height: 8),
                         Text(prompt),
+                        if (_marketEventOffers(state, eventOptions)
+                            case final marketOffers?) ...[
+                          const SizedBox(height: 8),
+                          marketOffers,
+                        ],
                         if (teamDecision != null) ...[
                           const SizedBox(height: 12),
                           _teamEventChoiceRows(
@@ -901,11 +906,12 @@ Widget? _marketEventCardDetails(GameState state, String option) {
   };
   if (cardId == null || cardId.isEmpty) return null;
   final definition = state.cardDefinitions[cardId];
-  final description =
-      state.contentTranslations['content.supply.$cardId.description'] ??
-      state.contentTranslations['content.item.$cardId.description'];
+  final description = _inventoryCardDescriptionForState(state, cardId);
   final price = action == 'buy' && definition != null
       ? (definition.cost - (int.tryParse(parts[4]) ?? 0)).clamp(0, 999)
+      : null;
+  final salePrice = action == 'sell' && definition != null
+      ? definition.cost
       : null;
   return Container(
     key: ValueKey<String>('market-card-details-$cardId'),
@@ -923,8 +929,93 @@ Widget? _marketEventCardDetails(GameState state, String option) {
           _inventoryCardName(state, cardId),
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
-        Text(description ?? 'Описание карты недоступно.'),
+        Text(description),
         if (price != null) Text('Цена: ₡$price'),
+        if (salePrice != null) Text('Цена продажи: ₡$salePrice'),
+      ],
+    ),
+  );
+}
+
+Widget? _marketEventOffers(GameState state, List<String> options) {
+  final token = options
+      .where((option) => option.startsWith('market|'))
+      .firstOrNull;
+  if (token == null) return null;
+  final parts = token.split('|');
+  if (parts.length != 9 || parts[5].isEmpty) return null;
+  final discount = int.tryParse(parts[4]) ?? 0;
+  final playerId = switch (state.pendingDecision) {
+    AwaitingEventOption(:final playerId) => playerId,
+    _ => null,
+  };
+  final player = playerId == null
+      ? null
+      : state.players.where((entry) => entry.id == playerId).firstOrNull;
+  final offers = parts[5].split(',');
+  return Container(
+    key: const ValueKey<String>('market-event-offers'),
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(
+      color: const Color(0x3320150E),
+      borderRadius: BorderRadius.circular(7),
+      border: Border.all(color: const Color(0x557D6043)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          'Открытые припасы',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        for (final cardId in offers)
+          Builder(
+            builder: (context) {
+              final definition = state.cardDefinitions[cardId];
+              final price = definition == null
+                  ? null
+                  : (definition.cost - discount).clamp(0, 999);
+              final affordable =
+                  price == null || player == null || player.credits >= price;
+              final affordabilityCopy = affordable
+                  ? ''
+                  : ' · не хватает кредитов';
+              return Padding(
+                padding: const EdgeInsets.only(top: 3),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Tooltip(
+                        message: _inventoryCardDescriptionForState(
+                          state,
+                          cardId,
+                        ),
+                        waitDuration: const Duration(milliseconds: 350),
+                        child: Text(
+                          _inventoryCardName(state, cardId),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    if (price != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        'Цена: ₡$price$affordabilityCopy',
+                        key: ValueKey<String>('market-offer-price-$cardId'),
+                        style: TextStyle(
+                          color: affordable
+                              ? const Color(0xFFE3C99A)
+                              : const Color(0xFFE47769),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
       ],
     ),
   );

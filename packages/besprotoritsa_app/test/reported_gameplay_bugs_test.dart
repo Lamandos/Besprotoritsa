@@ -3030,6 +3030,326 @@ void main() {
   });
 
   testWidgets(
+    'BUG134 roster selection order is shown and becomes turn order',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: RosterSelectionScreen(storage: InMemoryGameStorage()),
+        ),
+      );
+
+      for (final id in ['scientist', 'guard']) {
+        final card = find.byKey(ValueKey<String>('hero-$id'));
+        await tester.ensureVisible(card);
+        await tester.tap(card);
+        await tester.pump();
+      }
+      for (final id in ['astronaut', 'mechanic']) {
+        final card = find.byKey(ValueKey<String>('hero-$id'));
+        await tester.ensureVisible(card);
+        await tester.tap(card);
+        await tester.pump();
+      }
+
+      expect(
+        find.byKey(const ValueKey<String>('hero-order-astronaut')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('hero-order-mechanic')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey<String>('start-game-button')));
+      await tester.pumpAndSettle();
+      final astronaut = find.text('Астронавт');
+      final mechanic = find.text('Механик');
+      expect(astronaut, findsOneWidget);
+      expect(mechanic, findsOneWidget);
+      expect(
+        tester.getTopLeft(astronaut).dy,
+        lessThan(tester.getTopLeft(mechanic).dy),
+      );
+    },
+  );
+
+  testWidgets('BUG134 new party follows the order heroes were selected', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(home: RosterSelectionScreen(storage: InMemoryGameStorage())),
+    );
+    for (final id in ['scientist', 'guard']) {
+      final card = find.byKey(ValueKey<String>('hero-$id'));
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pump();
+    }
+    for (final id in ['astronaut', 'mechanic']) {
+      final card = find.byKey(ValueKey<String>('hero-$id'));
+      await tester.ensureVisible(card);
+      await tester.tap(card);
+      await tester.pump();
+    }
+    await tester.tap(find.byKey(const ValueKey<String>('start-game-button')));
+    await tester.pumpAndSettle();
+
+    final astronaut = find.text('Астронавт');
+    final mechanic = find.text('Механик');
+    expect(astronaut, findsOneWidget);
+    expect(mechanic, findsOneWidget);
+    expect(
+      tester.getTopLeft(astronaut).dy,
+      lessThan(tester.getTopLeft(mechanic).dy),
+    );
+  });
+
+  test('BUG135 junk guitar event matches source card', () {
+    final state = createFullGameState(
+      characterIds: const ['scientist', 'guard'],
+    );
+    final event = state.eventDefinitions['junk-guitar']!;
+    final options = event['options']! as List<Object?>;
+    final name = state.contentTranslations[event['nameKey']! as String];
+    final description = state.contentTranslations[event['descKey']! as String];
+
+    expect(options, hasLength(3));
+    expect(name, 'Груда обломков');
+    expect(
+      description,
+      'Груда обломков, мусора, перевернутых ящиков и прочего хлама '
+      'привлекла ваше внимание.',
+    );
+  });
+
+  testWidgets(
+    'BUG136 inventory remains inspectable while a decision is pending',
+    (tester) async {
+      final state = _scenario((doc) {
+        (_player(doc)['backpack']! as List).add('pistol');
+        doc['pending_decision'] = {
+          'type': 'reroll',
+          'dice': [3, 4],
+          'available_rerolls': 1,
+          'max_dice_per_reroll': 1,
+          'reroll_sources': <String>[],
+          'window': {'remaining_ticks': 5},
+          'context': null,
+        };
+      });
+      await _mount(tester, state);
+
+      await tester.tap(find.byKey(mvpInventoryButtonKey));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byKey(mvpInventorySheetKey), findsOneWidget);
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Tooltip &&
+              widget.message ==
+                  state.contentTranslations['content.item.pistol.description'],
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  test('BUG137 junk credits event matches source card', () {
+    final state = createFullGameState(
+      characterIds: const ['scientist', 'guard'],
+    );
+    final event = state.eventDefinitions['junk-credits']!;
+    final options = event['options']! as List<Object?>;
+    final name = state.contentTranslations[event['nameKey']! as String];
+    final description = state.contentTranslations[event['descKey']! as String];
+
+    expect(options, hasLength(3));
+    expect(name, 'Груда обломков');
+    expect(
+      description,
+      'Груда обломков, мусора, перевернутых ящиков и прочего хлама '
+      'привлекла ваше внимание.',
+    );
+  });
+
+  testWidgets(
+    'BUG138 event market shows every revealed offer and its price',
+    (tester) async {
+      const offered = 'nanobots,air-canister,adrenaline-supply,medkit,water';
+      final state = _scenario((doc) {
+        doc['phase'] = 'eventsPhase';
+        doc['pending_decision'] = {
+          'type': 'event_option',
+          'options': [
+            'market|trade-bot|1|5|0|$offered|1|buy|0:nanobots',
+            'market|trade-bot|1|5|0|$offered|1|done|',
+          ],
+          'player_id': _player(doc)['id'],
+          'event_id': 'trade-bot',
+        };
+      });
+      await _mount(tester, state);
+
+      for (final cardId in offered.split(',')) {
+        expect(find.text(fullRuntimeItemName(cardId)), findsWidgets);
+      }
+      expect(find.textContaining('Цена: ₡'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'BUG139 event market sale label shows localized card name and price',
+    (tester) async {
+      const sale = 'market|trade-bot|1|4|0|nanobots|1|sell|endurance-stimulant';
+      final state = _scenario((doc) {
+        (_player(doc)['backpack']! as List).add('endurance-stimulant');
+        doc['phase'] = 'eventsPhase';
+        doc['pending_decision'] = {
+          'type': 'event_option',
+          'options': [sale, 'market|trade-bot|1|4|0|nanobots|1|done|'],
+          'player_id': _player(doc)['id'],
+          'event_id': 'trade-bot',
+        };
+      });
+      await _mount(tester, state);
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('event-option-$sale')),
+      );
+      await tester.pump();
+
+      final marketSalePrice =
+          state.cardDefinitions['endurance-stimulant']!.cost;
+      final marketSaleName = fullRuntimeItemName('endurance-stimulant');
+      expect(
+        find.text('Продать: $marketSaleName · ₡$marketSalePrice'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Цена продажи: ₡$marketSalePrice'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'BUG141 roster shows a negative condition stat delta',
+    (tester) async {
+      final state = _scenarioWithCharacters(const ['mechanic', 'guard'], (doc) {
+        (_player(doc)['conditions']! as List).add('shortness-of-breath');
+      });
+      await _mount(tester, state);
+      expect(_rosterText(tester), contains('ВЫН 1 (-1)'));
+    },
+  );
+
+  testWidgets('BUG141 roster shows a positive implant stat delta', (
+    tester,
+  ) async {
+    final state = _scenarioWithCharacters(const ['mechanic', 'guard'], (doc) {
+      _player(doc)['implanted'] = ['implant-strength'];
+    });
+    await _mount(tester, state);
+    expect(_rosterText(tester), contains('СИЛ 3 (+1)'));
+  });
+
+  testWidgets('BUG140 compartment inventory sells carried supplies', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      (_player(doc)['backpack']! as List).add('dry-rations');
+      final board = (doc['board']! as List).cast<Map<String, dynamic>>();
+      final tile = board.firstWhere((entry) {
+        final coord = entry['coord']! as Map<String, dynamic>;
+        return coord['q'] == 0 && coord['r'] == 0;
+      });
+      tile['type'] = 'compartment';
+      tile['location_id'] = 'anabiosis';
+      tile['has_terminal'] = false;
+    });
+    final container = await _mount(tester, state);
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final sell = find.text('Продать за ₡2');
+    expect(sell, findsOneWidget);
+    await tester.scrollUntilVisible(
+      sell,
+      300,
+      scrollable: find
+          .ancestor(of: sell, matching: find.byType(Scrollable))
+          .first,
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.getCenter(sell).dy, lessThan(800));
+    final beforeCredits = container
+        .read(gameControllerProvider)
+        .players
+        .first
+        .credits;
+    final beforeActions = container.read(gameControllerProvider).actionsLeft;
+    await tester.tap(sell);
+    await tester.pump();
+    expect(
+      container.read(gameControllerProvider).players.first.credits,
+      beforeCredits + 2,
+    );
+    expect(
+      container.read(gameControllerProvider).players.first.backpack,
+      isEmpty,
+    );
+    expect(
+      container.read(gameControllerProvider).actionsLeft,
+      beforeActions - 1,
+    );
+  });
+
+  testWidgets('BUG142 backpack header shows occupied and total capacity', (
+    tester,
+  ) async {
+    final state = _scenario((doc) {
+      _player(doc)['backpack'] = ['tripwire', 'tripwire'];
+    });
+    await _mount(tester, state);
+    await tester.tap(find.byKey(mvpInventoryButtonKey));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('РЮКЗАК (2/3)'), findsOneWidget);
+  });
+
+  testWidgets('BUG143 event result omits a previously applied action bonus', (
+    tester,
+  ) async {
+    final codec = GameStateJsonCodec();
+    final beforeDoc =
+        jsonDecode(
+              codec.encode(_scenarioWithCharacters(const ['healer', 'guard'])),
+            )
+            as Map<String, dynamic>;
+    final beforePlayer = _player(beforeDoc);
+    beforePlayer['next_turn_action_delta'] = 1;
+    beforePlayer['action_points'] = 3;
+    beforeDoc['actions_left'] = 3;
+    final before = codec.fromJson(beforeDoc);
+
+    final afterDoc = jsonDecode(codec.encode(before)) as Map<String, dynamic>;
+    _player(afterDoc)['next_turn_action_delta'] = 0;
+    afterDoc['log'] = [
+      ...afterDoc['log'] as List,
+      'event-result:exposed-wires:1:failure',
+    ];
+    final after = codec.fromJson(afterDoc);
+    final controller = _MutableGameController(before);
+    await _mountWithController(tester, controller);
+
+    controller.publish(after);
+    await tester.pump();
+
+    expect(controller.state.actionsLeft, 3);
+    expect(find.textContaining('Знахарь — Следующий ход: −1 ОД'), findsNothing);
+  });
+
+  testWidgets(
     'BUG133 exhausted robot status appears beside its inventory row',
     (
       tester,
@@ -3203,8 +3523,10 @@ class _MutableGameController extends GameController {
   void publish(GameState snapshot) => state = snapshot;
 }
 
-String _rosterText(WidgetTester tester) =>
-    tester.widget<Text>(find.textContaining('СИЛ ').first).data!;
+String _rosterText(WidgetTester tester) => tester
+    .widget<Text>(find.textContaining('СИЛ ').first)
+    .textSpan!
+    .toPlainText();
 
 class _TransparentAssetBundle extends CachingAssetBundle {
   static final Uint8List _transparentPng = Uint8List.fromList(

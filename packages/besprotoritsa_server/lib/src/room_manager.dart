@@ -1722,6 +1722,7 @@ GameCommand _commandFromJson(
       _requiredString(json, 'cardId'),
     ),
     'useTerminal' => const UseTerminalCommand(),
+    'sellSupply' => SellSupplyCommand(_requiredString(json, 'cardId')),
     'depositIntoChest' => DepositIntoChestCommand(
       _requiredString(json, 'cardId'),
     ),

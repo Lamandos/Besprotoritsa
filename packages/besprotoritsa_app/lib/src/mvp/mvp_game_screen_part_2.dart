@@ -241,14 +241,12 @@ class _WideGameLayoutState extends State<_WideGameLayout>
                           right: 95,
                           bottom: 40,
                           height: 146,
-                          child: AbsorbPointer(
-                            absorbing: widget.blocked,
-                            child: _WideActionDock(
-                              state: state,
-                              onOpenLog: widget.onOpenLog,
-                              selectedDestination: _selectedDestination,
-                              selectedPlayerId: selectedPlayerId,
-                            ),
+                          child: _WideActionDock(
+                            state: state,
+                            blocked: widget.blocked,
+                            onOpenLog: widget.onOpenLog,
+                            selectedDestination: _selectedDestination,
+                            selectedPlayerId: selectedPlayerId,
                           ),
                         ),
                         if (state.pendingDecision != null && !queue.isPlaying)
@@ -332,13 +330,11 @@ class _CompactGameLayoutState extends State<_CompactGameLayout> {
       ),
       Align(
         alignment: Alignment.bottomCenter,
-        child: AbsorbPointer(
-          absorbing: widget.blocked,
-          child: _MobileActionDock(
-            state: widget.state,
-            onOpenLog: widget.onOpenLog,
-            selectedDestination: _selectedDestination,
-          ),
+        child: _MobileActionDock(
+          state: widget.state,
+          blocked: widget.blocked,
+          onOpenLog: widget.onOpenLog,
+          selectedDestination: _selectedDestination,
         ),
       ),
     ],

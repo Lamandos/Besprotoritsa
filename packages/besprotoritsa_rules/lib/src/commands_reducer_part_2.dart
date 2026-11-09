@@ -208,6 +208,22 @@ CommandRejection? validate(GameState state, GameCommand command) {
     }
   }
 
+  if (command case SellSupplyCommand(:final cardId)) {
+    final player = _activePlayer(state)!;
+    final definition = state.cardDefinitions[cardId];
+    final tile = state.tileAt(player.coord);
+    if (!player.backpack.contains(cardId) ||
+        definition?.type != ItemType.supply ||
+        _cardSourceDeck(state, definition!) != 'supplies' ||
+        state.decks['supplies'] == null ||
+        tile?.type != HexTileType.compartment ||
+        state.monsters.any((monster) => monster.coord == player.coord)) {
+      return const InventoryCommandRejected(
+        'Sell one carried supply in a clear compartment.',
+      );
+    }
+  }
+
   if (command is ExchangeCommand) {
     final player = _activePlayer(state)!;
     final partner = _playerById(state, command.partnerId);
@@ -403,6 +419,9 @@ GameStepResult step(GameState state, GameCommand command, DiceRoller dice) {
       state: _applyInventoryCommand(state, command),
     ),
     UseTerminalCommand() => _useTerminal(state),
+    SellSupplyCommand(:final cardId) => GameStepResult(
+      state: _sellSupply(state, cardId),
+    ),
     DepositIntoChestCommand() ||
     WithdrawFromChestCommand() ||
     TransferChestCardsCommand() => GameStepResult(

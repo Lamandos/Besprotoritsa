@@ -529,7 +529,19 @@ List<String> _stateConsequences(
         '$name — Кредиты: ${credits > 0 ? '+' : '−'}${credits.abs()}',
       );
     }
-    final actions = player.nextTurnActionDelta - previous.nextTurnActionDelta;
+    final actionLogPrefix = 'event-next-turn-actions:${player.id}:';
+    final newActionEntries = after.log
+        .where((entry) => entry.startsWith(actionLogPrefix))
+        .toList();
+    for (final oldEntry in before.log.where(
+      (entry) => entry.startsWith(actionLogPrefix),
+    )) {
+      newActionEntries.remove(oldEntry);
+    }
+    final actions = newActionEntries.fold<int>(0, (total, entry) {
+      final delta = int.tryParse(entry.substring(actionLogPrefix.length));
+      return total + (delta ?? 0);
+    });
     if (actions != 0) {
       changes.add(
         '$name — Следующий ход: ${actions > 0 ? '+' : '−'}${actions.abs()} ОД',
